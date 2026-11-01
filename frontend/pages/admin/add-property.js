@@ -8,7 +8,8 @@ document.addEventListener("DOMContentLoaded", () => {
     // =========================
     // INQUIRIES SUBMENU
     // =========================
-
+    const inquiriesToggle = document.getElementById("inquiriesToggle");
+    const inquiriesGroup = document.getElementById("inquiriesGroup");
     if (inquiriesToggle && inquiriesGroup) {
         inquiriesToggle.addEventListener("click", () => {
             const isOpen = inquiriesGroup.classList.toggle("open");
@@ -19,6 +20,14 @@ document.addEventListener("DOMContentLoaded", () => {
             );
         });
     }
+
+    // =========================
+    // FORM & UPLOAD REFERENCES
+    // =========================
+    const propertyForm = document.getElementById("addPropertyForm");
+    const propertyImages = document.getElementById("propertyImages");
+    const imagePreview = document.getElementById("imagePreview");
+    let selectedFiles = [];
 
     // =========================
     // PLACEHOLDER NAVIGATION

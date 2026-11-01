@@ -311,6 +311,13 @@ path when rendering from a page.
     - Removed all legacy brokerage references across public HTML (`index.html`, `pages/auth/login.html`, `pages/auth/register.html`, `pages/legal/terms.html`, `pages/legal/privacy.html`), admin profile settings (`pages/admin/profile.html`, `pages/admin/profile.js`), client/API gateways (`index.js`, `shared/js/supabase.js`, `shared/js/api.js`), FastAPI backend (`run.py`, `backend/app.py`, `backend/models.py`, `backend/database.py`), SQL seeds (`backend/supabase_schema.sql`, `supabase/seed.sql`), and documentation (`AGENTS.md`, `DATABASE.md`, `CHANGELOG.md`), standardizing default brokerage/platform branding to **UrbanScope** / **Miriam Lobren Real Estate**.
     - Added idempotent migration `supabase/migrations/20261102010000_update_default_brokerage.sql` (preserving historical applied migrations 0001 and 0002 per §Safety Rules) and runtime normalization in `init_db()` and frontend profile loaders so stale `localStorage` or database rows automatically resolve to `'UrbanScope'`.
 
+28. **Complete Removal of Dark Mode Feature:**
+    - Per user request, the experimental soft dark mode feature was completely removed from the project.
+    - Deleted `frontend/shared/css/theme.css` and `frontend/shared/js/theme.js`.
+    - Removed all `<link rel="stylesheet" href="...shared/css/theme.css">` and `<script src="...shared/js/theme.js"></script>` tags across all 20 HTML pages.
+    - Verified zero remaining `themeToggleBtn`, `theme.css`, `theme.js`, or `data-theme` references across the entire repository.
+    - Retained the runtime bug fix in `frontend/pages/admin/add-property.js` (`inquiriesToggle`, `inquiriesGroup`, `propertyForm`, `propertyImages`, `imagePreview`, `selectedFiles`), eliminating uncaught `ReferenceError`s.
+
 ---
 
 ## Safety Rules

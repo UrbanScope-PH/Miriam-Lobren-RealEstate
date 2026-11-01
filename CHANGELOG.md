@@ -23,6 +23,7 @@ This document records all features, enhancements, bug fixes, user requests, arch
 | **Oct 2026** | **Superadmin UI** | Fixed duplicate/unstyled profile dropdown artifact on superadmin console topbar (`session.js` route guard & script removal) | `session.js`, `pages/superadmin/dashboard.html`, `pages/admin/propertylist.html` |
 | **Oct 2026** | **Inquiry UX** | Replaced blocking native browser `alert()` on submission with animated success modal (`#inquirySuccessModal`), schedule recap, loading spinner, and toast notice | `inquiry.html`, `inquiry.js`, `inquiry.css` |
 | **Oct 2026** | **Database / CI** | Made Supabase migration `20261028000000_initial_schema.sql` idempotent (`IF NOT EXISTS`, drop trigger/policy guards) to fix GitHub Supabase Preview checks | `supabase/migrations/` |
+| **Nov 2026** | **Dark Mode Removal** | Completely removed dark mode feature, styles (`theme.css`), and script (`theme.js`) across all 20 HTML pages per user request | `shared/css/theme.css`, `shared/js/theme.js`, HTML files |
 
 ---
 
@@ -211,6 +212,17 @@ This document records all features, enhancements, bug fixes, user requests, arch
   - Added `DROP TRIGGER IF EXISTS ... ON ...` guards before each `CREATE TRIGGER` statement.
   - Added `DROP POLICY IF EXISTS ... ON ...` guards before each `CREATE POLICY` statement.
   - Enables Supabase Preview to run the migration safely without crashing when tables or policies are already present.
+
+---
+
+### 14. Complete Removal of Dark Mode Feature
+- **User Prompt:** *"never mind i change my mind, completely remove the dark mode feature"*
+- **Rationale & Implementation:**
+  - Removed the entire dark mode implementation per user instructions.
+  - Deleted `frontend/shared/css/theme.css` and `frontend/shared/js/theme.js`.
+  - Removed all `<link rel="stylesheet" href="...shared/css/theme.css">` and `<script src="...shared/js/theme.js"></script>` tags across all 20 HTML pages.
+  - Verified zero remaining `themeToggleBtn`, `theme.css`, `theme.js`, or `data-theme` references across the entire repository.
+  - Retained the general runtime stability fix in `frontend/pages/admin/add-property.js` (`inquiriesToggle`, `inquiriesGroup`, `propertyForm`, `propertyImages`, `imagePreview`, `selectedFiles`), eliminating uncaught `ReferenceError`s.
 
 ---
 
