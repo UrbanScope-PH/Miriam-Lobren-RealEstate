@@ -38,7 +38,7 @@ class UserResponse(BaseModel):
     avatar_url: Optional[str] = "assets/images/agent.jpg"
     license_number: Optional[str] = ""
     title: Optional[str] = "Licensed Real Estate Broker / Agent"
-    brokerage: Optional[str] = "CD Miranda Realty"
+    brokerage: Optional[str] = "UrbanScope"
     bio: Optional[str] = ""
     google_id: Optional[str] = None
     created_at: Optional[str] = None

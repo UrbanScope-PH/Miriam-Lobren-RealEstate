@@ -982,7 +982,7 @@
                             license: data.license_number || data.license || 'PRC REB #0031892',
                             license_number: data.license_number || data.license || 'PRC REB #0031892',
                             title: data.title || 'Licensed Real Estate Broker / Agent',
-                            brokerage: data.brokerage || 'CD Miranda Realty',
+                            brokerage: (!data.brokerage || /^cd\s.*realty$/i.test(String(data.brokerage).trim())) ? 'UrbanScope' : data.brokerage,
                             bio: data.bio || 'Serving Las Piñas, Cavite, and surrounding prime locations with high-integrity real estate solutions.',
                             avatar_url: data.avatar_url || 'assets/images/agent.jpg'
                         };
@@ -1026,7 +1026,10 @@
                     license: u.license_number || (cached && cached.license) || 'PRC REB #0031892',
                     license_number: u.license_number || (cached && cached.license_number) || 'PRC REB #0031892',
                     title: u.title || (cached && cached.title) || 'Licensed Real Estate Broker / Agent',
-                    brokerage: u.brokerage || (cached && cached.brokerage) || 'CD Miranda Realty',
+                    brokerage: (() => {
+                        const b = u.brokerage || (cached && cached.brokerage) || '';
+                        return (!b || /^cd\s.*realty$/i.test(String(b).trim())) ? 'UrbanScope' : b;
+                    })(),
                     bio: u.bio || (cached && cached.bio) || 'Serving Las Piñas, Cavite, and surrounding prime locations with high-integrity real estate solutions.',
                     avatar_url: u.avatar_url || (cached && cached.avatar_url) || 'assets/images/agent.jpg'
                 };
@@ -1049,7 +1052,7 @@
             license: 'PRC REB #0031892',
             license_number: 'PRC REB #0031892',
             title: 'Licensed Real Estate Broker / Agent',
-            brokerage: 'CD Miranda Realty',
+            brokerage: 'UrbanScope',
             bio: 'Serving Las Piñas, Cavite, and surrounding prime locations with high-integrity real estate solutions.',
             avatar_url: 'assets/images/agent.jpg'
         };

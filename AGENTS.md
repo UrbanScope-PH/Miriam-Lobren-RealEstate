@@ -8,7 +8,7 @@ product overview and [DATABASE.md](DATABASE.md) for the data layer.
 
 ## Project at a Glance
 
-**UrbanScope** — a real estate website for **CD Miranda Realty** / agent **Miriam Lobren**
+**UrbanScope** — a real estate website for agent **Miriam Lobren**
 (Las Piñas & Cavite, Philippines). Public property catalog, client accounts and inquiries,
 and an admin/superadmin dashboard.
 
@@ -198,7 +198,7 @@ path when rendering from a page.
       - Cancel button navigates cleanly back to `../../index.html`.
 13. **Terms of Service & Privacy Policy Legal Pages:**
     - Dedicated legal hub created under `frontend/pages/legal/` (`terms.html`, `privacy.html`, `legal.css`, and `legal.js`).
-    - **Terms of Service (`terms.html`)**: Tailored to Philippine real estate brokerage operations for Miriam Lobren / CD Miranda Realty under Republic Act No. 9646 (Real Estate Service Act - RESA), covering property listings accuracy, pricing disclaimers, free site tripping guidelines, account safety, reservation fees, financing disclosures, limitation of liability, and venue jurisdiction (Las Piñas City & Cavite courts).
+    - **Terms of Service (`terms.html`)**: Tailored to Philippine real estate brokerage operations for Miriam Lobren / UrbanScope under Republic Act No. 9646 (Real Estate Service Act - RESA), covering property listings accuracy, pricing disclaimers, free site tripping guidelines, account safety, reservation fees, financing disclosures, limitation of liability, and venue jurisdiction (Las Piñas City & Cavite courts).
     - **Privacy Policy (`privacy.html`)**: Fully compliant with the Philippine Data Privacy Act of 2012 (Republic Act No. 10173) and National Privacy Commission (NPC) circulars, detailing collected data categories, lawful processing purposes, strict non-disclosure/no-sale policy, physical & electronic security safeguards, data retention schedules, statutory data subject rights (access, correction, erasure, objection, damages), local storage usage, and Data Protection Officer (DPO) contact channels.
     - Features a pill document switcher (`[ Terms of Service ]` / `[ Privacy Policy ]`) allowing seamless switching between both documents, sticky Table of Contents sidebar for rapid navigation, responsive reading typography, and integrated standard navbar & session profile chip.
     - All dead `#` links and inline `alert(...)` handlers across `index.html`, `pages/auth/login.html`, `pages/properties/property-detail.html`, `pages/properties/Liora.html`, and `pages/properties/Airmen.html` are linked directly to these new legal pages.
@@ -306,6 +306,10 @@ path when rendering from a page.
     - Deleted `frontend/shared/js/chatbot.js` and `frontend/shared/css/chatbot.css` completely.
     - Removed all `<link rel="stylesheet" href="...shared/css/chatbot.css">` and `<script src="...shared/js/chatbot.js" defer></script>` tags across all 8 public/client pages (`index.html`, `pages/properties/property-detail.html`, `pages/properties/Liora.html`, `pages/properties/Airmen.html`, `pages/inquiry/inquiry.html`, `pages/inquiry/history.html`, `pages/legal/terms.html`, and `pages/legal/privacy.html`).
     - Removed all chatbot/assistant mentions from FAQ #4 in `frontend/index.html`, Section 3 of `frontend/pages/legal/privacy.html`, comments/docstrings in `properties.js` and `backend/app.py`, and documentation (`README.md`, `DATABASE.md`, `AGENTS.md`).
+
+27. **Complete Removal of Legacy Brokerage Branding:**
+    - Removed all legacy brokerage references across public HTML (`index.html`, `pages/auth/login.html`, `pages/auth/register.html`, `pages/legal/terms.html`, `pages/legal/privacy.html`), admin profile settings (`pages/admin/profile.html`, `pages/admin/profile.js`), client/API gateways (`index.js`, `shared/js/supabase.js`, `shared/js/api.js`), FastAPI backend (`run.py`, `backend/app.py`, `backend/models.py`, `backend/database.py`), SQL seeds (`backend/supabase_schema.sql`, `supabase/seed.sql`), and documentation (`AGENTS.md`, `DATABASE.md`, `CHANGELOG.md`), standardizing default brokerage/platform branding to **UrbanScope** / **Miriam Lobren Real Estate**.
+    - Added idempotent migration `supabase/migrations/20261102010000_update_default_brokerage.sql` (preserving historical applied migrations 0001 and 0002 per §Safety Rules) and runtime normalization in `init_db()` and frontend profile loaders so stale `localStorage` or database rows automatically resolve to `'UrbanScope'`.
 
 ---
 

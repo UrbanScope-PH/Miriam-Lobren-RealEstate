@@ -107,7 +107,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         email: 'admin.realestate@gmail.com',
         phone: '+63 900 000 0000',
         license: 'PRC REB #0031892',
-        brokerage: 'CD Miranda Realty',
+        brokerage: 'UrbanScope',
         bio: 'Serving Las Piñas, Cavite, and surrounding prime locations with high-integrity real estate solutions.'
     };
 
@@ -122,7 +122,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         email: savedProfile.email || storedAdmin.email || defaultProfile.email,
         license: savedProfile.license || savedProfile.license_number || storedAdmin.license || storedAdmin.license_number || defaultProfile.license,
         title: savedProfile.title !== undefined ? savedProfile.title : (storedAdmin.title !== undefined ? storedAdmin.title : defaultProfile.title),
-        brokerage: savedProfile.brokerage !== undefined ? savedProfile.brokerage : (storedAdmin.brokerage !== undefined ? storedAdmin.brokerage : defaultProfile.brokerage),
+        brokerage: (() => {
+            const raw = savedProfile.brokerage !== undefined ? savedProfile.brokerage : (storedAdmin.brokerage !== undefined ? storedAdmin.brokerage : defaultProfile.brokerage);
+            return /^cd\s.*realty$/i.test(String(raw || '').trim()) ? 'UrbanScope' : raw;
+        })(),
         bio: savedProfile.bio !== undefined ? savedProfile.bio : (storedAdmin.bio !== undefined ? storedAdmin.bio : defaultProfile.bio)
     };
 

@@ -1,4 +1,4 @@
-# Database — UrbanScope (CD Miranda Realty)
+# Database — UrbanScope (Miriam Lobren Real Estate)
 
 This document describes the data layer behind the UrbanScope platform: the
 schema, seed data, how migrations work, and how the frontend reaches it.
@@ -102,7 +102,7 @@ Client and admin accounts.
 | `google_id` | TEXT | Partial `UNIQUE` (`idx_users_google_id`) | Google OpenID `sub` identifier linked on Google Sign-In (*added by non-destructive migration*) |
 | `license_number` | TEXT | `DEFAULT ''` | Professional real estate broker / agent PRC registration identifier |
 | `title` | TEXT | `DEFAULT 'Licensed Real Estate Broker / Agent'` | Professional title or organizational role |
-| `brokerage` | TEXT | `DEFAULT 'CD Miranda Realty'` | Accredited brokerage or realty firm |
+| `brokerage` | TEXT | `DEFAULT 'UrbanScope'` | Accredited brokerage or realty firm |
 | `bio` | TEXT | `DEFAULT ''` | Professional biography and summary |
 | `created_at` | TIMESTAMP | `CURRENT_TIMESTAMP` | UTC, `YYYY-MM-DD HH:MM:SS` |
 
@@ -372,6 +372,8 @@ supabase/
   migrations/20261028000000_initial_schema.sql   Tables, triggers, indexes, views, RLS (no DROPs)
   migrations/20261030230000_admin_profile_fields_and_superadmin_role.sql
                                              users.title / brokerage / bio + 'superadmin' in users_role_check
+  migrations/20261102010000_update_default_brokerage.sql
+                                             Sets users.brokerage default to 'UrbanScope' and normalizes legacy rows
   seed.sql                                   Demo data (users, 6 properties, inquiries, ...)
   scripts/                                   One-off data fixes to paste into the SQL Editor (never auto-run)
 ```

@@ -13,7 +13,7 @@
 -- 8.1 Seed: Users (Admin Miriam Lobren & Clients)
 -- Passwords:
 --   urbanscope.cvsu@gmail.com -> urbanscope2026 (or urbanscope)
---   admin@cdmiranda.com       -> admin123
+--   admin.realestate@gmail.com -> realestate2026
 --   client@gmail.com        -> client123
 -- ------------------------------------------------------------------------------
 INSERT INTO users (id, email, password_hash, full_name, phone, role, license_number, avatar_url) VALUES
@@ -413,7 +413,7 @@ INSERT INTO testimonials (user_id, author_name, location, rating, quote, is_feat
     'Maria Elena Santos',
     'Imus, Cavite',
     5,
-    'From our very first website inquiry to our house turnover at Liora Homes, CD Miranda Realty and Miriam provided top-notch assistance. Thank you for our family dream home!',
+    'From our very first website inquiry to our house turnover at Liora Homes, Miriam Lobren provided top-notch assistance. Thank you for our family dream home!',
     TRUE
 );
 

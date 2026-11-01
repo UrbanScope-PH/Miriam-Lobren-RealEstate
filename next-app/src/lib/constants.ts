@@ -87,7 +87,7 @@ export const CITIES = [
 export const SITE = {
   name: "Miriam Lobren",
   tagline: "Real Estate Agent",
-  brokerage: "CD Miranda Realty",
+  brokerage: "UrbanScope",
   platform: "UrbanScope",
   phone: "+63 917 000 0000",
   email: "gianticaya@gmail.com",

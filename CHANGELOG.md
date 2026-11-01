@@ -97,7 +97,7 @@ This document records all features, enhancements, bug fixes, user requests, arch
 - **Rationale & Implementation:**
   - Built a dedicated legal hub under `frontend/pages/legal/` (`terms.html`, `privacy.html`, and `legal.css`).
   - **Terms of Service (`terms.html`)**:
-    - Tailored to Philippine real estate brokerage operations for Miriam Lobren / CD Miranda Realty.
+    - Tailored to Philippine real estate brokerage operations for Miriam Lobren / UrbanScope.
     - Fully compliant with **Republic Act No. 9646** (Real Estate Service Act - RESA), Professional Regulation Commission (PRC), and DHSUD.
     - 10 sections: Acceptance & Scope, Real Estate Representation, Property Listings & Pricing, Site Viewing & Consultations, Client Accounts & Security, Reservations & Financing, Intellectual Property, Limitation of Liability, Governing Philippine Law (Las Piñas City & Cavite jurisdiction), and Contact Details.
   - **Privacy Policy (`privacy.html`)**:

@@ -515,7 +515,8 @@ function renderHomepageAgentDetails(profile) {
     const rawName = profile.name || profile.full_name || 'Miriam Lobren';
     const cleanName = String(rawName).replace(/\s*\((?:Admin|Administrator)\)\s*$/i, '').trim() || rawName;
     const title = profile.title || 'Licensed Real Estate Broker / Agent';
-    const brokerage = profile.brokerage || 'CD Miranda Realty';
+    const rawBrok = String(profile.brokerage || '').trim();
+    const brokerage = (!rawBrok || /^cd\s.*realty$/i.test(rawBrok)) ? 'UrbanScope' : rawBrok;
     const phone = profile.phone || '+63 900 000 0000';
     const email = profile.email || 'admin.realestate@gmail.com';
     const bio = profile.bio || 'Serving Las Piñas, Cavite, and surrounding prime locations with high-integrity real estate solutions.';
@@ -560,7 +561,9 @@ function renderHomepageAgentDetails(profile) {
     if (footerName) footerName.textContent = cleanName;
     const footerBio = document.getElementById('footerAgentBio');
     if (footerBio && bio) {
-        footerBio.textContent = `Trusted real estate agent affiliated with ${brokerage}. ${bio}`;
+        footerBio.textContent = brokerage.toLowerCase() === 'urbanscope'
+            ? `Trusted real estate agent. ${bio}`
+            : `Trusted real estate agent affiliated with ${brokerage}. ${bio}`;
     }
     const footerPhone = document.getElementById('footerAgentPhone');
     if (footerPhone) {

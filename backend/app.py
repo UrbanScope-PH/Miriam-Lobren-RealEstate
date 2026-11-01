@@ -70,7 +70,7 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(
     title="UrbanScope Real Estate API",
-    description="Python Backend for CD Miranda Realty & Miriam Lobren Real Estate Platform with RBAC",
+    description="Python Backend for UrbanScope & Miriam Lobren Real Estate Platform with RBAC",
     version="1.0.0",
     lifespan=lifespan
 )
@@ -904,13 +904,16 @@ def get_public_agent_profile():
             "license": "PRC REB #0031892",
             "license_number": "PRC REB #0031892",
             "title": "Licensed Real Estate Broker / Agent",
-            "brokerage": "CD Miranda Realty",
+            "brokerage": "UrbanScope",
             "bio": "Serving Las Piñas, Cavite, and surrounding prime locations with high-integrity real estate solutions.",
             "avatar_url": "assets/images/agent.jpg"
         }
     data = dict(row)
     data["name"] = data.get("full_name") or "Miriam Lobren"
     data["license"] = data.get("license_number") or ""
+    brok = (data.get("brokerage") or "").strip()
+    if not brok or (brok.lower().startswith("cd ") and "realty" in brok.lower()):
+        data["brokerage"] = "UrbanScope"
     if data.get("email"):
         AUTHORIZED_ADMIN_EMAILS.add(data["email"].lower().strip())
     return data

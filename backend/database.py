@@ -64,7 +64,7 @@ def init_db():
             google_id TEXT,
             license_number TEXT DEFAULT '',
             title TEXT DEFAULT 'Licensed Real Estate Broker / Agent',
-            brokerage TEXT DEFAULT 'CD Miranda Realty',
+            brokerage TEXT DEFAULT 'UrbanScope',
             bio TEXT DEFAULT '',
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );
@@ -145,7 +145,8 @@ def init_db():
     if "title" not in existing_user_cols:
         cursor.execute("ALTER TABLE users ADD COLUMN title TEXT DEFAULT 'Licensed Real Estate Broker / Agent'")
     if "brokerage" not in existing_user_cols:
-        cursor.execute("ALTER TABLE users ADD COLUMN brokerage TEXT DEFAULT 'CD Miranda Realty'")
+        cursor.execute("ALTER TABLE users ADD COLUMN brokerage TEXT DEFAULT 'UrbanScope'")
+    cursor.execute("UPDATE users SET brokerage = 'UrbanScope' WHERE brokerage IS NULL OR (LOWER(brokerage) LIKE 'cd %' AND LOWER(brokerage) LIKE '%realty%')")
     if "bio" not in existing_user_cols:
         cursor.execute("ALTER TABLE users ADD COLUMN bio TEXT DEFAULT ''")
     cursor.execute("CREATE UNIQUE INDEX IF NOT EXISTS idx_users_google_id ON users(google_id) WHERE google_id IS NOT NULL")
