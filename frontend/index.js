@@ -245,7 +245,7 @@ function syncCategoryTabs(cat) {
             matched = true;
             try {
                 tab.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
-            } catch (e) {}
+            } catch (e) { }
         } else {
             tab.classList.remove('active');
         }
@@ -303,7 +303,7 @@ async function loadHomeProperties(category = 'all') {
             allCachedProperties = cached;
             applyCurrentFiltersAndRender();
         }
-    } catch (e) {}
+    } catch (e) { }
 
     // Fetch from backend API
     if (typeof apiGetProperties === 'function') {
@@ -514,7 +514,7 @@ function renderHomepageAgentDetails(profile) {
 
     const rawName = profile.name || profile.full_name || 'Miriam Lobren';
     const cleanName = String(rawName).replace(/\s*\((?:Admin|Administrator)\)\s*$/i, '').trim() || rawName;
-    const title = profile.title || 'Licensed Real Estate Broker / Agent';
+    const title = profile.title || 'Real Estate Agent';
     const rawBrok = String(profile.brokerage || '').trim();
     const brokerage = (!rawBrok || /^cd\s.*realty$/i.test(rawBrok)) ? 'UrbanScope' : rawBrok;
     const phone = profile.phone || '+63 900 000 0000';
@@ -588,7 +588,7 @@ async function initDynamicAgentDetails() {
                 localProfile = adminUser;
             }
         }
-    } catch (e) {}
+    } catch (e) { }
 
     if (localProfile) {
         renderHomepageAgentDetails(localProfile);
@@ -614,7 +614,7 @@ async function initDynamicAgentDetails() {
                 if (updated && (updated.name || updated.email || updated.phone)) {
                     renderHomepageAgentDetails(updated);
                 }
-            } catch (err) {}
+            } catch (err) { }
         }
     });
 
@@ -630,7 +630,7 @@ async function initDynamicAgentDetails() {
         try {
             const p = JSON.parse(localStorage.getItem('urbanscope_admin_profile') || 'null');
             if (p) renderHomepageAgentDetails(p);
-        } catch (err) {}
+        } catch (err) { }
     });
 }
 
