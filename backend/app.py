@@ -883,7 +883,7 @@ def update_user_password(
 @app.get("/api/agent/profile", tags=["Agent"])
 @app.get("/api/admin/profile/public", tags=["Agent"])
 def get_public_agent_profile():
-    """Returns the primary lead agent/admin's public profile details for public display on the homepage, chatbot, and footer."""
+    """Returns the primary lead agent/admin's public profile details for public display on the homepage and footer."""
     conn = get_db_connection()
     cursor = conn.cursor()
     cursor.execute("""

@@ -12,7 +12,6 @@ Built for **Miriam Lobren Real Estate Agent** (Las Piñas & Cavite, Philippines)
 - **Property Showcase** — featured listings with category tabs, detail pages with photo galleries, specs, and maps.
 - **Client Accounts & Google Sign-In** — registration with PH phone validation and password strength meter, plus one-click **Google Authentication** (OAuth 2.0 via Google Identity Services); unified sign-in that routes users by role.
 - **Consultations & Inquiries** — interactive consultation intent flow allowing clients to book general consultations (free site tripping, loan pre-approval, property advice) or inquire about specific accredited listings.
-- **Mira Chatbot** — on-site assistant for navigation, property search by location/budget/type, and financing guidance.
 - **Admin Dashboard** — KPI cards, inquiry charts, property CRUD, client inquiry tracking, and user overview.
 - **Superadmin Console** — role management (RBAC) and database health checks.
 - **Legal & Privacy Hub** — comprehensive Terms of Service (aligned with RESA RA 9646) and Privacy Policy (compliant with Philippine Data Privacy Act RA 10173).
@@ -72,7 +71,6 @@ To reset the data, delete `backend/urbanscope.db` and restart the server.
 - **Consultations & Dual-Mode Inquiries:** On the homepage, clicking **Book a Free Consultation** opens an interactive intent modal allowing clients to choose between *General Consultation / Question* (free site viewing, loan pre-approval, general advice) or *Inquire About a Specific Property* with dynamic listing selection, photo previews, and automated pricing details.
 - **Inquiry History & Management:** Access **Inquiry History** via the client profile menu or topbar to track submitted requests, filter by status (*Under Review*, *Scheduled*, *Contacted*, *Cancelled*), modify inquiry messages or contact phones, cancel active requests, or permanently delete records.
 - **Legal Compliance:** Review comprehensive, RESA-compliant Terms of Service and NPC-compliant Privacy Policy pages, fully integrated with seamless back navigation.
-- **Mira AI Assistant:** Use the floating chatbot bubble in the bottom-right corner for 24/7 assistance: search listings by budget, explore Cavite and Las Piñas locations, or ask about Pag-IBIG and bank financing requirements.
 
 ### 2. Administrator Guide (Miriam Lobren & Team)
 - **Unified Sign-In:** Log in via `/pages/auth/login.html`. Authorized administrative accounts are automatically routed to the Admin Dashboard.
@@ -100,7 +98,7 @@ To reset the data, delete `backend/urbanscope.db` and restart the server.
 ├── frontend/
 │   ├── index.html      # Home page
 │   ├── pages/          # One folder per feature (auth, properties, inquiry, legal, admin, superadmin)
-│   ├── shared/         # Shared CSS & JS (navbar, session, chatbot, API client)
+│   ├── shared/         # Shared CSS & JS (navbar, session, splash, API client)
 │   └── assets/images/  # Photos, logos, icons
 ├── DATABASE.md         # Database schema & seed data
 ├── CHANGELOG.md        # Session changelog & feature log

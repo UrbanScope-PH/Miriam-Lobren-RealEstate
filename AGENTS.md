@@ -10,7 +10,7 @@ product overview and [DATABASE.md](DATABASE.md) for the data layer.
 
 **UrbanScope** — a real estate website for **CD Miranda Realty** / agent **Miriam Lobren**
 (Las Piñas & Cavite, Philippines). Public property catalog, client accounts and inquiries,
-an admin dashboard, and the "Mira" chatbot.
+and an admin/superadmin dashboard.
 
 | Layer | Tech |
 | :--- | :--- |
@@ -57,8 +57,8 @@ frontend/              Everything the browser loads (served at /)
   pages/legal/         Terms of Service (terms.html) & Privacy Policy (privacy.html)
   pages/admin/         Dashboard, propertylist.html, add-property, edit-property, clients, profile, legacy login redirect (users.html redirects)
   pages/superadmin/    Master overview, system diagnostics, user account modification & RBAC management
-  shared/css/          common.css (design tokens, navbar, footer), session, splash, chatbot
-  shared/js/           supabase.js (API gateway), session.js, splash.js, chatbot.js, api.js
+  shared/css/          common.css (design tokens, navbar, footer), session.css, splash.css
+  shared/js/           supabase.js (API gateway), session.js, splash.js, api.js
   assets/images/       Photos, logos, icons
 supabase/              Supabase CLI project: config.toml, migrations/ (timestamped .sql), seed.sql, scripts/ (one-off SQL Editor fixes) — see DATABASE.md §10
 next-app/              Unfinished Next.js + Prisma rewrite — NOT wired up; ignore unless asked
@@ -99,8 +99,8 @@ to `/pages/…`.
 
 Pages in `frontend/pages/<section>/` are two levels below the frontend root, so they use
 `../../shared/…`, `../../assets/…`, `../../index.html`, and `../<other-section>/…` for sibling
-sections. The JS helpers (`getBasePath()` in `session.js`, plus the path resolvers in
-`chatbot.js` and `splash.js`) detect `/pages/` in the URL and return `../../` (else `./`).
+sections. The JS helpers (`getBasePath()` in `session.js` and the path resolver in
+`splash.js`) detect `/pages/` in the URL and return `../../` (else `./`).
 Login `?redirect=` values are relative to the frontend root (e.g. `pages/inquiry/inquiry.html`).
 Property `image_url` values are **root-relative** (`assets/images/…`); prefix with the base
 path when rendering from a page.
@@ -249,7 +249,7 @@ path when rendering from a page.
     - Until it is applied to the live project (`supabase db push` or the Supabase GitHub integration), `apiUpdateAdminProfile` intentionally does **not** send `title`/`brokerage`/`bio` to Supabase (PostgREST would reject unknown columns); those fields persist in SQLite + `localStorage` only.
     - Every migration must be committed to `main` — see DATABASE.md §10.1 team rule.
 21. **Dynamic Homepage & Multi-Page Contact Sync with Admin Settings:**
-    - Profile information saved on `/pages/admin/profile.html` (Full Name, Title, Email, Phone, License, Brokerage, Bio, Avatar) now automatically and dynamically propagates to the public homepage (`frontend/index.html`), Chatbot Mira (`frontend/shared/js/chatbot.js`), and footers across all site pages.
+    - Profile information saved on `/pages/admin/profile.html` (Full Name, Title, Email, Phone, License, Brokerage, Bio, Avatar) now automatically and dynamically propagates to the public homepage (`frontend/index.html`) and footers across all site pages.
     - **Homepage Elements Updated (`frontend/index.js` & `index.html`)**:
       - Topbar Nav Brand: `#navAgentName` (clean name without `(Admin)` suffix), `#navAgentTitle` (uppercase role/title).
       - About Me Section: `#aboutAgentName`, `#aboutAgentBrokerage`, `#aboutAgentBioText` (dynamic bio statement), and `#aboutAgentPhoto` (dynamic avatar URL).
@@ -258,8 +258,6 @@ path when rendering from a page.
       - Footer: `#footerAgentName`, `#footerAgentBio`, `#footerAgentPhone` (dynamic `tel:` link and formatted number), and `#footerAgentEmail` (dynamic `mailto:` link and address).
     - **Multi-Page Global Footer Sync (`frontend/shared/js/session.js`)**:
       - `syncGlobalFooterContact()` dynamically updates all `.footer-contact a[href^="tel:"]` and `.footer-contact a[href^="mailto:"]` across property details, showcases (`Liora.html`, `Airmen.html`), and legal pages (`terms.html`, `privacy.html`), ensuring contact numbers and emails always match admin settings.
-    - **Chatbot Mira Live Agent Info (`frontend/shared/js/chatbot.js`)**:
-      - `getLiveAgentInfo()` supplies live agent name, role, brokerage, phone, email, and service areas to Chatbot Mira when answering contact inquiries and agent bio questions.
     - **Public API & Zero-Latency Caching**:
       - Public endpoint `GET /api/agent/profile` in `backend/app.py` serves lead agent credentials without requiring authorization tokens.
       - `apiGetLeadAgentProfile()` in `supabase.js` and `api.js` queries `urbanscope_admin_profile` first for instant 0ms rendering, followed by background synchronization with FastAPI and Supabase Cloud.
@@ -267,7 +265,7 @@ path when rendering from a page.
       - **Target User Email Resolution (`backend/app.py` & Supabase Gateway)**: `PUT /api/admin/profile` resolves target account by `payload.email` first (updating `admin.realestate@gmail.com` / user 1 directly even if the authenticated session has a different user ID, e.g. superadmin or OAuth account, preventing `400 Email is already in use` conflicts). `apiUpdateAdminProfile` in `supabase.js` and `api.js` filters Supabase updates by `email=ilike.${targetEmail}` rather than local SQLite integer IDs (which differ from Supabase IDs), ensuring remote Cloud records stay in sync. Public broker profile `urbanscope_admin_profile` is preserved on logout so unauthenticated visitors continuously see current credentials.
 
 22. **Lead Agent Email & Phone Change Synchronization Across All Architecture Tiers:**
-    - Administrators can update their **Email Address** and **Contact Phone Number** on `/pages/admin/profile.html` and have them persist across both local SQLite (`backend/urbanscope.db`) and Supabase Cloud (`users` table), displaying immediately and permanently on the homepage footer (`#footerAgentPhone`, `#footerAgentEmail`), chatbot, and site footers even after logging out.
+    - Administrators can update their **Email Address** and **Contact Phone Number** on `/pages/admin/profile.html` and have them persist across both local SQLite (`backend/urbanscope.db`) and Supabase Cloud (`users` table), displaying immediately and permanently on the homepage footer (`#footerAgentPhone`, `#footerAgentEmail`) and site footers even after logging out.
     - **Original Email Tracking & Account Resolution**:
       - `AdminProfileUpdate` in `backend/models.py` accepts `original_email: Optional[str] = None`.
       - On `/pages/admin/profile.html`, form submission captures `original_email` (the email address before the user edited the input) and sends it in `updatedData`.
@@ -291,10 +289,10 @@ path when rendering from a page.
 
 25. **Comprehensive Mobile & Tablet UI Layout Architecture (`320px–1024px`):**
     - **Master Zoom Reset (`<= 1024px`)**: `common.css`, `inquiry.css`, `admin-shell.css`, and `superadmin/dashboard.css` all reset `html { zoom: 1; }` at `@media (max-width: 1024px)`, preserving the `1.25` desktop scale (`> 1024px`) while eliminating scaled viewport overflow across tablets and phones.
-    - **Global Navbar, Drawer, Buttons & Footer (`common.css`, `session.css`, `session.js`, `chatbot.css`, `chatbot.js`)**:
-      - Removed bare `button { min-height: 40px; }` on mobile so small circular icon/close buttons (`#chatbotCalloutClose`, `#searchToggle`, lightbox/modal close buttons) keep crisp square proportions while `.login-btn`, `.signup-btn`, and `.mobile-nav-toggle` retain 40px+ touch targets.
+    - **Global Navbar, Drawer, Buttons & Footer (`common.css`, `session.css`, `session.js`)**:
+      - Removed bare `button { min-height: 40px; }` on mobile so small circular icon/close buttons (`#searchToggle`, lightbox/modal close buttons) keep crisp square proportions while `.login-btn`, `.signup-btn`, and `.mobile-nav-toggle` retain 40px+ touch targets.
       - Aligned `.navbar` (`70px` / `64px`) seamlessly with `.navbar nav` and `.mobile-nav-backdrop` (`top: 70px` / `64px`, `100dvh`), added both `"Submit an Inquiry"` and `"Inquiry History"` links in `.mobile-drawer-user`, anchored `.profile-dropdown` within viewport bounds (`position: fixed` on `<= 480px`), and added `overflow-wrap: anywhere` on footer contact links.
-      - Updated dead `properties.html` links in `chatbot.js` and `pages/properties/*.html` / `property-detail.js` to point to `index.html#properties`.
+      - Updated dead `properties.html` links in `pages/properties/*.html` / `property-detail.js` to point to `index.html#properties`.
     - **Public, Auth, Legal & Client Inquiry Pages (`index.html/.css`, `property-detail.css`, `auth.css`, `legal.css`, `inquiry.html/.css`, `history.css`)**:
       - Replaced rigid inline styles on `.featured-header-row` / `#homeSortSelect` and `.inquiry-header-top` with responsive classes; stacked `.inquiry-mode-selector` tabs vertically on `<= 640px` to prevent card clipping; converted `history.html` `.filter-tabs` into a smooth horizontal touch-scroll strip; and added `16px` mobile form font sizes (preventing iOS auto-zoom) plus `max-height: calc(100dvh - 28px)` scrollable modals.
       - Fixed `auth.css` 2-column non-scrollable split to apply only at `@media (min-width: 769px) and (min-height: 540px)` so portrait small tablets (`681px–768px`) and landscape phones scroll cleanly without `overflow: hidden` clipping.
@@ -303,6 +301,11 @@ path when rendering from a page.
       - Unified mobile `.admin-topbar` (`min-height: 64px`) and anchored `#notifDropdown`, `#profileDropdown`, and `#saDropdownMenu` with `position: fixed; left: 12px; right: 12px; max-width: 380px; margin-left: auto;` so dropdowns never clip off-screen on narrow phones.
       - Resolved sidebar z-index layering across Admin (`z-index: 1250` over `.sidebar-backdrop` `1200`, removing conflicting `z-index: 900` in `edit-property.css` and adding missing `--green-*` / `--surface` CSS tokens) and Superadmin (`.sa-sidebar` full-height `top: 0; height: 100dvh; z-index: 1250` over `.sa-backdrop` `1200` at `<= 960px`).
       - Fixed stray closing tags in `add-property.html`, stacked `#inquiryChartContainer` donut legend at `<= 768px`, centered `.avatar-actions-row` on `profile.html`, and enabled horizontal touch scrolling on `.sa-table` (`min-width: 680px`) and `.sa-perm-matrix` (`min-width: 440px`).
+
+26. **Complete Removal of Legacy Chatbot Widget (`chatbot.js` & `chatbot.css`):**
+    - Deleted `frontend/shared/js/chatbot.js` and `frontend/shared/css/chatbot.css` completely.
+    - Removed all `<link rel="stylesheet" href="...shared/css/chatbot.css">` and `<script src="...shared/js/chatbot.js" defer></script>` tags across all 8 public/client pages (`index.html`, `pages/properties/property-detail.html`, `pages/properties/Liora.html`, `pages/properties/Airmen.html`, `pages/inquiry/inquiry.html`, `pages/inquiry/history.html`, `pages/legal/terms.html`, and `pages/legal/privacy.html`).
+    - Removed all chatbot/assistant mentions from FAQ #4 in `frontend/index.html`, Section 3 of `frontend/pages/legal/privacy.html`, comments/docstrings in `properties.js` and `backend/app.py`, and documentation (`README.md`, `DATABASE.md`, `AGENTS.md`).
 
 ---
 

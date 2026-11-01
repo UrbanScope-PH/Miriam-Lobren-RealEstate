@@ -147,7 +147,7 @@ function renderProperties(list) {
 
 // Initialize properties and controls on load
 window.addEventListener('DOMContentLoaded', () => {
-    // Check URL search params (e.g. from homepage search bar or chatbot)
+    // Check URL search params (e.g. from homepage search bar)
     const urlParams = new URLSearchParams(window.location.search);
     const locParam = urlParams.get('location');
     const typeParam = urlParams.get('type');
