@@ -26,6 +26,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const alertBox = document.getElementById('alertBox');
     const adminNameDisplay = document.getElementById('adminNameDisplay');
     const bannerName = document.getElementById('bannerName');
+    const adminTitleDisplay = document.getElementById('adminTitleDisplay');
 
     const fullNameInput = document.getElementById('adminFullName');
     const titleInput = document.getElementById('adminTitle');
@@ -139,6 +140,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     if (adminNameDisplay) adminNameDisplay.textContent = currentProfile.name || 'Miriam Lobren';
     if (bannerName) bannerName.textContent = currentProfile.name || 'Miriam Lobren';
+    if (adminTitleDisplay) adminTitleDisplay.textContent = currentProfile.title || 'Licensed Real Estate Broker / Agent';
 
     // Asynchronously refresh with server profile if available
     (async function refreshWithRemoteProfile() {
@@ -150,7 +152,10 @@ document.addEventListener('DOMContentLoaded', async () => {
                     if ((u.full_name || u.name) && !savedProfile.name && fullNameInput) fullNameInput.value = u.full_name || u.name;
                     if (u.email && !savedProfile.email && emailInput) emailInput.value = u.email;
                     if (u.license_number && !savedProfile.license && licenseInput) licenseInput.value = u.license_number;
-                    if (u.title && !savedProfile.title && titleInput) titleInput.value = u.title;
+                    if (u.title && !savedProfile.title) {
+                        if (titleInput) titleInput.value = u.title;
+                        if (adminTitleDisplay) adminTitleDisplay.textContent = u.title;
+                    }
                     if (u.brokerage && !savedProfile.brokerage && brokerageInput) brokerageInput.value = u.brokerage;
                     if (u.bio && !savedProfile.bio && bioInput) bioInput.value = u.bio;
                 }
@@ -407,11 +412,18 @@ document.addEventListener('DOMContentLoaded', async () => {
                 }
 
                 currentProfile.email = newEmail;
+                currentProfile.name = newName;
+                currentProfile.title = newTitle;
                 storedAdmin.email = newEmail;
+                storedAdmin.name = newName;
+                storedAdmin.title = newTitle;
                 savedProfile.email = newEmail;
+                savedProfile.name = newName;
+                savedProfile.title = newTitle;
 
                 if (adminNameDisplay) adminNameDisplay.textContent = newName;
                 if (bannerName) bannerName.textContent = newName;
+                if (adminTitleDisplay) adminTitleDisplay.textContent = newTitle;
 
                 // Sync topbar shell display
                 if (typeof syncAdminProfileDisplay === 'function') {

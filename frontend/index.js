@@ -529,9 +529,16 @@ function renderHomepageAgentDetails(profile) {
     const navTitle = document.getElementById('navAgentTitle');
     if (navTitle) navTitle.textContent = title.toUpperCase();
 
+    // Browser tab document title
+    if (cleanName && title) {
+        document.title = `${cleanName} | ${title}`;
+    }
+
     // 2. About Me Section
     const aboutName = document.getElementById('aboutAgentName');
     if (aboutName) aboutName.textContent = cleanName;
+    const aboutRole = document.getElementById('aboutAgentRoleText');
+    if (aboutRole) aboutRole.textContent = title.toLowerCase();
     const aboutBrokerage = document.getElementById('aboutAgentBrokerage');
     if (aboutBrokerage) aboutBrokerage.textContent = brokerage;
     const aboutBio = document.getElementById('aboutAgentBioText');
@@ -561,9 +568,10 @@ function renderHomepageAgentDetails(profile) {
     if (footerName) footerName.textContent = cleanName;
     const footerBio = document.getElementById('footerAgentBio');
     if (footerBio && bio) {
+        const lowerTitle = title.toLowerCase();
         footerBio.textContent = brokerage.toLowerCase() === 'urbanscope'
-            ? `Trusted real estate agent. ${bio}`
-            : `Trusted real estate agent affiliated with ${brokerage}. ${bio}`;
+            ? `Trusted ${lowerTitle}. ${bio}`
+            : `Trusted ${lowerTitle} affiliated with ${brokerage}. ${bio}`;
     }
     const footerPhone = document.getElementById('footerAgentPhone');
     if (footerPhone) {
@@ -611,7 +619,7 @@ async function initDynamicAgentDetails() {
         if (e.key === 'urbanscope_admin_profile' || e.key === 'adminUser') {
             try {
                 const updated = JSON.parse(e.newValue || '{}');
-                if (updated && (updated.name || updated.email || updated.phone)) {
+                if (updated && (updated.name || updated.title || updated.email || updated.phone || updated.avatar_url)) {
                     renderHomepageAgentDetails(updated);
                 }
             } catch (err) { }
@@ -625,12 +633,16 @@ async function initDynamicAgentDetails() {
         }
     });
 
-    // Re-sync when user switches back to this tab
-    window.addEventListener('focus', () => {
+    // Re-sync when user switches back to this tab (focus & tab visibility)
+    const handleReSync = () => {
         try {
             const p = JSON.parse(localStorage.getItem('urbanscope_admin_profile') || 'null');
             if (p) renderHomepageAgentDetails(p);
         } catch (err) { }
+    };
+    window.addEventListener('focus', handleReSync);
+    document.addEventListener('visibilitychange', () => {
+        if (!document.hidden) handleReSync();
     });
 }
 

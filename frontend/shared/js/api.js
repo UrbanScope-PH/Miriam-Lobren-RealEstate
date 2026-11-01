@@ -850,7 +850,33 @@
                 email: targetEmail,
                 phone: phone,
                 license_number: license,
+                title: title,
+                brokerage: brokerage,
+                bio: bio,
                 avatar_url: avatarUrl
+            };
+            const corePayload = {
+                full_name: fullName,
+                email: targetEmail,
+                phone: phone,
+                license_number: license,
+                avatar_url: avatarUrl
+            };
+
+            const sendSupabasePatch = async (url) => {
+                let res = await fetch(url, {
+                    method: 'PATCH',
+                    headers: getHeaders(),
+                    body: JSON.stringify(payload)
+                });
+                if (!res.ok && res.status === 400) {
+                    res = await fetch(url, {
+                        method: 'PATCH',
+                        headers: getHeaders(),
+                        body: JSON.stringify(corePayload)
+                    });
+                }
+                return res;
             };
 
             try {
@@ -858,11 +884,7 @@
 
                 // A. Try updating by original email first
                 if (originalEmail) {
-                    const res = await fetch(`${REST_BASE}/users?email=ilike.${encodeURIComponent(originalEmail)}`, {
-                        method: 'PATCH',
-                        headers: getHeaders(),
-                        body: JSON.stringify(payload)
-                    });
+                    const res = await sendSupabasePatch(`${REST_BASE}/users?email=ilike.${encodeURIComponent(originalEmail)}`);
                     if (res.ok) {
                         const updated = await res.json().catch(() => []);
                         if (Array.isArray(updated) && updated.length > 0) {
@@ -874,11 +896,7 @@
 
                 // B. If not updated by original email, try target email
                 if (!sbUpdated && targetEmail) {
-                    const res = await fetch(`${REST_BASE}/users?email=ilike.${encodeURIComponent(targetEmail)}`, {
-                        method: 'PATCH',
-                        headers: getHeaders(),
-                        body: JSON.stringify(payload)
-                    });
+                    const res = await sendSupabasePatch(`${REST_BASE}/users?email=ilike.${encodeURIComponent(targetEmail)}`);
                     if (res.ok) {
                         const updated = await res.json().catch(() => []);
                         if (Array.isArray(updated) && updated.length > 0) {
@@ -897,11 +915,7 @@
                         const adminRows = await getAdminRes.json().catch(() => []);
                         if (Array.isArray(adminRows) && adminRows.length > 0) {
                             const adminId = adminRows[0].id;
-                            const patchByIdRes = await fetch(`${REST_BASE}/users?id=eq.${adminId}`, {
-                                method: 'PATCH',
-                                headers: getHeaders(),
-                                body: JSON.stringify(payload)
-                            });
+                            const patchByIdRes = await sendSupabasePatch(`${REST_BASE}/users?id=eq.${adminId}`);
                             if (patchByIdRes.ok) {
                                 const patched = await patchByIdRes.json().catch(() => []);
                                 if (Array.isArray(patched) && patched.length > 0) {
@@ -1007,17 +1021,23 @@
                 if (res.ok) {
                     const data = await res.json();
                     if (data && data.email) {
+                        const cachedTitle = (cached && cached.title && cached.title.trim()) ? cached.title.trim() : null;
+                        const backendTitle = (data.title && data.title.trim()) ? data.title.trim() : null;
+                        const effectiveTitle = (backendTitle && backendTitle !== 'Licensed Real Estate Broker / Agent')
+                            ? backendTitle
+                            : (cachedTitle || backendTitle || 'Licensed Real Estate Broker / Agent');
+
                         const merged = {
-                            name: data.full_name || data.name || 'Miriam Lobren',
-                            full_name: data.full_name || data.name || 'Miriam Lobren',
+                            name: data.full_name || data.name || (cached && cached.name) || 'Miriam Lobren',
+                            full_name: data.full_name || data.name || (cached && cached.full_name) || 'Miriam Lobren',
                             email: data.email || 'admin.realestate@gmail.com',
-                            phone: data.phone || '+63 900 000 0000',
-                            license: data.license_number || data.license || 'PRC REB #0031892',
-                            license_number: data.license_number || data.license || 'PRC REB #0031892',
-                            title: data.title || 'Licensed Real Estate Broker / Agent',
-                            brokerage: (!data.brokerage || /^cd\s.*realty$/i.test(String(data.brokerage).trim())) ? 'UrbanScope' : data.brokerage,
-                            bio: data.bio || 'Serving Las Piñas, Cavite, and surrounding prime locations with high-integrity real estate solutions.',
-                            avatar_url: data.avatar_url || 'assets/images/agent.jpg'
+                            phone: data.phone || (cached && cached.phone) || '+63 900 000 0000',
+                            license: data.license_number || data.license || (cached && cached.license) || 'PRC REB #0031892',
+                            license_number: data.license_number || data.license || (cached && cached.license_number) || 'PRC REB #0031892',
+                            title: effectiveTitle,
+                            brokerage: (!data.brokerage || /^cd\s.*realty$/i.test(String(data.brokerage).trim())) ? ((cached && cached.brokerage) || 'UrbanScope') : data.brokerage,
+                            bio: data.bio || (cached && cached.bio) || 'Serving Las Piñas, Cavite, and surrounding prime locations with high-integrity real estate solutions.',
+                            avatar_url: data.avatar_url || (cached && cached.avatar_url) || 'assets/images/agent.jpg'
                         };
                         try {
                             localStorage.setItem('urbanscope_admin_profile', JSON.stringify(merged));
@@ -1051,6 +1071,12 @@
             }
             if (Array.isArray(users) && users.length > 0) {
                 const u = users[0];
+                const cachedTitle = (cached && cached.title && cached.title.trim()) ? cached.title.trim() : null;
+                const remoteTitle = (u.title && u.title.trim()) ? u.title.trim() : null;
+                const effectiveTitle = (remoteTitle && remoteTitle !== 'Licensed Real Estate Broker / Agent')
+                    ? remoteTitle
+                    : (cachedTitle || remoteTitle || 'Licensed Real Estate Broker / Agent');
+
                 const merged = {
                     name: u.full_name || (cached && cached.name) || 'Miriam Lobren',
                     full_name: u.full_name || (cached && cached.full_name) || 'Miriam Lobren',
@@ -1058,10 +1084,10 @@
                     phone: u.phone || (cached && cached.phone) || '+63 900 000 0000',
                     license: u.license_number || (cached && cached.license) || 'PRC REB #0031892',
                     license_number: u.license_number || (cached && cached.license_number) || 'PRC REB #0031892',
-                    title: u.title || (cached && cached.title) || 'Licensed Real Estate Broker / Agent',
+                    title: effectiveTitle,
                     brokerage: (() => {
                         const b = u.brokerage || (cached && cached.brokerage) || '';
-                        return (!b || /^cd\s.*realty$/i.test(String(b).trim())) ? 'UrbanScope' : b;
+                        return (!b || /^cd\s.*realty$/i.test(String(b).trim())) ? ((cached && cached.brokerage) || 'UrbanScope') : b;
                     })(),
                     bio: u.bio || (cached && cached.bio) || 'Serving Las Piñas, Cavite, and surrounding prime locations with high-integrity real estate solutions.',
                     avatar_url: u.avatar_url || (cached && cached.avatar_url) || 'assets/images/agent.jpg'
@@ -1078,16 +1104,16 @@
         if (cached) return cached;
 
         return {
-            name: 'Miriam Lobren',
-            full_name: 'Miriam Lobren',
-            email: 'admin.realestate@gmail.com',
-            phone: '+63 900 000 0000',
-            license: 'PRC REB #0031892',
-            license_number: 'PRC REB #0031892',
-            title: 'Licensed Real Estate Broker / Agent',
-            brokerage: 'UrbanScope',
-            bio: 'Serving Las Piñas, Cavite, and surrounding prime locations with high-integrity real estate solutions.',
-            avatar_url: 'assets/images/agent.jpg'
+            name: (cached && cached.name) || 'Miriam Lobren',
+            full_name: (cached && cached.full_name) || 'Miriam Lobren',
+            email: (cached && cached.email) || 'admin.realestate@gmail.com',
+            phone: (cached && cached.phone) || '+63 900 000 0000',
+            license: (cached && cached.license) || 'PRC REB #0031892',
+            license_number: (cached && cached.license_number) || 'PRC REB #0031892',
+            title: (cached && cached.title) || 'Licensed Real Estate Broker / Agent',
+            brokerage: (cached && cached.brokerage) || 'UrbanScope',
+            bio: (cached && cached.bio) || 'Serving Las Piñas, Cavite, and surrounding prime locations with high-integrity real estate solutions.',
+            avatar_url: (cached && cached.avatar_url) || 'assets/images/agent.jpg'
         };
     }
 

@@ -253,22 +253,25 @@ path when rendering from a page.
       - **Dedicated Card Alert Box (`#passwordAlertBox`)**: Added dedicated in-card alert banner in `profile.html` and `showPasswordAlert()` in `profile.js` to provide immediate error/success feedback directly inside the Change Password card without scrolling away.
 20. **Supabase migration 0002 (`20261030230000_admin_profile_fields_and_superadmin_role.sql`):**
     - Adds `users.title`, `users.brokerage`, `users.bio` and allows `'superadmin'` in `users_role_check`. Idempotent like 0001.
-    - Until it is applied to the live project (`supabase db push` or the Supabase GitHub integration), `apiUpdateAdminProfile` intentionally does **not** send `title`/`brokerage`/`bio` to Supabase (PostgREST would reject unknown columns); those fields persist in SQLite + `localStorage` only.
+    - `apiUpdateAdminProfile` in `supabase.js` and `api.js` sends the full profile payload (`title`, `brokerage`, `bio`, `full_name`, `email`, `phone`, `license_number`, `avatar_url`) to Supabase Cloud, and automatically falls back to core fields if remote PostgREST returns 400 (ensuring backward compatibility before migration 0002 is pushed to remote branches).
     - Every migration must be committed to `main` — see DATABASE.md §10.1 team rule.
-21. **Dynamic Homepage & Multi-Page Contact Sync with Admin Settings:**
-    - Profile information saved on `/pages/admin/profile.html` (Full Name, Title, Email, Phone, License, Brokerage, Bio, Avatar) now automatically and dynamically propagates to the public homepage (`frontend/index.html`) and footers across all site pages.
+21. **Dynamic Homepage & Multi-Page Contact & Professional Title Sync with Admin Settings:**
+    - Profile information saved on `/pages/admin/profile.html` (Full Name, Professional Title / Role, Email, Phone, License, Brokerage, Bio, Avatar) now automatically and dynamically propagates to the public homepage (`frontend/index.html`) and footers across all site pages.
     - **Homepage Elements Updated (`frontend/index.js` & `index.html`)**:
-      - Topbar Nav Brand: `#navAgentName` (clean name without `(Admin)` suffix), `#navAgentTitle` (uppercase role/title).
-      - About Me Section: `#aboutAgentName`, `#aboutAgentBrokerage`, `#aboutAgentBioText` (dynamic bio statement), and `#aboutAgentPhoto` (dynamic avatar URL).
+      - Topbar Nav Brand: `#navAgentName` (clean name without `(Admin)` suffix), `#navAgentTitle` (uppercase role/title, e.g. `REAL ESTATE AGENT` or `SENIOR PROPERTY SPECIALIST`).
+      - Browser Tab Title: Dynamically sets `document.title = `${cleanName} | ${title}``.
+      - About Me Section: `#aboutAgentName`, `#aboutAgentRoleText` (dynamic role text), `#aboutAgentBrokerage`, `#aboutAgentBioText` (dynamic bio statement), and `#aboutAgentPhoto` (dynamic avatar URL and `${cleanName} - ${title}` alt text).
       - FAQs Section: `#faqAgentName`, `#faqAgentPhone` (dynamic site tripping contact number), and `#faqContactBtnText` ('Speak with {Name}').
       - CTA Banner: `#ctaAgentName` and `#ctaAgentBrokerage`.
-      - Footer: `#footerAgentName`, `#footerAgentBio`, `#footerAgentPhone` (dynamic `tel:` link and formatted number), and `#footerAgentEmail` (dynamic `mailto:` link and address).
+      - Footer: `#footerAgentName`, `#footerAgentBio` (incorporates dynamic role title), `#footerAgentPhone` (dynamic `tel:` link and formatted number), and `#footerAgentEmail` (dynamic `mailto:` link and address).
+    - **Admin Profile Display Sync (`frontend/pages/admin/profile.html` & `profile.js`)**:
+      - Subtitle under avatar in profile card (`#adminTitleDisplay`) reflects current professional title on load and updates immediately upon saving profile changes.
     - **Multi-Page Global Footer Sync (`frontend/shared/js/session.js`)**:
       - `syncGlobalFooterContact()` dynamically updates all `.footer-contact a[href^="tel:"]` and `.footer-contact a[href^="mailto:"]` across property details, showcases (`Liora.html`, `Airmen.html`), and legal pages (`terms.html`, `privacy.html`), ensuring contact numbers and emails always match admin settings.
     - **Public API & Zero-Latency Caching**:
       - Public endpoint `GET /api/agent/profile` in `backend/app.py` serves lead agent credentials without requiring authorization tokens.
-      - `apiGetLeadAgentProfile()` in `supabase.js` and `api.js` queries `urbanscope_admin_profile` first for instant 0ms rendering, followed by background synchronization with FastAPI and Supabase Cloud.
-      - Real-time multi-tab synchronization via `window.addEventListener('storage', ...)`, `window.addEventListener('focus', ...)`, and custom `urbanscope:profileUpdated` events updates open homepage and client tabs immediately when changes are saved in the admin profile settings.
+      - `apiGetLeadAgentProfile()` in `supabase.js` and `api.js` queries `urbanscope_admin_profile` first for instant 0ms rendering, followed by background synchronization with FastAPI and Supabase Cloud. It prioritizes user-customized `cached.title` over uncustomized remote default placeholders (`'Licensed Real Estate Broker / Agent'`), preventing remote defaults from overwriting custom admin titles.
+      - Real-time multi-tab synchronization via `window.addEventListener('storage', ...)`, `window.addEventListener('focus', ...)`, `document.addEventListener('visibilitychange', ...)`, and custom `urbanscope:profileUpdated` events updates open homepage and client tabs immediately when changes are saved in the admin profile settings.
       - **Target User Email Resolution (`backend/app.py` & Supabase Gateway)**: `PUT /api/admin/profile` resolves target account by `payload.email` first (updating `admin.realestate@gmail.com` / user 1 directly even if the authenticated session has a different user ID, e.g. superadmin or OAuth account, preventing `400 Email is already in use` conflicts). `apiUpdateAdminProfile` in `supabase.js` and `api.js` filters Supabase updates by `email=ilike.${targetEmail}` rather than local SQLite integer IDs (which differ from Supabase IDs), ensuring remote Cloud records stay in sync. Public broker profile `urbanscope_admin_profile` is preserved on logout so unauthenticated visitors continuously see current credentials.
 
 22. **Lead Agent Email & Phone Change Synchronization Across All Architecture Tiers:**
