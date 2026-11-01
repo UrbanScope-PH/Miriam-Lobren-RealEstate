@@ -191,10 +191,10 @@ img, video, canvas, svg {
 .footer-top {
     max-width: 1200px;
     margin: 0 auto;
-    padding: 70px 5% 50px;
+    padding: 56px 5% 40px;
     display: grid;
     grid-template-columns: 1.4fr 1fr 1.2fr;
-    gap: 70px;
+    gap: 60px;
 }
 
 .footer h3 {

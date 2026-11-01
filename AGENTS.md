@@ -283,10 +283,11 @@ path when rendering from a page.
     - The "Client Testimonials" section on the homepage (`frontend/index.html`, `#feedback`) has been disabled/commented out for now as requested.
     - All existing card templates and CSS styles (`.testimonials-section`, `.testimonials-grid`, `.testimonial-card`) remain intact in `frontend/index.css` for quick re-enabling whenever needed.
 
-24. **Seamless Gradient Transition from CTA Banner into Green Footer:**
-    - On the homepage (`frontend/index.html` & `frontend/index.css`), the sharp cutoff line between the house background in the CTA banner (`.cta-banner`) and the dark green footer (`.footer`, `var(--dark-green)`) has been replaced with a smooth linear gradient.
-    - `.cta-overlay` uses a multi-stop `linear-gradient` that keeps the house background image visible in the upper section and gradually deepens into solid `var(--dark-green)` at the bottom.
-    - Added a bottom blend layer (`.cta-banner::after`) with `height: 180px` and `bottom: -1px` that completely dissolves the house photo into the exact `#1a3b23` color of the footer, ensuring zero visible seams or sub-pixel gaps across zoomed and responsive viewports.
+24. **Seamless Gradient Transition from CTA Banner into Green Footer (70% Upper / 30% Lower Ratio):**
+    - On the homepage (`frontend/index.html` & `frontend/index.css`), the transition between the house background in the CTA banner (`.cta-banner`) and the dark green footer (`.footer`, `var(--dark-green)`) is calibrated to an exact **70% / 30% ratio**:
+      - **Upper ~70%**: The house, villa architecture, trees, and warm sunset background remain clearly visible with a transparent tint (`rgba(20, 44, 26, 0.46)` to `0.58`) and subtle text shadows on `.cta-content h2` and `.cta-content p` ensuring crisp readability.
+      - **Lower ~30%**: From ~70% down to 100%, `.cta-overlay` smoothly blends into solid `#1a3b23` (`var(--dark-green)`), completely eliminating sharp edges and matching the footer background with 0px seam.
+      - Streamlined `.footer-top` padding in `common.css` (`56px 5% 40px`, gap: `60px`) to maintain the balanced 70% upper / 30% lower visual proportion across desktop viewports.
 
 ---
 
