@@ -715,9 +715,8 @@ body {
    Responsive Layouts: Mobile, Tablet & Landscape
    ========================================== */
 
-/* 1. TABLET & LANDSCAPE VIEW (Desktop-style 2-column side-by-side)
-   Applies to all tablets (>= 681px) in portrait & landscape, and any device in landscape */
-@media (min-width: 681px), (orientation: landscape) {
+/* 1. TABLET & DESKTOP VIEW (2-column side-by-side when viewport has sufficient width & height) */
+@media (min-width: 769px) and (min-height: 540px) {
     html {
         height: 100%;
         overflow: hidden;
@@ -732,6 +731,7 @@ body {
         width: 100% !important;
         height: 100% !important;
         max-height: 100vh !important;
+        max-height: 100dvh !important;
         overflow: hidden !important;
     }
     .showcase-panel {
@@ -741,6 +741,7 @@ body {
         width: 40% !important;
         height: 100% !important;
         max-height: 100vh !important;
+        max-height: 100dvh !important;
         border-radius: 0 20px 20px 0 !important;
         cursor: pointer;
         user-select: none;
@@ -764,14 +765,16 @@ body {
         width: 60% !important;
         height: 100% !important;
         max-height: 100vh !important;
+        max-height: 100dvh !important;
         overflow-y: auto !important;
+        -webkit-overflow-scrolling: touch;
     }
 }
 
-/* 2. TABLET PORTRAIT REFINEMENT (e.g. iPad 768px-1024px) */
-@media (min-width: 681px) and (max-width: 1024px) and (orientation: portrait) {
+/* 2. TABLET PORTRAIT REFINEMENT (e.g. iPad 769px-1024px) */
+@media (min-width: 769px) and (max-width: 1024px) {
     html {
-        zoom: 1; /* Crisp 1:1 scaling on tablet portrait */
+        zoom: 1; /* Crisp 1:1 scaling on tablet */
     }
     .showcase-panel {
         padding: clamp(22px, 3vh, 32px) clamp(18px, 2.5vw, 28px);
@@ -800,8 +803,8 @@ body {
     }
 }
 
-/* 3. COMPACT LANDSCAPE & LOW-HEIGHT SCREENS (Phones/tablets in landscape or short windows) */
-@media (orientation: landscape) and (max-height: 640px), (min-width: 681px) and (max-height: 640px) {
+/* 3. COMPACT DESKTOP/TABLET LANDSCAPE (width >= 769px and height 540px-640px) */
+@media (min-width: 769px) and (min-height: 540px) and (max-height: 640px) {
     html {
         zoom: 1;
     }
@@ -930,8 +933,8 @@ body {
     }
 }
 
-/* 4. MOBILE VIEW (Phones in Portrait, width <= 680px) */
-@media (max-width: 680px) and (orientation: portrait), (max-width: 540px) {
+/* 4. MOBILE & SHORT-SCREEN VIEW (Phones & small tablets <= 768px, or phone landscape max-height <= 539px) */
+@media (max-width: 768px), (max-height: 539px) {
     html {
         zoom: 1;
         height: auto;
@@ -948,15 +951,16 @@ body {
         height: auto;
         max-height: none;
         min-height: 100vh;
+        min-height: 100dvh;
         overflow: visible;
     }
 
     /* Showcase card at top of mobile view */
     .showcase-panel {
         width: 100%;
-        height: clamp(235px, 35vh, 280px);
-        min-height: 220px;
-        max-height: 285px;
+        height: clamp(200px, 32vh, 275px);
+        min-height: 190px;
+        max-height: 280px;
         padding: 18px 18px 14px;
         border-radius: 0 0 20px 20px;
         justify-content: space-between;

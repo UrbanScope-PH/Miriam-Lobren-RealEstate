@@ -201,7 +201,7 @@ window.addEventListener('DOMContentLoaded', () => {
     const searchToggle = document.getElementById('searchToggle');
     if (searchToggle) {
         searchToggle.addEventListener('click', () => {
-            location.href = 'properties.html';
+            location.href = '../../index.html#properties';
         });
     }
 });

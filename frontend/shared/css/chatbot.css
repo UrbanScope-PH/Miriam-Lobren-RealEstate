@@ -89,13 +89,22 @@
     cursor: pointer;
     font-size: 1.1rem;
     line-height: 1;
-    padding: 2px;
+    width: 24px;
+    height: 24px;
+    min-height: 0;
+    padding: 0;
     margin-left: 2px;
-    transition: color 0.15s;
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: color 0.15s, background 0.15s;
 }
 
 .chatbot-callout-close:hover {
     color: #1b2e21;
+    background: #eef5ef;
 }
 
 .chatbot-callout::after {

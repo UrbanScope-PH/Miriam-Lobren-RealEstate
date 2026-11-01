@@ -15,7 +15,7 @@
 
     const URLS = {
         home: basePath + 'index.html',
-        properties: basePath + 'pages/properties/properties.html',
+        properties: basePath + 'index.html#properties',
         propertyDetail: basePath + 'pages/properties/property-detail.html',
         inquiry: basePath + 'pages/inquiry/inquiry.html',
         login: basePath + 'pages/auth/login.html',

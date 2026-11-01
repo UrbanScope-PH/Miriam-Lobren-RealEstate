@@ -241,6 +241,14 @@ img, video, canvas, svg {
     gap: 12px;
     color: rgba(255, 255, 255, 0.85);
     font-size: 14.5px;
+    min-width: 0;
+}
+
+.footer-contact-item a,
+.footer-contact-item p {
+    min-width: 0;
+    overflow-wrap: anywhere;
+    word-break: break-word;
 }
 
 .footer-bottom {
@@ -348,13 +356,17 @@ img, video, canvas, svg {
 
 /* RESPONSIVE SHARED RULES */
 @media (max-width: 1024px) {
+    html {
+        zoom: 1; /* Reset desktop 1.25x zoom on tablets and landscape phones */
+    }
+
     .navbar {
-        gap: 24px;
+        gap: 20px;
         padding: 0 4%;
     }
 
     .navbar nav {
-        gap: 22px;
+        gap: 18px;
     }
 
     .footer-top {
@@ -365,7 +377,7 @@ img, video, canvas, svg {
 
 @media (max-width: 768px) {
     html {
-        zoom: 1; /* Reset desktop zoom on mobile viewports to prevent cramped layouts */
+        zoom: 1;
     }
 
     /* Prevent iOS browser auto-zoom on input focus */
@@ -373,20 +385,30 @@ img, video, canvas, svg {
         font-size: 16px !important;
     }
 
-    button, .login-btn, .signup-btn, .s-icon-btn, .mobile-nav-toggle {
+    .login-btn,
+    .signup-btn,
+    .mobile-nav-toggle {
         min-height: 40px;
+    }
+
+    .s-icon-btn {
+        width: 38px;
+        height: 38px;
+        min-width: 38px;
+        min-height: 38px;
+        padding: 0;
     }
 
     .navbar {
         height: 70px;
         padding: 0 16px;
         justify-content: space-between;
-        gap: 12px;
+        gap: 10px;
     }
 
     .brand-logo {
-        width: 44px;
-        height: 38px;
+        width: 42px;
+        height: 36px;
         flex-shrink: 0;
     }
 
@@ -394,6 +416,10 @@ img, video, canvas, svg {
         gap: 10px;
         min-width: 0;
         flex: 1;
+    }
+
+    .Cname span {
+        min-width: 0;
     }
 
     .Cname strong {
@@ -407,10 +433,14 @@ img, video, canvas, svg {
     .Cname small {
         font-size: 9px;
         letter-spacing: 1.2px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
     }
 
     .mobile-nav-toggle {
         display: flex;
+        flex-shrink: 0;
     }
 
     .nav-acts {
@@ -427,7 +457,7 @@ img, video, canvas, svg {
     /* MOBILE NAVIGATION DRAWER */
     .navbar nav {
         position: fixed;
-        top: 72px;
+        top: 70px;
         left: 0;
         right: 0;
         background: #ffffff;
@@ -436,15 +466,17 @@ img, video, canvas, svg {
         flex-direction: column;
         align-items: stretch;
         gap: 4px;
-        padding: 16px 20px 24px;
+        padding: 16px 20px calc(24px + env(safe-area-inset-bottom, 0px));
         z-index: 99;
         display: flex;
         opacity: 0;
         visibility: hidden;
         transform: translateY(-12px);
         transition: opacity 0.25s ease, transform 0.25s ease, visibility 0.25s ease;
-        max-height: calc(100vh - 72px);
+        max-height: calc(100vh - 70px);
+        max-height: calc(100dvh - 70px);
         overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
     }
 
     .navbar nav.mobile-open {
@@ -536,12 +568,40 @@ img, video, canvas, svg {
         display: flex;
         align-items: center;
         gap: 10px;
-        padding: 8px 12px;
+        padding: 10px 12px;
         background: var(--light-green);
-        border-radius: 8px;
+        border-radius: 10px;
         font-size: 14px;
         color: var(--text-dark);
         font-weight: 600;
+        min-width: 0;
+    }
+
+    .mobile-user-info > span:last-child {
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .mobile-drawer-user a.m-inquiry-link {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 11px 14px;
+        font-size: 14.5px;
+        font-weight: 600;
+        color: var(--dark-green);
+        border-radius: 10px;
+        border-left: none;
+        background: #f7faf8;
+        text-decoration: none;
+    }
+
+    .mobile-drawer-user a.m-inquiry-link:hover {
+        background: var(--light-green);
+        color: var(--green);
+        padding-left: 14px;
     }
 
     .mobile-drawer-user .m-signout-btn {
@@ -551,7 +611,7 @@ img, video, canvas, svg {
         padding: 10px;
         background: transparent;
         border: 1.5px solid #e2b3b0;
-        border-radius: 8px;
+        border-radius: 10px;
         color: #b3382c;
         font-weight: 600;
         font-size: 14px;
@@ -568,7 +628,7 @@ img, video, canvas, svg {
         display: block;
         position: fixed;
         inset: 0;
-        top: 72px;
+        top: 70px;
         background: rgba(0, 0, 0, 0.45);
         backdrop-filter: blur(2px);
         z-index: 98;
@@ -602,6 +662,7 @@ img, video, canvas, svg {
     .navbar nav {
         top: 64px;
         max-height: calc(100vh - 64px);
+        max-height: calc(100dvh - 64px);
     }
 
     .mobile-nav-backdrop {

@@ -330,6 +330,15 @@ textarea {
         padding: 16px 12px;
     }
 
+    .profile-avatar-meta {
+        min-width: 0;
+        width: 100%;
+    }
+
+    .avatar-actions-row {
+        justify-content: center;
+    }
+
     .card-actions {
         flex-direction: column-reverse;
         gap: 10px;

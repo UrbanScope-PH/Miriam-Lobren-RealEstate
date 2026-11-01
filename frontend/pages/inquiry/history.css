@@ -474,10 +474,15 @@ body {
     display: inline-flex;
     align-items: center;
     gap: 6px;
+    min-width: 0;
+    max-width: 100%;
+    overflow-wrap: anywhere;
+    word-break: break-word;
 }
 
 .contact-item svg {
     color: var(--green);
+    flex-shrink: 0;
 }
 
 /* CARD ACTION FOOTER */
@@ -610,7 +615,10 @@ body {
     box-shadow: 0 24px 60px rgba(0, 0, 0, 0.2);
     width: 100%;
     max-width: 540px;
-    overflow: hidden;
+    max-height: calc(100dvh - 28px);
+    overflow-x: hidden;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
     margin: auto;
     transform: scale(0.94) translateY(10px);
     transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
@@ -831,22 +839,35 @@ body {
 
 /* RESPONSIVE */
 @media (max-width: 768px) {
+    .history-container {
+        margin: 22px auto 44px;
+        padding: 0 14px;
+    }
     .history-header {
-        padding: 26px 20px 22px;
+        padding: 24px 18px 20px;
+        border-radius: 16px;
     }
     .history-header-top {
         flex-direction: column;
         align-items: flex-start;
     }
     .history-title-group h1 {
-        font-size: 1.6rem;
+        font-size: 1.55rem;
     }
     .history-controls {
         flex-direction: column;
         align-items: stretch;
+        gap: 12px;
     }
     .search-wrap {
+        min-width: 0;
+        width: 100%;
         max-width: 100%;
+    }
+    .search-input,
+    .form-input,
+    .form-textarea {
+        font-size: 16px;
     }
     .card-top-row {
         flex-direction: column;
@@ -858,5 +879,156 @@ body {
     .card-actions-row .card-btn {
         flex: 1;
         justify-content: center;
+    }
+}
+
+@media (max-width: 640px) {
+    .app-topbar {
+        height: 64px;
+        padding: 0 12px;
+        gap: 8px;
+    }
+
+    .topbar-left {
+        min-width: 0;
+        flex: 1;
+        gap: 8px;
+    }
+
+    .go-back-btn {
+        padding: 7px 11px;
+        font-size: 12px;
+        gap: 5px;
+        flex-shrink: 0;
+    }
+
+    .app-brand {
+        min-width: 0;
+        gap: 8px;
+        overflow: hidden;
+    }
+
+    .app-brand img {
+        height: 32px;
+        flex-shrink: 0;
+    }
+
+    .app-brand span {
+        min-width: 0;
+        overflow: hidden;
+    }
+
+    .app-brand strong {
+        font-size: 0.92rem;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .app-brand small {
+        font-size: 0.65rem;
+        white-space: nowrap;
+    }
+
+    .topbar-right {
+        flex-shrink: 0;
+        gap: 8px;
+    }
+
+    .history-stats-bar {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+    }
+
+    .stat-pill {
+        padding: 10px 12px;
+    }
+
+    .stat-pill-value {
+        font-size: 1.25rem;
+    }
+
+    .filter-tabs {
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+        width: 100%;
+        padding-bottom: 4px;
+    }
+
+    .filter-tabs::-webkit-scrollbar {
+        display: none;
+    }
+
+    .filter-tab {
+        flex-shrink: 0;
+        white-space: nowrap;
+        padding: 8px 14px;
+        font-size: 0.82rem;
+    }
+
+    .modal-overlay {
+        padding: 14px;
+    }
+
+    .modal-header {
+        padding: 18px 18px 14px;
+    }
+
+    .modal-body {
+        padding: 18px;
+    }
+
+    .modal-footer {
+        padding: 14px 18px 18px;
+    }
+
+    .toast-notice {
+        left: 14px;
+        right: 14px;
+        bottom: 16px;
+        font-size: 0.85rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .app-brand small {
+        display: none;
+    }
+
+    .header-action-btn {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .card-actions-row {
+        flex-direction: column;
+    }
+
+    .card-actions-row .card-btn {
+        width: 100%;
+    }
+
+    .modal-footer {
+        flex-direction: column-reverse;
+        align-items: stretch;
+        gap: 10px;
+    }
+
+    .modal-footer button {
+        width: 100%;
+        justify-content: center;
+        text-align: center;
+    }
+}
+
+@media (max-width: 380px) {
+    .go-back-btn span {
+        display: none;
+    }
+
+    .go-back-btn {
+        padding: 8px;
     }
 }

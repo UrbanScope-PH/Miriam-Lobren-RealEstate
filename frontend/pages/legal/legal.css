@@ -131,7 +131,10 @@ body {
     color: #a8cfb4;
     display: inline-flex;
     align-items: center;
-    gap: 12px;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 6px 12px;
+    max-width: 100%;
 }
 
 /* DOCUMENT SWITCHER TABS */
@@ -431,21 +434,39 @@ body {
 /* RESPONSIVE */
 @media (max-width: 900px) {
     .legal-main-container {
-        grid-template-columns: 1fr;
+        grid-template-columns: minmax(0, 1fr);
         gap: 28px;
     }
 
     .legal-sidebar {
         position: static;
         order: -1;
+        min-width: 0;
+        max-width: 100%;
     }
 
     .legal-content-card {
         padding: 30px 24px;
+        min-width: 0;
+        max-width: 100%;
     }
 
     .legal-hero h1 {
         font-size: 2rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .legal-table {
+        display: block;
+        width: 100%;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .legal-table th,
+    .legal-table td {
+        min-width: 135px;
     }
 }
 

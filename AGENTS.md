@@ -289,6 +289,21 @@ path when rendering from a page.
       - **Lower ~30%**: From ~70% down to 100%, `.cta-overlay` smoothly blends into solid `#1a3b23` (`var(--dark-green)`), completely eliminating sharp edges and matching the footer background with 0px seam.
       - Streamlined `.footer-top` padding in `common.css` (`56px 5% 40px`, gap: `60px`) to maintain the balanced 70% upper / 30% lower visual proportion across desktop viewports.
 
+25. **Comprehensive Mobile & Tablet UI Layout Architecture (`320px–1024px`):**
+    - **Master Zoom Reset (`<= 1024px`)**: `common.css`, `inquiry.css`, `admin-shell.css`, and `superadmin/dashboard.css` all reset `html { zoom: 1; }` at `@media (max-width: 1024px)`, preserving the `1.25` desktop scale (`> 1024px`) while eliminating scaled viewport overflow across tablets and phones.
+    - **Global Navbar, Drawer, Buttons & Footer (`common.css`, `session.css`, `session.js`, `chatbot.css`, `chatbot.js`)**:
+      - Removed bare `button { min-height: 40px; }` on mobile so small circular icon/close buttons (`#chatbotCalloutClose`, `#searchToggle`, lightbox/modal close buttons) keep crisp square proportions while `.login-btn`, `.signup-btn`, and `.mobile-nav-toggle` retain 40px+ touch targets.
+      - Aligned `.navbar` (`70px` / `64px`) seamlessly with `.navbar nav` and `.mobile-nav-backdrop` (`top: 70px` / `64px`, `100dvh`), added both `"Submit an Inquiry"` and `"Inquiry History"` links in `.mobile-drawer-user`, anchored `.profile-dropdown` within viewport bounds (`position: fixed` on `<= 480px`), and added `overflow-wrap: anywhere` on footer contact links.
+      - Updated dead `properties.html` links in `chatbot.js` and `pages/properties/*.html` / `property-detail.js` to point to `index.html#properties`.
+    - **Public, Auth, Legal & Client Inquiry Pages (`index.html/.css`, `property-detail.css`, `auth.css`, `legal.css`, `inquiry.html/.css`, `history.css`)**:
+      - Replaced rigid inline styles on `.featured-header-row` / `#homeSortSelect` and `.inquiry-header-top` with responsive classes; stacked `.inquiry-mode-selector` tabs vertically on `<= 640px` to prevent card clipping; converted `history.html` `.filter-tabs` into a smooth horizontal touch-scroll strip; and added `16px` mobile form font sizes (preventing iOS auto-zoom) plus `max-height: calc(100dvh - 28px)` scrollable modals.
+      - Fixed `auth.css` 2-column non-scrollable split to apply only at `@media (min-width: 769px) and (min-height: 540px)` so portrait small tablets (`681px–768px`) and landscape phones scroll cleanly without `overflow: hidden` clipping.
+      - Fixed `privacy.html` horizontal overflow on narrow phones (`minmax(0, 1fr)` grid tracks + `display: block; overflow-x: auto` on `.legal-table`).
+    - **Admin & Superadmin Portals (`admin-shell.css`, `admin/*.css`, `add-property.html`, `superadmin/dashboard.css`)**:
+      - Unified mobile `.admin-topbar` (`min-height: 64px`) and anchored `#notifDropdown`, `#profileDropdown`, and `#saDropdownMenu` with `position: fixed; left: 12px; right: 12px; max-width: 380px; margin-left: auto;` so dropdowns never clip off-screen on narrow phones.
+      - Resolved sidebar z-index layering across Admin (`z-index: 1250` over `.sidebar-backdrop` `1200`, removing conflicting `z-index: 900` in `edit-property.css` and adding missing `--green-*` / `--surface` CSS tokens) and Superadmin (`.sa-sidebar` full-height `top: 0; height: 100dvh; z-index: 1250` over `.sa-backdrop` `1200` at `<= 960px`).
+      - Fixed stray closing tags in `add-property.html`, stacked `#inquiryChartContainer` donut legend at `<= 768px`, centered `.avatar-actions-row` on `profile.html`, and enabled horizontal touch scrolling on `.sa-table` (`min-width: 680px`) and `.sa-perm-matrix` (`min-width: 440px`).
+
 ---
 
 ## Safety Rules

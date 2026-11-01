@@ -500,7 +500,7 @@ input:focus-visible {
 .sidebar-backdrop {
     position: fixed;
     inset: 0;
-    z-index: 140;
+    z-index: 1200;
     background: rgba(8, 20, 11, 0.48);
     opacity: 0;
     visibility: hidden;
@@ -521,13 +521,15 @@ input:focus-visible {
     top: 0;
     bottom: 0;
     left: 0;
-    z-index: 150;
+    z-index: 1250;
     display: flex;
     flex-direction: column;
     width: 300px;
     max-width: 88vw;
+    height: 100dvh;
     padding: 24px;
     overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
     background: linear-gradient(180deg, #17321e, #0d2113);
     color: #ffffff;
     box-shadow: 6px 0 25px rgba(0, 0, 0, 0.2);
@@ -660,16 +662,17 @@ input:focus-visible {
    RESPONSIVE OVERRIDES
    ========================================================================== */
 
-@media (max-width: 900px) {
+@media (max-width: 1024px) {
     html {
         zoom: 1; /* Reset zoom on mobile/tablet to avoid overflow */
     }
+}
 
+@media (min-width: 769px) and (max-width: 900px) {
     .admin-topbar {
         min-height: 68px;
-        padding: 10px 14px;
-        gap: 10px;
-        flex-wrap: wrap;
+        padding: 10px 16px;
+        gap: 12px;
     }
 
     .topbar-left {
@@ -677,12 +680,59 @@ input:focus-visible {
     }
 
     .logo-icon {
+        width: 36px;
+        height: 36px;
+    }
+
+    .brand-text h1 {
+        font-size: 17px;
+    }
+
+    .topbar-search {
+        max-width: 320px;
+    }
+}
+
+@media (max-width: 768px) {
+    html,
+    body {
+        width: 100%;
+        max-width: 100%;
+        overflow-x: hidden;
+    }
+
+    .admin-topbar {
+        min-height: 64px;
+        padding: 10px 14px;
+        gap: 10px;
+        flex-wrap: nowrap;
+    }
+
+    .topbar-left {
+        gap: 8px;
+        min-width: 0;
+        flex: 1 1 auto;
+    }
+
+    .brand-badge {
+        min-width: 0;
+        gap: 8px;
+    }
+
+    .logo-icon {
         width: 34px;
         height: 34px;
     }
 
+    .brand-text {
+        min-width: 0;
+    }
+
     .brand-text h1 {
         font-size: 16px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
     }
 
     .brand-text h2 {
@@ -690,15 +740,69 @@ input:focus-visible {
     }
 
     .topbar-search {
-        order: 3;
-        flex: 1 0 100%;
-        width: 100%;
-        max-width: none;
-        margin-top: 4px;
+        display: none !important;
+    }
+
+    .topbar-right {
+        gap: 8px;
+        flex-shrink: 0;
+    }
+
+    .admin-profile-badge .avatar-circle {
+        width: 38px;
+        height: 38px;
+        min-width: 38px;
+    }
+
+    .notif-dropdown,
+    .profile-dropdown {
+        position: fixed !important;
+        top: 72px !important;
+        left: 12px !important;
+        right: 12px !important;
+        width: auto !important;
+        max-width: 380px !important;
+        margin-left: auto !important;
+        max-height: calc(100dvh - 88px);
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+        z-index: 1100 !important;
     }
 
     .admin-sidebar {
-        width: 280px;
+        width: min(290px, 86vw);
+        padding: 20px 18px;
+    }
+}
+
+@media (max-width: 480px) {
+    .admin-topbar {
+        min-height: 60px;
+        padding: 8px 12px;
+        gap: 6px;
+    }
+
+    .logo-icon {
+        width: 31px;
+        height: 31px;
+    }
+
+    .brand-text h1 {
+        font-size: 15px;
+    }
+
+    .admin-profile-badge .avatar-circle {
+        width: 35px;
+        height: 35px;
+        min-width: 35px;
+    }
+
+    .notif-dropdown,
+    .profile-dropdown {
+        top: 66px !important;
+        left: 10px !important;
+        right: 10px !important;
+        padding: 14px;
     }
 }
 

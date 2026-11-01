@@ -265,10 +265,11 @@
             userSection.className = 'mobile-drawer-user';
             userSection.innerHTML =
                 '<div class="mobile-user-info">' +
-                    '<span class="profile-avatar" style="width:30px;height:30px;font-size:0.75rem;">' + avatarInnerHtml(user) + '</span>' +
+                    '<span class="profile-avatar" style="width:30px;height:30px;font-size:0.75rem;flex-shrink:0;">' + avatarInnerHtml(user) + '</span>' +
                     '<span>' + esc(user.name) + '</span>' +
                 '</div>' +
-                '<a href="' + base + 'pages/inquiry/history.html" class="m-inquiry-link" style="display:block;padding:8px 0;color:#1e5c33;font-weight:600;text-decoration:none;">Inquiry History</a>' +
+                '<a href="' + base + 'pages/inquiry/inquiry.html" class="m-inquiry-link">Submit an Inquiry</a>' +
+                '<a href="' + base + 'pages/inquiry/history.html" class="m-inquiry-link">Inquiry History</a>' +
                 '<button type="button" class="m-signout-btn" data-action="signout">Sign Out</button>';
             wireAvatarFallbacks(userSection);
             nav.appendChild(userSection);

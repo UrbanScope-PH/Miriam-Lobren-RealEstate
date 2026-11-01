@@ -1,5 +1,19 @@
 @import url('admin-shell.css');
 
+:root {
+    --green-50: #eef5ef;
+    --green-100: #dceee0;
+    --green-600: #347c47;
+    --green-700: #2d5c39;
+    --green-800: #245331;
+    --green-950: #1a3b23;
+    --surface: #ffffff;
+    --border: #e4ece5;
+    --border-dark: #cbd9ce;
+    --text-primary: #1b2e21;
+    --text-secondary: #5e7163;
+}
+
 /* ================================
    PAGE CONTENT
 ================================ */
@@ -500,27 +514,6 @@
     font-size: 10px;
 }
 
-/* ================================
-   SIDEBAR BACKDROP
-================================ */
-
-.sidebar-backdrop {
-    position: fixed;
-    inset: 0;
-    z-index: 900;
-    visibility: hidden;
-    background: rgba(12, 27, 17, 0.48);
-    opacity: 0;
-    transition:
-        opacity 0.25s ease,
-        visibility 0.25s ease;
-}
-
-.sidebar-backdrop.backdrop-visible {
-    visibility: visible;
-    opacity: 1;
-}
-
 body.sidebar-is-open {
     overflow: hidden;
 }
@@ -775,6 +768,7 @@ body.sidebar-is-open {
 
     .form-group textarea {
         min-height: 130px;
+        font-size: 16px;
     }
 
     .current-image {
@@ -808,22 +802,24 @@ body.sidebar-is-open {
     .upload-btn {
         min-height: 40px;
         padding: 10px 15px;
+        font-size: 12px;
     }
 
     .form-actions {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
+        display: flex;
+        flex-direction: column-reverse;
+        align-items: stretch;
         gap: 10px;
-        padding-top: 5px;
+        padding-top: 8px;
     }
 
     .cancel-btn,
     .save-btn {
         min-width: 0;
         width: 100%;
-        min-height: 43px;
-        padding: 10px;
-        font-size: 10px;
+        min-height: 44px;
+        padding: 11px 16px;
+        font-size: 13px;
     }
 
     .page-footer {
