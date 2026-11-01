@@ -396,12 +396,32 @@ body {
 }
 .status-under-review .status-dot { background-color: var(--warning-amber); }
 
+.status-approved,
 .status-scheduled {
     background-color: var(--success-bg);
     color: var(--success-green);
     border: 1px solid var(--success-border);
 }
+.status-approved .status-dot,
 .status-scheduled .status-dot { background-color: var(--success-green); }
+
+.approved-banner {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: #ecfdf5;
+    border: 1px solid #a7f3d0;
+    color: #065f46;
+    padding: 11px 16px;
+    border-radius: 10px;
+    font-size: 0.88rem;
+    font-weight: 600;
+    margin-bottom: 16px;
+}
+.approved-banner svg {
+    color: #10b981;
+    flex-shrink: 0;
+}
 
 .status-contacted {
     background-color: var(--info-bg);

@@ -1977,6 +1977,38 @@
     box-shadow: 0 6px 16px rgba(10, 24, 15, 0.22);
 }
 
+.btn-modal-approve {
+    background: #15803d;
+    color: #ffffff;
+    border: none;
+    font-weight: 700;
+    font-size: 0.88rem;
+    padding: 9px 20px;
+    border-radius: 10px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.2s ease;
+    box-shadow: 0 4px 12px rgba(21, 128, 61, 0.2);
+}
+
+.btn-modal-approve:hover:not(:disabled) {
+    background: #166534;
+    transform: translateY(-1px);
+    box-shadow: 0 6px 16px rgba(21, 128, 61, 0.3);
+}
+
+.btn-modal-approve.approved,
+.btn-modal-approve:disabled {
+    background: #dcfce7;
+    color: #15803d;
+    border: 1px solid #86efac;
+    cursor: default;
+    transform: none;
+    box-shadow: none;
+}
+
 @media (max-width: 600px) {
     .modal-box {
         padding: 20px 18px;

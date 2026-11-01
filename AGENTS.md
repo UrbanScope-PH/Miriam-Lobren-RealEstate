@@ -217,8 +217,14 @@ path when rendering from a page.
       - Direct pill link in `inquiry.html` header alongside page title.
     - **Features**:
       - Real-time search query filter across property titles, message content, and contact phones.
-      - Status filter segmented tabs: `All`, `Under Review`, `Scheduled`, `Contacted`, `Cancelled`.
-      - Real-time KPI stat pills (Total Inquiries, Under Review, Scheduled, Cancelled).
+      - Status filter segmented tabs: `All`, `Under Review`, `Approved` (transitioned from Scheduled), `Contacted`, `Cancelled`.
+      - Real-time KPI stat pills (Total Inquiries, Under Review, Approved, Cancelled).
+      - **Approved Status Presentation**: Approved inquiries display a `.status-approved` badge (emerald background, green text, glowing dot) and a dedicated green banner (`.approved-banner`) acknowledging approval from agent Miriam Lobren.
+      - **Admin Approval Integration**:
+        - On Admin Dashboard (`pages/admin/dashboard.html`), the Recent Inquiries detail modal features a dedicated "Approve Inquiry" action button (`.btn-modal-approve`).
+        - On Admin Clients page (`pages/admin/clients.html`), the inquiry view modal and inline table select allow instant approval (`apiUpdateInquiryStatus`).
+        - Updates synchronize across SQLite (`UPDATE inquiries SET status = 'Approved'`), Supabase Cloud, and `localStorage`.
+        - Instant Client Sync: `history.js` listens to `storage`, `inquiryStatusChanged`, `inquiriesUpdated`, and `visibilitychange` events, automatically refreshing the client inquiry history in real-time when the admin approves an inquiry.
       - **Modify Inquiry (`#modifyModal`)**: Allows clients to update their inquiry message, contact phone, or property/topic title, calling `PUT /api/inquiries/{id}`.
       - **Cancel Inquiry (`#cancelModal`)**: Allows clients to cancel active requests, setting status to `Cancelled` via `POST /api/inquiries/{id}/cancel` while keeping history record intact.
       - **Delete Inquiry (`#deleteModal`)**: Confirms permanent deletion via `DELETE /api/inquiries/{id}`.

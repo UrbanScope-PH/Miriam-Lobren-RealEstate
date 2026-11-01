@@ -300,7 +300,18 @@ document.addEventListener('DOMContentLoaded', async () => {
                     <div style="background: #f8fafc; border: 1px solid var(--border-color); border-radius: 8px; padding: 14px; font-size: 0.92rem; line-height: 1.6; color: #334155; white-space: pre-wrap;">${escapeHtml(message)}</div>
                 </div>
 
-                <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 10px; padding-top: 14px; border-top: 1px solid #edf2ee;">
+                <div style="display: flex; justify-content: flex-end; align-items: center; gap: 10px; margin-top: 10px; padding-top: 14px; border-top: 1px solid #edf2ee;">
+                    ${normStatus !== 'Approved' ? `
+                        <button type="button" id="modalApproveInqBtn" class="action-btn" style="background: var(--dark-green); color: white; padding: 9px 18px; font-size: 0.9rem; border-radius: 8px; border: none; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; font-weight: 600;">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                            Approve Inquiry
+                        </button>
+                    ` : `
+                        <button type="button" class="action-btn" disabled style="background: #e2f4e8; color: #166534; padding: 9px 18px; font-size: 0.9rem; border-radius: 8px; border: 1px solid #86efac; font-weight: 600; display: inline-flex; align-items: center; gap: 6px;">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                            Approved
+                        </button>
+                    `}
                     <a href="mailto:${encodeURIComponent(email)}?subject=Re:%20Inquiry%20regarding%20${encodeURIComponent(propTitle)}" class="action-btn" style="background: var(--green); color: white; padding: 9px 18px; font-size: 0.9rem; text-decoration: none; border-radius: 8px;">
                         Reply via Email
                     </a>
@@ -308,6 +319,28 @@ document.addEventListener('DOMContentLoaded', async () => {
             </div>
         `;
         modal.classList.add('open');
+
+        const modalApproveBtn = document.getElementById('modalApproveInqBtn');
+        if (modalApproveBtn) {
+            modalApproveBtn.addEventListener('click', async () => {
+                modalApproveBtn.disabled = true;
+                modalApproveBtn.innerHTML = `<span>Approving...</span>`;
+                await window.handleStatusChange({ target: { value: 'Approved' } }, inquiryId);
+                const select = document.querySelector(`.status-select-inline[data-id="${inquiryId}"]`);
+                if (select) select.value = 'Approved';
+                modalApproveBtn.outerHTML = `
+                    <button type="button" class="action-btn" disabled style="background: #e2f4e8; color: #166534; padding: 9px 18px; font-size: 0.9rem; border-radius: 8px; border: 1px solid #86efac; font-weight: 600; display: inline-flex; align-items: center; gap: 6px;">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                        Approved
+                    </button>
+                `;
+                const modalBadge = modalContent.querySelector('.status-badge');
+                if (modalBadge) {
+                    modalBadge.textContent = 'Approved';
+                    modalBadge.className = 'status-badge approved';
+                }
+            });
+        }
     };
 
     // Filter tab listeners

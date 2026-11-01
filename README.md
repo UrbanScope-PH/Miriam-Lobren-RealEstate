@@ -69,18 +69,18 @@ To reset the data, delete `backend/urbanscope.db` and restart the server.
 - **Browsing Properties:** Visit the home page to view showcased listings, filter by property type (Houses, Townhouses, Lots, Commercial), or use search keywords. Click any property card to view high-resolution photos, pricing, lot/floor area, amenities, and location details.
 - **Client Registration & Login:** Click **Sign In** in the top navigation bar. New users can create an account with a name, email, Philippine mobile number (`+63` / `09...`), and password. The system automatically signs you in and secures your session. Form input drafts are preserved in real-time when reviewing Terms of Service and Privacy Policy documents.
 - **Consultations & Dual-Mode Inquiries:** On the homepage, clicking **Book a Free Consultation** opens an interactive intent modal allowing clients to choose between *General Consultation / Question* (free site viewing, loan pre-approval, general advice) or *Inquire About a Specific Property* with dynamic listing selection, photo previews, and automated pricing details.
-- **Inquiry History & Management:** Access **Inquiry History** via the client profile menu or topbar to track submitted requests, filter by status (*Under Review*, *Scheduled*, *Contacted*, *Cancelled*), modify inquiry messages or contact phones, cancel active requests, or permanently delete records.
+- **Inquiry History & Management:** Access **Inquiry History** via the client profile menu or topbar to track submitted requests, filter by status (*Under Review*, *Approved*, *Contacted*, *Cancelled*), view agent approval notices, modify inquiry messages or contact phones, cancel active requests, or permanently delete records.
 - **Legal Compliance:** Review comprehensive, RESA-compliant Terms of Service and NPC-compliant Privacy Policy pages, fully integrated with seamless back navigation.
 
 ### 2. Administrator Guide (Miriam Lobren & Team)
 - **Unified Sign-In:** Log in via `/pages/auth/login.html`. Authorized administrative accounts are automatically routed to the Admin Dashboard.
-- **Dashboard Overview & Inquiry Modal:** Monitor business health with key metrics: Total Properties, Total Inquiries, Pending Follow-ups, and recent activity streams. Click **View** on any inquiry to open an interactive modal with full message details, tour schedule, and direct email reply options.
+- **Dashboard Overview & Inquiry Modal:** Monitor business health with key metrics: Total Properties, Total Inquiries, Pending Follow-ups, and recent activity streams. Click **View** on any inquiry to open an interactive modal with full message details, tour schedule, direct email reply, and instant **Approve Inquiry** action that immediately updates the client's inquiry history in real time.
 - **Managing Properties (CRUD):**
   - **View Listings:** Access `propertylist.html` to browse active catalog listings with status indicators.
   - **Add Property:** Click **Add New Property** (`add-property.html`) to input property name, category, price (₱), location, bedrooms, bathrooms, dimensions, amenities, and upload images.
   - **Edit Property:** Select **Edit** on any listing card (`edit-property.html`) to update pricing, specifications, or replace photos.
   - **Delete Property:** Remove unlisted or sold properties with immediate database and cache synchronization.
-- **Client Inquiries & CRM:** Review client inquiries under `clients.html`, inspect contact information, track message details, and update inquiry follow-up statuses (e.g., *Pending*, *Contacted*, *Scheduled*, *Closed*).
+- **Client Inquiries & CRM:** Review client inquiries under `clients.html`, inspect contact information, track message details, approve client requests via the modal or inline select, and update inquiry follow-up statuses (e.g., *Under Review*, *Approved*, *Completed*).
 - **Profile Picture Upload & Settings:** Visit `profile.html` to update contact details, change passwords, and upload custom profile photos (< 5MB limit) with automatic canvas optimization, live topbar avatar synchronization, and one-click photo reset. User account directory and role management are reserved for the Superadmin.
 
 ### 3. Superadministrator Guide

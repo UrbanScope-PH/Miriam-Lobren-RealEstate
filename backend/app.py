@@ -1195,6 +1195,9 @@ def modify_inquiry(
         if caller_email and caller_email == inq_email:
             is_owner = True
     else:
+        admin_candidate = (payload.get("admin_email") or payload.get("caller_email") or "").strip().lower()
+        if admin_candidate in AUTHORIZED_ADMIN_EMAILS:
+            is_admin = True
         passed_email = (payload.get("client_email") or "").strip().lower()
         if passed_email and passed_email == inq_email:
             is_owner = True

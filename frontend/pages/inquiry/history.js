@@ -18,6 +18,7 @@
 
     const statTotalEl = document.getElementById('statTotal');
     const statUnderReviewEl = document.getElementById('statUnderReview');
+    const statApprovedEl = document.getElementById('statApproved') || document.getElementById('statScheduled');
     const statScheduledEl = document.getElementById('statScheduled');
     const statCancelledEl = document.getElementById('statCancelled');
 
@@ -97,13 +98,20 @@
     // ==========================================
     function updateStats() {
         const total = allInquiries.length;
-        const underReview = allInquiries.filter(i => (i.status || '').toLowerCase() === 'under review').length;
-        const scheduled = allInquiries.filter(i => (i.status || '').toLowerCase() === 'scheduled' || (i.status || '').toLowerCase() === 'contacted').length;
-        const cancelled = allInquiries.filter(i => (i.status || '').toLowerCase() === 'cancelled').length;
+        const underReview = allInquiries.filter(i => {
+            const s = (i.status || '').toLowerCase().trim();
+            return s === 'under review' || s === 'pending';
+        }).length;
+        const approved = allInquiries.filter(i => {
+            const s = (i.status || '').toLowerCase().trim();
+            return s === 'approved' || s === 'scheduled';
+        }).length;
+        const cancelled = allInquiries.filter(i => (i.status || '').toLowerCase().trim() === 'cancelled').length;
 
         if (statTotalEl) statTotalEl.textContent = total;
         if (statUnderReviewEl) statUnderReviewEl.textContent = underReview;
-        if (statScheduledEl) statScheduledEl.textContent = scheduled;
+        if (statApprovedEl) statApprovedEl.textContent = approved;
+        if (statScheduledEl) statScheduledEl.textContent = approved;
         if (statCancelledEl) statCancelledEl.textContent = cancelled;
     }
 
@@ -112,8 +120,18 @@
     // ==========================================
     function renderInquiries() {
         const filtered = allInquiries.filter(item => {
-            const statusMatch = (currentFilter === 'all') ||
-                (item.status && item.status.toLowerCase() === currentFilter.toLowerCase());
+            const rawStatus = (item.status || '').toLowerCase().trim();
+            let statusMatch = (currentFilter === 'all');
+            if (!statusMatch) {
+                const targetFilter = currentFilter.toLowerCase().trim();
+                if (targetFilter === 'approved') {
+                    statusMatch = (rawStatus === 'approved' || rawStatus === 'scheduled');
+                } else if (targetFilter === 'under review') {
+                    statusMatch = (rawStatus === 'under review' || rawStatus === 'pending');
+                } else {
+                    statusMatch = (rawStatus === targetFilter);
+                }
+            }
 
             if (!statusMatch) return false;
 
@@ -150,10 +168,11 @@
             const formattedDate = formatDate(item.created_at);
             const title = escHtml(item.property_title || item.propertyTitle || 'General Consultation');
             const phone = escHtml(item.client_phone || item.clientPhone || 'Not specified');
-            const email = escHtml(item.client_email || item.clientEmail || currentUser.email || '');
+            const email = escHtml(item.client_email || item.clientEmail || (currentUser && currentUser.email) || '');
             const message = escHtml(item.message || 'No details provided.');
-            const isCancelled = rawStatus.toLowerCase() === 'cancelled';
-            const isClosed = rawStatus.toLowerCase() === 'closed';
+            const isApproved = rawStatus.toLowerCase().trim() === 'approved';
+            const isCancelled = rawStatus.toLowerCase().trim() === 'cancelled';
+            const isClosed = rawStatus.toLowerCase().trim() === 'closed';
 
             return `
                 <article class="inquiry-card" data-id="${item.id}">
@@ -180,6 +199,13 @@
                             <span>${rawStatus}</span>
                         </div>
                     </div>
+
+                    ${isApproved ? `
+                        <div class="approved-banner">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                            <span>Your inquiry has been approved by Miriam Lobren! Our team will contact you shortly regarding the next steps.</span>
+                        </div>
+                    ` : ''}
 
                     <div class="card-contact-row">
                         <div class="contact-item">
@@ -441,7 +467,7 @@
     // ==========================================
     function getStatusClass(status) {
         const s = (status || '').toLowerCase().trim();
-        if (s === 'scheduled') return 'status-scheduled';
+        if (s === 'approved' || s === 'scheduled') return 'status-approved';
         if (s === 'contacted') return 'status-contacted';
         if (s === 'cancelled') return 'status-cancelled';
         if (s === 'closed') return 'status-closed';
@@ -474,6 +500,27 @@
             .replace(/"/g, '&quot;')
             .replace(/'/g, '&#39;');
     }
+
+    // Real-time synchronization when admin approves or modifies inquiries
+    window.addEventListener('storage', function (e) {
+        if (e.key === 'inquiries') {
+            loadInquiries();
+        }
+    });
+
+    window.addEventListener('inquiryStatusChanged', function () {
+        loadInquiries();
+    });
+
+    window.addEventListener('inquiriesUpdated', function () {
+        loadInquiries();
+    });
+
+    document.addEventListener('visibilitychange', function () {
+        if (document.visibilityState === 'visible') {
+            loadInquiries();
+        }
+    });
 
     // Start initialization
     if (document.readyState === 'loading') {

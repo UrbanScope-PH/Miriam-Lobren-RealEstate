@@ -547,8 +547,36 @@
 
     async function apiUpdateInquiryStatus(id, newStatus) {
         let updated = false;
+        const token = localStorage.getItem(TOKEN_KEY) ||
+                      localStorage.getItem('urbanscope_jwt_token') ||
+                      localStorage.getItem('access_token') ||
+                      localStorage.getItem('adminToken') ||
+                      localStorage.getItem('supabase_token') || '';
 
-        // 1. Try Supabase
+        // 1. Try FastAPI backend first
+        try {
+            const localBase = (location.port === '8000') ? '/api' : 'http://127.0.0.1:8000/api';
+            let adminEmail = '';
+            try {
+                const adminUser = JSON.parse(localStorage.getItem('adminUser') || localStorage.getItem(USER_KEY) || '{}');
+                adminEmail = adminUser.email || '';
+            } catch (_) {}
+
+            const res = await fetch(`${localBase}/inquiries/${encodeURIComponent(id)}`, {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json',
+                    ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+                },
+                credentials: 'same-origin',
+                body: JSON.stringify({ status: newStatus, caller_email: adminEmail, admin_email: adminEmail })
+            });
+            if (res.ok) updated = true;
+        } catch (e) {
+            console.warn('FastAPI inquiry status update notice:', e);
+        }
+
+        // 2. Try Supabase Cloud
         try {
             const res = await fetch(`${REST_BASE}/inquiries?id=eq.${encodeURIComponent(id)}`, {
                 method: 'PATCH',
@@ -557,23 +585,6 @@
             });
             if (res.ok) updated = true;
         } catch (e) {}
-
-        // 2. Try FastAPI
-        if (!updated) {
-            try {
-                const localBase = (location.port === '8000') ? '/api' : 'http://127.0.0.1:8000/api';
-                const token = localStorage.getItem('adminToken') || localStorage.getItem('supabase_token');
-                const res = await fetch(`${localBase}/inquiries/${encodeURIComponent(id)}`, {
-                    method: 'PATCH',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        ...(token ? { 'Authorization': `Bearer ${token}` } : {})
-                    },
-                    body: JSON.stringify({ status: newStatus })
-                });
-                if (res.ok) updated = true;
-            } catch (e) {}
-        }
 
         // 3. Always update localStorage cache
         try {
@@ -585,21 +596,29 @@
             }
         } catch (_) {}
 
+        window.dispatchEvent(new CustomEvent('inquiryStatusChanged', { detail: { id, status: newStatus } }));
+        window.dispatchEvent(new CustomEvent('inquiriesUpdated', { detail: { id, status: newStatus } }));
+
         return updated;
     }
 
     async function apiGetMyInquiries(email) {
         let list = [];
         const cleanEmail = (email || '').trim().toLowerCase();
+        const token = localStorage.getItem(TOKEN_KEY) ||
+                      localStorage.getItem('urbanscope_jwt_token') ||
+                      localStorage.getItem('access_token') ||
+                      localStorage.getItem('adminToken') ||
+                      localStorage.getItem('supabase_token') || '';
 
         // 1. Try FastAPI backend
         try {
             const localBase = (location.port === '8000') ? '/api' : 'http://127.0.0.1:8000/api';
-            const token = localStorage.getItem('access_token') || localStorage.getItem('supabase_token') || localStorage.getItem('adminToken');
             const url = cleanEmail ? `${localBase}/inquiries/my?email=${encodeURIComponent(cleanEmail)}` : `${localBase}/inquiries/my`;
             const res = await fetch(url, {
                 method: 'GET',
-                headers: token ? { 'Authorization': `Bearer ${token}` } : {}
+                headers: token ? { 'Authorization': `Bearer ${token}` } : {},
+                credentials: 'same-origin'
             });
             if (res.ok) {
                 const data = await res.json();
@@ -630,6 +649,20 @@
                 }
             } catch (_) {}
         }
+
+        // Reconcile status with localStorage cache (preserves instant admin updates)
+        try {
+            const cached = JSON.parse(localStorage.getItem('inquiries') || '[]');
+            if (Array.isArray(cached) && cached.length > 0) {
+                list = list.map(item => {
+                    const match = cached.find(c => String(c.id) === String(item.id));
+                    if (match && match.status && match.status !== item.status) {
+                        return { ...item, status: match.status };
+                    }
+                    return item;
+                });
+            }
+        } catch (_) {}
 
         return list;
     }

@@ -389,6 +389,7 @@ function renderInquiryRows(inquiries) {
                     <button
                         class="action-view-btn"
                         type="button"
+                        data-raw-id="${inquiry.id}"
                         data-inquiry-id="${inquiryId}"
                         data-client-name="${clientName}"
                         data-property-title="${propertyTitle}"
@@ -438,7 +439,8 @@ function openInquiryModal(data) {
         .filter(Boolean)
         .slice(0, 2)
         .map(w => w[0].toUpperCase())
-        .join("") || "CL";
+    const rawId = data.rawId || data.inquiryId?.replace('INQ-', '') || '';
+    const isApproved = String(status || '').toLowerCase().trim() === 'approved';
 
     modalContent.innerHTML = `
         <div class="inquiry-modal-detail">
@@ -526,6 +528,21 @@ function openInquiryModal(data) {
                 <button type="button" class="btn-modal-secondary btn-close-modal" id="modalCloseActionBtn">
                     Close
                 </button>
+                ${!isApproved ? `
+                    <button type="button" class="btn-modal-approve" id="modalApproveInquiryBtn" data-raw-id="${escapeHTML(rawId)}">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                            <polyline points="20 6 9 17 4 12"></polyline>
+                        </svg>
+                        <span>Approve Inquiry</span>
+                    </button>
+                ` : `
+                    <button type="button" class="btn-modal-approve approved" disabled>
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                            <polyline points="20 6 9 17 4 12"></polyline>
+                        </svg>
+                        <span>Approved</span>
+                    </button>
+                `}
                 ${email ? `
                     <a href="mailto:${encodeURIComponent(email)}?subject=Re:%20Inquiry%20regarding%20${encodeURIComponent(propertyTitle)}" class="btn-modal-primary" target="_blank" rel="noopener">
                         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -542,6 +559,56 @@ function openInquiryModal(data) {
             </div>
         </div>
     `;
+
+    // Hook up approve action inside modal
+    const approveBtn = modalContent.querySelector("#modalApproveInquiryBtn");
+    if (approveBtn) {
+        approveBtn.addEventListener("click", async () => {
+            approveBtn.disabled = true;
+            approveBtn.innerHTML = `<span>Approving...</span>`;
+            try {
+                if (typeof apiUpdateInquiryStatus === 'function') {
+                    await apiUpdateInquiryStatus(rawId, 'Approved');
+                }
+                approveBtn.className = "btn-modal-approve approved";
+                approveBtn.innerHTML = `
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                        <polyline points="20 6 9 17 4 12"></polyline>
+                    </svg>
+                    <span>Approved</span>
+                `;
+                // Update modal status pill
+                const statusPill = modalContent.querySelector('.inquiry-banner-meta .status-pill');
+                if (statusPill) {
+                    statusPill.textContent = 'Approved';
+                    statusPill.className = 'status-pill green';
+                }
+                // Update corresponding table row in Recent Inquiries
+                const rowBtn = document.querySelector(`.action-view-btn[data-raw-id="${rawId}"]`) ||
+                               document.querySelector(`.action-view-btn[data-inquiry-id="${inquiryId}"]`);
+                if (rowBtn) {
+                    rowBtn.dataset.status = "Approved";
+                    rowBtn.dataset.statusClass = "green";
+                    const tr = rowBtn.closest('tr');
+                    if (tr) {
+                        const badge = tr.querySelector('.status-pill');
+                        if (badge) {
+                            badge.textContent = 'Approved';
+                            badge.className = 'status-pill green';
+                        }
+                    }
+                }
+                // Re-hydrate dashboard data
+                if (typeof loadDashboardData === 'function') {
+                    loadDashboardData();
+                }
+            } catch (err) {
+                console.error('Failed to approve inquiry from dashboard modal:', err);
+                approveBtn.disabled = false;
+                approveBtn.innerHTML = `<span>Retry Approve</span>`;
+            }
+        });
+    }
 
     modal.hidden = false;
     // Force layout recalculation for smooth CSS animation
