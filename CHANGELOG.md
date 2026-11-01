@@ -150,7 +150,7 @@ This document records all features, enhancements, bug fixes, user requests, arch
   - **Navigation Integration (`session.js`, `session.css`, `inquiry.html`):**
     - Added **"Inquiry History"** to the profile menu (`.profile-dropdown`) across the entire website between "Submit an Inquiry" and "Sign Out".
     - Added "Inquiry History" to the mobile navigation drawer (`.mobile-drawer-user`) for logged-in clients on small screens.
-    - Added a direct pill button `My Inquiry History` in the page header of `pages/inquiry/inquiry.html`.
+    - Added a direct pill button `Inquiry History` in the page header of `pages/inquiry/inquiry.html`.
   - **Inquiry History Hub (`frontend/pages/inquiry/history.html`, `history.css`, `history.js`):**
     - Protected route requiring authentication (`<html data-require-auth>`).
     - Responsive header with summary stats pills: Total Inquiries, Under Review, Scheduled, and Cancelled.

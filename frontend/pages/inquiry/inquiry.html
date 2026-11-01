@@ -48,7 +48,7 @@
             <h1 class="page-heading">Submit Inquiry</h1>
             <a href="history.html" class="history-pill-link">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
-                <span>My Inquiry History</span>
+                <span>Inquiry History</span>
             </a>
         </div>
 
@@ -178,7 +178,13 @@
     <!-- INQUIRY SUBMISSION SUCCESS MODAL -->
     <div class="modal-overlay" id="inquirySuccessModal" role="dialog" aria-modal="true" aria-labelledby="successModalTitle">
         <div class="modal-box success-modal-box">
-            <button type="button" class="modal-close-btn" id="closeSuccessModalBtn" aria-label="Close dialog">
+            <a href="../../index.html" class="modal-back-btn" id="modalBackHomeBtn" aria-label="Back to Home" title="Back to Home">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="19" y1="12" x2="5" y2="12"></line>
+                    <polyline points="12 19 5 12 12 5"></polyline>
+                </svg>
+            </a>
+            <button type="button" class="modal-close-btn" id="closeSuccessModalBtn" aria-label="Close dialog" title="Close dialog">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
             </button>
 
@@ -229,7 +235,10 @@
 
                     <div class="success-note">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
-                        <span>Our accredited agents will review your inquiry and contact you via phone or email shortly to confirm your schedule and answer your questions.</span>
+                        <div class="success-note-content">
+                            <span>Our accredited agents will review your inquiry and contact you via phone or email shortly to confirm your schedule and answer your questions.</span>
+                            <span class="success-sla-notice">You'll receive a response via email within 48 hours (pls check spam/junk).</span>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -240,7 +249,6 @@
                     <span>View in Inquiry History</span>
                 </a>
                 <button type="button" class="btn-secondary" id="submitAnotherBtn">Submit Another</button>
-                <a href="../../index.html" class="btn-return-home">Back to Home</a>
             </div>
         </div>
     </div>

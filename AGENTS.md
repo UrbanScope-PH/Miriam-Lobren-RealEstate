@@ -231,7 +231,8 @@ path when rendering from a page.
     - Replaced blocking browser `alert(...)` popups on `frontend/pages/inquiry/inquiry.html` with a dedicated UI Success Modal (`#inquirySuccessModal`) and animated pulse checkmark badge.
     - Centered precisely across zoomed environments (`zoom: 1.25`) by avoiding `100vw/100vh` skew, utilizing `position: fixed; inset: 0; width: 100%; height: 100%; margin: auto;` and `z-index: 9999`.
     - Displays dynamic summary details: Subject/topic, schedule pill (if specified), client contact info (name, email, phone), and `Under Review` status pill.
-    - Features action buttons: direct link to 'View in Inquiry History' (`pages/inquiry/history.html`), 'Submit Another' (resets form and closes modal), and 'Back to Home' (`../../index.html`).
+    - Features a clear SLA guarantee notice: `"You'll receive a response via email within 48 hours (pls check spam/junk)."`
+    - Action controls & navigation: Upper-left circular back arrow (`#modalBackHomeBtn`) returns directly to Home (`../../index.html`), upper-right circular close button (`#closeSuccessModalBtn`) dismisses modal, and the modal footer cleanly contains only two action buttons: 'View in Inquiry History' (`pages/inquiry/history.html`) and 'Submit Another' (`#submitAnotherBtn`).
     - Added loading state with a spinner (`.btn-spinner`) on the submit button while sending requests to prevent duplicate submissions.
     - Replaced submission failure alerts with a slide-up toast notification (`#toastNotice`).
 18. **Idempotent Supabase Schema Migration (`20261028000000_initial_schema.sql`):**

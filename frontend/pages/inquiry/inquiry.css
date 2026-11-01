@@ -712,6 +712,31 @@ body {
     transform: scale(1) translateY(0);
 }
 
+.modal-back-btn {
+    position: absolute;
+    top: 18px;
+    left: 18px;
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    background: #f1f6f2;
+    border: 1px solid #d4e2d7;
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.18s ease;
+    z-index: 2;
+    text-decoration: none;
+}
+
+.modal-back-btn:hover {
+    background: #e2ede5;
+    color: var(--dark-green);
+    transform: translateX(-2px);
+}
+
 .modal-close-btn {
     position: absolute;
     top: 18px;
@@ -912,6 +937,20 @@ body {
     margin-top: 2px;
 }
 
+.success-note-content {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.success-sla-notice {
+    display: block;
+    font-size: 0.81rem;
+    font-weight: 700;
+    color: #1e5c33;
+    line-height: 1.35;
+}
+
 .modal-footer.success-modal-footer {
     display: flex;
     align-items: center;
@@ -1056,19 +1095,16 @@ body {
     }
 
     .modal-footer.success-modal-footer {
-        flex-direction: column-reverse;
+        flex-direction: column;
         align-items: stretch;
         padding: 14px 16px 20px;
+        gap: 10px;
     }
 
     .btn-success-primary,
     .btn-secondary {
         width: 100%;
         justify-content: center;
-        text-align: center;
-    }
-
-    .btn-return-home {
         text-align: center;
     }
 
