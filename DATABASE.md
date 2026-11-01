@@ -374,6 +374,8 @@ supabase/
                                              users.title / brokerage / bio + 'superadmin' in users_role_check
   migrations/20261102010000_update_default_brokerage.sql
                                              Sets users.brokerage default to 'UrbanScope' and normalizes legacy rows
+  migrations/20261102020000_expand_inquiry_status_workflow.sql
+                                             Updates inquiries.status CHECK constraint to include all active CRM workflow statuses
   seed.sql                                   Demo data (users, 6 properties, inquiries, ...)
   scripts/                                   One-off data fixes to paste into the SQL Editor (never auto-run)
 ```
@@ -392,12 +394,11 @@ supabase migration new add_some_column   # create the next migration file
 > so the whole seed failed.
 
 > [!IMPORTANT]
-> **Team rule:** every migration file must be committed to `main`. If someone runs
-> `supabase db push` with migration files that only exist on their machine, the remote
-> history gets versions this repo doesn't have, and the Supabase GitHub check fails with
-> *"Remote migration versions not found in local migrations directory"*. Fix: commit the
-> missing files (same filenames/timestamps), or run `supabase migration repair --status reverted <version>`.
-> Write every migration idempotently (`IF NOT EXISTS`, `DROP … IF EXISTS`) so preview branches can replay it.
+> **Git-Like Migration History Standard:**
+> - **One Migration per Logical Change:** Treat Supabase migrations like Git commit history. Each distinct schema modification, constraint alteration, column addition, or data normalization MUST live in its own separate, atomic migration file. Never bundle unrelated changes into a single file.
+> - **Immutable Past History:** Never retroactively edit, reorder, or overwrite an already-applied migration file in `supabase/migrations/`. Always evolve the schema forward with a new timestamped migration.
+> - **Strict Idempotency:** Write every statement idempotently (`IF NOT EXISTS`, `DROP … IF EXISTS`, `ALTER … SET DEFAULT`) so fresh local databases, GitHub Actions CI preview branches, and live production can replay the entire sequence cleanly without errors.
+> - **Commit Every Migration to Git:** Every migration file must be committed to `main`. If someone runs `supabase db push` with uncommitted migration files, the remote history gets versions the repo lacks, causing Supabase CI checks to fail with *"Remote migration versions not found in local migrations directory"*. Always commit the matching local file alongside the code changes.
 
 ### 10.2 One-shot SQL Editor script (legacy)
 

@@ -139,6 +139,7 @@ path when rendering from a page.
 - Preserve existing comments and docstrings unrelated to your change.
 - `README.md` is the **public** overview — keep it short (features, stack, setup, top-level structure) and never
   list admin/superadmin credentials there. Detailed internals belong in `AGENTS.md` / `DATABASE.md`; keep those in sync.
+- **Supabase Migrations as Git History:** Treat Supabase migrations strictly like Git commit history. Every logical schema modification, column addition, constraint update, or data normalization MUST be placed in its own separate, atomic migration file (`supabase/migrations/YYYYMMDDHHMMSS_<feature_name>.sql`). Never combine multiple unrelated changes into a single migration file, never edit already-applied migrations, ensure every migration is idempotent (`IF NOT EXISTS`, `DROP … IF EXISTS`), and commit every migration file to `main` alongside its code.
 - **Always update documentation (.md) when chatting/completing tasks:** Every change, new route, UI adjustment,
   schema update, or architectural decision MUST immediately be recorded in `AGENTS.md`, `README.md`, and
   `DATABASE.md` as appropriate. Never finish a turn without ensuring markdown documentation reflects the current state.
