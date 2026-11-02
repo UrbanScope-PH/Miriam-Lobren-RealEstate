@@ -1934,16 +1934,22 @@
             if (isLocalDevHost()) {
                 const localBase = (typeof location !== 'undefined' && location.origin && location.port === '8000') ? `${location.origin}/api` : 'http://127.0.0.1:8000/api';
                 try {
-                    const token = localStorage.getItem(TOKEN_KEY);
+                    const token = localStorage.getItem(TOKEN_KEY) ||
+                                  localStorage.getItem('urbanscope_jwt_token') ||
+                                  localStorage.getItem('access_token') ||
+                                  localStorage.getItem('adminToken') ||
+                                  localStorage.getItem('supabase_token') || '';
                     const res = await fetch(`${localBase}/admin/password`, {
                         method: 'PUT',
                         headers: {
                             'Content-Type': 'application/json',
                             ...(token ? { 'Authorization': `Bearer ${token}` } : {})
                         },
+                        credentials: (typeof location !== 'undefined' && location.port === '8000') ? 'same-origin' : 'include',
                         body: JSON.stringify({
                             current_password: currentPassword,
-                            new_password: newPassword
+                            new_password: newPassword,
+                            email: adminEmail
                         })
                     });
 

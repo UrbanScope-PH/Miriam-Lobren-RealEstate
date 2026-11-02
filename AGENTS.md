@@ -485,6 +485,17 @@ path when rendering from a page.
          - In `submit_inquiry`: Inserts an admin notification row (`recipient_role = 'admin'`, `type = 'new_inquiry'`) so that new inquiries submitted across separate devices notify the administrator in real-time.
          - In `modify_inquiry`: When an inquiry is approved, SQLite marks any existing admin notification for that inquiry as read and seen (`UPDATE notifications SET is_read = 1, is_seen = 1 WHERE inquiry_id = ? AND LOWER(recipient_role) = 'admin'`).
 
+39. **Admin Self Password Management & Server Restart Persistence:**
+    - **Self-Service Password Change**: Administrators can change their own password directly from the **Profile & Security Settings** page (`/pages/admin/profile.html`) under the "Change Password" section by providing their current password and entering a new password (min. 6 characters).
+    - **End-to-End Flow & Verification**:
+      - `frontend/pages/admin/profile.js` captures current, new, and confirm passwords and triggers `apiUpdateAdminPassword(curPass, newPass)` in `frontend/shared/js/supabase.js` and `api.js`.
+      - `PUT /api/admin/password` in `backend/routers/auth.py` validates the request, resolves the account via authenticated JWT/session cookie or email fallback, verifies the `current_password` against the stored PBKDF2 hash, and updates `users.password_hash` in SQLite.
+      - Supabase Cloud sync: Asynchronously generates a PBKDF2 salt-hash and updates `${REST_BASE}/users` if remote cloud is active.
+      - Client Storage: Synchronizes `urbanscope_admin_password_updated` and `adminPassword` in `localStorage` for seamless immediate sign-in.
+    - **Database Restart Persistence Guarantee (`backend/database.py`)**:
+      - `init_db()` was previously overwriting existing users' `password_hash` with default seed hashes on every server boot or reload.
+      - Updated `init_db()` to check `if not existing[1]:` so that existing users' custom updated passwords and profile info are strictly preserved across server restarts and lifespan reloads.
+
 ---
 
 ## Safety Rules

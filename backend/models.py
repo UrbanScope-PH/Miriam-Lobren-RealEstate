@@ -59,6 +59,7 @@ class AdminProfileUpdate(BaseModel):
 class PasswordChangeRequest(BaseModel):
     current_password: str = Field(..., min_length=1, description="Current account password")
     new_password: str = Field(..., min_length=6, description="New password (minimum 6 characters)")
+    email: Optional[str] = Field(None, description="Account email address")
 
 
 class AuthResponse(BaseModel):

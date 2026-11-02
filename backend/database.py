@@ -212,13 +212,14 @@ def init_db():
     ]
 
     for email, pwd_hash, full_name, phone, role in accounts_to_sync:
-        cursor.execute("SELECT id FROM users WHERE LOWER(email) = LOWER(?)", (email,))
+        cursor.execute("SELECT id, password_hash, role FROM users WHERE LOWER(email) = LOWER(?)", (email,))
         existing = cursor.fetchone()
         if existing:
-            cursor.execute(
-                "UPDATE users SET password_hash = ?, role = ?, full_name = ?, phone = ? WHERE id = ?",
-                (pwd_hash, role, full_name, phone, existing[0])
-            )
+            # Preserve existing user's password and profile updates; ensure proper RBAC role
+            if not existing[1]:
+                cursor.execute("UPDATE users SET password_hash = ? WHERE id = ?", (pwd_hash, existing[0]))
+            if existing[2] != role:
+                cursor.execute("UPDATE users SET role = ? WHERE id = ?", (role, existing[0]))
         else:
             cursor.execute(
                 "INSERT INTO users (email, password_hash, full_name, phone, role) VALUES (?, ?, ?, ?, ?)",

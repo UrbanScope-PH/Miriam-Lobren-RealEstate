@@ -334,6 +334,16 @@ This document records all features, enhancements, bug fixes, user requests, arch
 
 ---
 
+### 23. Admin Self Password Management & Server Restart Persistence
+- **User Prompt:** *"is it possible to manually chnage the password of admin on its own"*
+- **Rationale & Implementation:**
+  - Administrators can change their own password directly from the Profile & Security Settings page (`/pages/admin/profile.html`) under the "Change Password" section.
+  - Resolved `init_db()` in `backend/database.py` which was previously resetting existing users' `password_hash` back to seed credentials on every server startup or reload. Added `if not existing[1]:` check to guarantee password updates persist permanently across server restarts.
+  - Enhanced `PUT /api/admin/password` in `backend/routers/auth.py` and `PasswordChangeRequest` in `backend/models.py` with fallback account resolution and session credentials.
+  - Verified end-to-end update flow, PBKDF2 hashing, and immediate login synchronization.
+
+---
+
 | Component | Test Performed | Result |
 | :--- | :--- | :--- |
 | **HTTP Routing** | `curl -s -w "%{http_code}" http://127.0.0.1:8000/pages/inquiry/history.html` | `200 OK` |
