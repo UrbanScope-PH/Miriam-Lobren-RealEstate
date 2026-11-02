@@ -9,6 +9,7 @@
     let allInquiries = [];
     let currentFilter = 'all';
     let searchQuery = '';
+    const prevInquiryStatuses = new Map();
 
     // DOM Elements
     const inquiriesListEl = document.getElementById('inquiriesList');
@@ -96,9 +97,14 @@
             }
         }
 
-        // When viewing inquiry history, mark notifications as read and seen across all devices
-        if (typeof window.apiMarkNotificationsRead === 'function') {
-            window.apiMarkNotificationsRead({ email });
+        // When viewing inquiry history interactively, mark notifications as read after a short delay
+        // so approval toasts have time to display and background polls do not swallow notifications
+        if (!silent && typeof window.apiMarkNotificationsRead === 'function') {
+            setTimeout(function () {
+                if (document.visibilityState === 'visible') {
+                    window.apiMarkNotificationsRead({ email });
+                }
+            }, 6000);
         }
 
         // If modify modal is open for an inquiry that is no longer Under Review, close it
@@ -130,24 +136,35 @@
         let newlyApproved = null;
         allInquiries.forEach(item => {
             const s = String(item.status || '').toLowerCase().trim();
-            if (s === 'approved' || s === 'scheduled') {
-                const key = 'approved_' + item.id;
-                if (!toastedIds.includes(key)) {
-                    toastedIds.push(key);
-                    if (isLiveUpdate && !newlyApproved) {
-                        newlyApproved = item;
-                    }
+            const idKey = String(item.id);
+            const prev = prevInquiryStatuses.get(idKey);
+            const isApprovedNow = (s === 'approved' || s === 'scheduled');
+            const wasApprovedBefore = prev && (prev === 'approved' || prev === 'scheduled');
+            const toastKey = 'approved_' + item.id;
+
+            if (isApprovedNow) {
+                // Trigger notification if inquiry transitioned to approved while page was open,
+                // or if it was newly approved and hasn't toasted on this device yet
+                if (prev !== undefined && !wasApprovedBefore) {
+                    if (!newlyApproved) newlyApproved = item;
+                } else if (!toastedIds.includes(toastKey)) {
+                    if (!newlyApproved) newlyApproved = item;
                 }
             }
+            prevInquiryStatuses.set(idKey, s);
         });
 
-        try {
-            localStorage.setItem(toastedKey, JSON.stringify(toastedIds));
-        } catch (e) { }
-
         if (newlyApproved) {
+            const key = 'approved_' + newlyApproved.id;
+            if (!toastedIds.includes(key)) {
+                toastedIds.push(key);
+                try {
+                    localStorage.setItem(toastedKey, JSON.stringify(toastedIds));
+                } catch (e) { }
+            }
             const propTitle = newlyApproved.property_title || newlyApproved.propertyTitle || 'General Consultation';
             showToast(`✓ Good news! Your inquiry for "${propTitle}" has been approved by Miriam Lobren!`);
+            window.dispatchEvent(new CustomEvent('inquiryStatusChanged', { detail: newlyApproved }));
         }
     }
 
@@ -606,7 +623,7 @@ setInterval(function () {
     if (document.visibilityState === 'visible' && currentUser) {
         loadInquiries(true);
     }
-}, 15000);
+}, 4000);
 
 // Start initialization
 if (document.readyState === 'loading') {

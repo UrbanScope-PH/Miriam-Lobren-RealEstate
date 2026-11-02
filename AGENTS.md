@@ -409,7 +409,7 @@ path when rendering from a page.
         - Demoted legacy duplicate row `id: 1` (`miriamlobren@gmail.com`) to `role = 'client'`.
         - Re-pointed `properties.agent_id` from legacy `1` to active lead admin `15`.
       - **Immediate Real-Time Broadcast**: Dispatches `urbanscope:profileUpdated` upon remote resolution, ensuring open tabs, footers, headers, and mailto links instantly render `miriam@gmail.com` and `09123456789`.
-34. **Cross-Device Client Notification Seen & Read Synchronization (One-Time Notification Guarantee):**
+35. **Cross-Device Client Notification Seen & Read Synchronization (One-Time Notification Guarantee):**
     - **Problem Identified**: When an administrator approved an inquiry, client notification toasts and unread bell badge indicators were tracked solely in device-specific `localStorage` keys (`client_notifs_read_ids_${email}`, `client_notifs_toasted_${email}`). When a client subsequently logged in or opened the site on another device (or mobile browser), the new device had empty `localStorage`, causing the floating approval toast to pop up again and the bell badge to re-display as unread (`1`), despite the client having already seen and acknowledged the notification on their first device.
     - **Solution Implemented**:
       - **Database Schema & Migration (`supabase/migrations/20261103000000_notification_seen_sync.sql`, `backend/database.py`, `backend/supabase_schema.sql`)**:
@@ -430,6 +430,24 @@ path when rendering from a page.
       - **Inquiry History Page (`frontend/pages/inquiry/history.js`)**:
         - Automatically marks user notifications as read and seen on page load via `apiMarkNotificationsRead({ email })`.
         - Suppresses repeat initial toasts on secondary devices while preserving live status change notifications during active sessions.
+
+36. **Real-Time Cross-Device Inquiry Approval Synchronization & Supabase Notification Schema Alignment:**
+    - **Problem Identified**: When an administrator tapped "Approved" in the Inquiry Details modal on mobile (`/pages/admin/dashboard.html` / `clients.html`), a client viewing `/pages/inquiry/history.html` on another mobile phone did not see their inquiry status update from "Under Review" to "Approved", and did not receive the approval toast or bell badge notification.
+    - **Root Causes**:
+      1. *Stale Local Storage Overwrite*: In `applyLocalInquiryState(list)` (`supabase.js` & `api.js`), fetched server inquiries were being compared against local `localStorage.getItem('inquiries')`. If `cachedMatch.status !== merged.status`, `applyLocalInquiryState` unconditionally executed `merged.status = cachedMatch.status`. Because the client's phone had saved the inquiry as "Under Review" when originally submitted, every API fetch forcibly downgraded the server's authoritative "Approved" status back to "Under Review".
+      2. *Supabase Notifications Schema Mismatch*: Remote Supabase Cloud `notifications` table has columns `['id', 'user_id', 'title', 'message', 'reference_type', 'reference_id', 'is_read', 'created_at']` (foreign key `user_id` to `users(id)`). The client gateways were sending and filtering by `recipient_email` and `client_name`, resulting in HTTP 400 `column notifications.recipient_email does not exist` errors.
+      3. *Eager Read-Marking in Polling Loops*: `history.js` executed `apiMarkNotificationsRead({ email })` synchronously inside `loadInquiries()` before checking status changes, causing notifications to be marked as read before toasts could trigger.
+      4. *Long Polling Delays*: Both `history.js` and `session.js` polled at 15-second intervals.
+    - **Solution Implemented**:
+      - **Server Authority in `applyLocalInquiryState` (`supabase.js` & `api.js`)**: Removed the stale `cachedMatch.status` override. When the remote database returns a status, the server's status is preserved as the single source of truth, stale local overrides are cleared for approved records, and `localStorage.inquiries` is updated with fresh server data.
+      - **Supabase Cloud Schema Alignment**:
+        - `apiUpdateInquiryStatus`: Resolves the client's `user_id` (via `targetInquiry.client_id` or `users?email=ilike...`) and inserts notifications using Supabase's native schema (`user_id`, `reference_type: 'inquiry'`, `reference_id: id`, `title`, `message`, `is_read: false`).
+        - `apiGetClientNotifications`: Resolves `user_id` and queries `${REST_BASE}/notifications?user_id=eq.${userId}` alongside the live inquiries status derivation fallback.
+        - `apiMarkNotificationsRead`: Patches Supabase by `id=eq.${notifId}` or `user_id=eq.${userId}` with `{ is_read: true }` without invalid column names.
+      - **Live Status Transition & Deferral (`history.js`)**:
+        - Added `prevInquiryStatuses` tracking to immediately detect when an inquiry transitions from `Under Review` to `Approved` during active viewing, firing `showToast(...)`, re-rendering the card with the emerald badge and Miriam Lobren approval banner, and dispatching `inquiryStatusChanged`.
+        - Deferred `apiMarkNotificationsRead` with a 6-second delay on interactive load and excluded it from background poll ticks so notifications display cleanly before being cleared.
+      - **Responsive Live Polling**: Reduced polling intervals from 15 seconds to 4 seconds in `history.js` and 5 seconds in `session.js`, delivering near-instant updates across mobile devices.
 
 ---
 

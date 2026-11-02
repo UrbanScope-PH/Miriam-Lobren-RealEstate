@@ -753,7 +753,7 @@
         if (!document.hidden && currentUser) {
             loadClientNotifications();
         }
-    }, 15000);
+    }, 5000);
 
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
     else init();
