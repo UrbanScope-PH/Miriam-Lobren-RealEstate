@@ -521,7 +521,7 @@ function renderHomepageAgentDetails(profile) {
     const rawBrok = String(profile.brokerage || '').trim();
     const brokerage = (!rawBrok || /^cd\s.*realty$/i.test(rawBrok)) ? 'UrbanScope' : rawBrok;
     const phone = profile.phone || '+63 900 000 0000';
-    const email = profile.email || 'admin.realestate@gmail.com';
+    const email = profile.email || 'miriamlobren@gmail.com';
     const bio = profile.bio || 'Serving Las Piñas, Cavite, and surrounding prime locations with high-integrity real estate solutions.';
     const avatarUrl = profile.avatar_url || 'assets/images/agent.jpg';
     const cleanDigits = phone.replace(/[^\d+]/g, '');
@@ -595,7 +595,7 @@ async function initDynamicAgentDetails() {
         localProfile = JSON.parse(localStorage.getItem('urbanscope_admin_profile') || 'null');
         if (!localProfile) {
             const adminUser = JSON.parse(localStorage.getItem('adminUser') || 'null');
-            if (adminUser && (adminUser.role === 'admin' || adminUser.email === 'admin.realestate@gmail.com')) {
+            if (adminUser && (adminUser.role === 'admin' || adminUser.email === 'admin.realestate@gmail.com' || adminUser.email === 'miriamlobren@gmail.com')) {
                 localProfile = adminUser;
             }
         }

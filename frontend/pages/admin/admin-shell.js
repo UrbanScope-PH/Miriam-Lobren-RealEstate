@@ -167,7 +167,7 @@
                                     ? matchedCancelEv.notifKey
                                     : `cancelled_${id}`,
                                 avatarClass: 'cancel',
-                                avatarIcon: '✕',
+                                avatarIcon: '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>',
                                 title: `Inquiry ${code} cancelled by ${clientName}`,
                                 subtitle: `${propTitle} &bull; ${evTimeAgo}`,
                                 time: evTime,
@@ -178,7 +178,7 @@
                                 type: 'approved',
                                 notifKey: `approved_${id}`,
                                 avatarClass: 'check',
-                                avatarIcon: '✓',
+                                avatarIcon: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>',
                                 title: `Inquiry ${code} approved`,
                                 subtitle: `Client: ${clientName} &bull; ${timeAgo}`,
                                 time: new Date(date).getTime(),
@@ -189,7 +189,7 @@
                                 type: 'completed',
                                 notifKey: `completed_${id}`,
                                 avatarClass: 'check',
-                                avatarIcon: '✓',
+                                avatarIcon: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>',
                                 title: `Inquiry ${code} completed`,
                                 subtitle: `Client: ${clientName} &bull; ${timeAgo}`,
                                 time: new Date(date).getTime(),
@@ -201,7 +201,7 @@
                                 type: 'new_inquiry',
                                 notifKey: `new_inquiry_${id}`,
                                 avatarClass: 'user',
-                                avatarIcon: '👤',
+                                avatarIcon: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>',
                                 title: `New inquiry submitted by ${clientName}`,
                                 subtitle: `${code} &bull; ${formatTimeAgo(createdDate)}`,
                                 time: new Date(createdDate).getTime(),
@@ -222,7 +222,7 @@
                     type: ev.type || 'cancelled',
                     notifKey: ev.notifKey || `deleted_${ev.inquiryId}`,
                     avatarClass: ev.avatarClass || 'cancel',
-                    avatarIcon: ev.avatarIcon || '✕',
+                    avatarIcon: ev.avatarIcon || '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>',
                     title: ev.title || `Inquiry ${code} cancelled by ${ev.client_name || 'Client'}`,
                     subtitle: `${propTitle} &bull; ${timeAgo}`,
                     time: evTime,
@@ -237,21 +237,29 @@
 
         function renderNotifHtml(items) {
             if (!items || !items.length) {
-                return '<div class="notif-empty">No notifications yet.</div>';
+                return `
+                    <div class="notif-empty">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin:0 auto 8px;display:block;opacity:0.4;">
+                            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                            <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+                        </svg>
+                        <span>No notifications yet.</span>
+                    </div>
+                `;
             }
             const targetUrl = getInquiryPageUrl();
-        return items.slice(0, 6).map(item => `
-                < a href = "${targetUrl}" class= "notif-item" role = "menuitem" >
-                <div class="notif-avatar ${item.avatarClass}">
-                    ${item.avatarIcon}
-                </div>
-                <div class="notif-text">
-                    <strong>${item.title}</strong>
-                    <small>${item.subtitle}</small>
-                </div>
-            </a >
-                `).join('');
-    }
+            return items.slice(0, 6).map(item => `
+                <a href="${targetUrl}" class="notif-item" role="menuitem">
+                    <div class="notif-avatar ${item.avatarClass}">
+                        ${item.avatarIcon}
+                    </div>
+                    <div class="notif-text">
+                        <strong>${item.title}</strong>
+                        <small>${item.subtitle}</small>
+                    </div>
+                </a>
+            `).join('');
+        }
 
     function showAdminShellToast(message) {
         let toast = document.getElementById("adminShellToast");
@@ -397,6 +405,16 @@
         notifBtn.setAttribute("aria-expanded", "false");
         notifBtn.setAttribute("aria-controls", "notifDropdown");
 
+        // Ensure notif-badge element exists inside notifBtn
+        let badgeEl = notifBtn.querySelector(".notif-badge");
+        if (!badgeEl) {
+            badgeEl = document.createElement("span");
+            badgeEl.className = "notif-badge";
+            badgeEl.style.display = "none";
+            badgeEl.textContent = "0";
+            notifBtn.appendChild(badgeEl);
+        }
+
         let notifDropdown = document.getElementById("notifDropdown");
         const targetUrl = getInquiryPageUrl();
 
@@ -407,7 +425,7 @@
             notifDropdown.setAttribute("role", "menu");
             notifDropdown.hidden = true;
             notifDropdown.innerHTML = `
-            < div class= "notif-dropdown-header" >
+                <div class="notif-dropdown-header">
                     <div class="notif-header-title">
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
@@ -416,7 +434,7 @@
                         <h3>Recent Notifications</h3>
                     </div>
                     <a href="${targetUrl}" class="view-all-link">View All</a>
-                </div >
+                </div>
                 <div class="notif-list" id="topbarNotifList">
                     <div class="notif-empty">Loading notifications...</div>
                 </div>
@@ -463,6 +481,13 @@
         notifDropdown.addEventListener("click", function () {
             markNotificationsAsViewed();
         });
+
+        const dashList = document.getElementById("dashboardNotifList");
+        if (dashList) {
+            dashList.addEventListener("click", function () {
+                markNotificationsAsViewed();
+            });
+        }
 
         // When profile button is clicked, close notifDropdown
         const profileBtn = document.getElementById("profileButton");

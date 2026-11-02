@@ -360,6 +360,39 @@ path when rendering from a page.
       - When an admin approves an inquiry from `pages/admin/dashboard.html` or `pages/admin/clients.html` (`apiUpdateInquiryStatus(id, 'Approved')`), `backend/routers/inquiries.py` and `supabase.js` (`pushClientNotification`) create an `approved` notification targeted to the client's email.
       - `frontend/shared/js/session.js` and `frontend/shared/css/session.css` render a client notification bell (`#clientNotifWrap`, `#clientNotifBtn`, `#clientNotifBadge`, `#clientNotifDropdown`) in the navbar across all client pages, polling and listening to `storage` / `inquiryStatusChanged` / `clientNotificationAdded` events, displaying unread counts, listing approval notifications with links to `pages/inquiry/history.html`, and popping up a floating toast (`#clientApprovalToast` / `#toastNotice`) when an inquiry is approved.
 
+31. **Admin UI Consistency & Notification Dropdown Harmonization:**
+    - **Fixed Malformed HTML in Notification Engine (`admin-shell.js`)**: Resolved spaces inside template literal HTML tags (`< a href = ... >`, `</a >`, `< div class= "notif-dropdown-header" >`, `</div >`), which previously caused raw HTML tags and stacked elements to print directly as text into the topbar notification dropdown and the Dashboard "Recent Notifications" card (`#dashboardNotifList`).
+    - **Standardized Notification Avatars & Layout (`admin-shell.js` & `admin-shell.css`)**: Replaced raw unicode/emoji strings (`✓`, `✕`, `👤`) with crisp SVG icons (`check`, `cancel`, `user`). Aligned `.notif-item` elements with flex centering (`align-items: center`), added truncation (`text-overflow: ellipsis`) for long titles and client names, defined `.notif-avatar.cancel` with red `#dc2626` background, and enhanced empty states with an SVG icon.
+    - **Top-Bar Notification Badge Auto-Injection**: Updated `admin-shell.js` to ensure `.notif-badge` is auto-created if missing from `.notif-btn`, and added missing `<span class="notif-badge">` to `propertylist.html`.
+    - **Top-Bar Profile Dropdown Harmonization**: Removed redundant double-nested `<div class="profile-dropdown-info">` wrappers in `dashboard.html`, `add-property.html`, and `addproperty.html`. Replaced inline color styles on Sign Out links in `clients.html` and `profile.html` with standard `class="profile-signout"` to ensure unified styling and click handler attachment.
+    - **Responsive KPI Grid Layout (`dashboard.css`)**: Increased the `.kpi-grid` breakpoint to 1380px so 5 metric cards adapt cleanly to 3 columns on row 1 and 2 columns on row 2 on common laptop resolutions (1366x768 and zoomed viewports) without squeezing labels or overflowing under floating menus.
+    - **Managed Property Listings Action Buttons Harmonization (`dashboard.js` & `dashboard.html`)**: Added an 'Edit' link button (`edit-property.html?id=${p.id}`) with inline SVG icon to each property row in the Dashboard table, styled View, Edit, Status Toggle, and Delete buttons with matching micro-badges, and added 'View All Properties &rarr;' to the panel heading to harmonize with the Recent Inquiries table.
+
+32. **Cross-Device Contact Email Synchronization & Lead Agent Resolution Priority:**
+    - **Problem Identified**: When updating the administrator profile on desktop to `miriamlobren@gmail.com`, visitors and other devices (such as mobile browsers accessing Vercel) continued displaying the default seed email `admin.realestate@gmail.com`, despite phone number edits (`6789998212`) syncing successfully.
+    - **Root Cause**:
+      - `apiGetLeadAgentProfile()` in `frontend/shared/js/supabase.js` and `frontend/shared/js/api.js` queried `${REST_BASE}/users?role=eq.admin&select=*&order=id.desc&limit=1` when no local cache existed on the visiting device.
+      - Because the default demo account `admin.realestate@gmail.com` had a higher primary key ID (`id: 15`) than the lead agent account `miriamlobren@gmail.com` (`id: 1`), `order=id.desc&limit=1` always selected the demo account `admin.realestate@gmail.com` on devices lacking local cache.
+    - **Solution Implemented**:
+      - **Lead Agent Resolution Priority (`supabase.js` & `api.js`)**: Updated `apiGetLeadAgentProfile()` to query `${REST_BASE}/users?role=in.(admin,superadmin)&select=*` and prioritize the active lead agent:
+        1. Explicit match with non-placeholder email cached in `localStorage` (`urbanscope_admin_profile`).
+        2. Remote administrator row with a real agent email (excluding generic placeholders `admin.realestate@gmail.com`, developer `urbanscope.cvsu@gmail.com`, and `@example.com` domains), sorted by `updated_at DESC`.
+        3. Fallback administrator row with `admin.realestate@gmail.com` if no custom agent email exists.
+      - **Admin Profile Sync Enhancement (`supabase.js` & `api.js`)**: Updated `apiUpdateAdminProfile()` to explicitly include `role: 'admin'` in payloads, ensuring that any target account is promoted to admin status in Supabase Cloud.
+      - **Admin Profile Page Remote Refresh (`pages/admin/profile.js`)**: Enhanced `refreshWithRemoteProfile()` to invoke `apiGetLeadAgentProfile()`, immediately populating the email input and currentProfile with `miriamlobren@gmail.com` when opening admin profile settings on any device.
+      - **FastAPI Backend Synchronization (`backend/routers/auth.py`)**: Updated `get_public_agent_profile()` and unauthenticated profile update fallback queries to order real non-demo emails first (`CASE WHEN LOWER(email) NOT IN ('admin.realestate@gmail.com', 'urbanscope.cvsu@gmail.com') AND email NOT LIKE '%@example.com' THEN 0 ELSE 1 END`), preventing local SQLite from picking the demo account over custom agent records.
+      - **Static HTML Default Harmonization**: Standardized static fallback contact email links across `index.html`, `property-detail.html`, `Liora.html`, `Airmen.html`, `terms.html`, and `privacy.html` to `miriamlobren@gmail.com`.
+
+33. **Inquiry Modal Close ("X") Button Concentric SVG & Smooth Animation Enhancement:**
+    - **Problem Identified**: The close button on inquiry details modals used a plain `&times;` typography character inside `.modal-close`. Because font glyph bounding boxes have asymmetrical vertical baselines, hovering over the button (`transform: rotate(90deg)`) caused a jerky, off-center wobble. In addition, the animation lacked entrance easing and click feedback.
+    - **Solution Implemented**:
+      - Replaced raw `&times;` text with geometrically symmetrical SVG cross icons (`18x18`, lines crossing at exact center `(12, 12)`) in `dashboard.html`, `clients.html`, and `index.html`.
+      - Updated `.modal-close` in `dashboard.css`, `clients.css`, and `index.css`:
+        - Smooth concentric rotation of the inner SVG (`transform: rotate(90deg)`) on hover without glyph jitter.
+        - Outer circular pill hover elevation (`transform: scale(1.06)`, `background: #fee2e2`, `border-color: #fca5a5`, `color: #dc2626`, and soft red shadow).
+        - Tactile press state on active click (`transform: scale(0.92)`).
+        - Smooth entrance pop-in animation (`modalCloseEntrance`: `scale(0.5) rotate(-45deg)` to `scale(1) rotate(0deg)`) when `.modal-overlay.open` activates.
+
 ---
 
 ## Safety Rules

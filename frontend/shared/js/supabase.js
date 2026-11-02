@@ -1265,14 +1265,16 @@
                 title: title,
                 brokerage: brokerage,
                 bio: bio,
-                avatar_url: avatarUrl
+                avatar_url: avatarUrl,
+                role: 'admin'
             };
             const corePayload = {
                 full_name: fullName,
                 email: targetEmail,
                 phone: phone,
                 license_number: license,
-                avatar_url: avatarUrl
+                avatar_url: avatarUrl,
+                role: 'admin'
             };
 
             const safePayload = {
@@ -1329,7 +1331,12 @@
                     }
                 }
 
-                // C. Synchronize all admin accounts in Supabase with safePayload (title, name, phone, avatar)
+                // C. If original email is admin.realestate@gmail.com and targetEmail is custom, ensure target is admin
+                if (targetEmail && targetEmail !== 'admin.realestate@gmail.com') {
+                    await sendSupabasePatch(`${REST_BASE}/users?email=ilike.${encodeURIComponent(targetEmail)}`, { role: 'admin' }).catch(() => {});
+                }
+
+                // D. Synchronize all admin accounts in Supabase with safePayload (title, name, phone, avatar)
                 await sendSupabasePatch(`${REST_BASE}/users?role=eq.admin`, safePayload).catch(() => {});
             } catch (sbErr) {
                 console.warn('Supabase profile sync notice:', sbErr);
@@ -1455,48 +1462,80 @@
 
         // 2. Query Supabase Cloud
         try {
-            let url = `${REST_BASE}/users?role=eq.admin&select=*&order=id.desc&limit=1`;
-            if (cached && cached.email) {
-                url = `${REST_BASE}/users?email=ilike.${encodeURIComponent(cached.email)}&select=*&limit=1`;
-            }
-            let res = await fetch(url, { headers: getHeaders() });
+            let res = await fetch(`${REST_BASE}/users?role=in.(admin,superadmin)&select=*`, { headers: getHeaders() });
             let users = [];
             if (res.ok) {
                 users = await res.json().catch(() => []);
             }
             if (!Array.isArray(users) || users.length === 0) {
-                const fallbackRes = await fetch(`${REST_BASE}/users?role=eq.admin&select=*&order=id.desc&limit=1`, {
-                    headers: getHeaders()
-                });
+                const fallbackRes = await fetch(`${REST_BASE}/users?select=*&limit=5`, { headers: getHeaders() });
                 if (fallbackRes.ok) {
                     users = await fallbackRes.json().catch(() => []);
                 }
             }
             if (Array.isArray(users) && users.length > 0) {
-                const u = users[0];
-                const cachedTitle = (cached && cached.title && cached.title.trim()) ? cached.title.trim() : null;
-                const remoteTitle = (u.title && u.title.trim()) ? u.title.trim() : null;
-                const effectiveTitle = remoteTitle || cachedTitle || 'Real Estate Agent';
-
-                const merged = {
-                    name: u.full_name || (cached && cached.name) || 'Miriam Lobren',
-                    full_name: u.full_name || (cached && cached.full_name) || 'Miriam Lobren',
-                    email: u.email || (cached && cached.email) || 'admin.realestate@gmail.com',
-                    phone: u.phone || (cached && cached.phone) || '+63 900 000 0000',
-                    license: u.license_number || (cached && cached.license) || 'PRC REB #0031892',
-                    license_number: u.license_number || (cached && cached.license_number) || 'PRC REB #0031892',
-                    title: effectiveTitle,
-                    brokerage: (() => {
-                        const b = u.brokerage || (cached && cached.brokerage) || '';
-                        return (!b || /^cd\s.*realty$/i.test(String(b).trim())) ? ((cached && cached.brokerage) || 'UrbanScope') : b;
-                    })(),
-                    bio: u.bio || (cached && cached.bio) || 'Serving Las Piñas, Cavite, and surrounding prime locations with high-integrity real estate solutions.',
-                    avatar_url: u.avatar_url || (cached && cached.avatar_url) || 'assets/images/agent.jpg'
+                const isRealAgentEmail = (em) => {
+                    if (!em) return false;
+                    const clean = String(em).trim().toLowerCase();
+                    return clean &&
+                           clean !== 'admin.realestate@gmail.com' &&
+                           clean !== 'urbanscope.cvsu@gmail.com' &&
+                           !clean.endsWith('@example.com');
                 };
-                try {
-                    localStorage.setItem('urbanscope_admin_profile', JSON.stringify(merged));
-                } catch (e) {}
-                return merged;
+
+                // Resolution priority:
+                // 1. Explicit match with locally cached email if cached has a real agent email
+                // 2. Remote admin user with a real configured agent email (e.g. miriamlobren@gmail.com)
+                // 3. Fallback admin user with admin.realestate@gmail.com
+                // 4. First admin record in result set
+                let u = null;
+                if (cached && cached.email && isRealAgentEmail(cached.email)) {
+                    u = users.find(x => (x.email || '').trim().toLowerCase() === cached.email.trim().toLowerCase());
+                }
+                if (!u) {
+                    const customAdmins = users.filter(x => isRealAgentEmail(x.email));
+                    if (customAdmins.length > 0) {
+                        customAdmins.sort((a, b) => {
+                            const dateA = a.updated_at ? new Date(a.updated_at).getTime() : 0;
+                            const dateB = b.updated_at ? new Date(b.updated_at).getTime() : 0;
+                            if (dateB !== dateA) return dateB - dateA;
+                            return (a.id || 0) - (b.id || 0);
+                        });
+                        u = customAdmins[0];
+                    }
+                }
+                if (!u) {
+                    u = users.find(x => (x.email || '').trim().toLowerCase() === 'admin.realestate@gmail.com') || users[0];
+                }
+
+                if (u) {
+                    const cachedTitle = (cached && cached.title && cached.title.trim()) ? cached.title.trim() : null;
+                    const remoteTitle = (u.title && u.title.trim()) ? u.title.trim() : null;
+                    const effectiveTitle = remoteTitle || cachedTitle || 'Real Estate Agent';
+
+                    const effectiveEmail = u.email || (cached && cached.email) || 'miriamlobren@gmail.com';
+                    const effectivePhone = u.phone || (cached && cached.phone) || '+63 900 000 0000';
+
+                    const merged = {
+                        name: u.full_name || (cached && cached.name) || 'Miriam Lobren',
+                        full_name: u.full_name || (cached && cached.full_name) || 'Miriam Lobren',
+                        email: effectiveEmail,
+                        phone: effectivePhone,
+                        license: u.license_number || (cached && cached.license) || 'PRC REB #0031892',
+                        license_number: u.license_number || (cached && cached.license_number) || 'PRC REB #0031892',
+                        title: effectiveTitle,
+                        brokerage: (() => {
+                            const b = u.brokerage || (cached && cached.brokerage) || '';
+                            return (!b || /^cd\s.*realty$/i.test(String(b).trim())) ? ((cached && cached.brokerage) || 'UrbanScope') : b;
+                        })(),
+                        bio: u.bio || (cached && cached.bio) || 'Serving Las Piñas, Cavite, and surrounding prime locations with high-integrity real estate solutions.',
+                        avatar_url: u.avatar_url || (cached && cached.avatar_url) || 'assets/images/agent.jpg'
+                    };
+                    try {
+                        localStorage.setItem('urbanscope_admin_profile', JSON.stringify(merged));
+                    } catch (e) {}
+                    return merged;
+                }
             }
         } catch (sbErr) {
             console.warn('Supabase get agent profile notice:', sbErr);
@@ -1507,7 +1546,7 @@
         return {
             name: (cached && cached.name) || 'Miriam Lobren',
             full_name: (cached && cached.full_name) || 'Miriam Lobren',
-            email: (cached && cached.email) || 'admin.realestate@gmail.com',
+            email: (cached && cached.email) || 'miriamlobren@gmail.com',
             phone: (cached && cached.phone) || '+63 900 000 0000',
             license: (cached && cached.license) || 'PRC REB #0031892',
             license_number: (cached && cached.license_number) || 'PRC REB #0031892',

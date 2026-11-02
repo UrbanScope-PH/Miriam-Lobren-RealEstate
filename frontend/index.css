@@ -1227,25 +1227,74 @@
 .modal-close {
     background: #f1f5f2;
     border: 1px solid #e1ebe3;
-    width: 34px;
-    height: 34px;
+    width: 36px;
+    height: 36px;
     border-radius: 50%;
-    font-size: 22px;
-    line-height: 1;
     cursor: pointer;
     color: #5e7163;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    transition: all 0.18s ease;
+    padding: 0;
+    transition: background-color 0.22s ease,
+                border-color 0.22s ease,
+                color 0.22s ease,
+                transform 0.25s cubic-bezier(0.16, 1, 0.3, 1),
+                box-shadow 0.22s ease;
     flex-shrink: 0;
+    transform-origin: center center;
+    will-change: transform;
+}
+
+.modal-close svg {
+    pointer-events: none;
+    display: block;
+    width: 18px;
+    height: 18px;
+    transform-origin: center center;
+    transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .modal-close:hover {
     background: #fee2e2;
     border-color: #fca5a5;
     color: #dc2626;
+    transform: scale(1.06);
+    box-shadow: 0 4px 12px rgba(220, 38, 38, 0.16);
+}
+
+.modal-close:hover svg {
     transform: rotate(90deg);
+}
+
+.modal-close:active {
+    transform: scale(0.92);
+    background: #fecaca;
+    box-shadow: none;
+}
+
+.modal-close:active svg {
+    transform: rotate(90deg) scale(0.92);
+}
+
+.modal-close:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.22);
+}
+
+.modal-overlay.open .modal-close {
+    animation: modalCloseEntrance 0.32s cubic-bezier(0.16, 1, 0.3, 1) 0.08s both;
+}
+
+@keyframes modalCloseEntrance {
+    0% {
+        opacity: 0;
+        transform: scale(0.5) rotate(-45deg);
+    }
+    100% {
+        opacity: 1;
+        transform: scale(1) rotate(0deg);
+    }
 }
 
 .intent-cards-container {

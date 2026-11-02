@@ -105,7 +105,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const defaultProfile = {
         name: 'Miriam Lobren (Admin)',
         title: 'Real Estate Agent',
-        email: 'admin.realestate@gmail.com',
+        email: 'miriamlobren@gmail.com',
         phone: '+63 900 000 0000',
         license: 'PRC REB #0031892',
         brokerage: 'UrbanScope',
@@ -145,12 +145,30 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Asynchronously refresh with server profile if available
     (async function refreshWithRemoteProfile() {
         try {
+            if (typeof apiGetLeadAgentProfile === 'function') {
+                const lead = await apiGetLeadAgentProfile();
+                if (lead) {
+                    if (lead.email && (!savedProfile.email || savedProfile.email === 'admin.realestate@gmail.com') && emailInput) {
+                        emailInput.value = lead.email;
+                        currentProfile.email = lead.email;
+                    }
+                    if (lead.phone && !savedProfile.phone && phoneInput) phoneInput.value = lead.phone;
+                    if ((lead.full_name || lead.name) && !savedProfile.name && fullNameInput) fullNameInput.value = lead.full_name || lead.name;
+                    if (lead.license && !savedProfile.license && licenseInput) licenseInput.value = lead.license;
+                    if (lead.title && !savedProfile.title) {
+                        if (titleInput) titleInput.value = lead.title;
+                        if (adminTitleDisplay) adminTitleDisplay.textContent = lead.title;
+                    }
+                    if (lead.brokerage && !savedProfile.brokerage && brokerageInput) brokerageInput.value = lead.brokerage;
+                    if (lead.bio && !savedProfile.bio && bioInput) bioInput.value = lead.bio;
+                }
+            }
             if (typeof apiGetCurrentUser === 'function') {
                 const u = await apiGetCurrentUser();
                 if (u) {
                     if (u.phone && !savedProfile.phone && phoneInput) phoneInput.value = u.phone;
                     if ((u.full_name || u.name) && !savedProfile.name && fullNameInput) fullNameInput.value = u.full_name || u.name;
-                    if (u.email && !savedProfile.email && emailInput) emailInput.value = u.email;
+                    if (u.email && !savedProfile.email && u.email !== 'admin.realestate@gmail.com' && emailInput) emailInput.value = u.email;
                     if (u.license_number && !savedProfile.license && licenseInput) licenseInput.value = u.license_number;
                     if (u.title && !savedProfile.title) {
                         if (titleInput) titleInput.value = u.title;

@@ -71,12 +71,8 @@
             <div class="profile-dropdown" id="profileDropdown" role="menu" hidden>
 
                 <div class="profile-dropdown-info">
-                    <div class="profile-dropdown-info">
-                        <img src="../../assets/images/agent.jpg" alt="Miriam Lobren" class="avatar-circle">
-
-                        <span class="profile-dropdown-name"><strong>Miriam
-                                Lobren</strong><small>Administrator</small></span>
-                    </div>
+                    <img src="../../assets/images/agent.jpg" alt="Miriam Lobren" class="avatar-circle">
+                    <span class="profile-dropdown-name"><strong id="adminNameDisplay">Miriam Lobren</strong><small>Administrator</small></span>
                 </div>
 
 
@@ -416,7 +412,7 @@
                     <div class="property-overview-note">
                         <span class="note-dot"></span>
                         <span>
-                            Keep your listings updated so clients can get an accurate informations and
+                            Keep your listings updated so clients can get accurate information and
                             explore available properties.
                         </span>
                     </div>
@@ -569,11 +565,14 @@
                     <h2>Managed Property Listings</h2>
                     <p>Review and manage all real estate inventory published on your platform</p>
                 </div>
-                <div style="display: flex; gap: 10px; align-items: center;">
+                <div style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
                     <a href="add-property.html" class="primary-action-btn"
-                        style="padding: 8px 16px; font-size: 0.88rem; text-decoration: none; border-radius: 6px; background: var(--green); color: #fff; font-weight: 600; display: inline-flex; align-items: center; gap: 6px;">
+                        style="padding: 8px 16px; font-size: 0.88rem; text-decoration: none; border-radius: 8px; background: var(--green); color: #fff; font-weight: 600; display: inline-flex; align-items: center; gap: 6px;">
                         + Add Property
                     </a>
+                    <button class="text-button" type="button" onclick="location.href='propertylist.html'">
+                        View All Properties &rarr;
+                    </button>
                 </div>
             </div>
 
@@ -645,7 +644,12 @@
                         <p class="modal-subtitle">Review inquiry information and client details</p>
                     </div>
                 </div>
-                <button class="modal-close" id="closeModalBtn" type="button" aria-label="Close modal">&times;</button>
+                <button class="modal-close" id="closeModalBtn" type="button" aria-label="Close modal">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                </button>
             </div>
             <div class="modal-body" id="modalContent">
                 <!-- Dynamically populated -->

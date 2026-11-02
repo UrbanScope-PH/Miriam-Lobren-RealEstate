@@ -353,7 +353,18 @@ def update_current_user_profile(
 
     # 4. Fallback to default lead admin if still unauthenticated in local development
     if not user_id:
-        cursor.execute("SELECT * FROM users WHERE role = 'admin' OR LOWER(email) = 'admin.realestate@gmail.com' ORDER BY CASE WHEN role = 'admin' THEN 0 ELSE 1 END, id ASC LIMIT 1")
+        cursor.execute("""
+            SELECT * FROM users 
+            WHERE role IN ('admin', 'superadmin') OR LOWER(email) = 'admin.realestate@gmail.com' 
+            ORDER BY 
+                CASE 
+                    WHEN LOWER(email) NOT IN ('admin.realestate@gmail.com', 'urbanscope.cvsu@gmail.com') AND email NOT LIKE '%@example.com' THEN 0 
+                    ELSE 1 
+                END,
+                CASE WHEN role = 'admin' THEN 0 ELSE 1 END,
+                id ASC 
+            LIMIT 1
+        """)
         target_row = cursor.fetchone()
         if target_row:
             user_id = target_row["id"]
@@ -467,8 +478,14 @@ def get_public_agent_profile():
     cursor.execute("""
         SELECT id, email, full_name, phone, license_number, title, brokerage, bio, avatar_url, role
         FROM users
-        WHERE role = 'admin' OR LOWER(email) = 'admin.realestate@gmail.com'
-        ORDER BY CASE WHEN role = 'admin' THEN 0 ELSE 1 END, id ASC
+        WHERE role IN ('admin', 'superadmin') OR LOWER(email) = 'admin.realestate@gmail.com'
+        ORDER BY 
+            CASE 
+                WHEN LOWER(email) NOT IN ('admin.realestate@gmail.com', 'urbanscope.cvsu@gmail.com') AND email NOT LIKE '%@example.com' THEN 0 
+                ELSE 1 
+            END,
+            CASE WHEN role = 'admin' THEN 0 ELSE 1 END,
+            id ASC
         LIMIT 1
     """)
     row = cursor.fetchone()
@@ -477,7 +494,7 @@ def get_public_agent_profile():
         return {
             "name": "Miriam Lobren",
             "full_name": "Miriam Lobren",
-            "email": "admin.realestate@gmail.com",
+            "email": "miriamlobren@gmail.com",
             "phone": "+63 900 000 0000",
             "license": "PRC REB #0031892",
             "license_number": "PRC REB #0031892",

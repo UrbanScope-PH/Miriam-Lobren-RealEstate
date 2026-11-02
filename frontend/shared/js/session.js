@@ -576,7 +576,7 @@
             p = JSON.parse(localStorage.getItem('urbanscope_admin_profile') || 'null');
             if (!p) {
                 var adminUser = JSON.parse(localStorage.getItem('adminUser') || 'null');
-                if (adminUser && (adminUser.role === 'admin' || adminUser.email === 'admin.realestate@gmail.com')) {
+                if (adminUser && (adminUser.role === 'admin' || adminUser.email === 'admin.realestate@gmail.com' || adminUser.email === 'miriamlobren@gmail.com')) {
                     p = adminUser;
                 }
             }
@@ -585,7 +585,7 @@
         function applyContact(phone, email) {
             if (!phone && !email) return;
             var cleanPhone = phone || '+63 900 000 0000';
-            var cleanEmail = email || 'admin.realestate@gmail.com';
+            var cleanEmail = email || 'miriamlobren@gmail.com';
             var cleanDigits = cleanPhone.replace(/[^\d+]/g, '');
 
             document.querySelectorAll('.footer-contact a[href^="tel:"], footer a[href^="tel:"], #footerAgentPhone').forEach(function (el) {
