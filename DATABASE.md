@@ -189,6 +189,7 @@ Bi-directional inquiry lifecycle alerts for administrators (client cancellations
 | `title` | TEXT | NOT NULL | Notification headline |
 | `message` | TEXT | NOT NULL | Notification body |
 | `is_read` | INTEGER | `0` | `0` = unread, `1` = read |
+| `is_seen` | INTEGER | `0` | `0` = unseen, `1` = seen/toasted (prevents repeat notifications across devices) |
 | `created_at` | TIMESTAMP | `CURRENT_TIMESTAMP` | |
 
 ---
@@ -404,6 +405,8 @@ supabase/
                                              Extends notifications table for admin/client inquiry lifecycle alerts
   migrations/20261102050000_normalize_lead_admin_role_and_email.sql
                                              Normalizes lead agent account to miriam@gmail.com (role: admin), sets superadmin role for urbanscope.cvsu@gmail.com, demotes legacy duplicate id 1 to client, and re-points property agent_id
+  migrations/20261103000000_notification_seen_sync.sql
+                                             Adds is_seen column to notifications table for persistent cross-device seen and toast suppression sync
   seed.sql                                   Demo data (users, 6 properties, inquiries, ...)
   scripts/                                   One-off data fixes to paste into the SQL Editor (never auto-run)
 ```

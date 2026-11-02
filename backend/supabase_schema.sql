@@ -334,6 +334,7 @@ CREATE TABLE notifications (
     reference_type TEXT,
     reference_id BIGINT,
     is_read BOOLEAN DEFAULT FALSE,
+    is_seen BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMPTZ DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 

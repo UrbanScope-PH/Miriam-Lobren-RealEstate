@@ -409,7 +409,27 @@ path when rendering from a page.
         - Demoted legacy duplicate row `id: 1` (`miriamlobren@gmail.com`) to `role = 'client'`.
         - Re-pointed `properties.agent_id` from legacy `1` to active lead admin `15`.
       - **Immediate Real-Time Broadcast**: Dispatches `urbanscope:profileUpdated` upon remote resolution, ensuring open tabs, footers, headers, and mailto links instantly render `miriam@gmail.com` and `09123456789`.
-      - **Harmonized Fallbacks**: Synchronized defaults in `index.html`, `index.js`, `session.js`, `terms.html`, `privacy.html`, `Liora.html`, `Airmen.html`, and `property-detail.html`.
+34. **Cross-Device Client Notification Seen & Read Synchronization (One-Time Notification Guarantee):**
+    - **Problem Identified**: When an administrator approved an inquiry, client notification toasts and unread bell badge indicators were tracked solely in device-specific `localStorage` keys (`client_notifs_read_ids_${email}`, `client_notifs_toasted_${email}`). When a client subsequently logged in or opened the site on another device (or mobile browser), the new device had empty `localStorage`, causing the floating approval toast to pop up again and the bell badge to re-display as unread (`1`), despite the client having already seen and acknowledged the notification on their first device.
+    - **Solution Implemented**:
+      - **Database Schema & Migration (`supabase/migrations/20261103000000_notification_seen_sync.sql`, `backend/database.py`, `backend/supabase_schema.sql`)**:
+        Added `is_seen INTEGER DEFAULT 0` (SQLite) and `is_seen BOOLEAN DEFAULT false` (Supabase Cloud) to `notifications` table, ensuring display/seen state is permanently recorded in the database.
+      - **Backend API Endpoints (`backend/routers/inquiries.py`)**:
+        - `POST /api/notifications/seen`: Updates `is_seen = 1` for a specific inquiry, notification ID, or client email so other devices know the notification was already presented.
+        - `POST /api/notifications/read`: Updates `is_read = 1, is_seen = 1` for a specific notification or user across all devices.
+        - `GET /api/notifications`: Auto-synchronizes notification records for approved client inquiries and returns `is_read` and `is_seen` booleans.
+      - **API Gateways (`frontend/shared/js/supabase.js` and `api.js`)**:
+        - `isLocalDevHost()`: Expanded to recognize LAN IP addresses (`192.168.*`, `10.*`, `172.16-31.*`) and port 8000, ensuring mobile devices on local networks connect directly to the FastAPI notification endpoints.
+        - `apiGetClientNotifications()`: Returns remote notifications with server-backed `is_read` and `is_seen` flags.
+        - `apiMarkNotificationsRead()` and `apiMarkNotificationsSeen()`: Persist read and seen states across FastAPI backend, Supabase Cloud (`PATCH /rest/v1/notifications`), and local storage caches.
+      - **Client Session Engine (`frontend/shared/js/session.js` & `session.css`)**:
+        - `showClientApprovalToast()`: Immediately calls `apiMarkNotificationsSeen()` upon rendering the toast so remote devices are notified of the seen state.
+        - Floating toast dismissal: Added a dedicated `✕` button (`.client-approval-toast-close`) and click-through link on `.client-approval-toast`. Clicking either action immediately marks the notification as read and seen in the database.
+        - `loadClientNotifications()`: Enforces `isSeen = (n.is_seen === true) || isRead || toastedIds.includes(k)`. Repeat toasts are completely suppressed on any device once seen or read.
+        - `markAllClientNotifsRead()`: Persists read state to the server upon clicking the notification bell or viewing notifications, clearing the unread badge across all devices.
+      - **Inquiry History Page (`frontend/pages/inquiry/history.js`)**:
+        - Automatically marks user notifications as read and seen on page load via `apiMarkNotificationsRead({ email })`.
+        - Suppresses repeat initial toasts on secondary devices while preserving live status change notifications during active sessions.
 
 ---
 

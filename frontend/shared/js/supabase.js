@@ -49,7 +49,14 @@
     }
 
     function isLocalDevHost() {
-        return location.hostname === 'localhost' || location.hostname === '127.0.0.1';
+        const h = location.hostname;
+        return h === 'localhost' ||
+               h === '127.0.0.1' ||
+               h === '[::1]' ||
+               /^192\.168\./.test(h) ||
+               /^10\./.test(h) ||
+               /^172\.(1[6-9]|2[0-9]|3[0-1])\./.test(h) ||
+               location.port === '8000';
     }
 
     // ----------------------------------------------------------
@@ -591,20 +598,7 @@
 
         const mapByKey = new Map();
 
-        // 1. Local stored client notifications
-        try {
-            const localNotifs = JSON.parse(localStorage.getItem(CLIENT_NOTIFS_KEY) || '[]');
-            if (Array.isArray(localNotifs)) {
-                localNotifs.forEach(n => {
-                    if (n && String(n.client_email || '').trim().toLowerCase() === cleanEmail) {
-                        const key = n.notifKey || `approved_${n.inquiryId || n.id}`;
-                        mapByKey.set(key, { ...n, notifKey: key });
-                    }
-                });
-            }
-        } catch (_) {}
-
-        // 2. Local FastAPI backend notifications
+        // 1. Local FastAPI backend notifications (persisted with is_read and is_seen)
         if (isLocalDevHost()) {
             try {
                 const localBase = (location.port === '8000') ? '/api' : 'http://127.0.0.1:8000/api';
@@ -615,31 +609,89 @@
                         rows.forEach(r => {
                             const inqId = r.inquiry_id || r.id;
                             const key = `${(r.type || 'approved').toLowerCase()}_${inqId}`;
-                            if (!mapByKey.has(key)) {
-                                const createdMs = r.created_at ? new Date(r.created_at).getTime() : Date.now();
-                                mapByKey.set(key, {
-                                    id: `srv_${r.id}`,
-                                    notifKey: key,
-                                    type: (r.type || 'approved').toLowerCase(),
-                                    inquiryId: inqId,
-                                    client_email: cleanEmail,
-                                    property_title: r.property_title || 'General Inquiry',
-                                    title: r.title || `Inquiry #${inqId} Approved!`,
-                                    message: r.message || `Your inquiry for "${r.property_title || 'General Inquiry'}" has been approved by Miriam Lobren!`,
-                                    created_at: r.created_at,
-                                    time: isNaN(createdMs) ? Date.now() : createdMs
-                                });
-                            }
+                            const createdMs = r.created_at ? new Date(r.created_at).getTime() : Date.now();
+                            mapByKey.set(key, {
+                                id: `srv_${r.id}`,
+                                db_id: r.id,
+                                notifKey: key,
+                                type: (r.type || 'approved').toLowerCase(),
+                                inquiryId: inqId,
+                                client_email: cleanEmail,
+                                property_title: r.property_title || 'General Inquiry',
+                                title: r.title || `Inquiry #${inqId} Approved!`,
+                                message: r.message || `Your inquiry for "${r.property_title || 'General Inquiry'}" has been approved by Miriam Lobren!`,
+                                is_read: Boolean(r.is_read),
+                                is_seen: Boolean(r.is_seen),
+                                created_at: r.created_at,
+                                time: isNaN(createdMs) ? Date.now() : createdMs
+                            });
                         });
                     }
                 }
             } catch (_) {}
         }
 
-        // 3. Derive from client's live inquiries with 'Approved' status
+        // 2. Try Supabase Cloud
+        try {
+            const res = await fetch(`${REST_BASE}/notifications?recipient_email=ilike.${encodeURIComponent(cleanEmail)}&order=created_at.desc&limit=50`, {
+                method: 'GET',
+                headers: getHeaders()
+            });
+            if (res.ok) {
+                const rows = await res.json();
+                if (Array.isArray(rows)) {
+                    rows.forEach(r => {
+                        const inqId = r.inquiry_id || r.reference_id || r.id;
+                        const key = `${(r.type || 'approved').toLowerCase()}_${inqId}`;
+                        if (!mapByKey.has(key)) {
+                            const createdMs = r.created_at ? new Date(r.created_at).getTime() : Date.now();
+                            mapByKey.set(key, {
+                                id: `sb_${r.id}`,
+                                db_id: r.id,
+                                notifKey: key,
+                                type: (r.type || 'approved').toLowerCase(),
+                                inquiryId: inqId,
+                                client_email: cleanEmail,
+                                property_title: r.property_title || 'General Inquiry',
+                                title: r.title || `Inquiry #${inqId} Approved!`,
+                                message: r.message || `Your inquiry for "${r.property_title || 'General Inquiry'}" has been approved by Miriam Lobren!`,
+                                is_read: Boolean(r.is_read),
+                                is_seen: Boolean(r.is_seen),
+                                created_at: r.created_at,
+                                time: isNaN(createdMs) ? Date.now() : createdMs
+                            });
+                        }
+                    });
+                }
+            }
+        } catch (_) {}
+
+        // 3. Local stored client notifications (offline fallback)
+        try {
+            const localNotifs = JSON.parse(localStorage.getItem(CLIENT_NOTIFS_KEY) || '[]');
+            if (Array.isArray(localNotifs)) {
+                localNotifs.forEach(n => {
+                    if (n && String(n.client_email || '').trim().toLowerCase() === cleanEmail) {
+                        const key = n.notifKey || `approved_${n.inquiryId || n.id}`;
+                        if (!mapByKey.has(key)) {
+                            mapByKey.set(key, { ...n, notifKey: key });
+                        }
+                    }
+                });
+            }
+        } catch (_) {}
+
+        // 4. Derive from client's live inquiries with 'Approved' status
         try {
             const myInquiries = await apiGetMyInquiries(cleanEmail);
             if (Array.isArray(myInquiries)) {
+                let localRead = [];
+                let localToasted = [];
+                try {
+                    localRead = JSON.parse(localStorage.getItem('client_notifs_read_ids_' + cleanEmail) || '[]');
+                    localToasted = JSON.parse(localStorage.getItem('client_notifs_toasted_' + cleanEmail) || '[]');
+                } catch (_) {}
+
                 myInquiries.forEach(inq => {
                     const s = String(inq.status || '').toLowerCase().trim();
                     if (s === 'approved' || s === 'scheduled') {
@@ -649,6 +701,8 @@
                             const code = inq.inquiry_code || `INQ-2026-${String(inq.id).padStart(3, '0')}`;
                             const ts = inq.updated_at || inq.created_at || new Date().toISOString();
                             const timeMs = new Date(ts).getTime();
+                            const alreadyRead = localRead.includes(key);
+                            const alreadySeen = alreadyRead || localToasted.includes(key);
                             mapByKey.set(key, {
                                 id: key,
                                 notifKey: key,
@@ -658,6 +712,8 @@
                                 property_title: propTitle,
                                 title: `Inquiry ${code} Approved!`,
                                 message: `Your inquiry for "${propTitle}" has been approved by Miriam Lobren!`,
+                                is_read: alreadyRead,
+                                is_seen: alreadySeen,
                                 created_at: ts,
                                 time: isNaN(timeMs) ? Date.now() : timeMs
                             });
@@ -670,6 +726,111 @@
         const result = Array.from(mapByKey.values());
         result.sort((a, b) => (b.time || 0) - (a.time || 0));
         return result;
+    }
+
+    async function apiMarkNotificationsRead(payload) {
+        const data = payload || {};
+        const email = (data.email || '').trim().toLowerCase();
+        const inquiryId = data.inquiryId || data.inquiry_id;
+        const notifId = data.notifId || data.id;
+
+        // 1. FastAPI backend
+        if (isLocalDevHost()) {
+            try {
+                const localBase = (location.port === '8000') ? '/api' : 'http://127.0.0.1:8000/api';
+                await fetch(`${localBase}/notifications/read`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, inquiry_id: inquiryId, id: notifId, role: data.role })
+                });
+            } catch (_) {}
+        }
+
+        // 2. Supabase Cloud
+        try {
+            let sbUrl = `${REST_BASE}/notifications?`;
+            if (notifId && typeof notifId === 'number') {
+                sbUrl += `id=eq.${encodeURIComponent(notifId)}`;
+            } else if (inquiryId && email) {
+                sbUrl += `recipient_email=ilike.${encodeURIComponent(email)}&inquiry_id=eq.${encodeURIComponent(inquiryId)}`;
+            } else if (email) {
+                sbUrl += `recipient_email=ilike.${encodeURIComponent(email)}`;
+            } else if (data.role === 'admin') {
+                sbUrl += `recipient_role=eq.admin`;
+            }
+            await fetch(sbUrl, {
+                method: 'PATCH',
+                headers: getHeaders(),
+                body: JSON.stringify({ is_read: true, is_seen: true })
+            });
+        } catch (_) {}
+
+        // 3. Local sync
+        if (email) {
+            try {
+                const readKey = 'client_notifs_read_ids_' + email;
+                const readIds = JSON.parse(localStorage.getItem(readKey) || '[]');
+                if (inquiryId) {
+                    const k = 'approved_' + inquiryId;
+                    if (!readIds.includes(k)) readIds.push(k);
+                }
+                localStorage.setItem(readKey, JSON.stringify(readIds));
+            } catch (_) {}
+        }
+
+        window.dispatchEvent(new CustomEvent('clientNotificationRead', { detail: payload }));
+        return true;
+    }
+
+    async function apiMarkNotificationsSeen(payload) {
+        const data = payload || {};
+        const email = (data.email || '').trim().toLowerCase();
+        const inquiryId = data.inquiryId || data.inquiry_id;
+        const notifId = data.notifId || data.id;
+
+        // 1. FastAPI backend
+        if (isLocalDevHost()) {
+            try {
+                const localBase = (location.port === '8000') ? '/api' : 'http://127.0.0.1:8000/api';
+                await fetch(`${localBase}/notifications/seen`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, inquiry_id: inquiryId, id: notifId, role: data.role })
+                });
+            } catch (_) {}
+        }
+
+        // 2. Supabase Cloud
+        try {
+            let sbUrl = `${REST_BASE}/notifications?`;
+            if (notifId && typeof notifId === 'number') {
+                sbUrl += `id=eq.${encodeURIComponent(notifId)}`;
+            } else if (inquiryId && email) {
+                sbUrl += `recipient_email=ilike.${encodeURIComponent(email)}&inquiry_id=eq.${encodeURIComponent(inquiryId)}`;
+            } else if (email) {
+                sbUrl += `recipient_email=ilike.${encodeURIComponent(email)}`;
+            }
+            await fetch(sbUrl, {
+                method: 'PATCH',
+                headers: getHeaders(),
+                body: JSON.stringify({ is_seen: true })
+            });
+        } catch (_) {}
+
+        // 3. Local sync
+        if (email) {
+            try {
+                const toastKey = 'client_notifs_toasted_' + email;
+                const toastedIds = JSON.parse(localStorage.getItem(toastKey) || '[]');
+                if (inquiryId) {
+                    const k = 'approved_' + inquiryId;
+                    if (!toastedIds.includes(k)) toastedIds.push(k);
+                }
+                localStorage.setItem(toastKey, JSON.stringify(toastedIds));
+            } catch (_) {}
+        }
+
+        return true;
     }
 
     async function apiSubmitInquiry(inquiry) {
@@ -875,6 +1036,8 @@
                 const clientEmail = (targetInquiry.client_email || targetInquiry.email || '').trim().toLowerCase();
                 const propTitle = targetInquiry.property_title || targetInquiry.propertyTitle || 'General Consultation';
                 const code = targetInquiry.inquiry_code || `INQ-2026-${String(id).padStart(3, '0')}`;
+                const notifTitle = `Inquiry ${code} Approved!`;
+                const notifMsg = `Your inquiry for "${propTitle}" has been approved by Miriam Lobren!`;
                 pushClientNotification({
                     id: `approved_${id}_${Date.now()}`,
                     notifKey: `approved_${id}`,
@@ -882,11 +1045,33 @@
                     inquiryId: id,
                     client_email: clientEmail,
                     property_title: propTitle,
-                    title: `Inquiry ${code} Approved!`,
-                    message: `Your inquiry for "${propTitle}" has been approved by Miriam Lobren!`,
+                    title: notifTitle,
+                    message: notifMsg,
+                    is_read: false,
+                    is_seen: false,
                     created_at: nowIso,
                     time: Date.now()
                 });
+
+                // Sync notification to Supabase Cloud if active
+                try {
+                    fetch(`${REST_BASE}/notifications`, {
+                        method: 'POST',
+                        headers: getHeaders(),
+                        body: JSON.stringify({
+                            recipient_role: 'client',
+                            recipient_email: clientEmail,
+                            type: 'approved',
+                            inquiry_id: id,
+                            property_title: propTitle,
+                            client_name: targetInquiry.client_name || targetInquiry.name || 'Client',
+                            title: notifTitle,
+                            message: notifMsg,
+                            is_read: false,
+                            is_seen: false
+                        })
+                    }).catch(() => {});
+                } catch (_) {}
             }
         }
 
@@ -2411,6 +2596,8 @@
     window.apiCancelMyInquiry = apiCancelMyInquiry;
     window.apiGetAdminNotifications = apiGetAdminNotifications;
     window.apiGetClientNotifications = apiGetClientNotifications;
+    window.apiMarkNotificationsRead = apiMarkNotificationsRead;
+    window.apiMarkNotificationsSeen = apiMarkNotificationsSeen;
     window.apiGetUsers = apiGetUsers;
     window.apiUpdateAdminProfile = apiUpdateAdminProfile;
     window.apiGetLeadAgentProfile = apiGetLeadAgentProfile;

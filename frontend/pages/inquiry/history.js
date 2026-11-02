@@ -96,6 +96,11 @@
             }
         }
 
+        // When viewing inquiry history, mark notifications as read and seen across all devices
+        if (typeof window.apiMarkNotificationsRead === 'function') {
+            window.apiMarkNotificationsRead({ email });
+        }
+
         // If modify modal is open for an inquiry that is no longer Under Review, close it
         if (modifyModal && modifyModal.classList.contains('active')) {
             const activeModifyId = document.getElementById('modifyInquiryId')?.value;
@@ -105,7 +110,7 @@
             }
         }
 
-        checkApprovedInquiryNotifications(email);
+        checkApprovedInquiryNotifications(email, silent);
         updateStats();
         renderInquiries();
 
@@ -114,7 +119,7 @@
         }
     }
 
-    function checkApprovedInquiryNotifications(email) {
+    function checkApprovedInquiryNotifications(email, isLiveUpdate = false) {
         if (!email || !Array.isArray(allInquiries)) return;
         const toastedKey = 'client_notifs_toasted_' + email;
         let toastedIds = [];
@@ -129,15 +134,18 @@
                 const key = 'approved_' + item.id;
                 if (!toastedIds.includes(key)) {
                     toastedIds.push(key);
-                    if (!newlyApproved) newlyApproved = item;
+                    if (isLiveUpdate && !newlyApproved) {
+                        newlyApproved = item;
+                    }
                 }
             }
         });
 
+        try {
+            localStorage.setItem(toastedKey, JSON.stringify(toastedIds));
+        } catch (e) { }
+
         if (newlyApproved) {
-            try {
-                localStorage.setItem(toastedKey, JSON.stringify(toastedIds));
-            } catch (e) { }
             const propTitle = newlyApproved.property_title || newlyApproved.propertyTitle || 'General Consultation';
             showToast(`✓ Good news! Your inquiry for "${propTitle}" has been approved by Miriam Lobren!`);
         }

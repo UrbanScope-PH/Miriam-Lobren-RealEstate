@@ -186,9 +186,16 @@ def init_db():
             title TEXT NOT NULL,
             message TEXT NOT NULL,
             is_read INTEGER DEFAULT 0,
+            is_seen INTEGER DEFAULT 0,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );
     """)
+
+    cursor.execute("PRAGMA table_info(notifications)")
+    existing_notif_cols = {col[1] for col in cursor.fetchall()}
+    if "is_seen" not in existing_notif_cols:
+        cursor.execute("ALTER TABLE notifications ADD COLUMN is_seen INTEGER DEFAULT 0")
+        cursor.execute("UPDATE notifications SET is_seen = 1 WHERE is_read = 1")
 
     conn.commit()
 

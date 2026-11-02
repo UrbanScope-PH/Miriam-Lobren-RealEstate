@@ -231,6 +231,11 @@ html.auth-checking body {
     flex-shrink: 0;
 }
 
+.client-approval-toast-content {
+    flex: 1;
+    min-width: 0;
+}
+
 .client-approval-toast-content strong {
     display: block;
     font-size: 0.88rem;
@@ -244,6 +249,26 @@ html.auth-checking body {
     font-size: 0.79rem;
     color: #dcfce7;
     line-height: 1.35;
+}
+
+.client-approval-toast-close {
+    background: transparent;
+    border: none;
+    color: rgba(255, 255, 255, 0.75);
+    padding: 4px;
+    margin-left: 4px;
+    border-radius: 6px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: color 0.15s ease, background-color 0.15s ease;
+    flex-shrink: 0;
+}
+
+.client-approval-toast-close:hover {
+    color: #ffffff;
+    background: rgba(255, 255, 255, 0.2);
 }
 
 /* ---------- Profile chip (public navbar) ---------- */

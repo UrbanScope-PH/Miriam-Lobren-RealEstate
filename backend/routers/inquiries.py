@@ -201,8 +201,8 @@ def modify_inquiry(
 
     if requested_status and requested_status.lower() == "cancelled" and current_status != "cancelled":
         cursor.execute("""
-            INSERT INTO notifications (recipient_role, recipient_email, type, inquiry_id, property_title, client_name, title, message)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            INSERT INTO notifications (recipient_role, recipient_email, type, inquiry_id, property_title, client_name, title, message, is_read, is_seen)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0, 0)
         """, (
             "admin",
             "admin.realestate@gmail.com",
@@ -215,8 +215,8 @@ def modify_inquiry(
         ))
     elif requested_status and requested_status.lower() == "approved" and current_status != "approved":
         cursor.execute("""
-            INSERT INTO notifications (recipient_role, recipient_email, type, inquiry_id, property_title, client_name, title, message)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            INSERT INTO notifications (recipient_role, recipient_email, type, inquiry_id, property_title, client_name, title, message, is_read, is_seen)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0, 0)
         """, (
             "client",
             inq_email,
@@ -285,8 +285,8 @@ def delete_inquiry(
     # Notify admin when a client deletes/cancels their inquiry
     if not is_admin:
         cursor.execute("""
-            INSERT INTO notifications (recipient_role, recipient_email, type, inquiry_id, property_title, client_name, title, message)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            INSERT INTO notifications (recipient_role, recipient_email, type, inquiry_id, property_title, client_name, title, message, is_read, is_seen)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0, 0)
         """, (
             "admin",
             "admin.realestate@gmail.com",
@@ -327,6 +327,7 @@ def list_notifications(
 ):
     """
     Lists notifications for either administrators (role='admin') or a specific client email.
+    Auto-synchronizes notification records for approved inquiries.
     """
     conn = get_db_connection()
     cursor = conn.cursor()
@@ -339,6 +340,38 @@ def list_notifications(
             "SELECT * FROM notifications WHERE LOWER(recipient_role) = 'admin' ORDER BY id DESC LIMIT 50"
         )
     elif target_email:
+        # Ensure any approved inquiries for this email have a corresponding notification row
+        cursor.execute(
+            "SELECT id, property_title, client_name, updated_at, created_at FROM inquiries "
+            "WHERE LOWER(client_email) = ? AND LOWER(status) IN ('approved', 'scheduled')",
+            (target_email,)
+        )
+        approved_inqs = cursor.fetchall()
+        for inq_row in approved_inqs:
+            inq_id, prop_t, c_name, u_at, c_at = inq_row
+            prop_t = (prop_t or "General Inquiry").strip()
+            c_name = (c_name or "Client").strip()
+            cursor.execute(
+                "SELECT id FROM notifications WHERE inquiry_id = ? AND LOWER(recipient_email) = ? AND type = 'approved'",
+                (inq_id, target_email)
+            )
+            if not cursor.fetchone():
+                code = f"INQ-2026-{str(inq_id).zfill(3)}"
+                cursor.execute("""
+                    INSERT INTO notifications (recipient_role, recipient_email, type, inquiry_id, property_title, client_name, title, message, is_read, is_seen)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0, 0)
+                """, (
+                    "client",
+                    target_email,
+                    "approved",
+                    inq_id,
+                    prop_t,
+                    c_name,
+                    f"Inquiry {code} Approved!",
+                    f"Your inquiry for \"{prop_t}\" has been approved by Miriam Lobren!"
+                ))
+        conn.commit()
+
         cursor.execute(
             "SELECT * FROM notifications WHERE LOWER(recipient_email) = ? ORDER BY id DESC LIMIT 50",
             (target_email,)
@@ -359,18 +392,53 @@ def mark_notifications_read(
     current_user: Optional[dict] = Depends(get_current_user_from_request)
 ):
     """
-    Marks notifications as read for admin or for a specific client email.
+    Marks notifications as read and seen for admin, a specific client email, or single inquiry.
     """
     data = payload or {}
     target_role = str(data.get("role") or "").strip().lower()
     target_email = str(data.get("email") or (current_user.get("email") if current_user else "") or "").strip().lower()
+    notif_id = data.get("id") or data.get("notif_id")
+    inquiry_id = data.get("inquiry_id") or data.get("inquiryId")
 
     conn = get_db_connection()
     cursor = conn.cursor()
     if target_role == "admin":
-        cursor.execute("UPDATE notifications SET is_read = 1 WHERE LOWER(recipient_role) = 'admin'")
+        cursor.execute("UPDATE notifications SET is_read = 1, is_seen = 1 WHERE LOWER(recipient_role) = 'admin'")
+    elif notif_id:
+        cursor.execute("UPDATE notifications SET is_read = 1, is_seen = 1 WHERE id = ?", (notif_id,))
+    elif inquiry_id and target_email:
+        cursor.execute("UPDATE notifications SET is_read = 1, is_seen = 1 WHERE LOWER(recipient_email) = ? AND inquiry_id = ?", (target_email, inquiry_id))
     elif target_email:
-        cursor.execute("UPDATE notifications SET is_read = 1 WHERE LOWER(recipient_email) = ?", (target_email,))
+        cursor.execute("UPDATE notifications SET is_read = 1, is_seen = 1 WHERE LOWER(recipient_email) = ?", (target_email,))
+    conn.commit()
+    conn.close()
+    return {"success": True}
+
+
+@router.post("/api/notifications/seen", tags=["Notifications"])
+def mark_notifications_seen(
+    payload: Optional[dict] = None,
+    current_user: Optional[dict] = Depends(get_current_user_from_request)
+):
+    """
+    Marks notifications as seen (toasted/presented to user) so they won't notify again on other devices.
+    """
+    data = payload or {}
+    target_role = str(data.get("role") or "").strip().lower()
+    target_email = str(data.get("email") or (current_user.get("email") if current_user else "") or "").strip().lower()
+    notif_id = data.get("id") or data.get("notif_id")
+    inquiry_id = data.get("inquiry_id") or data.get("inquiryId")
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    if target_role == "admin":
+        cursor.execute("UPDATE notifications SET is_seen = 1 WHERE LOWER(recipient_role) = 'admin'")
+    elif notif_id:
+        cursor.execute("UPDATE notifications SET is_seen = 1 WHERE id = ?", (notif_id,))
+    elif inquiry_id and target_email:
+        cursor.execute("UPDATE notifications SET is_seen = 1 WHERE LOWER(recipient_email) = ? AND inquiry_id = ?", (target_email, inquiry_id))
+    elif target_email:
+        cursor.execute("UPDATE notifications SET is_seen = 1 WHERE LOWER(recipient_email) = ?", (target_email,))
     conn.commit()
     conn.close()
     return {"success": True}

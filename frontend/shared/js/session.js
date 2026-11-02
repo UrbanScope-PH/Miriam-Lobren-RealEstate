@@ -176,10 +176,11 @@
     // ------------------------------------------------------------------
     function getNotifKey(n) {
         if (!n) return '';
-        if (n.inquiry_id != null && String(n.type || '').toLowerCase() === 'approved') {
-            return 'approved_' + n.inquiry_id;
+        var inqId = n.inquiryId != null ? n.inquiryId : n.inquiry_id;
+        if (inqId != null && String(n.type || '').toLowerCase() === 'approved') {
+            return 'approved_' + inqId;
         }
-        return String(n.id || ('approved_' + (n.inquiry_id || '')));
+        return String(n.id || ('approved_' + (inqId || '')));
     }
 
     function markAllClientNotifsRead(cleanEmail) {
@@ -190,9 +191,16 @@
             cachedClientNotifs.forEach(function (n) {
                 var k = getNotifKey(n);
                 if (k && readIds.indexOf(k) === -1) readIds.push(k);
+                n.is_read = true;
+                n.is_seen = true;
             });
             localStorage.setItem(readKey, JSON.stringify(readIds));
         } catch (e) { }
+
+        // Persist across devices to SQLite backend and Supabase Cloud
+        if (typeof window.apiMarkNotificationsRead === 'function') {
+            window.apiMarkNotificationsRead({ email: cleanEmail });
+        }
 
         var badge = document.getElementById('clientNotifBadge');
         if (badge) {
@@ -204,7 +212,7 @@
         });
     }
 
-    function showClientApprovalToast(notif) {
+    function showClientApprovalToast(notif, cleanEmail) {
         if (!notif) return;
         // Avoid duplicating toast if history.js already displayed #toastNotice
         var historyToast = document.getElementById('toastNotice');
@@ -213,19 +221,71 @@
         var existing = document.getElementById('clientApprovalToast');
         if (existing) existing.remove();
 
+        var email = cleanEmail || (currentUser && currentUser.email ? String(currentUser.email).toLowerCase().trim() : '');
+        var inqId = notif.inquiryId != null ? notif.inquiryId : notif.inquiry_id;
+
+        // Immediately mark as seen on backend and local cache so other devices won't notify again!
+        if (email && typeof window.apiMarkNotificationsSeen === 'function') {
+            window.apiMarkNotificationsSeen({
+                email: email,
+                inquiryId: inqId,
+                notifId: notif.db_id || notif.id
+            });
+        }
+        notif.is_seen = true;
+
         var base = getBasePath();
-        var toast = document.createElement('a');
+        var toast = document.createElement('div');
         toast.id = 'clientApprovalToast';
         toast.className = 'client-approval-toast';
-        toast.href = base + 'pages/inquiry/history.html';
         toast.innerHTML =
             '<div class="client-approval-toast-icon">' +
             '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>' +
             '</div>' +
-            '<div class="client-approval-toast-content">' +
+            '<a href="' + base + 'pages/inquiry/history.html" class="client-approval-toast-content" style="color: inherit; text-decoration: none;">' +
             '<strong>' + esc(notif.title || 'Inquiry Approved!') + '</strong>' +
             '<span>' + esc(notif.message || 'Miriam Lobren approved your inquiry.') + '</span>' +
-            '</div>';
+            '</a>' +
+            '<button type="button" class="client-approval-toast-close" aria-label="Dismiss notification" title="Dismiss">' +
+            '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>' +
+            '</button>';
+
+        var contentLink = toast.querySelector('.client-approval-toast-content');
+        if (contentLink) {
+            contentLink.addEventListener('click', function () {
+                if (email && typeof window.apiMarkNotificationsRead === 'function') {
+                    window.apiMarkNotificationsRead({
+                        email: email,
+                        inquiryId: inqId,
+                        notifId: notif.db_id || notif.id
+                    });
+                }
+                notif.is_read = true;
+                notif.is_seen = true;
+            });
+        }
+
+        var closeBtn = toast.querySelector('.client-approval-toast-close');
+        if (closeBtn) {
+            closeBtn.addEventListener('click', function (e) {
+                e.preventDefault();
+                e.stopPropagation();
+                if (email && typeof window.apiMarkNotificationsRead === 'function') {
+                    window.apiMarkNotificationsRead({
+                        email: email,
+                        inquiryId: inqId,
+                        notifId: notif.db_id || notif.id
+                    });
+                }
+                notif.is_read = true;
+                notif.is_seen = true;
+                toast.classList.remove('show');
+                setTimeout(function () {
+                    if (toast.parentNode) toast.remove();
+                }, 250);
+            });
+        }
+
         document.body.appendChild(toast);
 
         setTimeout(function () {
@@ -237,7 +297,7 @@
             setTimeout(function () {
                 if (toast.parentNode) toast.remove();
             }, 300);
-        }, 6000);
+        }, 7000);
     }
 
     async function loadClientNotifications() {
@@ -267,21 +327,27 @@
 
             list.forEach(function (n) {
                 var k = getNotifKey(n);
-                var isUnread = k && readIds.indexOf(k) === -1;
-                if (isUnread) {
+                var isRead = (n.is_read === true) || (k && readIds.indexOf(k) !== -1);
+                var isSeen = (n.is_seen === true) || isRead || (k && toastedIds.indexOf(k) !== -1);
+
+                if (!isRead) {
                     unreadCount++;
-                    if (toastedIds.indexOf(k) === -1) {
-                        toastedIds.push(k);
-                        if (!newestUntoasted) newestUntoasted = n;
-                    }
+                }
+
+                if (!isSeen && !isRead) {
+                    if (!newestUntoasted) newestUntoasted = n;
                 }
             });
 
             if (newestUntoasted) {
-                try {
-                    localStorage.setItem(toastedKey, JSON.stringify(toastedIds));
-                } catch (e) { }
-                showClientApprovalToast(newestUntoasted);
+                var k = getNotifKey(newestUntoasted);
+                if (k && toastedIds.indexOf(k) === -1) {
+                    toastedIds.push(k);
+                    try {
+                        localStorage.setItem(toastedKey, JSON.stringify(toastedIds));
+                    } catch (e) { }
+                }
+                showClientApprovalToast(newestUntoasted, cleanEmail);
             }
 
             var badge = document.getElementById('clientNotifBadge');
@@ -303,9 +369,10 @@
                     var base = getBasePath();
                     listEl.innerHTML = list.slice(0, 12).map(function (n) {
                         var k = getNotifKey(n);
-                        var isUnread = k && readIds.indexOf(k) === -1;
+                        var isUnread = (n.is_read !== true) && (!k || readIds.indexOf(k) === -1);
+                        var inqId = n.inquiryId != null ? n.inquiryId : n.inquiry_id;
                         return '' +
-                            '<a href="' + base + 'pages/inquiry/history.html" class="client-notif-item' + (isUnread ? ' unread' : '') + '">' +
+                            '<a href="' + base + 'pages/inquiry/history.html" class="client-notif-item' + (isUnread ? ' unread' : '') + '" data-key="' + esc(k) + '" data-inq="' + esc(String(inqId || '')) + '">' +
                             '<span class="client-notif-icon">✓</span>' +
                             '<div class="client-notif-body">' +
                             '<strong>' + esc(n.title || 'Inquiry Approved!') + '</strong>' +
@@ -314,6 +381,15 @@
                             '</div>' +
                             '</a>';
                     }).join('');
+
+                    listEl.querySelectorAll('.client-notif-item').forEach(function (link) {
+                        link.addEventListener('click', function () {
+                            var inqId = this.getAttribute('data-inq');
+                            if (cleanEmail && typeof window.apiMarkNotificationsRead === 'function') {
+                                window.apiMarkNotificationsRead({ email: cleanEmail, inquiryId: inqId });
+                            }
+                        });
+                    });
                 }
             }
         } catch (err) {
