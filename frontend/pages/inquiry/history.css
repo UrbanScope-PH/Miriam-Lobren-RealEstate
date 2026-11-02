@@ -44,9 +44,9 @@ body {
 
 /* TOPBAR */
 .app-topbar {
-    height: 76px;
+    height: 80px;
     background-color: #ffffff;
-    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -66,25 +66,35 @@ body {
 .go-back-btn {
     display: inline-flex;
     align-items: center;
-    gap: 8px;
-    background: #f0f6f2;
+    gap: 7px;
+    padding: 7px 14px;
+    background-color: #f0f7f2;
     border: 1px solid #cbe0d1;
-    color: var(--green);
-    padding: 8px 16px;
     border-radius: 999px;
-    font-family: inherit;
-    font-size: 13.5px;
+    color: var(--green);
+    font-size: 13px;
     font-weight: 700;
+    font-family: inherit;
     cursor: pointer;
-    text-decoration: none;
     transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    text-decoration: none;
+    line-height: 1;
 }
 
 .go-back-btn:hover {
-    background: #e2ede5;
-    border-color: #b3d1bb;
+    background-color: #e2ede5;
     color: var(--dark-green);
-    transform: translateX(-3px);
+    border-color: #a8ceb2;
+    transform: translateX(-2px);
+    box-shadow: 0 2px 8px rgba(45, 92, 57, 0.12);
+}
+
+.go-back-btn svg {
+    transition: transform 0.2s ease;
+}
+
+.go-back-btn:hover svg {
+    transform: translateX(-2px);
 }
 
 .app-brand {
@@ -92,31 +102,31 @@ body {
     align-items: center;
     gap: 10px;
     text-decoration: none;
-    color: var(--text-dark);
+    color: var(--dark-green);
 }
 
+.brand-logo,
 .app-brand img {
-    height: 38px;
-    width: auto;
-}
-
-.app-brand span {
-    display: flex;
-    flex-direction: column;
+    width: 48px;
+    height: 42px;
+    object-fit: contain;
 }
 
 .app-brand strong {
-    font-size: 1.05rem;
-    font-weight: 800;
-    color: var(--dark-green);
+    font-size: 18px;
+    font-weight: 700;
+    letter-spacing: 1.2px;
+    display: block;
     line-height: 1.1;
+    color: var(--dark-green);
 }
 
 .app-brand small {
-    font-size: 0.72rem;
-    color: var(--text-muted);
-    font-weight: 600;
-    letter-spacing: 0.5px;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 1.8px;
+    color: var(--accent-green);
+    display: block;
 }
 
 .topbar-right {
@@ -917,26 +927,33 @@ body {
         overflow: hidden;
     }
 
-    .app-brand img {
-        height: 32px;
-        flex-shrink: 0;
-    }
-
+    .app-brand > span,
     .app-brand span {
         min-width: 0;
         overflow: hidden;
     }
 
+    .brand-logo,
+    .app-brand img {
+        width: 36px;
+        height: 32px;
+        flex-shrink: 0;
+        object-fit: contain;
+    }
+
     .app-brand strong {
-        font-size: 0.92rem;
+        font-size: 14.5px;
+        letter-spacing: 0.5px;
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
     }
 
     .app-brand small {
-        font-size: 0.65rem;
+        font-size: 8.5px;
+        letter-spacing: 1.2px;
         white-space: nowrap;
+        color: var(--accent-green);
     }
 
     .topbar-right {

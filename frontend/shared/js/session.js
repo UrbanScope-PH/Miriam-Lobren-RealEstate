@@ -387,14 +387,36 @@
             });
         }
 
+        function applyAgentBranding(profile) {
+            if (!profile) return;
+            var rawName = profile.name || profile.full_name || 'Miriam Lobren';
+            var cleanName = String(rawName).replace(/\s*\((?:Admin|Administrator)\)\s*$/i, '').trim() || rawName;
+            var rawTitle = (profile.title && profile.title.trim()) || 'Real Estate Agent';
+            if (/^licensed real estate broker\s*\/\s*agent$/i.test(rawTitle)) {
+                rawTitle = 'Real Estate Agent';
+            }
+
+            document.querySelectorAll('.app-brand strong, .Cname strong, #navAgentName').forEach(function(el) {
+                el.textContent = cleanName;
+            });
+
+            document.querySelectorAll('.app-brand small, .Cname small, #navAgentTitle').forEach(function(el) {
+                el.textContent = rawTitle.toUpperCase();
+            });
+        }
+
         if (p) {
             applyContact(p.phone, p.email);
+            applyAgentBranding(p);
         }
 
         if (typeof window.apiGetLeadAgentProfile === 'function') {
             window.apiGetLeadAgentProfile().then(function(lead) {
-                if (lead && (lead.phone || lead.email)) {
-                    applyContact(lead.phone, lead.email);
+                if (lead) {
+                    if (lead.phone || lead.email) {
+                        applyContact(lead.phone, lead.email);
+                    }
+                    applyAgentBranding(lead);
                 }
             }).catch(function() {});
         }

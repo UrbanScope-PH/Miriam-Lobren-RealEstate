@@ -228,9 +228,11 @@ path when rendering from a page.
         - Instant Client Sync: `history.js` listens to `storage`, `inquiryStatusChanged`, `inquiriesUpdated`, and `visibilitychange` events, automatically refreshing the client inquiry history in real-time when the admin approves an inquiry.
       - **Modify Inquiry (`#modifyModal`)**: Allows clients to update their inquiry message, contact phone, or property/topic title, calling `PUT /api/inquiries/{id}`.
       - **Cancel Inquiry (`#cancelModal`)**: Allows clients to cancel active requests, setting status to `Cancelled` via `POST /api/inquiries/{id}/cancel` while keeping history record intact.
-      - **Delete Inquiry (`#deleteModal`)**: Confirms permanent deletion via `DELETE /api/inquiries/{id}`.
-    - **Backend Protection**:
+      - **Backend Protection**:
       - Endpoints `GET /api/inquiries/my`, `PUT /api/inquiries/{id}`, `DELETE /api/inquiries/{id}`, and `POST /api/inquiries/{id}/cancel` enforce strict client email ownership validation (or administrative privileges), preventing unauthorized cross-user modifications.
+    - **Topbar Brand Harmonization (`history.css` & `session.js`)**:
+      - Harmonized `.history-topbar` and `.app-brand` in `history.css` with `inquiry.css`: topbar height set to 80px, `.brand-logo` / `.app-brand img` sized to 48px × 42px (`object-fit: contain`), `.app-brand strong` set to 18px (700 weight, 1.2px letter spacing, `var(--dark-green)`), and `.app-brand small` set to 10px (700 weight, 1.8px letter spacing, `var(--accent-green)`).
+      - Added `applyAgentBranding()` in `session.js` to dynamically update `.app-brand strong` and `.app-brand small` across all pages from cached and live lead agent profiles.
 16. **Admin & Superadmin Header Isolation (Session Chip Guard):**
     - `frontend/shared/js/session.js` (`renderNavProfile` and `initMobileNav`) enforces an explicit admin route guard (`path.includes('/pages/admin/') || path.includes('/pages/superadmin/')`) and narrows container selectors to `.navbar .nav-acts, .inquiry-topbar .nav-acts, .history-topbar .nav-acts, .nav-acts`. This prevents the client navigation menu (`#profileMenu`, "Home", "Submit an Inquiry", "Inquiry History") from injecting duplicate, unstyled chips into administrative headers.
     - Removed redundant `session.js` script tags from `pages/superadmin/dashboard.html` and `pages/admin/propertylist.html`, ensuring Superadmin (`#saProfileDropdownBtn`) and Admin profile dropdowns render cleanly and exclusively.
