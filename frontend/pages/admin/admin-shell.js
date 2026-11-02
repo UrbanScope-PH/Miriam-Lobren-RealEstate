@@ -1,6 +1,6 @@
 /**
  * UrbanScope Admin Shell — Unified Sidebar, Topbar & Navigation Engine
- * Guarantees consistent sidebar behavior and active item styling across all admin pages.
+ * Guarantees consistent sidebar behavior, notifications, and active item styling across all admin pages.
  */
 
 (function () {
@@ -33,7 +33,6 @@
         }
 
         if (toggleBtn) {
-            // Remove any clone listeners
             toggleBtn.onclick = function (e) {
                 e.preventDefault();
                 e.stopPropagation();
@@ -77,7 +76,6 @@
             profileButton.setAttribute("aria-expanded", "false");
         }
 
-        // Always ensure dropdown is closed initially
         closeDropdown();
 
         function toggleDropdown(e) {
@@ -132,66 +130,118 @@
         return "pages/admin/clients.html?view=inquiries";
     }
 
-    function buildNotificationItems(inquiries) {
-        const items = [];
+        function buildNotificationItems(inquiries, adminEvents = []) {
+            const items = [];
+            const eventsList = Array.isArray(adminEvents) ? adminEvents : [];
+            const existingInqIds = new Set();
 
-        if (Array.isArray(inquiries)) {
-            inquiries.forEach((inq, index) => {
-                const id = inq.id || (index + 1);
-                const code = inq.inquiry_code || `INQ-2026-${String(id).padStart(3, '0')}`;
-                const clientName = inq.client_name || inq.name || 'Client';
-                const status = (inq.status || 'Under Review').trim();
-                const date = inq.created_at || new Date().toISOString();
-                const timeAgo = formatTimeAgo(date);
+            if (Array.isArray(inquiries)) {
+                inquiries.forEach((inq, index) => {
+                    const id = inq.id || (index + 1);
+                    existingInqIds.add(String(id));
 
-                const isApproved = status.toLowerCase() === 'approved';
-                const isCompleted = status.toLowerCase() === 'completed';
+                    const code = inq.inquiry_code || `INQ-2026-${String(id).padStart(3, '0')}`;
+                    const clientName = inq.client_name || inq.name || 'Client';
+                    const propTitle = inq.property_title || inq.propertyTitle || 'General Inquiry';
+                    const status = (inq.status || 'Under Review').trim();
+                    const statusLower = status.toLowerCase();
+                    const date = inq.updated_at || inq.created_at || new Date().toISOString();
+                    const timeAgo = formatTimeAgo(date);
 
-                if (isApproved) {
-                    items.push({
-                        type: 'approved',
-                        avatarClass: 'check',
-                        avatarIcon: '✓',
-                        title: `Inquiry ${code} approved`,
-                        subtitle: `Client: ${clientName} &bull; ${timeAgo}`,
-                        time: new Date(date).getTime(),
-                        inquiryId: id
+                    const isCancelled = statusLower === 'cancelled';
+                    const isApproved = statusLower === 'approved';
+                    const isCompleted = statusLower === 'completed';
+
+                        const matchedCancelEv = eventsList.find(
+                            ev => ev && String(ev.inquiryId) === String(id) && ev.type === 'cancelled'
+                        );
+
+                        if (isCancelled || matchedCancelEv) {
+                            const evTime = (matchedCancelEv && matchedCancelEv.time)
+                                ? matchedCancelEv.time
+                                : new Date(date).getTime();
+                            const evTimeAgo = formatTimeAgo(new Date(evTime).toISOString());
+                            items.push({
+                                type: 'cancelled',
+                                notifKey: (matchedCancelEv && matchedCancelEv.notifKey)
+                                    ? matchedCancelEv.notifKey
+                                    : `cancelled_${id}`,
+                                avatarClass: 'cancel',
+                                avatarIcon: '✕',
+                                title: `Inquiry ${code} cancelled by ${clientName}`,
+                                subtitle: `${propTitle} &bull; ${evTimeAgo}`,
+                                time: evTime,
+                                inquiryId: id
+                            });
+                        } else if (isApproved) {
+                            items.push({
+                                type: 'approved',
+                                notifKey: `approved_${id}`,
+                                avatarClass: 'check',
+                                avatarIcon: '✓',
+                                title: `Inquiry ${code} approved`,
+                                subtitle: `Client: ${clientName} &bull; ${timeAgo}`,
+                                time: new Date(date).getTime(),
+                                inquiryId: id
+                            });
+                        } else if (isCompleted) {
+                            items.push({
+                                type: 'completed',
+                                notifKey: `completed_${id}`,
+                                avatarClass: 'check',
+                                avatarIcon: '✓',
+                                title: `Inquiry ${code} completed`,
+                                subtitle: `Client: ${clientName} &bull; ${timeAgo}`,
+                                time: new Date(date).getTime(),
+                                inquiryId: id
+                            });
+                        } else {
+                            const createdDate = inq.created_at || date;
+                            items.push({
+                                type: 'new_inquiry',
+                                notifKey: `new_inquiry_${id}`,
+                                avatarClass: 'user',
+                                avatarIcon: '👤',
+                                title: `New inquiry submitted by ${clientName}`,
+                                subtitle: `${code} &bull; ${formatTimeAgo(createdDate)}`,
+                                time: new Date(createdDate).getTime(),
+                                inquiryId: id
+                            });
+                        }
                     });
-                } else if (isCompleted) {
-                    items.push({
-                        type: 'completed',
-                        avatarClass: 'check',
-                        avatarIcon: '✓',
-                        title: `Inquiry ${code} completed`,
-                        subtitle: `Client: ${clientName} &bull; ${timeAgo}`,
-                        time: new Date(date).getTime(),
-                        inquiryId: id
-                    });
-                } else {
-                    items.push({
-                        type: 'new_inquiry',
-                        avatarClass: 'user',
-                        avatarIcon: '👤',
-                        title: `New inquiry submitted by ${clientName}`,
-                        subtitle: `${code} &bull; ${timeAgo}`,
-                        time: new Date(date).getTime(),
-                        inquiryId: id
-                    });
-                }
+            }
+
+            // Also include admin notification events for inquiries that were deleted by the client
+            eventsList.forEach(ev => {
+                if (!ev || existingInqIds.has(String(ev.inquiryId))) return;
+                const evTime = ev.time || (ev.created_at ? new Date(ev.created_at).getTime() : Date.now());
+                const timeAgo = formatTimeAgo(new Date(evTime).toISOString());
+                const propTitle = ev.property_title || ev.subtitle || 'General Inquiry';
+                const code = `INQ-2026-${String(ev.inquiryId || 0).padStart(3, '0')}`;
+                items.push({
+                    type: ev.type || 'cancelled',
+                    notifKey: ev.notifKey || `deleted_${ev.inquiryId}`,
+                    avatarClass: ev.avatarClass || 'cancel',
+                    avatarIcon: ev.avatarIcon || '✕',
+                    title: ev.title || `Inquiry ${code} cancelled by ${ev.client_name || 'Client'}`,
+                    subtitle: `${propTitle} &bull; ${timeAgo}`,
+                    time: evTime,
+                    inquiryId: ev.inquiryId
+                });
             });
-        }
-        // Sort real inquiry notifications by most recent first
-        items.sort((a, b) => (b.time || 0) - (a.time || 0));
-        return items;
-    }
 
-    function renderNotifHtml(items) {
-        if (!items || !items.length) {
-            return '<div class="notif-empty">No notifications yet.</div>';
+            // Sort notifications by most recent first
+            items.sort((a, b) => (b.time || 0) - (a.time || 0));
+            return items;
         }
-        const targetUrl = getInquiryPageUrl();
-        return items.slice(0, 5).map(item => `
-            <a href="${targetUrl}" class="notif-item" role="menuitem">
+
+        function renderNotifHtml(items) {
+            if (!items || !items.length) {
+                return '<div class="notif-empty">No notifications yet.</div>';
+            }
+            const targetUrl = getInquiryPageUrl();
+        return items.slice(0, 6).map(item => `
+                < a href = "${targetUrl}" class= "notif-item" role = "menuitem" >
                 <div class="notif-avatar ${item.avatarClass}">
                     ${item.avatarIcon}
                 </div>
@@ -199,8 +249,26 @@
                     <strong>${item.title}</strong>
                     <small>${item.subtitle}</small>
                 </div>
-            </a>
-        `).join('');
+            </a >
+                `).join('');
+    }
+
+    function showAdminShellToast(message) {
+        let toast = document.getElementById("adminShellToast");
+        if (!toast) {
+            toast = document.createElement("div");
+            toast.id = "adminShellToast";
+            toast.className = "admin-shell-toast";
+            toast.setAttribute("role", "status");
+            toast.setAttribute("aria-live", "polite");
+            document.body.appendChild(toast);
+        }
+        toast.textContent = message;
+        toast.classList.add("show");
+        clearTimeout(toast._hideTimer);
+        toast._hideTimer = setTimeout(() => {
+            toast.classList.remove("show");
+        }, 4200);
     }
 
     let currentNotificationItems = [];
@@ -210,8 +278,16 @@
         localStorage.setItem("admin_notifs_last_viewed", String(now));
 
         if (Array.isArray(currentNotificationItems)) {
-            const readIds = currentNotificationItems.map(it => it.inquiryId).filter(Boolean);
-            localStorage.setItem("admin_notifs_read_ids", JSON.stringify(readIds));
+            let existingRead = [];
+            try {
+                existingRead = JSON.parse(localStorage.getItem("admin_notifs_read_ids") || "[]");
+            } catch (_) {}
+            const mergedSet = new Set(Array.isArray(existingRead) ? existingRead.map(String) : []);
+            currentNotificationItems.forEach(it => {
+                if (it.notifKey) mergedSet.add(String(it.notifKey));
+                if (it.inquiryId) mergedSet.add(String(it.inquiryId));
+            });
+            localStorage.setItem("admin_notifs_read_ids", JSON.stringify(Array.from(mergedSet)));
         }
 
         const badges = document.querySelectorAll(".notif-badge");
@@ -224,6 +300,8 @@
 
     async function loadNotifications() {
         let inquiries = [];
+        let adminEvents = [];
+
         if (typeof window.apiGetInquiries === "function") {
             try {
                 const res = await window.apiGetInquiries();
@@ -236,7 +314,18 @@
             } catch (_) {}
         }
 
-        const items = buildNotificationItems(inquiries);
+        if (typeof window.apiGetAdminNotifications === "function") {
+            try {
+                const evs = await window.apiGetAdminNotifications();
+                if (Array.isArray(evs)) adminEvents = evs;
+            } catch (_) {}
+        } else {
+            try {
+                adminEvents = JSON.parse(localStorage.getItem("urbanscope_admin_event_notifs") || "[]");
+            } catch (_) {}
+        }
+
+        const items = buildNotificationItems(inquiries, adminEvents);
         currentNotificationItems = items;
         const html = renderNotifHtml(items);
 
@@ -246,23 +335,43 @@
         const dashList = document.getElementById("dashboardNotifList");
         if (dashList) dashList.innerHTML = html;
 
-        // Calculate unread count based on last viewed timestamp and read IDs
+        // Calculate unread count based on last viewed timestamp and read notifKeys
         const lastViewed = parseInt(localStorage.getItem("admin_notifs_last_viewed") || "0", 10);
         let readIds = [];
         try {
             readIds = JSON.parse(localStorage.getItem("admin_notifs_read_ids") || "[]");
         } catch (_) {}
+        const readSet = new Set(Array.isArray(readIds) ? readIds.map(String) : []);
 
         let unreadCount = 0;
-        if (lastViewed > 0 || readIds.length > 0) {
+        if (lastViewed > 0 || readSet.size > 0) {
             unreadCount = items.filter(it => {
-                if (it.inquiryId && readIds.includes(it.inquiryId)) return false;
-                if (it.time && lastViewed > 0 && it.time <= lastViewed) return false;
+                if (it.notifKey && readSet.has(String(it.notifKey))) return false;
+                if (it.type === 'new_inquiry' && it.inquiryId && readSet.has(String(it.inquiryId))) return false;
+                if (it.type !== 'cancelled' && it.time && lastViewed > 0 && it.time <= lastViewed) return false;
                 return true;
             }).length;
         } else {
             unreadCount = items.length;
         }
+
+        // Check for newly arrived cancellation notifications to toast for admin
+        try {
+            const toastedKey = "admin_notifs_toasted_keys";
+            const toasted = JSON.parse(localStorage.getItem(toastedKey) || "[]");
+            const toastedSet = new Set(Array.isArray(toasted) ? toasted : []);
+            let newestCancel = null;
+            items.forEach(it => {
+                if (it.type === "cancelled" && it.notifKey && !readSet.has(String(it.notifKey)) && !toastedSet.has(String(it.notifKey))) {
+                    toastedSet.add(String(it.notifKey));
+                    if (!newestCancel) newestCancel = it;
+                }
+            });
+            if (newestCancel) {
+                localStorage.setItem(toastedKey, JSON.stringify(Array.from(toastedSet)));
+                showAdminShellToast(`✕ ${ newestCancel.title }`);
+            }
+        } catch (_) {}
 
         // Update badges to display unread count (completely hidden if 0)
         const badges = document.querySelectorAll(".notif-badge");
@@ -298,7 +407,7 @@
             notifDropdown.setAttribute("role", "menu");
             notifDropdown.hidden = true;
             notifDropdown.innerHTML = `
-                <div class="notif-dropdown-header">
+            < div class= "notif-dropdown-header" >
                     <div class="notif-header-title">
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
@@ -307,7 +416,7 @@
                         <h3>Recent Notifications</h3>
                     </div>
                     <a href="${targetUrl}" class="view-all-link">View All</a>
-                </div>
+                </div >
                 <div class="notif-list" id="topbarNotifList">
                     <div class="notif-empty">Loading notifications...</div>
                 </div>
@@ -378,10 +487,26 @@
         });
 
         loadNotifications();
-        setInterval(loadNotifications, 25000);
+        setInterval(loadNotifications, 15000);
         window.addEventListener("inquirySubmitted", () => loadNotifications());
+        window.addEventListener("inquiryCancelled", () => loadNotifications());
+        window.addEventListener("inquiryStatusChanged", () => loadNotifications());
+        window.addEventListener("inquiriesUpdated", () => loadNotifications());
+        window.addEventListener("adminNotificationAdded", () => loadNotifications());
         window.addEventListener("storage", e => {
-            if (e.key === "inquiries") loadNotifications();
+            if (
+                e.key === "inquiries" ||
+                e.key === "urbanscope_admin_event_notifs" ||
+                e.key === "urbanscope_inquiry_overrides" ||
+                e.key === "urbanscope_deleted_inquiry_ids"
+            ) {
+                loadNotifications();
+            }
+        });
+        document.addEventListener("visibilitychange", () => {
+            if (document.visibilityState === "visible") {
+                loadNotifications();
+            }
         });
     }
 
@@ -455,7 +580,6 @@
 
     function syncAdminProfileDisplay() {
         try {
-            // Clean up any stale/corrupted default path stored in custom avatar key
             let customAvatar = localStorage.getItem("urbanscope_profile_avatar");
             if (customAvatar && (customAvatar.includes("agent.jpg") || (!customAvatar.startsWith("data:") && !/^https?:\/\//i.test(customAvatar)))) {
                 localStorage.removeItem("urbanscope_profile_avatar");

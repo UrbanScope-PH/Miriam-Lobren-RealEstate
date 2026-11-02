@@ -162,6 +162,30 @@ def init_db():
             client_phone TEXT,
             message TEXT NOT NULL,
             status TEXT DEFAULT 'Under Review',
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+    """)
+
+    cursor.execute("PRAGMA table_info(inquiries)")
+    existing_inq_cols = {col[1] for col in cursor.fetchall()}
+    if "updated_at" not in existing_inq_cols:
+        cursor.execute("ALTER TABLE inquiries ADD COLUMN updated_at TIMESTAMP")
+        cursor.execute("UPDATE inquiries SET updated_at = created_at WHERE updated_at IS NULL")
+
+    # 4. Notifications Table
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS notifications (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            recipient_role TEXT DEFAULT 'admin',
+            recipient_email TEXT DEFAULT '',
+            type TEXT DEFAULT 'info',
+            inquiry_id INTEGER,
+            property_title TEXT DEFAULT '',
+            client_name TEXT DEFAULT '',
+            title TEXT NOT NULL,
+            message TEXT NOT NULL,
+            is_read INTEGER DEFAULT 0,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );
     """)

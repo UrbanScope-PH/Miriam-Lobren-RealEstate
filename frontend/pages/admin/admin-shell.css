@@ -860,3 +860,34 @@ input:focus-visible {
     transform: scale(1.08);
 }
 
+
+/* Cancellation Notification Avatar & Admin Toast */
+.notif-avatar.cancel {
+    background: #dc2626;
+    color: #ffffff;
+    font-weight: 800;
+}
+
+.admin-shell-toast {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    z-index: 9999;
+    background: #14351e;
+    color: #ffffff;
+    padding: 13px 20px;
+    border-radius: 12px;
+    font-size: 13px;
+    font-weight: 700;
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.22);
+    border-left: 4px solid #ef4444;
+    transform: translateY(20px);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s ease, transform 0.25s ease;
+}
+
+.admin-shell-toast.show {
+    transform: translateY(0);
+    opacity: 1;
+}

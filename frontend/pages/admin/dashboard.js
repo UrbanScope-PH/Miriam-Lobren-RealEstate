@@ -267,6 +267,7 @@ function updateInquiryDonut(inquiries) {
         else if (s.includes('review') || s.includes('pending')) underReview++;
         else if (s.includes('approv')) approved++;
         else if (s.includes('complete')) completed++;
+        else if (s.includes('cancel')) { /* cancelled */ }
         else underReview++;
     });
 
@@ -441,6 +442,7 @@ function openInquiryModal(data) {
         .map(w => w[0].toUpperCase())
     const rawId = data.rawId || data.inquiryId?.replace('INQ-', '') || '';
     const isApproved = String(status || '').toLowerCase().trim() === 'approved';
+    const isCancelled = String(status || '').toLowerCase().trim() === 'cancelled';
 
     modalContent.innerHTML = `
         <div class="inquiry-modal-detail">
@@ -528,7 +530,11 @@ function openInquiryModal(data) {
                 <button type="button" class="btn-modal-secondary btn-close-modal" id="modalCloseActionBtn">
                     Close
                 </button>
-                ${!isApproved ? `
+                ${isCancelled ? `
+                    <button type="button" class="btn-modal-approve" disabled style="background:#fee2e2;color:#b91c1c;border:1px solid #fecaca;cursor:not-allowed;">
+                        <span>Cancelled by Client</span>
+                    </button>
+                ` : !isApproved ? `
                     <button type="button" class="btn-modal-approve" id="modalApproveInquiryBtn" data-raw-id="${escapeHTML(rawId)}">
                         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
                             <polyline points="20 6 9 17 4 12"></polyline>
@@ -976,4 +982,18 @@ document.addEventListener("DOMContentLoaded", () => {
             if (typeof apiSignOut === 'function') apiSignOut();
         });
     });
+});
+
+
+// Live sync when client cancels, deletes, or modifies an inquiry
+window.addEventListener('storage', (e) => {
+    if (e.key === 'inquiries' || e.key === 'urbanscope_admin_event_notifs' || e.key === 'urbanscope_inquiry_overrides' || e.key === 'urbanscope_deleted_inquiry_ids') {
+        loadDashboardData();
+    }
+});
+window.addEventListener('inquiryCancelled', () => loadDashboardData());
+window.addEventListener('inquiryStatusChanged', () => loadDashboardData());
+window.addEventListener('inquiriesUpdated', () => loadDashboardData());
+document.addEventListener('visibilitychange', () => {
+    if (!document.hidden) loadDashboardData();
 });

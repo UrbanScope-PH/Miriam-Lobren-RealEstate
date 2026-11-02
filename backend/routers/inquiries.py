@@ -1,6 +1,6 @@
 """
 UrbanScope - Client & Admin Inquiry Lifecycle Router
-Handles inquiry submission, admin listing, client history, modifications, and cancellations.
+Handles inquiry submission, admin listing, client history, modifications, cancellations, and notifications.
 """
 
 from typing import List, Optional
@@ -141,6 +141,23 @@ def modify_inquiry(
             detail="You are not authorized to modify this inquiry."
         )
 
+    current_status = (inq.get("status") or "Under Review").strip().lower()
+    requested_status = str(payload.get("status")).strip() if ("status" in payload and payload["status"] is not None) else None
+    is_cancelling = bool(requested_status and requested_status.lower() == "cancelled")
+
+    # Clients can only modify details when the inquiry is still Under Review / Pending
+    if not is_admin and not is_cancelling:
+        has_detail_edits = any(
+            k in payload and payload[k] is not None
+            for k in ("message", "client_phone", "property_title")
+        )
+        if has_detail_edits and current_status not in ("under review", "pending", ""):
+            conn.close()
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Approved or processed inquiries can no longer be modified."
+            )
+
     updates = []
     params = []
 
@@ -156,27 +173,62 @@ def modify_inquiry(
         updates.append("property_title = ?")
         params.append(str(payload["property_title"]).strip())
 
-    if "status" in payload and payload["status"] is not None:
-        new_status = str(payload["status"]).strip()
-        if not is_admin and new_status not in ["Cancelled", "Under Review"]:
+    if requested_status is not None:
+        if not is_admin and requested_status not in ["Cancelled", "Under Review"]:
             conn.close()
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Clients can only cancel an inquiry."
             )
         updates.append("status = ?")
-        params.append(new_status)
+        params.append(requested_status)
 
     if not updates:
         conn.close()
         return {"success": True, "data": inq, "message": "No fields to update."}
 
+    updates.append("updated_at = CURRENT_TIMESTAMP")
     params.append(inquiry_id)
     cursor.execute(f"UPDATE inquiries SET {', '.join(updates)} WHERE id = ?", tuple(params))
-    conn.commit()
 
     cursor.execute("SELECT * FROM inquiries WHERE id = ?", (inquiry_id,))
     updated_inq = row_to_dict(cursor.fetchone())
+
+    # Record notifications on status transitions
+    prop_title = (updated_inq.get("property_title") or "General Inquiry").strip()
+    client_name = (updated_inq.get("client_name") or "Client").strip()
+    code = f"INQ-2026-{str(inquiry_id).zfill(3)}"
+
+    if requested_status and requested_status.lower() == "cancelled" and current_status != "cancelled":
+        cursor.execute("""
+            INSERT INTO notifications (recipient_role, recipient_email, type, inquiry_id, property_title, client_name, title, message)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        """, (
+            "admin",
+            "admin.realestate@gmail.com",
+            "cancelled",
+            inquiry_id,
+            prop_title,
+            client_name,
+            f"Inquiry {code} cancelled by {client_name}",
+            f"{client_name} cancelled their inquiry for {prop_title}."
+        ))
+    elif requested_status and requested_status.lower() == "approved" and current_status != "approved":
+        cursor.execute("""
+            INSERT INTO notifications (recipient_role, recipient_email, type, inquiry_id, property_title, client_name, title, message)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        """, (
+            "client",
+            inq_email,
+            "approved",
+            inquiry_id,
+            prop_title,
+            client_name,
+            f"Inquiry {code} Approved!",
+            f"Your inquiry for \"{prop_title}\" has been approved by Miriam Lobren!"
+        ))
+
+    conn.commit()
     conn.close()
 
     return {"success": True, "data": updated_inq}
@@ -224,7 +276,28 @@ def delete_inquiry(
             detail="You are not authorized to delete this inquiry."
         )
 
+    prop_title = (inq.get("property_title") or "General Inquiry").strip()
+    client_name = (inq.get("client_name") or "Client").strip()
+    code = f"INQ-2026-{str(inquiry_id).zfill(3)}"
+
     cursor.execute("DELETE FROM inquiries WHERE id = ?", (inquiry_id,))
+
+    # Notify admin when a client deletes/cancels their inquiry
+    if not is_admin:
+        cursor.execute("""
+            INSERT INTO notifications (recipient_role, recipient_email, type, inquiry_id, property_title, client_name, title, message)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        """, (
+            "admin",
+            "admin.realestate@gmail.com",
+            "cancelled",
+            inquiry_id,
+            prop_title,
+            client_name,
+            f"Inquiry {code} cancelled by {client_name}",
+            f"{client_name} cancelled and removed their inquiry for {prop_title}."
+        ))
+
     conn.commit()
     conn.close()
 
@@ -244,3 +317,60 @@ def cancel_inquiry(
     if payload and "client_email" in payload:
         data["client_email"] = payload["client_email"]
     return modify_inquiry(inquiry_id, data, current_user)
+
+
+@router.get("/api/notifications", tags=["Notifications"])
+def list_notifications(
+    role: Optional[str] = Query(None),
+    email: Optional[str] = Query(None),
+    current_user: Optional[dict] = Depends(get_current_user_from_request)
+):
+    """
+    Lists notifications for either administrators (role='admin') or a specific client email.
+    """
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    target_role = (role or "").strip().lower()
+    target_email = (email or (current_user.get("email") if current_user else "") or "").strip().lower()
+
+    if target_role == "admin":
+        cursor.execute(
+            "SELECT * FROM notifications WHERE LOWER(recipient_role) = 'admin' ORDER BY id DESC LIMIT 50"
+        )
+    elif target_email:
+        cursor.execute(
+            "SELECT * FROM notifications WHERE LOWER(recipient_email) = ? ORDER BY id DESC LIMIT 50",
+            (target_email,)
+        )
+    else:
+        conn.close()
+        return []
+
+    rows = cursor.fetchall()
+    notifs = [row_to_dict(r) for r in rows]
+    conn.close()
+    return notifs
+
+
+@router.post("/api/notifications/read", tags=["Notifications"])
+def mark_notifications_read(
+    payload: Optional[dict] = None,
+    current_user: Optional[dict] = Depends(get_current_user_from_request)
+):
+    """
+    Marks notifications as read for admin or for a specific client email.
+    """
+    data = payload or {}
+    target_role = str(data.get("role") or "").strip().lower()
+    target_email = str(data.get("email") or (current_user.get("email") if current_user else "") or "").strip().lower()
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    if target_role == "admin":
+        cursor.execute("UPDATE notifications SET is_read = 1 WHERE LOWER(recipient_role) = 'admin'")
+    elif target_email:
+        cursor.execute("UPDATE notifications SET is_read = 1 WHERE LOWER(recipient_email) = ?", (target_email,))
+    conn.commit()
+    conn.close()
+    return {"success": True}

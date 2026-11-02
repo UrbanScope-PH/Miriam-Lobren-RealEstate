@@ -15,7 +15,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (adminNameDisplay && storedAdmin.name) {
             adminNameDisplay.textContent = storedAdmin.name;
         }
-    } catch (_) {}
+    } catch (_) { }
 
     // UI Toggles (sidebar & profile dropdown) handled by admin-shell.js
 
@@ -112,11 +112,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     function updateKPIs() {
         const total = inquiries.length;
         const pending = inquiries.filter(i => {
-            const s = (i.status || '').toLowerCase();
+            const s = (i.status || '').toLowerCase().trim();
             return s === 'under review' || s === 'pending' || !s;
         }).length;
-        const approved = inquiries.filter(i => (i.status || '').toLowerCase() === 'approved').length;
-        const completed = inquiries.filter(i => (i.status || '').toLowerCase() === 'completed').length;
+        const approved = inquiries.filter(i => (i.status || '').toLowerCase().trim() === 'approved').length;
+        const completed = inquiries.filter(i => (i.status || '').toLowerCase().trim() === 'completed').length;
 
         if (statTotal) statTotal.textContent = total;
         if (statPending) statPending.textContent = pending;
@@ -128,15 +128,17 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     function getNormalizedStatus(status) {
-        const s = (status || '').toLowerCase();
+        const s = (status || '').toLowerCase().trim();
         if (s === 'approved') return 'Approved';
         if (s === 'completed') return 'Completed';
+        if (s === 'cancelled') return 'Cancelled';
         return 'Under Review';
     }
 
     function getBadgeClass(normStatus) {
         if (normStatus === 'Approved') return 'approved';
         if (normStatus === 'Completed') return 'completed';
+        if (normStatus === 'Cancelled') return 'cancelled';
         return 'review';
     }
 
@@ -153,7 +155,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 const q = searchQuery.toLowerCase();
                 const name = (inq.client_name || inq.name || '').toLowerCase();
                 const email = (inq.email || inq.client_email || '').toLowerCase();
-                const phone = (inq.phone || inq.contact_number || '').toLowerCase();
+                const phone = (inq.phone || inq.client_phone || inq.contact_number || '').toLowerCase();
                 const prop = (inq.property_title || propertiesMap[inq.property_id] || '').toLowerCase();
                 const msg = (inq.message || '').toLowerCase();
                 return name.includes(q) || email.includes(q) || phone.includes(q) || prop.includes(q) || msg.includes(q);
@@ -181,7 +183,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             const id = inq.id;
             const name = inq.client_name || inq.name || 'Anonymous Client';
             const email = inq.email || inq.client_email || 'No email provided';
-            const phone = inq.phone || inq.contact_number || 'N/A';
+            const phone = inq.phone || inq.client_phone || inq.contact_number || 'N/A';
             const propTitle = inq.property_title || propertiesMap[inq.property_id] || (inq.property_id ? `Property #${inq.property_id}` : 'General Inquiry');
             const normStatus = getNormalizedStatus(inq.status);
             const badgeClass = getBadgeClass(normStatus);
@@ -209,6 +211,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                                 <option value="Under Review" ${normStatus === 'Under Review' ? 'selected' : ''}>Under Review</option>
                                 <option value="Approved" ${normStatus === 'Approved' ? 'selected' : ''}>Approved</option>
                                 <option value="Completed" ${normStatus === 'Completed' ? 'selected' : ''}>Completed</option>
+                                <option value="Cancelled" ${normStatus === 'Cancelled' ? 'selected' : ''}>Cancelled</option>
                             </select>
                         </div>
                     </td>
@@ -259,12 +262,36 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         const name = inq.client_name || inq.name || 'Anonymous Client';
         const email = inq.email || inq.client_email || 'N/A';
-        const phone = inq.phone || inq.contact_number || 'N/A';
+        const phone = inq.phone || inq.client_phone || inq.contact_number || 'N/A';
         const propTitle = inq.property_title || propertiesMap[inq.property_id] || (inq.property_id ? `Property #${inq.property_id}` : 'General Inquiry');
         const normStatus = getNormalizedStatus(inq.status);
         const schedule = inq.schedule_date || inq.preferred_date || 'No schedule requested';
         const message = inq.message || inq.notes || 'No message content provided.';
         const dateStr = inq.created_at ? new Date(inq.created_at).toLocaleString() : 'N/A';
+
+        let actionButtonHtml = '';
+        if (normStatus === 'Approved') {
+            actionButtonHtml = `
+                <button type="button" class="action-btn" disabled style="background: #e2f4e8; color: #166534; padding: 9px 18px; font-size: 0.9rem; border-radius: 8px; border: 1px solid #86efac; font-weight: 600; display: inline-flex; align-items: center; gap: 6px;">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                    Approved
+                </button>
+            `;
+        } else if (normStatus === 'Cancelled') {
+            actionButtonHtml = `
+                <button type="button" class="action-btn" disabled style="background: #fee2e2; color: #b91c1c; padding: 9px 18px; font-size: 0.9rem; border-radius: 8px; border: 1px solid #fecaca; font-weight: 600; display: inline-flex; align-items: center; gap: 6px;">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"></circle><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"></line></svg>
+                    Cancelled by Client
+                </button>
+            `;
+        } else {
+            actionButtonHtml = `
+                <button type="button" id="modalApproveInqBtn" class="action-btn" style="background: var(--dark-green); color: white; padding: 9px 18px; font-size: 0.9rem; border-radius: 8px; border: none; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; font-weight: 600;">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                    Approve Inquiry
+                </button>
+            `;
+        }
 
         modalContent.innerHTML = `
             <div style="display: flex; flex-direction: column; gap: 16px;">
@@ -301,17 +328,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 </div>
 
                 <div style="display: flex; justify-content: flex-end; align-items: center; gap: 10px; margin-top: 10px; padding-top: 14px; border-top: 1px solid #edf2ee;">
-                    ${normStatus !== 'Approved' ? `
-                        <button type="button" id="modalApproveInqBtn" class="action-btn" style="background: var(--dark-green); color: white; padding: 9px 18px; font-size: 0.9rem; border-radius: 8px; border: none; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; font-weight: 600;">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                            Approve Inquiry
-                        </button>
-                    ` : `
-                        <button type="button" class="action-btn" disabled style="background: #e2f4e8; color: #166534; padding: 9px 18px; font-size: 0.9rem; border-radius: 8px; border: 1px solid #86efac; font-weight: 600; display: inline-flex; align-items: center; gap: 6px;">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                            Approved
-                        </button>
-                    `}
+                    ${actionButtonHtml}
                     <a href="mailto:${encodeURIComponent(email)}?subject=Re:%20Inquiry%20regarding%20${encodeURIComponent(propTitle)}" class="action-btn" style="background: var(--green); color: white; padding: 9px 18px; font-size: 0.9rem; text-decoration: none; border-radius: 8px;">
                         Reply via Email
                     </a>
@@ -372,6 +389,22 @@ document.addEventListener('DOMContentLoaded', async () => {
             .replace(/"/g, '&quot;')
             .replace(/'/g, '&#039;');
     }
+
+    // Live sync listeners when client cancels/deletes/modifies an inquiry
+    window.addEventListener('storage', (e) => {
+        if (e.key === 'inquiries' ||
+            e.key === 'urbanscope_admin_event_notifs' ||
+            e.key === 'urbanscope_inquiry_overrides' ||
+            e.key === 'urbanscope_deleted_inquiry_ids') {
+            loadData();
+        }
+    });
+    window.addEventListener('inquiryCancelled', () => loadData());
+    window.addEventListener('inquiryStatusChanged', () => loadData());
+    window.addEventListener('inquiriesUpdated', () => loadData());
+    document.addEventListener('visibilitychange', () => {
+        if (!document.hidden) loadData();
+    });
 
     // Initial load
     await loadData();

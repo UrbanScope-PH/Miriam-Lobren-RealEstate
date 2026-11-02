@@ -1,5 +1,5 @@
 /**
- * UrbanScope - Session UI (profile chip, dropdown, login notice)
+ * UrbanScope - Session UI (profile chip, dropdown, client notifications, login notice)
  */
 
 /* User profile badge hidden until authenticated */
@@ -10,6 +10,240 @@ html.auth-pending .user-profile-badge {
 /* Pages that require login stay hidden until the check passes */
 html.auth-checking body {
     visibility: hidden;
+}
+
+/* ---------- Client Notification Bell (public / client navbar) ---------- */
+.client-notif-wrap {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+}
+
+.client-notif-btn {
+    position: relative;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: 1.5px solid #d1ddd3;
+    background: #fff;
+    color: #1b2e21;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: border-color 0.2s, box-shadow 0.2s, background 0.2s, transform 0.2s;
+    padding: 0;
+}
+
+.client-notif-btn:hover,
+.client-notif-wrap.open .client-notif-btn {
+    border-color: #2d5c39;
+    background: #f4f9f5;
+    box-shadow: 0 6px 18px rgba(45, 92, 57, 0.16);
+}
+
+.client-notif-badge {
+    position: absolute;
+    top: -4px;
+    right: -4px;
+    min-width: 19px;
+    height: 19px;
+    padding: 0 5px;
+    border-radius: 999px;
+    background: #dc2626;
+    color: #ffffff;
+    font-size: 0.68rem;
+    font-weight: 800;
+    line-height: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid #ffffff;
+    box-shadow: 0 2px 6px rgba(220, 38, 38, 0.35);
+    pointer-events: none;
+}
+
+.client-notif-dropdown {
+    position: absolute;
+    right: 0;
+    top: calc(100% + 12px);
+    width: 340px;
+    max-width: calc(100vw - 24px);
+    background: #ffffff;
+    border: 1px solid #d1ddd3;
+    border-radius: 16px;
+    box-shadow: 0 18px 40px rgba(0, 0, 0, 0.16);
+    z-index: 1250;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-8px) scale(0.98);
+    transform-origin: top right;
+    transition: opacity 0.18s, transform 0.18s, visibility 0.18s;
+    text-align: left;
+    overflow: hidden;
+}
+
+.client-notif-wrap.open>.client-notif-dropdown {
+    opacity: 1;
+    visibility: visible;
+    transform: none;
+}
+
+.client-notif-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 13px 16px;
+    border-bottom: 1px solid #e6eee8;
+    background: #f8fbf9;
+}
+
+.client-notif-head strong {
+    font-size: 0.92rem;
+    font-weight: 800;
+    color: #1b2e21;
+}
+
+.client-notif-view-all {
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: #2d5c39;
+    text-decoration: none;
+}
+
+.client-notif-view-all:hover {
+    text-decoration: underline;
+}
+
+.client-notif-list {
+    max-height: 330px;
+    overflow-y: auto;
+    divide-y: 1px solid #eef3ef;
+}
+
+.client-notif-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 13px 16px;
+    text-decoration: none;
+    color: #1b2e21;
+    border-bottom: 1px solid #f0f4f1;
+    transition: background 0.15s;
+}
+
+.client-notif-item:last-child {
+    border-bottom: none;
+}
+
+.client-notif-item:hover {
+    background: #f3f9f4;
+}
+
+.client-notif-item.unread {
+    background: #eef8f1;
+}
+
+.client-notif-icon {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    background: #dcfce7;
+    color: #15803d;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    font-weight: 800;
+    margin-top: 2px;
+}
+
+.client-notif-body {
+    flex: 1;
+    min-width: 0;
+}
+
+.client-notif-body strong {
+    display: block;
+    font-size: 0.84rem;
+    font-weight: 700;
+    color: #14532d;
+    margin-bottom: 2px;
+}
+
+.client-notif-body p {
+    font-size: 0.79rem;
+    color: #334155;
+    line-height: 1.4;
+    margin: 0 0 4px;
+}
+
+.client-notif-time {
+    display: block;
+    font-size: 0.71rem;
+    color: #64748b;
+    font-weight: 600;
+}
+
+.client-notif-empty {
+    padding: 28px 18px;
+    text-align: center;
+    color: #64748b;
+    font-size: 0.84rem;
+}
+
+/* Floating Toast for Client Approval Notification */
+.client-approval-toast {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: #14532d;
+    color: #ffffff;
+    padding: 14px 18px;
+    border-radius: 14px;
+    box-shadow: 0 14px 34px rgba(20, 83, 45, 0.32);
+    max-width: min(400px, calc(100vw - 32px));
+    opacity: 0;
+    transform: translateY(16px);
+    pointer-events: none;
+    transition: opacity 0.25s ease, transform 0.25s ease;
+    text-decoration: none;
+}
+
+.client-approval-toast.show {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+}
+
+.client-approval-toast-icon {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.18);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.client-approval-toast-content strong {
+    display: block;
+    font-size: 0.88rem;
+    font-weight: 800;
+    margin-bottom: 2px;
+    color: #ffffff;
+}
+
+.client-approval-toast-content span {
+    display: block;
+    font-size: 0.79rem;
+    color: #dcfce7;
+    line-height: 1.35;
 }
 
 /* ---------- Profile chip (public navbar) ---------- */
@@ -32,6 +266,7 @@ html.auth-checking body {
     transition: border-color 0.2s, box-shadow 0.2s, transform 0.2s;
     animation: profileIn 0.45s cubic-bezier(0.2, 0.8, 0.2, 1) both;
 }
+
 .profile-chip:hover,
 .profile-menu.open .profile-chip {
     border-color: #2d5c39;
@@ -74,7 +309,10 @@ html.auth-checking body {
     transition: transform 0.2s;
     color: #5f7364;
 }
-.profile-menu.open .profile-chevron { transform: rotate(180deg); }
+
+.profile-menu.open .profile-chevron {
+    transform: rotate(180deg);
+}
 
 /* ---------- Dropdown ---------- */
 .profile-dropdown {
@@ -95,8 +333,9 @@ html.auth-checking body {
     transition: opacity 0.18s, transform 0.18s, visibility 0.18s;
     text-align: left;
 }
-.profile-menu.open > .profile-dropdown,
-.user-profile-badge.open > .profile-dropdown {
+
+.profile-menu.open>.profile-dropdown,
+.user-profile-badge.open>.profile-dropdown {
     opacity: 1;
     visibility: visible;
     transform: none;
@@ -110,8 +349,19 @@ html.auth-checking body {
     border-bottom: 1px solid #e6eee8;
     margin-bottom: 6px;
 }
-.profile-dropdown-head .profile-avatar { width: 42px; height: 42px; font-size: 0.9rem; }
-.profile-dropdown-head strong { display: block; font-size: 0.92rem; color: #1b2e21; }
+
+.profile-dropdown-head .profile-avatar {
+    width: 42px;
+    height: 42px;
+    font-size: 0.9rem;
+}
+
+.profile-dropdown-head strong {
+    display: block;
+    font-size: 0.92rem;
+    color: #1b2e21;
+}
+
 .profile-dropdown-head small {
     display: block;
     font-size: 0.76rem;
@@ -141,45 +391,78 @@ html.auth-checking body {
     text-align: left;
     transition: background 0.15s, color 0.15s;
 }
+
 .profile-dropdown a:hover,
-.profile-dropdown button:hover { background: #eef5ef; color: #2d5c39; }
-.profile-dropdown .signout-item { color: #b3382c; }
-.profile-dropdown .signout-item:hover { background: #fdeeec; color: #b3382c; }
+.profile-dropdown button:hover {
+    background: #eef5ef;
+    color: #2d5c39;
+}
+
+.profile-dropdown .signout-item {
+    color: #b3382c;
+}
+
+.profile-dropdown .signout-item:hover {
+    background: #fdeeec;
+    color: #b3382c;
+}
 
 /* Inquiry page top bar badge */
-.user-profile-badge { position: relative; cursor: pointer; }
+.user-profile-badge {
+    position: relative;
+    cursor: pointer;
+}
 
 @keyframes profileIn {
-    from { opacity: 0; transform: translateY(-6px) scale(0.96); }
-    to   { opacity: 1; transform: none; }
+    from {
+        opacity: 0;
+        transform: translateY(-6px) scale(0.96);
+    }
+
+    to {
+        opacity: 1;
+        transform: none;
+    }
 }
 
 @media (max-width: 640px) {
+
     .profile-name,
-    .profile-chevron { display: none; }
-    .profile-chip { padding: 4px; }
+    .profile-chevron {
+        display: none;
+    }
+
+    .profile-chip {
+        padding: 4px;
+    }
+
     .profile-dropdown {
         min-width: 220px;
         max-width: calc(100vw - 24px);
         right: 0;
     }
+
+    .client-notif-dropdown {
+        width: min(320px, calc(100vw - 24px));
+    }
 }
 
 @media (max-width: 480px) {
-    .profile-dropdown {
-        position: fixed;
-        top: 68px;
-        right: 12px;
-        left: auto;
-        width: min(260px, calc(100vw - 24px));
-        min-width: 0;
+        .profile-dropdown,
+        .client-notif-dropdown {
+            position: fixed;
+            top: 68px;
+            right: 12px;
+            left: auto;
+            width: min(300px, calc(100vw - 24px));
+            min-width: 0;
+        }
     }
-}
 
-@media (min-width: 769px) {
-    .mobile-drawer-auth,
-    .mobile-drawer-user {
-        display: none !important;
+    @media (min-width: 769px) {
+
+        .mobile-drawer-auth,
+        .mobile-drawer-user {
+            display: none !important;
+        }
     }
-}
-

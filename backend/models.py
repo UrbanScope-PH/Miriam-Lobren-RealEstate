@@ -148,6 +148,7 @@ class InquiryResponse(BaseModel):
     message: str
     status: str = "Under Review"
     created_at: Optional[str] = None
+    updated_at: Optional[str] = None
 
 
 class InquiryUpdate(BaseModel):
@@ -179,4 +180,3 @@ class SuperadminUpdateUser(BaseModel):
     phone: Optional[str] = Field(default=None, description="Contact phone number")
     role: Optional[str] = Field(default=None, description="Target role: 'user', 'admin', or 'superadmin'")
     password: Optional[str] = Field(default=None, description="Optional new password (min. 6 characters if provided)")
-

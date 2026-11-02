@@ -159,6 +159,7 @@ Client consultation / viewing requests submitted from `frontend/pages/inquiry/in
 | `message` | TEXT | NOT NULL | |
 | `status` | TEXT | `'Under Review'` | See lifecycle below |
 | `created_at` | TIMESTAMP | `CURRENT_TIMESTAMP` | |
+| `updated_at` | TIMESTAMP | `CURRENT_TIMESTAMP` | Updated on status or detail modifications (*added by migration*) |
 
 **Status lifecycle (as used by the admin dashboard UI):**
 
@@ -168,6 +169,27 @@ Submitted → Requirements Submitted → Under Review → Approved → Completed
 
 `GET /api/stats` counts an inquiry as *pending* when `LOWER(status)` contains
 `review` or `pending`.
+
+---
+
+
+### 3.4 `notifications`
+
+Bi-directional inquiry lifecycle alerts for administrators (client cancellations/deletions) and clients (admin approvals).
+
+| Column | Type | Default | Notes |
+| :--- | :--- | :--- | :--- |
+| `id` | INTEGER | PK, AUTOINCREMENT | |
+| `recipient_role` | TEXT | `'admin'` | `'admin'` or `'client'` |
+| `recipient_email` | TEXT | `''` | Lower-cased client email when `recipient_role = 'client'` |
+| `type` | TEXT | `'info'` | `'cancelled'`, `'approved'`, `'new_inquiry'` |
+| `inquiry_id` | INTEGER | — | Soft reference to `inquiries.id` |
+| `property_title` | TEXT | `''` | Property or consultation topic |
+| `client_name` | TEXT | `''` | Client full name |
+| `title` | TEXT | NOT NULL | Notification headline |
+| `message` | TEXT | NOT NULL | Notification body |
+| `is_read` | INTEGER | `0` | `0` = unread, `1` = read |
+| `created_at` | TIMESTAMP | `CURRENT_TIMESTAMP` | |
 
 ---
 
@@ -378,6 +400,8 @@ supabase/
                                              Updates inquiries.status CHECK constraint to include all active CRM workflow statuses
   migrations/20261102030000_update_default_user_title.sql
                                              Sets default title to 'Real Estate Agent' and normalizes legacy rows
+  migrations/20261102040000_inquiry_lifecycle_notifications.sql
+                                             Extends notifications table for admin/client inquiry lifecycle alerts
   seed.sql                                   Demo data (users, 6 properties, inquiries, ...)
   scripts/                                   One-off data fixes to paste into the SQL Editor (never auto-run)
 ```

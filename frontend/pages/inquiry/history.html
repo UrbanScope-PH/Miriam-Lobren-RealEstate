@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en" data-require-auth>
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -12,20 +13,24 @@
     <script src="../../shared/js/supabase.js"></script>
     <script src="../../shared/js/session.js"></script>
 </head>
+
 <body>
 
     <!-- CLIENT TOPBAR -->
     <header class="app-topbar">
         <div class="topbar-left">
-            <button class="go-back-btn" type="button" aria-label="Go back" onclick="if (history.length > 1) { history.back(); } else { location.href='../../index.html'; }">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <button class="go-back-btn" type="button" aria-label="Go back"
+                onclick="if (history.length > 1) { history.back(); } else { location.href='../../index.html'; }">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+                    stroke-linecap="round" stroke-linejoin="round">
                     <line x1="19" y1="12" x2="5" y2="12"></line>
                     <polyline points="12 19 5 12 12 5"></polyline>
                 </svg>
                 <span>Go Back</span>
             </button>
             <a class="app-brand" href="../../index.html">
-                <img src="../../assets/images/logo.png" alt="ML Logo" class="brand-logo" onerror="this.style.display='none'">
+                <img src="../../assets/images/logo.png" alt="ML Logo" class="brand-logo"
+                    onerror="this.style.display='none'">
                 <span>
                     <strong>Miriam Lobren</strong>
                     <small>REAL ESTATE AGENT</small>
@@ -40,16 +45,18 @@
 
     <!-- MAIN HISTORY CONTENT -->
     <main class="history-container">
-        
+
         <!-- HEADER HERO -->
         <section class="history-header">
             <div class="history-header-top">
                 <div class="history-title-group">
                     <h1>Inquiry History</h1>
-                    <p>Track, manage, modify, or cancel your property inquiries and consultation requests with Miriam Lobren.</p>
+                    <p>Track, manage, modify, or cancel your property inquiries and consultation requests with Miriam
+                        Lobren.</p>
                 </div>
                 <a href="inquiry.html" class="header-action-btn">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        stroke-width="2.3">
                         <line x1="12" y1="5" x2="12" y2="19"></line>
                         <line x1="5" y1="12" x2="19" y2="12"></line>
                     </svg>
@@ -92,7 +99,8 @@
                     <circle cx="11" cy="11" r="8"></circle>
                     <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
                 </svg>
-                <input type="text" id="searchInquiriesInput" class="search-input" placeholder="Search by property, keyword, or message...">
+                <input type="text" id="searchInquiriesInput" class="search-input"
+                    placeholder="Search by property, keyword, or message...">
             </div>
         </div>
 
@@ -109,8 +117,10 @@
                 </svg>
             </div>
             <h3 id="emptyStateTitle">No Inquiries Found</h3>
-            <p id="emptyStateDesc">You haven't submitted any inquiries or consultation requests yet. Looking for a home or need financing guidance?</p>
-            <a href="inquiry.html" class="header-action-btn" style="display: inline-flex; background: var(--green); color: #fff;">
+            <p id="emptyStateDesc">You haven't submitted any inquiries or consultation requests yet. Looking for a home
+                or need financing guidance?</p>
+            <a href="inquiry.html" class="header-action-btn"
+                style="display: inline-flex; background: var(--green); color: #fff;">
                 <span>Submit an Inquiry Now</span>
             </a>
         </div>
@@ -123,7 +133,8 @@
             <div class="modal-header">
                 <div class="modal-title-group">
                     <div class="modal-icon-badge">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
                             <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
                             <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
                         </svg>
@@ -134,7 +145,11 @@
                     </div>
                 </div>
                 <button type="button" class="modal-close-btn" onclick="closeModifyModal()" aria-label="Close dialog">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        stroke-width="2.2">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
                 </button>
             </div>
 
@@ -147,11 +162,13 @@
                     </div>
                     <div class="form-group">
                         <label for="modifyClientPhone">Contact Phone Number</label>
-                        <input type="tel" id="modifyClientPhone" class="form-input" required placeholder="+(63) 9xx xxx xxxx">
+                        <input type="tel" id="modifyClientPhone" class="form-input" required
+                            placeholder="+(63) 9xx xxx xxxx">
                     </div>
                     <div class="form-group">
                         <label for="modifyMessage">Message &amp; Inquiry Details</label>
-                        <textarea id="modifyMessage" class="form-textarea" required rows="4" placeholder="Update your questions, preferences, or preferred viewing schedule..."></textarea>
+                        <textarea id="modifyMessage" class="form-textarea" required rows="4"
+                            placeholder="Update your questions, preferences, or preferred viewing schedule..."></textarea>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -168,7 +185,8 @@
             <div class="modal-header">
                 <div class="modal-title-group">
                     <div class="modal-icon-badge" style="background:#fef3c7; color:#d97706;">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
                             <circle cx="12" cy="12" r="10"></circle>
                             <line x1="4.93" y1="4.93" x2="19.07" y2="19.07"></line>
                         </svg>
@@ -179,21 +197,28 @@
                     </div>
                 </div>
                 <button type="button" class="modal-close-btn" onclick="closeCancelModal()" aria-label="Close dialog">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        stroke-width="2.2">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
                 </button>
             </div>
             <div class="modal-body">
                 <input type="hidden" id="cancelInquiryId">
                 <p style="font-size: 0.95rem; color: var(--text-dark); margin-bottom: 8px;">
-                    Are you sure you want to cancel inquiry for <strong id="cancelPropertyTitle" style="color:var(--dark-green);">Property</strong>?
+                    Are you sure you want to cancel inquiry for <strong id="cancelPropertyTitle"
+                        style="color:var(--dark-green);">Property</strong>?
                 </p>
                 <p style="font-size: 0.86rem; color: var(--text-muted);">
-                    Miriam Lobren's team will be notified of your cancellation. You can submit a new inquiry whenever you're ready.
+                    Miriam Lobren's team will be notified of your cancellation. You can submit a new inquiry whenever
+                    you're ready.
                 </p>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn-secondary" onclick="closeCancelModal()">Keep Active</button>
-                <button type="button" class="btn-warning-modal" id="confirmCancelBtn" onclick="handleConfirmCancel()">Yes, Cancel Inquiry</button>
+                <button type="button" class="btn-warning-modal" id="confirmCancelBtn"
+                    onclick="handleConfirmCancel()">Yes, Cancel Inquiry</button>
             </div>
         </div>
     </div>
@@ -204,18 +229,24 @@
             <div class="modal-header">
                 <div class="modal-title-group">
                     <div class="modal-icon-badge" style="background:#fee2e2; color:#b91c1c;">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
                             <polyline points="3 6 5 6 21 6"></polyline>
-                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2">
+                            </path>
                         </svg>
                     </div>
                     <div>
                         <h3 id="deleteModalTitle">Delete Inquiry Record</h3>
-                        <p class="modal-subtitle">Permanently delete this inquiry</p>
+                        <p class="modal-subtitle">Cancel &amp; permanently remove this inquiry</p>
                     </div>
                 </div>
                 <button type="button" class="modal-close-btn" onclick="closeDeleteModal()" aria-label="Close dialog">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        stroke-width="2.2">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
                 </button>
             </div>
             <div class="modal-body">
@@ -224,22 +255,27 @@
                     Are you sure you want to permanently delete this inquiry?
                 </p>
                 <p style="font-size: 0.86rem; color: var(--text-muted);">
-                    This will permanently remove the record from your history. This action cannot be undone.
+                    This will permanently remove the record from your history and notify Miriam Lobren's team that your
+                    inquiry was cancelled. This action cannot be undone.
                 </p>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn-secondary" onclick="closeDeleteModal()">Keep Record</button>
-                <button type="button" class="btn-danger-modal" id="confirmDeleteBtn" onclick="handleConfirmDelete()">Permanently Delete</button>
+                <button type="button" class="btn-danger-modal" id="confirmDeleteBtn"
+                    onclick="handleConfirmDelete()">Permanently Delete</button>
             </div>
         </div>
     </div>
 
     <!-- TOAST NOTICE -->
     <div class="toast-notice" id="toastNotice" role="status" aria-live="polite">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <polyline points="20 6 9 17 4 12"></polyline>
+        </svg>
         <span id="toastMessage">Success</span>
     </div>
 
     <script src="history.js"></script>
 </body>
+
 </html>

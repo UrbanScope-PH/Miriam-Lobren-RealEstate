@@ -29,6 +29,11 @@
     const toastNotice = document.getElementById('toastNotice');
     const toastMessage = document.getElementById('toastMessage');
 
+    function isInquiryUnderReview(status) {
+        const s = String(status || 'Under Review').toLowerCase().trim();
+        return s === 'under review' || s === 'pending' || !s;
+    }
+
     // ==========================================
     // INITIALIZATION & USER SESSION
     // ==========================================
@@ -40,7 +45,7 @@
         if (!currentUser) {
             try {
                 currentUser = JSON.parse(localStorage.getItem('urbanscope_demo_user'));
-            } catch (e) {}
+            } catch (e) { }
         }
 
         if (!currentUser) {
@@ -60,18 +65,20 @@
     // ==========================================
     // FETCH INQUIRIES
     // ==========================================
-    async function loadInquiries() {
-        if (!currentUser) return;
-        inquiriesListEl.innerHTML = `
-            <div style="text-align:center; padding: 48px; color: var(--text-muted);">
-                <div class="empty-state-icon" style="animation: spin 1s linear infinite;">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="2" x2="12" y2="6"></line><line x1="12" y1="18" x2="12" y2="22"></line><line x1="4.93" y1="4.93" x2="7.76" y2="7.76"></line><line x1="16.24" y1="16.24" x2="19.07" y2="19.07"></line><line x1="2" y1="12" x2="6" y2="12"></line><line x1="18" y1="12" x2="22" y2="12"></line><line x1="4.93" y1="19.07" x2="7.76" y2="16.24"></line><line x1="16.24" y1="7.76" x2="19.07" y2="4.93"></line></svg>
-                </div>
-                <p style="font-weight:700; color:var(--dark-green);">Loading your inquiries...</p>
-            </div>
-        `;
+        async function loadInquiries(silent = false) {
+            if (!currentUser) return;
+        if (!silent && allInquiries.length === 0) {
+            inquiriesListEl.innerHTML = `
+                < div style = "text-align:center; padding: 48px; color: var(--text-muted);" >
+                    <div class="empty-state-icon" style="animation: spin 1s linear infinite;">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="2" x2="12" y2="6"></line><line x1="12" y1="18" x2="12" y2="22"></line><line x1="4.93" y1="4.93" x2="7.76" y2="7.76"></line><line x1="16.24" y1="16.24" x2="19.07" y2="19.07"></line><line x1="2" y1="12" x2="6" y2="12"></line><line x1="18" y1="12" x2="22" y2="12"></line><line x1="4.93" y1="19.07" x2="7.76" y2="16.24"></line><line x1="16.24" y1="7.76" x2="19.07" y2="4.93"></line></svg>
+                    </div>
+                    <p style="font-weight:700; color:var(--dark-green);">Loading your inquiries...</p>
+                </div >
+            `;
+        }
 
-        const email = currentUser.email || '';
+        const email = (currentUser.email || '').trim().toLowerCase();
         if (typeof window.apiGetMyInquiries === 'function') {
             try {
                 allInquiries = await window.apiGetMyInquiries(email);
@@ -83,14 +90,57 @@
             // Fallback from localStorage
             try {
                 const cached = JSON.parse(localStorage.getItem('inquiries') || '[]');
-                allInquiries = cached.filter(i => (i.client_email || i.clientEmail || '').trim().toLowerCase() === email.toLowerCase());
+                allInquiries = cached.filter(i => (i.client_email || i.clientEmail || '').trim().toLowerCase() === email);
             } catch (e) {
                 allInquiries = [];
             }
         }
 
+        // If modify modal is open for an inquiry that is no longer Under Review, close it
+        if (modifyModal && modifyModal.classList.contains('active')) {
+            const activeModifyId = document.getElementById('modifyInquiryId')?.value;
+            const currentItem = allInquiries.find(i => String(i.id) === String(activeModifyId));
+            if (currentItem && !isInquiryUnderReview(currentItem.status)) {
+                closeModifyModal();
+            }
+        }
+
+        checkApprovedInquiryNotifications(email);
         updateStats();
         renderInquiries();
+
+        if (typeof window.loadClientNotifications === 'function') {
+            window.loadClientNotifications();
+        }
+    }
+
+    function checkApprovedInquiryNotifications(email) {
+        if (!email || !Array.isArray(allInquiries)) return;
+        const toastedKey = 'client_notifs_toasted_' + email;
+        let toastedIds = [];
+        try {
+            toastedIds = JSON.parse(localStorage.getItem(toastedKey) || '[]');
+        } catch (e) { }
+
+        let newlyApproved = null;
+        allInquiries.forEach(item => {
+            const s = String(item.status || '').toLowerCase().trim();
+            if (s === 'approved' || s === 'scheduled') {
+                const key = 'approved_' + item.id;
+                if (!toastedIds.includes(key)) {
+                    toastedIds.push(key);
+                    if (!newlyApproved) newlyApproved = item;
+                }
+            }
+        });
+
+        if (newlyApproved) {
+            try {
+                localStorage.setItem(toastedKey, JSON.stringify(toastedIds));
+            } catch (e) { }
+            const propTitle = newlyApproved.property_title || newlyApproved.propertyTitle || 'General Consultation';
+            showToast(`✓ Good news! Your inquiry for "${propTitle}" has been approved by Miriam Lobren!`);
+        }
     }
 
     // ==========================================
@@ -98,10 +148,7 @@
     // ==========================================
     function updateStats() {
         const total = allInquiries.length;
-        const underReview = allInquiries.filter(i => {
-            const s = (i.status || '').toLowerCase().trim();
-            return s === 'under review' || s === 'pending';
-        }).length;
+        const underReview = allInquiries.filter(i => isInquiryUnderReview(i.status)).length;
         const approved = allInquiries.filter(i => {
             const s = (i.status || '').toLowerCase().trim();
             return s === 'approved' || s === 'scheduled';
@@ -127,7 +174,7 @@
                 if (targetFilter === 'approved') {
                     statusMatch = (rawStatus === 'approved' || rawStatus === 'scheduled');
                 } else if (targetFilter === 'under review') {
-                    statusMatch = (rawStatus === 'under review' || rawStatus === 'pending');
+                    statusMatch = isInquiryUnderReview(rawStatus);
                 } else {
                     statusMatch = (rawStatus === targetFilter);
                 }
@@ -164,15 +211,17 @@
 
         inquiriesListEl.innerHTML = filtered.map(item => {
             const rawStatus = item.status || 'Under Review';
+            const statusLower = rawStatus.toLowerCase().trim();
             const statusClass = getStatusClass(rawStatus);
             const formattedDate = formatDate(item.created_at);
             const title = escHtml(item.property_title || item.propertyTitle || 'General Consultation');
             const phone = escHtml(item.client_phone || item.clientPhone || 'Not specified');
             const email = escHtml(item.client_email || item.clientEmail || (currentUser && currentUser.email) || '');
             const message = escHtml(item.message || 'No details provided.');
-            const isApproved = rawStatus.toLowerCase().trim() === 'approved';
-            const isCancelled = rawStatus.toLowerCase().trim() === 'cancelled';
-            const isClosed = rawStatus.toLowerCase().trim() === 'closed';
+            const isUnderReview = isInquiryUnderReview(rawStatus);
+            const isApproved = statusLower === 'approved' || statusLower === 'scheduled';
+            const isCancelled = statusLower === 'cancelled';
+            const isClosed = statusLower === 'closed' || statusLower === 'completed';
 
             return `
                 <article class="inquiry-card" data-id="${item.id}">
@@ -196,7 +245,7 @@
 
                         <div class="status-pill ${statusClass}">
                             <span class="status-dot"></span>
-                            <span>${rawStatus}</span>
+                            <span>${escHtml(rawStatus)}</span>
                         </div>
                     </div>
 
@@ -224,7 +273,7 @@
                     </div>
 
                     <div class="card-actions-row">
-                        ${!isClosed ? `
+                        ${isUnderReview ? `
                             <button type="button" class="card-btn btn-modify" onclick="openModifyModal(${item.id})">
                                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
                                 <span>Modify Details</span>
@@ -257,6 +306,11 @@
         const item = allInquiries.find(i => String(i.id) === String(id));
         if (!item) return;
 
+        if (!isInquiryUnderReview(item.status)) {
+            showToast('Approved or processed inquiries can no longer be modified.');
+            return;
+        }
+
         document.getElementById('modifyInquiryId').value = item.id;
         document.getElementById('modifyPropertyTitle').value = item.property_title || item.propertyTitle || 'General Consultation';
         document.getElementById('modifyClientPhone').value = item.client_phone || item.clientPhone || '';
@@ -273,6 +327,14 @@
     window.handleSaveModify = async function (e) {
         e.preventDefault();
         const id = document.getElementById('modifyInquiryId').value;
+        const item = allInquiries.find(i => String(i.id) === String(id));
+        if (item && !isInquiryUnderReview(item.status)) {
+            closeModifyModal();
+            renderInquiries();
+            showToast('Approved or processed inquiries can no longer be modified.');
+            return;
+        }
+
         const property_title = document.getElementById('modifyPropertyTitle').value.trim();
         const client_phone = document.getElementById('modifyClientPhone').value.trim();
         const message = document.getElementById('modifyMessage').value.trim();
@@ -314,7 +376,8 @@
             renderInquiries();
             showToast('✓ Inquiry details successfully updated');
         } else {
-            alert('Failed to update inquiry. Please try again.');
+            alert('Failed to update inquiry. It may have already been approved or processed.');
+            loadInquiries(true);
         }
     };
 
@@ -335,18 +398,20 @@
     window.handleConfirmCancel = async function () {
         const id = document.getElementById('cancelInquiryId').value;
         const confirmBtn = document.getElementById('confirmCancelBtn');
+        const targetItem = allInquiries.find(i => String(i.id) === String(id));
 
         confirmBtn.disabled = true;
         confirmBtn.textContent = 'Cancelling...';
 
         let success = false;
         if (typeof window.apiCancelMyInquiry === 'function') {
-            const res = await window.apiCancelMyInquiry(id, currentUser.email);
+            const res = await window.apiCancelMyInquiry(id, currentUser.email, targetItem);
             success = res && res.success;
         } else {
             const idx = allInquiries.findIndex(i => String(i.id) === String(id));
             if (idx !== -1) {
                 allInquiries[idx].status = 'Cancelled';
+                allInquiries[idx].updated_at = new Date().toISOString();
                 localStorage.setItem('inquiries', JSON.stringify(allInquiries));
                 success = true;
             }
@@ -359,11 +424,12 @@
             const idx = allInquiries.findIndex(i => String(i.id) === String(id));
             if (idx !== -1) {
                 allInquiries[idx].status = 'Cancelled';
+                allInquiries[idx].updated_at = new Date().toISOString();
             }
             closeCancelModal();
             updateStats();
             renderInquiries();
-            showToast('✓ Inquiry marked as Cancelled');
+            showToast('✓ Inquiry cancelled. Admin has been notified.');
         } else {
             alert('Failed to cancel inquiry. Please try again.');
         }
@@ -382,13 +448,14 @@
     window.handleConfirmDelete = async function () {
         const id = document.getElementById('deleteInquiryId').value;
         const confirmBtn = document.getElementById('confirmDeleteBtn');
+        const targetItem = allInquiries.find(i => String(i.id) === String(id));
 
         confirmBtn.disabled = true;
         confirmBtn.textContent = 'Deleting...';
 
         let success = false;
         if (typeof window.apiDeleteMyInquiry === 'function') {
-            const res = await window.apiDeleteMyInquiry(id, currentUser.email);
+            const res = await window.apiDeleteMyInquiry(id, currentUser.email, targetItem);
             success = res && res.success;
         } else {
             allInquiries = allInquiries.filter(i => String(i.id) !== String(id));
@@ -404,7 +471,7 @@
             closeDeleteModal();
             updateStats();
             renderInquiries();
-            showToast('✓ Inquiry permanently removed');
+            showToast('✓ Inquiry deleted. Admin has been notified of your cancellation.');
         } else {
             alert('Failed to delete inquiry. Please try again.');
         }
@@ -419,113 +486,124 @@
         toastNotice.classList.add('show');
         setTimeout(() => {
             toastNotice.classList.remove('show');
-        }, 3200);
-    }
+    }, 3800);
+}
 
     // ==========================================
     // FILTER & SEARCH LISTENERS
     // ==========================================
     filterTabs.forEach(tab => {
-        tab.addEventListener('click', function () {
-            filterTabs.forEach(t => t.classList.remove('active'));
-            this.classList.add('active');
-            currentFilter = this.getAttribute('data-filter') || 'all';
-            renderInquiries();
-        });
+    tab.addEventListener('click', function () {
+        filterTabs.forEach(t => t.classList.remove('active'));
+        this.classList.add('active');
+        currentFilter = this.getAttribute('data-filter') || 'all';
+        renderInquiries();
     });
+});
 
-    if (searchInputEl) {
-        searchInputEl.addEventListener('input', function (e) {
-            searchQuery = e.target.value.trim();
-            renderInquiries();
-        });
-    }
+if (searchInputEl) {
+    searchInputEl.addEventListener('input', function (e) {
+        searchQuery = e.target.value.trim();
+        renderInquiries();
+    });
+}
 
-    // Close modals on overlay backdrop click
-    [modifyModal, cancelModal, deleteModal].forEach(modal => {
-        if (!modal) return;
-        modal.addEventListener('click', function (e) {
-            if (e.target === modal) {
+// Close modals on overlay backdrop click
+[modifyModal, cancelModal, deleteModal].forEach(modal => {
+    if (!modal) return;
+    modal.addEventListener('click', function (e) {
+        if (e.target === modal) {
+            modal.classList.remove('active');
+        }
+    });
+});
+
+// Close modals on Escape key
+window.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape') {
+        [modifyModal, cancelModal, deleteModal].forEach(modal => {
+            if (modal && modal.classList.contains('active')) {
                 modal.classList.remove('active');
             }
         });
-    });
+    }
+});
 
-    // Close modals on Escape key
-    window.addEventListener('keydown', function (e) {
-        if (e.key === 'Escape') {
-            [modifyModal, cancelModal, deleteModal].forEach(modal => {
-                if (modal && modal.classList.contains('active')) {
-                    modal.classList.remove('active');
-                }
-            });
+// ==========================================
+// FORMATTING HELPERS
+// ==========================================
+function getStatusClass(status) {
+    const s = (status || '').toLowerCase().trim();
+    if (s === 'approved' || s === 'scheduled') return 'status-approved';
+    if (s === 'contacted') return 'status-contacted';
+    if (s === 'cancelled') return 'status-cancelled';
+    if (s === 'closed' || s === 'completed') return 'status-closed';
+    return 'status-under-review';
+}
+
+function formatDate(raw) {
+    if (!raw) return 'Recently';
+    try {
+        const d = new Date(raw);
+        if (isNaN(d.getTime())) return String(raw);
+        return d.toLocaleDateString('en-US', {
+            month: 'short',
+            day: 'numeric',
+            year: 'numeric',
+            hour: 'numeric',
+            minute: '2-digit',
+            hour12: true
+        });
+    } catch (e) {
+        return String(raw);
+    }
+}
+
+function escHtml(str) {
+    return String(str || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+
+// Real-time synchronization when admin approves or modifies inquiries
+window.addEventListener('storage', function (e) {
+        if (
+            e.key === 'inquiries' ||
+            e.key === 'urbanscope_inquiry_overrides' ||
+            e.key === 'urbanscope_client_notifications'
+        ) {
+            loadInquiries(true);
         }
     });
 
-    // ==========================================
-    // FORMATTING HELPERS
-    // ==========================================
-    function getStatusClass(status) {
-        const s = (status || '').toLowerCase().trim();
-        if (s === 'approved' || s === 'scheduled') return 'status-approved';
-        if (s === 'contacted') return 'status-contacted';
-        if (s === 'cancelled') return 'status-cancelled';
-        if (s === 'closed') return 'status-closed';
-        return 'status-under-review';
+window.addEventListener('inquiryStatusChanged', function () {
+    loadInquiries(true);
+});
+
+window.addEventListener('inquiriesUpdated', function () {
+    loadInquiries(true);
+});
+
+document.addEventListener('visibilitychange', function () {
+    if (document.visibilityState === 'visible') {
+        loadInquiries(true);
     }
+});
 
-    function formatDate(raw) {
-        if (!raw) return 'Recently';
-        try {
-            const d = new Date(raw);
-            if (isNaN(d.getTime())) return String(raw);
-            return d.toLocaleDateString('en-US', {
-                month: 'short',
-                day: 'numeric',
-                year: 'numeric',
-                hour: 'numeric',
-                minute: '2-digit',
-                hour12: true
-            });
-        } catch (e) {
-            return String(raw);
-        }
+// Poll periodically for remote backend/Supabase updates while history page is open
+setInterval(function () {
+    if (document.visibilityState === 'visible' && currentUser) {
+        loadInquiries(true);
     }
+}, 15000);
 
-    function escHtml(str) {
-        return String(str || '')
-            .replace(/&/g, '&amp;')
-            .replace(/</g, '&lt;')
-            .replace(/>/g, '&gt;')
-            .replace(/"/g, '&quot;')
-            .replace(/'/g, '&#39;');
-    }
-
-    // Real-time synchronization when admin approves or modifies inquiries
-    window.addEventListener('storage', function (e) {
-        if (e.key === 'inquiries') {
-            loadInquiries();
-        }
-    });
-
-    window.addEventListener('inquiryStatusChanged', function () {
-        loadInquiries();
-    });
-
-    window.addEventListener('inquiriesUpdated', function () {
-        loadInquiries();
-    });
-
-    document.addEventListener('visibilitychange', function () {
-        if (document.visibilityState === 'visible') {
-            loadInquiries();
-        }
-    });
-
-    // Start initialization
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', initHistoryPage);
-    } else {
-        initHistoryPage();
-    }
-})();
+// Start initialization
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initHistoryPage);
+} else {
+    initHistoryPage();
+}
+}) ();

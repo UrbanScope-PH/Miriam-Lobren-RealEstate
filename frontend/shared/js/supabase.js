@@ -425,8 +425,253 @@
     }
 
     // ----------------------------------------------------------
-    // 3. INQUIRY SERVICES
+    // 3. INQUIRY & NOTIFICATION SERVICES
     // ----------------------------------------------------------
+    const ADMIN_EVENT_NOTIFS_KEY = 'urbanscope_admin_event_notifs';
+    const CLIENT_NOTIFS_KEY = 'urbanscope_client_notifications';
+    const INQUIRY_OVERRIDES_KEY = 'urbanscope_inquiry_overrides';
+    const DELETED_INQUIRIES_KEY = 'urbanscope_deleted_inquiry_ids';
+
+    function getDeletedInquiryIds() {
+        try {
+            const arr = JSON.parse(localStorage.getItem(DELETED_INQUIRIES_KEY) || '[]');
+            return Array.isArray(arr) ? arr.map(String) : [];
+        } catch (_) {
+            return [];
+        }
+    }
+
+    function markInquiryDeletedLocal(id) {
+        try {
+            const set = new Set(getDeletedInquiryIds());
+            set.add(String(id));
+            localStorage.setItem(DELETED_INQUIRIES_KEY, JSON.stringify(Array.from(set)));
+        } catch (_) {}
+    }
+
+    function getInquiryOverrides() {
+        try {
+            const obj = JSON.parse(localStorage.getItem(INQUIRY_OVERRIDES_KEY) || '{}');
+            return (obj && typeof obj === 'object') ? obj : {};
+        } catch (_) {
+            return {};
+        }
+    }
+
+    function saveInquiryOverride(id, patch) {
+        try {
+            const overrides = getInquiryOverrides();
+            const key = String(id);
+            overrides[key] = { ...(overrides[key] || {}), ...patch, updated_at: new Date().toISOString() };
+            localStorage.setItem(INQUIRY_OVERRIDES_KEY, JSON.stringify(overrides));
+        } catch (_) {}
+    }
+
+    function applyLocalInquiryState(list) {
+        if (!Array.isArray(list)) return [];
+        const deletedIds = new Set(getDeletedInquiryIds());
+        const overrides = getInquiryOverrides();
+        let cached = [];
+        try {
+            cached = JSON.parse(localStorage.getItem('inquiries') || '[]');
+        } catch (_) {}
+
+        return list
+            .filter(item => item && !deletedIds.has(String(item.id)))
+            .map(item => {
+                const key = String(item.id);
+                let merged = { ...item };
+                const cachedMatch = Array.isArray(cached) ? cached.find(c => String(c.id) === key) : null;
+                if (cachedMatch) {
+                    if (cachedMatch.status && cachedMatch.status !== merged.status) {
+                        merged.status = cachedMatch.status;
+                    }
+                    if (cachedMatch.updated_at) {
+                        merged.updated_at = cachedMatch.updated_at;
+                    }
+                }
+                if (overrides[key]) {
+                    merged = { ...merged, ...overrides[key] };
+                }
+                return merged;
+            });
+    }
+
+    function pushAdminEventNotification(eventObj) {
+        try {
+            const list = JSON.parse(localStorage.getItem(ADMIN_EVENT_NOTIFS_KEY) || '[]');
+            const cleanList = Array.isArray(list)
+                ? list.filter(it => it && it.notifKey !== eventObj.notifKey)
+                : [];
+            cleanList.unshift(eventObj);
+            localStorage.setItem(ADMIN_EVENT_NOTIFS_KEY, JSON.stringify(cleanList.slice(0, 50)));
+            window.dispatchEvent(new CustomEvent('adminNotificationAdded', { detail: eventObj }));
+        } catch (_) {}
+    }
+
+    function pushClientNotification(notifObj) {
+        try {
+            const list = JSON.parse(localStorage.getItem(CLIENT_NOTIFS_KEY) || '[]');
+            const cleanList = Array.isArray(list)
+                ? list.filter(it => it && it.notifKey !== notifObj.notifKey)
+                : [];
+            cleanList.unshift(notifObj);
+            localStorage.setItem(CLIENT_NOTIFS_KEY, JSON.stringify(cleanList.slice(0, 50)));
+
+            const cleanEmail = String(notifObj.client_email || '').trim().toLowerCase();
+            if (cleanEmail && notifObj.notifKey) {
+                try {
+                    const readKey = 'client_notifs_read_ids_' + cleanEmail;
+                    const readIds = JSON.parse(localStorage.getItem(readKey) || '[]');
+                    if (Array.isArray(readIds)) {
+                        localStorage.setItem(readKey, JSON.stringify(readIds.filter(k => k !== notifObj.notifKey)));
+                    }
+                } catch (_) {}
+                try {
+                    const toastKey = 'client_notifs_toasted_' + cleanEmail;
+                    const toastedIds = JSON.parse(localStorage.getItem(toastKey) || '[]');
+                    if (Array.isArray(toastedIds)) {
+                        localStorage.setItem(toastKey, JSON.stringify(toastedIds.filter(k => k !== notifObj.notifKey)));
+                    }
+                } catch (_) {}
+            }
+
+            window.dispatchEvent(new CustomEvent('clientNotificationAdded', { detail: notifObj }));
+        } catch (_) {}
+    }
+
+    async function apiGetAdminNotifications() {
+        let items = [];
+        try {
+            const localEvents = JSON.parse(localStorage.getItem(ADMIN_EVENT_NOTIFS_KEY) || '[]');
+            if (Array.isArray(localEvents)) items = [...localEvents];
+        } catch (_) {}
+
+        if (isLocalDevHost()) {
+            try {
+                const localBase = (location.port === '8000') ? '/api' : 'http://127.0.0.1:8000/api';
+                const res = await fetch(`${localBase}/notifications?role=admin`, { method: 'GET' });
+                if (res.ok) {
+                    const rows = await res.json();
+                    if (Array.isArray(rows)) {
+                        rows.forEach(r => {
+                            const inqId = r.inquiry_id || r.id;
+                            const nType = (r.type || 'info').toLowerCase();
+                            const createdMs = r.created_at ? new Date(r.created_at).getTime() : Date.now();
+                            const notifKey = `${nType}_${inqId}`;
+                            if (!items.some(existing => String(existing.inquiryId) === String(inqId) && existing.type === nType)) {
+                                items.push({
+                                    id: `srv_${r.id}`,
+                                    notifKey: notifKey,
+                                    type: nType,
+                                    avatarClass: nType === 'cancelled' ? 'cancel' : 'check',
+                                    avatarIcon: nType === 'cancelled' ? '✕' : '✓',
+                                    inquiryId: inqId,
+                                    client_name: r.client_name || 'Client',
+                                    property_title: r.property_title || 'General Inquiry',
+                                    title: r.title,
+                                    subtitle: `${r.property_title || 'General Inquiry'}`,
+                                    created_at: r.created_at,
+                                    time: isNaN(createdMs) ? Date.now() : createdMs
+                                });
+                            }
+                        });
+                    }
+                }
+            } catch (_) {}
+        }
+
+        items.sort((a, b) => (b.time || 0) - (a.time || 0));
+        return items;
+    }
+
+    async function apiGetClientNotifications(email) {
+        const cleanEmail = (email || '').trim().toLowerCase();
+        if (!cleanEmail) return [];
+
+        const mapByKey = new Map();
+
+        // 1. Local stored client notifications
+        try {
+            const localNotifs = JSON.parse(localStorage.getItem(CLIENT_NOTIFS_KEY) || '[]');
+            if (Array.isArray(localNotifs)) {
+                localNotifs.forEach(n => {
+                    if (n && String(n.client_email || '').trim().toLowerCase() === cleanEmail) {
+                        const key = n.notifKey || `approved_${n.inquiryId || n.id}`;
+                        mapByKey.set(key, { ...n, notifKey: key });
+                    }
+                });
+            }
+        } catch (_) {}
+
+        // 2. Local FastAPI backend notifications
+        if (isLocalDevHost()) {
+            try {
+                const localBase = (location.port === '8000') ? '/api' : 'http://127.0.0.1:8000/api';
+                const res = await fetch(`${localBase}/notifications?email=${encodeURIComponent(cleanEmail)}`, { method: 'GET' });
+                if (res.ok) {
+                    const rows = await res.json();
+                    if (Array.isArray(rows)) {
+                        rows.forEach(r => {
+                            const inqId = r.inquiry_id || r.id;
+                            const key = `${(r.type || 'approved').toLowerCase()}_${inqId}`;
+                            if (!mapByKey.has(key)) {
+                                const createdMs = r.created_at ? new Date(r.created_at).getTime() : Date.now();
+                                mapByKey.set(key, {
+                                    id: `srv_${r.id}`,
+                                    notifKey: key,
+                                    type: (r.type || 'approved').toLowerCase(),
+                                    inquiryId: inqId,
+                                    client_email: cleanEmail,
+                                    property_title: r.property_title || 'General Inquiry',
+                                    title: r.title || `Inquiry #${inqId} Approved!`,
+                                    message: r.message || `Your inquiry for "${r.property_title || 'General Inquiry'}" has been approved by Miriam Lobren!`,
+                                    created_at: r.created_at,
+                                    time: isNaN(createdMs) ? Date.now() : createdMs
+                                });
+                            }
+                        });
+                    }
+                }
+            } catch (_) {}
+        }
+
+        // 3. Derive from client's live inquiries with 'Approved' status
+        try {
+            const myInquiries = await apiGetMyInquiries(cleanEmail);
+            if (Array.isArray(myInquiries)) {
+                myInquiries.forEach(inq => {
+                    const s = String(inq.status || '').toLowerCase().trim();
+                    if (s === 'approved' || s === 'scheduled') {
+                        const key = `approved_${inq.id}`;
+                        if (!mapByKey.has(key)) {
+                            const propTitle = inq.property_title || inq.propertyTitle || 'General Consultation';
+                            const code = inq.inquiry_code || `INQ-2026-${String(inq.id).padStart(3, '0')}`;
+                            const ts = inq.updated_at || inq.created_at || new Date().toISOString();
+                            const timeMs = new Date(ts).getTime();
+                            mapByKey.set(key, {
+                                id: key,
+                                notifKey: key,
+                                type: 'approved',
+                                inquiryId: inq.id,
+                                client_email: cleanEmail,
+                                property_title: propTitle,
+                                title: `Inquiry ${code} Approved!`,
+                                message: `Your inquiry for "${propTitle}" has been approved by Miriam Lobren!`,
+                                created_at: ts,
+                                time: isNaN(timeMs) ? Date.now() : timeMs
+                            });
+                        }
+                    }
+                });
+            }
+        } catch (_) {}
+
+        const result = Array.from(mapByKey.values());
+        result.sort((a, b) => (b.time || 0) - (a.time || 0));
+        return result;
+    }
+
     async function apiSubmitInquiry(inquiry) {
         const payload = {
             property_title: inquiry.property_title || inquiry.propertyTitle || 'General Inquiry',
@@ -439,7 +684,7 @@
 
         let result = null;
 
-        // Try Supabase Cloud
+        // 1. Try Supabase Cloud
         try {
             const res = await fetch(`${REST_BASE}/inquiries`, {
                 method: 'POST',
@@ -455,8 +700,8 @@
             console.warn('Supabase inquiry save notice:', err.message);
         }
 
-        // Fallback 1: Local FastAPI Python backend
-        if (!result) {
+        // 2. Also sync to Local FastAPI Python backend when on local dev host
+        if (isLocalDevHost()) {
             try {
                 const localBase = (location.port === '8000') ? '/api' : 'http://127.0.0.1:8000/api';
                 const localRes = await fetch(`${localBase}/inquiries`, {
@@ -466,7 +711,7 @@
                 });
                 if (localRes.ok) {
                     const localData = await localRes.json();
-                    result = { success: true, data: localData.data || localData };
+                    if (!result) result = { success: true, data: localData.data || localData };
                 }
             } catch (e) {}
         }
@@ -490,7 +735,26 @@
     async function apiGetInquiries() {
         let list = [];
 
-        // 1. Try Supabase REST
+        // 1. Try Local FastAPI backend first on local dev host
+        if (isLocalDevHost()) {
+            try {
+                const localBase = (location.port === '8000') ? '/api' : 'http://127.0.0.1:8000/api';
+                const token = localStorage.getItem(TOKEN_KEY) || localStorage.getItem('adminToken') || localStorage.getItem('supabase_token') || '';
+                const localRes = await fetch(`${localBase}/inquiries`, {
+                    method: 'GET',
+                    headers: token ? { 'Authorization': `Bearer ${token}` } : {},
+                    credentials: 'same-origin'
+                });
+                if (localRes.ok) {
+                    const localData = await localRes.json();
+                    if (Array.isArray(localData) && localData.length > 0) {
+                        list = localData;
+                    }
+                }
+            } catch (e) {}
+        }
+
+        // 2. Try Supabase REST
         try {
             const res = await fetch(`${REST_BASE}/inquiries?select=*&order=created_at.desc`, {
                 method: 'GET',
@@ -500,29 +764,20 @@
             if (res.ok) {
                 const data = await res.json();
                 if (Array.isArray(data) && data.length > 0) {
-                    list = data;
+                    if (!list.length) {
+                        list = data;
+                    } else {
+                        const existingIds = new Set(list.map(i => String(i.id)));
+                        data.forEach(item => {
+                            if (!existingIds.has(String(item.id))) {
+                                list.push(item);
+                            }
+                        });
+                    }
                 }
             }
         } catch (err) {
             console.warn('Supabase inquiries fetch notice:', err.message);
-        }
-
-        // 2. Fallback: Local FastAPI backend
-        if (!list.length) {
-            try {
-                const localBase = (location.port === '8000') ? '/api' : 'http://127.0.0.1:8000/api';
-                const token = localStorage.getItem('adminToken') || localStorage.getItem('supabase_token');
-                const localRes = await fetch(`${localBase}/inquiries`, {
-                    method: 'GET',
-                    headers: token ? { 'Authorization': `Bearer ${token}` } : {}
-                });
-                if (localRes.ok) {
-                    const localData = await localRes.json();
-                    if (Array.isArray(localData) && localData.length > 0) {
-                        list = localData;
-                    }
-                }
-            } catch (e) {}
         }
 
         // 3. Fallback: localStorage
@@ -535,7 +790,9 @@
             } catch (_) {}
         }
 
-        if (list.length > 0) {
+        list = applyLocalInquiryState(list);
+
+        if (list.length >= 0) {
             try {
                 localStorage.setItem('inquiries', JSON.stringify(list));
             } catch (_) {}
@@ -547,6 +804,7 @@
 
     async function apiUpdateInquiryStatus(id, newStatus) {
         let updated = false;
+        const nowIso = new Date().toISOString();
         const token = localStorage.getItem(TOKEN_KEY) ||
                       localStorage.getItem('urbanscope_jwt_token') ||
                       localStorage.getItem('access_token') ||
@@ -554,26 +812,28 @@
                       localStorage.getItem('supabase_token') || '';
 
         // 1. Try FastAPI backend first
-        try {
-            const localBase = (location.port === '8000') ? '/api' : 'http://127.0.0.1:8000/api';
-            let adminEmail = '';
+        if (isLocalDevHost()) {
             try {
-                const adminUser = JSON.parse(localStorage.getItem('adminUser') || localStorage.getItem(USER_KEY) || '{}');
-                adminEmail = adminUser.email || '';
-            } catch (_) {}
+                const localBase = (location.port === '8000') ? '/api' : 'http://127.0.0.1:8000/api';
+                let adminEmail = '';
+                try {
+                    const adminUser = JSON.parse(localStorage.getItem('adminUser') || localStorage.getItem(USER_KEY) || '{}');
+                    adminEmail = adminUser.email || '';
+                } catch (_) {}
 
-            const res = await fetch(`${localBase}/inquiries/${encodeURIComponent(id)}`, {
-                method: 'PATCH',
-                headers: {
-                    'Content-Type': 'application/json',
-                    ...(token ? { 'Authorization': `Bearer ${token}` } : {})
-                },
-                credentials: 'same-origin',
-                body: JSON.stringify({ status: newStatus, caller_email: adminEmail, admin_email: adminEmail })
-            });
-            if (res.ok) updated = true;
-        } catch (e) {
-            console.warn('FastAPI inquiry status update notice:', e);
+                const res = await fetch(`${localBase}/inquiries/${encodeURIComponent(id)}`, {
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+                    },
+                    credentials: 'same-origin',
+                    body: JSON.stringify({ status: newStatus, caller_email: adminEmail, admin_email: adminEmail })
+                });
+                if (res.ok) updated = true;
+            } catch (e) {
+                console.warn('FastAPI inquiry status update notice:', e);
+            }
         }
 
         // 2. Try Supabase Cloud
@@ -586,15 +846,49 @@
             if (res.ok) updated = true;
         } catch (e) {}
 
-        // 3. Always update localStorage cache
+        // 3. Always update localStorage cache & overrides
+        let targetInquiry = null;
         try {
             const cached = JSON.parse(localStorage.getItem('inquiries') || '[]');
             const idx = cached.findIndex(i => String(i.id) === String(id));
             if (idx !== -1) {
                 cached[idx].status = newStatus;
+                cached[idx].updated_at = nowIso;
+                targetInquiry = cached[idx];
                 localStorage.setItem('inquiries', JSON.stringify(cached));
             }
         } catch (_) {}
+
+        saveInquiryOverride(id, { status: newStatus, updated_at: nowIso });
+
+        // 4. If admin approved the inquiry, push notification for the user
+        if (String(newStatus || '').toLowerCase().trim() === 'approved') {
+            if (!targetInquiry) {
+                try {
+                    const all = await apiGetInquiries();
+                    if (Array.isArray(all)) {
+                        targetInquiry = all.find(i => String(i.id) === String(id));
+                    }
+                } catch (_) {}
+            }
+            if (targetInquiry) {
+                const clientEmail = (targetInquiry.client_email || targetInquiry.email || '').trim().toLowerCase();
+                const propTitle = targetInquiry.property_title || targetInquiry.propertyTitle || 'General Consultation';
+                const code = targetInquiry.inquiry_code || `INQ-2026-${String(id).padStart(3, '0')}`;
+                pushClientNotification({
+                    id: `approved_${id}_${Date.now()}`,
+                    notifKey: `approved_${id}`,
+                    type: 'approved',
+                    inquiryId: id,
+                    client_email: clientEmail,
+                    property_title: propTitle,
+                    title: `Inquiry ${code} Approved!`,
+                    message: `Your inquiry for "${propTitle}" has been approved by Miriam Lobren!`,
+                    created_at: nowIso,
+                    time: Date.now()
+                });
+            }
+        }
 
         window.dispatchEvent(new CustomEvent('inquiryStatusChanged', { detail: { id, status: newStatus } }));
         window.dispatchEvent(new CustomEvent('inquiriesUpdated', { detail: { id, status: newStatus } }));
@@ -612,22 +906,24 @@
                       localStorage.getItem('supabase_token') || '';
 
         // 1. Try FastAPI backend
-        try {
-            const localBase = (location.port === '8000') ? '/api' : 'http://127.0.0.1:8000/api';
-            const url = cleanEmail ? `${localBase}/inquiries/my?email=${encodeURIComponent(cleanEmail)}` : `${localBase}/inquiries/my`;
-            const res = await fetch(url, {
-                method: 'GET',
-                headers: token ? { 'Authorization': `Bearer ${token}` } : {},
-                credentials: 'same-origin'
-            });
-            if (res.ok) {
-                const data = await res.json();
-                if (Array.isArray(data)) list = data;
-            }
-        } catch (e) {}
+        if (isLocalDevHost()) {
+            try {
+                const localBase = (location.port === '8000') ? '/api' : 'http://127.0.0.1:8000/api';
+                const url = cleanEmail ? `${localBase}/inquiries/my?email=${encodeURIComponent(cleanEmail)}` : `${localBase}/inquiries/my`;
+                const res = await fetch(url, {
+                    method: 'GET',
+                    headers: token ? { 'Authorization': `Bearer ${token}` } : {},
+                    credentials: 'same-origin'
+                });
+                if (res.ok) {
+                    const data = await res.json();
+                    if (Array.isArray(data) && data.length > 0) list = data;
+                }
+            } catch (e) {}
+        }
 
         // 2. Try Supabase Cloud
-        if (!list.length && cleanEmail) {
+        if (cleanEmail) {
             try {
                 const res = await fetch(`${REST_BASE}/inquiries?client_email=ilike.${encodeURIComponent(cleanEmail)}&order=created_at.desc`, {
                     method: 'GET',
@@ -635,7 +931,16 @@
                 });
                 if (res.ok) {
                     const data = await res.json();
-                    if (Array.isArray(data) && data.length > 0) list = data;
+                    if (Array.isArray(data) && data.length > 0) {
+                        if (!list.length) {
+                            list = data;
+                        } else {
+                            const existingIds = new Set(list.map(i => String(i.id)));
+                            data.forEach(item => {
+                                if (!existingIds.has(String(item.id))) list.push(item);
+                            });
+                        }
+                    }
                 }
             } catch (err) {}
         }
@@ -650,20 +955,7 @@
             } catch (_) {}
         }
 
-        // Reconcile status with localStorage cache (preserves instant admin updates)
-        try {
-            const cached = JSON.parse(localStorage.getItem('inquiries') || '[]');
-            if (Array.isArray(cached) && cached.length > 0) {
-                list = list.map(item => {
-                    const match = cached.find(c => String(c.id) === String(item.id));
-                    if (match && match.status && match.status !== item.status) {
-                        return { ...item, status: match.status };
-                    }
-                    return item;
-                });
-            }
-        } catch (_) {}
-
+        list = applyLocalInquiryState(list);
         return list;
     }
 
@@ -671,95 +963,200 @@
         let updated = false;
         let updatedRecord = null;
         const cleanEmail = (email || '').trim().toLowerCase();
+        const nowIso = new Date().toISOString();
         const payload = { ...updates };
         if (cleanEmail && !payload.client_email) payload.client_email = cleanEmail;
 
-        // 1. Try FastAPI
-        try {
-            const localBase = (location.port === '8000') ? '/api' : 'http://127.0.0.1:8000/api';
-            const token = localStorage.getItem('access_token') || localStorage.getItem('supabase_token') || localStorage.getItem('adminToken');
-            const res = await fetch(`${localBase}/inquiries/${encodeURIComponent(id)}`, {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                    ...(token ? { 'Authorization': `Bearer ${token}` } : {})
-                },
-                body: JSON.stringify(payload)
-            });
-            if (res.ok) {
-                const data = await res.json();
-                updated = true;
-                updatedRecord = data.data || data;
-            }
-        } catch (e) {}
-
-        // 2. Try Supabase
-        if (!updated) {
+        // Guard: prevent modifying details if already approved (unless cancelling)
+        const isCancelling = String(updates.status || '').toLowerCase().trim() === 'cancelled';
+        if (!isCancelling) {
             try {
-                const res = await fetch(`${REST_BASE}/inquiries?id=eq.${encodeURIComponent(id)}`, {
-                    method: 'PATCH',
-                    headers: getHeaders(),
-                    body: JSON.stringify(updates)
+                const cached = JSON.parse(localStorage.getItem('inquiries') || '[]');
+                const overrides = getInquiryOverrides();
+                const match = cached.find(i => String(i.id) === String(id));
+                const currentStatus = String(
+                    (overrides[String(id)] && overrides[String(id)].status) ||
+                    (match && match.status) ||
+                    'Under Review'
+                ).toLowerCase().trim();
+                if (currentStatus && currentStatus !== 'under review' && currentStatus !== 'pending') {
+                    return { success: false, error: 'Approved or processed inquiries can no longer be modified.' };
+                }
+            } catch (_) {}
+        }
+
+        const token = localStorage.getItem(TOKEN_KEY) ||
+                      localStorage.getItem('urbanscope_jwt_token') ||
+                      localStorage.getItem('access_token') ||
+                      localStorage.getItem('supabase_token') ||
+                      localStorage.getItem('adminToken') || '';
+
+        // 1. Try FastAPI
+        if (isLocalDevHost()) {
+            try {
+                const localBase = (location.port === '8000') ? '/api' : 'http://127.0.0.1:8000/api';
+                const res = await fetch(`${localBase}/inquiries/${encodeURIComponent(id)}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+                    },
+                    credentials: 'same-origin',
+                    body: JSON.stringify(payload)
                 });
                 if (res.ok) {
+                    const data = await res.json();
                     updated = true;
+                    updatedRecord = data.data || data;
+                } else if (res.status === 400) {
+                    return { success: false, error: 'Approved inquiries can no longer be modified.' };
                 }
             } catch (e) {}
         }
 
-        // 3. Update localStorage cache
+        // 2. Always sync to Supabase Cloud as well
+        try {
+            const supaUpdates = { ...updates };
+            delete supaUpdates.client_email;
+            const res = await fetch(`${REST_BASE}/inquiries?id=eq.${encodeURIComponent(id)}`, {
+                method: 'PATCH',
+                headers: getHeaders(),
+                body: JSON.stringify(supaUpdates)
+            });
+            if (res.ok) {
+                updated = true;
+            }
+        } catch (e) {}
+
+        // 3. Update localStorage cache & overrides
         try {
             const cached = JSON.parse(localStorage.getItem('inquiries') || '[]');
             const idx = cached.findIndex(i => String(i.id) === String(id));
             if (idx !== -1) {
-                cached[idx] = { ...cached[idx], ...updates };
+                cached[idx] = { ...cached[idx], ...updates, updated_at: nowIso };
                 localStorage.setItem('inquiries', JSON.stringify(cached));
                 if (!updatedRecord) updatedRecord = cached[idx];
             }
         } catch (_) {}
 
+        saveInquiryOverride(id, { ...updates, updated_at: nowIso });
+
         return { success: updated || Boolean(updatedRecord), data: updatedRecord };
     }
 
-    async function apiDeleteMyInquiry(id, email) {
+    async function apiDeleteMyInquiry(id, email, itemHint = null) {
         let deleted = false;
         const cleanEmail = (email || '').trim().toLowerCase();
 
-        // 1. Try FastAPI
+        // Capture inquiry info before deleting so we can notify admin
+        let targetInq = itemHint;
         try {
-            const localBase = (location.port === '8000') ? '/api' : 'http://127.0.0.1:8000/api';
-            const token = localStorage.getItem('access_token') || localStorage.getItem('supabase_token') || localStorage.getItem('adminToken');
-            const url = cleanEmail ? `${localBase}/inquiries/${encodeURIComponent(id)}?client_email=${encodeURIComponent(cleanEmail)}` : `${localBase}/inquiries/${encodeURIComponent(id)}`;
-            const res = await fetch(url, {
-                method: 'DELETE',
-                headers: token ? { 'Authorization': `Bearer ${token}` } : {}
-            });
-            if (res.ok) deleted = true;
-        } catch (e) {}
+            const cached = JSON.parse(localStorage.getItem('inquiries') || '[]');
+            if (!targetInq && Array.isArray(cached)) {
+                targetInq = cached.find(i => String(i.id) === String(id)) || null;
+            }
+        } catch (_) {}
 
-        // 2. Try Supabase
-        if (!deleted) {
+        const token = localStorage.getItem(TOKEN_KEY) ||
+                      localStorage.getItem('urbanscope_jwt_token') ||
+                      localStorage.getItem('access_token') ||
+                      localStorage.getItem('supabase_token') ||
+                      localStorage.getItem('adminToken') || '';
+
+        // 1. Delete in FastAPI
+        if (isLocalDevHost()) {
             try {
-                const res = await fetch(`${REST_BASE}/inquiries?id=eq.${encodeURIComponent(id)}`, {
+                const localBase = (location.port === '8000') ? '/api' : 'http://127.0.0.1:8000/api';
+                const url = cleanEmail ? `${localBase}/inquiries/${encodeURIComponent(id)}?client_email=${encodeURIComponent(cleanEmail)}` : `${localBase}/inquiries/${encodeURIComponent(id)}`;
+                const res = await fetch(url, {
                     method: 'DELETE',
-                    headers: getHeaders()
+                    headers: token ? { 'Authorization': `Bearer ${token}` } : {},
+                    credentials: 'same-origin'
                 });
                 if (res.ok) deleted = true;
             } catch (e) {}
         }
 
-        // 3. Remove from localStorage cache
+        // 2. Always delete in Supabase Cloud as well
+        try {
+            const res = await fetch(`${REST_BASE}/inquiries?id=eq.${encodeURIComponent(id)}`, {
+                method: 'DELETE',
+                headers: getHeaders()
+            });
+            if (res.ok) deleted = true;
+        } catch (e) {}
+
+        // 3. Remove from localStorage cache & mark deleted
+        markInquiryDeletedLocal(id);
         try {
             const cached = JSON.parse(localStorage.getItem('inquiries') || '[]');
             const filtered = cached.filter(i => String(i.id) !== String(id));
             localStorage.setItem('inquiries', JSON.stringify(filtered));
         } catch (_) {}
 
+        // 4. Notify admin that the client cancelled/removed the inquiry
+        const code = (targetInq && targetInq.inquiry_code) || `INQ-2026-${String(id).padStart(3, '0')}`;
+        const clientName = (targetInq && (targetInq.client_name || targetInq.name)) || cleanEmail.split('@')[0] || 'Client';
+        const propTitle = (targetInq && (targetInq.property_title || targetInq.propertyTitle)) || 'General Inquiry';
+
+        pushAdminEventNotification({
+            id: `delete_${id}_${Date.now()}`,
+            notifKey: `deleted_${id}`,
+            type: 'cancelled',
+            avatarClass: 'cancel',
+            avatarIcon: '✕',
+            inquiryId: id,
+            client_name: clientName,
+            property_title: propTitle,
+            title: `Inquiry ${code} cancelled by ${clientName}`,
+            subtitle: propTitle,
+            created_at: new Date().toISOString(),
+            time: Date.now()
+        });
+
+        window.dispatchEvent(new CustomEvent('inquiryCancelled', { detail: { id, clientName, propTitle } }));
+        window.dispatchEvent(new CustomEvent('inquiryStatusChanged', { detail: { id, status: 'Cancelled' } }));
+        window.dispatchEvent(new CustomEvent('inquiriesUpdated', { detail: { id, status: 'Deleted' } }));
+
         return { success: true };
     }
 
-    async function apiCancelMyInquiry(id, email) {
-        return apiUpdateMyInquiry(id, { status: 'Cancelled' }, email);
+    async function apiCancelMyInquiry(id, email, itemHint = null) {
+        const cleanEmail = (email || '').trim().toLowerCase();
+        let targetInq = itemHint;
+        try {
+            const cached = JSON.parse(localStorage.getItem('inquiries') || '[]');
+            if (!targetInq && Array.isArray(cached)) {
+                targetInq = cached.find(i => String(i.id) === String(id)) || null;
+            }
+        } catch (_) {}
+
+        const res = await apiUpdateMyInquiry(id, { status: 'Cancelled' }, email);
+        if (res && res.success) {
+            const code = (targetInq && targetInq.inquiry_code) || `INQ-2026-${String(id).padStart(3, '0')}`;
+            const clientName = (targetInq && (targetInq.client_name || targetInq.name)) || cleanEmail.split('@')[0] || 'Client';
+            const propTitle = (targetInq && (targetInq.property_title || targetInq.propertyTitle)) || 'General Inquiry';
+
+            pushAdminEventNotification({
+                id: `cancel_${id}_${Date.now()}`,
+                notifKey: `cancelled_${id}`,
+                type: 'cancelled',
+                avatarClass: 'cancel',
+                avatarIcon: '✕',
+                inquiryId: id,
+                client_name: clientName,
+                property_title: propTitle,
+                title: `Inquiry ${code} cancelled by ${clientName}`,
+                subtitle: propTitle,
+                created_at: new Date().toISOString(),
+                time: Date.now()
+            });
+
+            window.dispatchEvent(new CustomEvent('inquiryCancelled', { detail: { id, clientName, propTitle } }));
+            window.dispatchEvent(new CustomEvent('inquiryStatusChanged', { detail: { id, status: 'Cancelled' } }));
+            window.dispatchEvent(new CustomEvent('inquiriesUpdated', { detail: { id, status: 'Cancelled' } }));
+        }
+        return res;
     }
 
 
@@ -1966,6 +2363,8 @@
     window.apiUpdateMyInquiry = apiUpdateMyInquiry;
     window.apiDeleteMyInquiry = apiDeleteMyInquiry;
     window.apiCancelMyInquiry = apiCancelMyInquiry;
+    window.apiGetAdminNotifications = apiGetAdminNotifications;
+    window.apiGetClientNotifications = apiGetClientNotifications;
     window.apiGetUsers = apiGetUsers;
     window.apiUpdateAdminProfile = apiUpdateAdminProfile;
     window.apiGetLeadAgentProfile = apiGetLeadAgentProfile;

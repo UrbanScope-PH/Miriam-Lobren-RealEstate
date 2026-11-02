@@ -347,6 +347,19 @@ path when rendering from a page.
       - `backend/routers/superadmin.py` — user directory (`/api/users`) and superadmin executive metrics, RBAC user management, and SQLite integrity checks (`/api/superadmin/*`).
       - `backend/routers/web.py` — `register_web_hosting()` mounting portal shortcut overrides, `StaticFiles` (`pages`, `shared`, `assets`), legacy 301 section redirects, and root landing assets (`/`, `/index.*`, `/favicon.ico`).
 
+30. **Inquiry Lifecycle Rules & Bi-Directional Real-Time Notifications (Approval Lock, Cancellation/Deletion Admin Alerts, Client Approval Alerts):**
+    - **Modify Details Restricted to Under Review Inquiries Only:**
+      - On `frontend/pages/inquiry/history.js`, `isInquiryUnderReview(status)` checks whether an inquiry is `Under Review` / `Pending`. Once an inquiry is **Approved** (or `Cancelled`, `Completed`, `Closed`), the **Modify Details** button (`.btn-modify`) is hidden from the inquiry card so clients can no longer edit approved inquiries.
+      - `openModifyModal()` and `handleSaveModify()` enforce frontend guards, and if an inquiry is approved while `#modifyModal` is open, the modal automatically closes and alerts the client.
+      - On the backend (`backend/routers/inquiries.py` `modify_inquiry`), non-admin attempts to modify `message`, `client_phone`, or `property_title` when the inquiry status is not `Under Review` / `Pending` are rejected with HTTP `400 Bad Request` (`"Approved or processed inquiries can no longer be modified."`).
+    - **Admin Notifications on Client Inquiry Cancellation or Deletion:**
+      - When a client cancels an inquiry (`Cancel Inquiry` -> `apiCancelMyInquiry`) or permanently deletes an inquiry (`Delete` -> `apiDeleteMyInquiry`), `backend/routers/inquiries.py` and `frontend/shared/js/supabase.js` (`pushAdminEventNotification`) record a `cancelled` notification for the administrator and synchronize status/deletion across SQLite, Supabase Cloud, and local state overrides (`urbanscope_inquiry_overrides`, `urbanscope_deleted_inquiry_ids`).
+      - `frontend/pages/admin/admin-shell.js` (`buildNotificationItems`) merges live inquiries with `apiGetAdminNotifications()`, rendering red cancellation alerts (`.notif-avatar.cancel`, `"Inquiry INQ-2026-00X cancelled by {Client}"`) in the Admin topbar notification bell dropdown and Dashboard "Recent Notifications" card, incrementing the unread badge via event-specific keys (`cancelled_${id}`, `deleted_${id}`), and displaying a real-time floating toast (`#adminShellToast`).
+      - `frontend/pages/admin/clients.html`, `clients.js`, `clients.css`, and `dashboard.js` support the `Cancelled` status badge (`.status-badge.cancelled`), `Cancelled` filter tab, and automatic live table refresh via `storage` and `inquiryCancelled` events.
+    - **Client Notifications on Admin Inquiry Approval:**
+      - When an admin approves an inquiry from `pages/admin/dashboard.html` or `pages/admin/clients.html` (`apiUpdateInquiryStatus(id, 'Approved')`), `backend/routers/inquiries.py` and `supabase.js` (`pushClientNotification`) create an `approved` notification targeted to the client's email.
+      - `frontend/shared/js/session.js` and `frontend/shared/css/session.css` render a client notification bell (`#clientNotifWrap`, `#clientNotifBtn`, `#clientNotifBadge`, `#clientNotifDropdown`) in the navbar across all client pages, polling and listening to `storage` / `inquiryStatusChanged` / `clientNotificationAdded` events, displaying unread counts, listing approval notifications with links to `pages/inquiry/history.html`, and popping up a floating toast (`#clientApprovalToast` / `#toastNotice`) when an inquiry is approved.
+
 ---
 
 ## Safety Rules

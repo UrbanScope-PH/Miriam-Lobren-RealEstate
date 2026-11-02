@@ -4,7 +4,8 @@
  * - The public site (home, properties, details) is open to everyone.
  * - Any link to inquiry sends visitors who are not logged in to
  *   pages/auth/login.html (they return to their target page afterwards).
- * - Logged-in users see their profile (avatar + name + menu) in the navbar.
+ * - Logged-in users see their profile (avatar + name + menu) and notification
+ *   bell in the navbar.
  *
  * Load AFTER shared/js/supabase.js. Works with Supabase auth, and falls
  * back to a local demo session if Supabase is not configured.
@@ -20,11 +21,11 @@
             var email = (parsed.email || '').toLowerCase().trim();
             var isSuperadmin = (role === 'superadmin' || email === 'urbanscope.cvsu@gmail.com');
             var isAdmin = (role === 'admin' || email === 'admin.realestate@gmail.com');
-            
+
             var path = location.pathname.toLowerCase().replace(/\\/g, '/');
             var inAdmin = path.includes('/pages/admin/') || path.includes('/pages/superadmin/');
             var inAuth = path.includes('/pages/auth/');
-            
+
             if (!inAdmin && !inAuth && (isSuperadmin || isAdmin)) {
                 var p = location.pathname.replace(/\\/g, '/');
                 var basePath = p.indexOf('/pages/') !== -1 ? '../../' : './';
@@ -33,13 +34,14 @@
                 return;
             }
         }
-    } catch (e) {}
+    } catch (e) { }
 
     var DEMO_USER_KEY = 'urbanscope_demo_user';
     var root = document.documentElement;
     var requiresAuth = root.hasAttribute('data-require-auth');
     var currentUser = null;
     var resolved = false;
+    var cachedClientNotifs = [];
 
     root.classList.add('auth-pending');
     if (requiresAuth) root.classList.add('auth-checking');
@@ -96,6 +98,21 @@
         return url;
     }
 
+    function formatRelativeTime(dateStr) {
+        if (!dateStr) return 'Recently';
+        try {
+            var d = new Date(dateStr);
+            if (isNaN(d.getTime())) return 'Recently';
+            var diffSec = Math.floor((Date.now() - d.getTime()) / 1000);
+            if (diffSec < 60) return 'Just now';
+            if (diffSec < 3600) return Math.floor(diffSec / 60) + 'm ago';
+            if (diffSec < 86400) return Math.floor(diffSec / 3600) + 'h ago';
+            return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+        } catch (e) {
+            return 'Recently';
+        }
+    }
+
     // ------------------------------------------------------------------
     // Session lookup
     // ------------------------------------------------------------------
@@ -150,25 +167,177 @@
         try {
             if (usingSupabase() && typeof apiSignOut === 'function') await apiSignOut();
         } catch (err) { console.error(err); }
-        try { localStorage.removeItem(DEMO_USER_KEY); } catch (e) {}
+        try { localStorage.removeItem(DEMO_USER_KEY); } catch (e) { }
         location.href = getBasePath() + 'index.html';
     }
 
     // ------------------------------------------------------------------
-    // UI: dropdown + profile chip
+    // Client Notifications (Approval Alerts & Bell Dropdown)
+    // ------------------------------------------------------------------
+    function getNotifKey(n) {
+        if (!n) return '';
+        if (n.inquiry_id != null && String(n.type || '').toLowerCase() === 'approved') {
+            return 'approved_' + n.inquiry_id;
+        }
+        return String(n.id || ('approved_' + (n.inquiry_id || '')));
+    }
+
+    function markAllClientNotifsRead(cleanEmail) {
+        if (!cleanEmail) return;
+        try {
+            var readKey = 'client_notifs_read_ids_' + cleanEmail;
+            var readIds = JSON.parse(localStorage.getItem(readKey) || '[]');
+            cachedClientNotifs.forEach(function (n) {
+                var k = getNotifKey(n);
+                if (k && readIds.indexOf(k) === -1) readIds.push(k);
+            });
+            localStorage.setItem(readKey, JSON.stringify(readIds));
+        } catch (e) { }
+
+        var badge = document.getElementById('clientNotifBadge');
+        if (badge) {
+            badge.style.display = 'none';
+            badge.textContent = '0';
+        }
+        document.querySelectorAll('.client-notif-item.unread').forEach(function (el) {
+            el.classList.remove('unread');
+        });
+    }
+
+    function showClientApprovalToast(notif) {
+        if (!notif) return;
+        // Avoid duplicating toast if history.js already displayed #toastNotice
+        var historyToast = document.getElementById('toastNotice');
+        if (historyToast && historyToast.classList.contains('show')) return;
+
+        var existing = document.getElementById('clientApprovalToast');
+        if (existing) existing.remove();
+
+        var base = getBasePath();
+        var toast = document.createElement('a');
+        toast.id = 'clientApprovalToast';
+        toast.className = 'client-approval-toast';
+        toast.href = base + 'pages/inquiry/history.html';
+        toast.innerHTML =
+            '<div class="client-approval-toast-icon">' +
+            '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>' +
+            '</div>' +
+            '<div class="client-approval-toast-content">' +
+            '<strong>' + esc(notif.title || 'Inquiry Approved!') + '</strong>' +
+            '<span>' + esc(notif.message || 'Miriam Lobren approved your inquiry.') + '</span>' +
+            '</div>';
+        document.body.appendChild(toast);
+
+        setTimeout(function () {
+            toast.classList.add('show');
+        }, 40);
+
+        setTimeout(function () {
+            toast.classList.remove('show');
+            setTimeout(function () {
+                if (toast.parentNode) toast.remove();
+            }, 300);
+        }, 6000);
+    }
+
+    async function loadClientNotifications() {
+        if (!currentUser || !currentUser.email) return;
+        var cleanEmail = String(currentUser.email).toLowerCase().trim();
+        if (!cleanEmail) return;
+
+        try {
+            var list = [];
+            if (typeof window.apiGetClientNotifications === 'function') {
+                list = await window.apiGetClientNotifications(cleanEmail);
+            }
+            if (!Array.isArray(list)) list = [];
+            cachedClientNotifs = list;
+
+            var readKey = 'client_notifs_read_ids_' + cleanEmail;
+            var toastedKey = 'client_notifs_toasted_' + cleanEmail;
+            var readIds = [];
+            var toastedIds = [];
+            try {
+                readIds = JSON.parse(localStorage.getItem(readKey) || '[]');
+                toastedIds = JSON.parse(localStorage.getItem(toastedKey) || '[]');
+            } catch (e) { }
+
+            var unreadCount = 0;
+            var newestUntoasted = null;
+
+            list.forEach(function (n) {
+                var k = getNotifKey(n);
+                var isUnread = k && readIds.indexOf(k) === -1;
+                if (isUnread) {
+                    unreadCount++;
+                    if (toastedIds.indexOf(k) === -1) {
+                        toastedIds.push(k);
+                        if (!newestUntoasted) newestUntoasted = n;
+                    }
+                }
+            });
+
+            if (newestUntoasted) {
+                try {
+                    localStorage.setItem(toastedKey, JSON.stringify(toastedIds));
+                } catch (e) { }
+                showClientApprovalToast(newestUntoasted);
+            }
+
+            var badge = document.getElementById('clientNotifBadge');
+            if (badge) {
+                if (unreadCount > 0) {
+                    badge.textContent = unreadCount > 99 ? '99+' : String(unreadCount);
+                    badge.style.display = 'inline-flex';
+                } else {
+                    badge.textContent = '0';
+                    badge.style.display = 'none';
+                }
+            }
+
+            var listEl = document.getElementById('clientNotifList');
+            if (listEl) {
+                if (list.length === 0) {
+                    listEl.innerHTML = '<div class="client-notif-empty">No notifications yet. We\'ll alert you here when Miriam Lobren approves your inquiry.</div>';
+                } else {
+                    var base = getBasePath();
+                    listEl.innerHTML = list.slice(0, 12).map(function (n) {
+                        var k = getNotifKey(n);
+                        var isUnread = k && readIds.indexOf(k) === -1;
+                        return '' +
+                            '<a href="' + base + 'pages/inquiry/history.html" class="client-notif-item' + (isUnread ? ' unread' : '') + '">' +
+                            '<span class="client-notif-icon">✓</span>' +
+                            '<div class="client-notif-body">' +
+                            '<strong>' + esc(n.title || 'Inquiry Approved!') + '</strong>' +
+                            '<p>' + esc(n.message || 'Your inquiry has been approved by Miriam Lobren.') + '</p>' +
+                            '<span class="client-notif-time">' + esc(formatRelativeTime(n.created_at)) + '</span>' +
+                            '</div>' +
+                            '</a>';
+                    }).join('');
+                }
+            }
+        } catch (err) {
+            console.warn('Failed to load client notifications:', err);
+        }
+    }
+
+    window.loadClientNotifications = loadClientNotifications;
+
+    // ------------------------------------------------------------------
+    // UI: dropdown + profile chip + notification bell
     // ------------------------------------------------------------------
     function dropdownHtml(user) {
         var base = getBasePath();
         return '' +
             '<div class="profile-dropdown" role="menu">' +
-                '<div class="profile-dropdown-head">' +
-                    '<span class="profile-avatar">' + avatarInnerHtml(user) + '</span>' +
-                    '<div><strong>' + esc(user.name) + '</strong><small>' + esc(user.email) + '</small></div>' +
-                '</div>' +
-                '<a href="' + base + 'index.html" role="menuitem">Home</a>' +
-                '<a href="' + base + 'pages/inquiry/inquiry.html" role="menuitem">Submit an Inquiry</a>' +
-                '<a href="' + base + 'pages/inquiry/history.html" role="menuitem">Inquiry History</a>' +
-                '<button type="button" class="signout-item" role="menuitem" data-action="signout">Sign Out</button>' +
+            '<div class="profile-dropdown-head">' +
+            '<span class="profile-avatar">' + avatarInnerHtml(user) + '</span>' +
+            '<div><strong>' + esc(user.name) + '</strong><small>' + esc(user.email) + '</small></div>' +
+            '</div>' +
+            '<a href="' + base + 'index.html" role="menuitem">Home</a>' +
+            '<a href="' + base + 'pages/inquiry/inquiry.html" role="menuitem">Submit an Inquiry</a>' +
+            '<a href="' + base + 'pages/inquiry/history.html" role="menuitem">Inquiry History</a>' +
+            '<button type="button" class="signout-item" role="menuitem" data-action="signout">Sign Out</button>' +
             '</div>';
     }
 
@@ -186,28 +355,71 @@
             var oldMenu = acts.querySelector('#profileMenu');
             if (oldMenu) oldMenu.remove();
 
+            var oldClientNotif = acts.querySelector('#clientNotifWrap');
+            if (oldClientNotif) oldClientNotif.remove();
+
             var oldNotif = acts.querySelector('.notif-btn');
             if (oldNotif) oldNotif.remove();
 
             var oldBadge = acts.querySelector('.user-profile-badge');
             if (oldBadge) oldBadge.remove();
 
+            var base = getBasePath();
+
+            // 1. Client Notification Bell
+            var notifWrap = document.createElement('div');
+            notifWrap.className = 'client-notif-wrap';
+            notifWrap.id = 'clientNotifWrap';
+            notifWrap.innerHTML =
+                '<button type="button" class="client-notif-btn" id="clientNotifBtn" aria-label="Notifications" aria-haspopup="true" aria-expanded="false">' +
+                '<svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' +
+                '<path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>' +
+                '<path d="M13.73 21a2 2 0 0 1-3.46 0"></path>' +
+                '</svg>' +
+                '<span class="client-notif-badge" id="clientNotifBadge" style="display: none;">0</span>' +
+                '</button>' +
+                '<div class="client-notif-dropdown" id="clientNotifDropdown" role="menu">' +
+                '<div class="client-notif-head">' +
+                '<strong>Notifications</strong>' +
+                '<a href="' + base + 'pages/inquiry/history.html" class="client-notif-view-all">Inquiry History</a>' +
+                '</div>' +
+                '<div class="client-notif-list" id="clientNotifList">' +
+                '<div class="client-notif-empty">Checking notifications...</div>' +
+                '</div>' +
+                '</div>';
+            acts.appendChild(notifWrap);
+
+            // 2. Profile Menu Chip
             var wrap = document.createElement('div');
             wrap.className = 'profile-menu';
             wrap.id = 'profileMenu';
             wrap.innerHTML =
                 '<button type="button" class="profile-chip" id="profileChip" aria-haspopup="true" aria-expanded="false">' +
-                    '<span class="profile-avatar">' + avatarInnerHtml(user) + '</span>' +
-                    '<span class="profile-name">' + esc(user.name.split(' ')[0]) + '</span>' +
-                    '<svg class="profile-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>' +
+                '<span class="profile-avatar">' + avatarInnerHtml(user) + '</span>' +
+                '<span class="profile-name">' + esc(user.name.split(' ')[0]) + '</span>' +
+                '<svg class="profile-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>' +
                 '</button>' + dropdownHtml(user);
             wireAvatarFallbacks(wrap);
             acts.appendChild(wrap);
+
+            notifWrap.querySelector('#clientNotifBtn').addEventListener('click', function (e) {
+                e.stopPropagation();
+                wrap.classList.remove('open');
+                var open = notifWrap.classList.toggle('open');
+                this.setAttribute('aria-expanded', String(open));
+                if (open && user && user.email) {
+                    markAllClientNotifsRead(String(user.email).toLowerCase().trim());
+                }
+            });
+
             wrap.querySelector('#profileChip').addEventListener('click', function (e) {
                 e.stopPropagation();
+                notifWrap.classList.remove('open');
                 var open = wrap.classList.toggle('open');
                 this.setAttribute('aria-expanded', open);
             });
+
+            loadClientNotifications();
         }
     }
 
@@ -265,8 +477,8 @@
             userSection.className = 'mobile-drawer-user';
             userSection.innerHTML =
                 '<div class="mobile-user-info">' +
-                    '<span class="profile-avatar" style="width:30px;height:30px;font-size:0.75rem;flex-shrink:0;">' + avatarInnerHtml(user) + '</span>' +
-                    '<span>' + esc(user.name) + '</span>' +
+                '<span class="profile-avatar" style="width:30px;height:30px;font-size:0.75rem;flex-shrink:0;">' + avatarInnerHtml(user) + '</span>' +
+                '<span>' + esc(user.name) + '</span>' +
                 '</div>' +
                 '<a href="' + base + 'pages/inquiry/inquiry.html" class="m-inquiry-link">Submit an Inquiry</a>' +
                 '<a href="' + base + 'pages/inquiry/history.html" class="m-inquiry-link">Inquiry History</a>' +
@@ -368,7 +580,7 @@
                     p = adminUser;
                 }
             }
-        } catch (e) {}
+        } catch (e) { }
 
         function applyContact(phone, email) {
             if (!phone && !email) return;
@@ -376,12 +588,12 @@
             var cleanEmail = email || 'admin.realestate@gmail.com';
             var cleanDigits = cleanPhone.replace(/[^\d+]/g, '');
 
-            document.querySelectorAll('.footer-contact a[href^="tel:"], footer a[href^="tel:"], #footerAgentPhone').forEach(function(el) {
+            document.querySelectorAll('.footer-contact a[href^="tel:"], footer a[href^="tel:"], #footerAgentPhone').forEach(function (el) {
                 el.textContent = cleanPhone;
                 el.setAttribute('href', 'tel:' + cleanDigits);
             });
 
-            document.querySelectorAll('.footer-contact a[href^="mailto:"], footer a[href^="mailto:"], #footerAgentEmail').forEach(function(el) {
+            document.querySelectorAll('.footer-contact a[href^="mailto:"], footer a[href^="mailto:"], #footerAgentEmail').forEach(function (el) {
                 el.textContent = cleanEmail;
                 el.setAttribute('href', 'mailto:' + cleanEmail);
             });
@@ -396,11 +608,11 @@
                 rawTitle = 'Real Estate Agent';
             }
 
-            document.querySelectorAll('.app-brand strong, .Cname strong, #navAgentName').forEach(function(el) {
+            document.querySelectorAll('.app-brand strong, .Cname strong, #navAgentName').forEach(function (el) {
                 el.textContent = cleanName;
             });
 
-            document.querySelectorAll('.app-brand small, .Cname small, #navAgentTitle').forEach(function(el) {
+            document.querySelectorAll('.app-brand small, .Cname small, #navAgentTitle').forEach(function (el) {
                 el.textContent = rawTitle.toUpperCase();
             });
         }
@@ -411,30 +623,61 @@
         }
 
         if (typeof window.apiGetLeadAgentProfile === 'function') {
-            window.apiGetLeadAgentProfile().then(function(lead) {
+            window.apiGetLeadAgentProfile().then(function (lead) {
                 if (lead) {
                     if (lead.phone || lead.email) {
                         applyContact(lead.phone, lead.email);
                     }
                     applyAgentBranding(lead);
                 }
-            }).catch(function() {});
+            }).catch(function () { });
         }
     }
 
-    window.addEventListener('storage', function(e) {
+    window.addEventListener('storage', function (e) {
         if (e.key === 'urbanscope_admin_profile' || e.key === 'adminUser') {
             syncGlobalFooterContact();
         }
+        if (e.key === 'inquiries' ||
+            e.key === 'urbanscope_client_notifs' ||
+            e.key === 'urbanscope_inquiry_overrides' ||
+            (e.key && e.key.indexOf('client_notifs_read_ids_') === 0)) {
+            loadClientNotifications();
+        }
     });
 
-    window.addEventListener('urbanscope:profileUpdated', function() {
+    window.addEventListener('urbanscope:profileUpdated', function () {
         syncGlobalFooterContact();
     });
 
-    window.addEventListener('focus', function() {
-        syncGlobalFooterContact();
+    window.addEventListener('inquiryStatusChanged', function () {
+        loadClientNotifications();
     });
+
+    window.addEventListener('inquiriesUpdated', function () {
+        loadClientNotifications();
+    });
+
+    window.addEventListener('clientNotificationAdded', function () {
+        loadClientNotifications();
+    });
+
+    window.addEventListener('focus', function () {
+        syncGlobalFooterContact();
+        loadClientNotifications();
+    });
+
+    document.addEventListener('visibilitychange', function () {
+        if (!document.hidden) {
+            loadClientNotifications();
+        }
+    });
+
+    setInterval(function () {
+        if (!document.hidden && currentUser) {
+            loadClientNotifications();
+        }
+    }, 15000);
 
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
     else init();
@@ -459,6 +702,11 @@
         // Close open dropdowns when clicking elsewhere
         if (!e.target.closest('.profile-menu') && !e.target.closest('.user-profile-badge')) {
             document.querySelectorAll('.profile-menu.open, .user-profile-badge.open').forEach(function (m) {
+                m.classList.remove('open');
+            });
+        }
+        if (!e.target.closest('.client-notif-wrap')) {
+            document.querySelectorAll('.client-notif-wrap.open').forEach(function (m) {
                 m.classList.remove('open');
             });
         }
