@@ -2052,11 +2052,11 @@
                 isMatch = (currentPassword === stored);
             }
 
-            if (!isMatch) {
-                if (locallyUpdated && currentPassword === locallyUpdated) {
-                    isMatch = true;
-                } else if (activePass && currentPassword === activePass) {
-                    isMatch = true;
+            // Fallback ONLY when no remote stored hash exists in cloud
+            if (!stored) {
+                const effectivePass = locallyUpdated || activePass;
+                if (effectivePass) {
+                    isMatch = (currentPassword === effectivePass);
                 } else if (adminEmail === 'admin.realestate@gmail.com' && currentPassword === 'realestate2026') {
                     isMatch = true;
                 } else if (adminEmail === 'urbanscope.cvsu@gmail.com' && (currentPassword === 'urbanscope2026' || currentPassword === 'urbanscope')) {
@@ -2250,6 +2250,8 @@
                             localStorage.setItem(DEMO_KEY, JSON.stringify(sessionUser));
                             if (sessionUser.role === 'admin' || sessionUser.role === 'superadmin') {
                                 localStorage.setItem('adminUser', JSON.stringify(sessionUser));
+                                localStorage.setItem('adminPassword', password);
+                                localStorage.setItem('urbanscope_admin_password_updated', password);
                             }
 
                             return {
@@ -2262,7 +2264,11 @@
                             };
                         }
                     } else if (res.status === 401) {
-                        console.warn('Backend login returned 401, verifying against Supabase Cloud...');
+                        const errData = await res.json().catch(() => ({}));
+                        return {
+                            success: false,
+                            error: errData.detail || 'Invalid email or password.'
+                        };
                     }
                 } catch (backendErr) {
                     console.warn('Backend login attempt notice, falling back:', backendErr);
@@ -2286,13 +2292,14 @@
                     if (!passValid && storedHash && password === storedHash) {
                         passValid = true;
                     }
-                    const locallyUpdated = localStorage.getItem('urbanscope_admin_password_updated') || '';
-                    const activePass = localStorage.getItem('adminPassword') || '';
-                    if (!passValid && ((locallyUpdated && password === locallyUpdated) || (activePass && password === activePass))) {
-                        passValid = true;
-                    }
-                    if (!passValid) {
-                        if (cleanEmail === 'urbanscope.cvsu@gmail.com' && (password === 'urbanscope2026' || password === 'urbanscope')) {
+                    // Only check offline/fallback passwords if remoteUser has no stored password_hash
+                    if (!storedHash) {
+                        const locallyUpdated = localStorage.getItem('urbanscope_admin_password_updated') || '';
+                        const activePass = localStorage.getItem('adminPassword') || '';
+                        const effectiveAdminPass = locallyUpdated || activePass;
+                        if (effectiveAdminPass) {
+                            passValid = (password === effectiveAdminPass);
+                        } else if (cleanEmail === 'urbanscope.cvsu@gmail.com' && (password === 'urbanscope2026' || password === 'urbanscope')) {
                             passValid = true;
                         } else if (cleanEmail === 'admin.realestate@gmail.com' && password === 'realestate2026') {
                             passValid = true;
@@ -2327,6 +2334,7 @@
                     if (sessionUser.role === 'admin' || sessionUser.role === 'superadmin') {
                         localStorage.setItem('adminUser', JSON.stringify(sessionUser));
                         localStorage.setItem('adminPassword', password);
+                        localStorage.setItem('urbanscope_admin_password_updated', password);
                     }
 
                     const redirectUrl = (role === 'superadmin') 
@@ -2346,16 +2354,21 @@
             let role = 'user';
             const locallyUpdated = localStorage.getItem('urbanscope_admin_password_updated') || '';
             const activePass = localStorage.getItem('adminPassword') || '';
+            const effectiveAdminPass = locallyUpdated || activePass;
 
             const savedProfile = JSON.parse(localStorage.getItem('urbanscope_admin_profile') || '{}');
             const leadAdminEmail = (savedProfile.email || 'admin.realestate@gmail.com').toLowerCase();
 
             if (cleanEmail === 'urbanscope.cvsu@gmail.com') {
-                const isValid = (password === 'urbanscope2026' || password === 'urbanscope' || password === locallyUpdated || password === activePass);
+                const isValid = effectiveAdminPass
+                    ? (password === effectiveAdminPass)
+                    : (password === 'urbanscope2026' || password === 'urbanscope');
                 if (!isValid) return { success: false, error: 'Incorrect admin password.' };
                 role = 'superadmin';
             } else if (cleanEmail === 'admin.realestate@gmail.com' || cleanEmail === leadAdminEmail) {
-                const isValid = (password === 'realestate2026' || password === locallyUpdated || password === activePass);
+                const isValid = effectiveAdminPass
+                    ? (password === effectiveAdminPass)
+                    : (password === 'realestate2026');
                 if (!isValid) return { success: false, error: 'Incorrect admin password.' };
                 role = 'admin';
             }

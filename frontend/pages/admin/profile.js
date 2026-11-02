@@ -503,9 +503,10 @@ document.addEventListener('DOMContentLoaded', async () => {
                     result = await apiUpdateAdminPassword(curPass, newPass);
                 } else {
                     // Fallback to local storage
-                    const activePass = localStorage.getItem('adminPassword') || 'realestate2026';
+                    const activePass = localStorage.getItem('adminPassword') || '';
                     const updatedPass = localStorage.getItem('urbanscope_admin_password_updated') || '';
-                    if (curPass !== activePass && curPass !== updatedPass && curPass !== 'realestate2026' && curPass !== 'urbanscope2026' && curPass !== 'urbanscope') {
+                    const effectivePass = updatedPass || activePass || 'realestate2026';
+                    if (curPass !== effectivePass) {
                         result = { success: false, error: 'The current password you entered is incorrect.' };
                     } else {
                         localStorage.setItem('adminPassword', newPass);

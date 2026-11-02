@@ -33,6 +33,7 @@ This document records all features, enhancements, bug fixes, user requests, arch
 | **Nov 2026** | **Brand Harmonization** | Harmonized logo dimensions (48x42px), Miriam Lobren agent name typography (18px, 700 weight, 1.2px spacing), and title styling between history and submit inquiry topbars | `frontend/pages/inquiry/history.css`, `frontend/shared/js/session.js` |
 | **Nov 2026** | **Cross-Device Password Sync** | Enabled two-way PBKDF2 password sync between SQLite and Supabase Cloud, fixed mobile loopback IP resolution, and set run.py to 0.0.0.0 | `backend/routers/auth.py`, `supabase.js`, `api.js`, `run.py` |
 | **Nov 2026** | **Password Visibility Toggle** | Added interactive show/hide password toggle buttons to Current, New, and Confirm password inputs in admin profile settings | `profile.html`, `profile.css`, `profile.js` |
+| **Nov 2026** | **Admin Password Invalidation** | Complete invalidation of old passwords upon update, proactive cloud sync on login, and removal of default credential bypasses | `backend/routers/auth.py`, `supabase.js`, `api.js`, `profile.js` |
 
 ---
 
@@ -368,6 +369,20 @@ This document records all features, enhancements, bug fixes, user requests, arch
 
 ---
 
+### 26. Complete Invalidation of Old Password on Admin Login
+- **User Prompt:** *"i can still use the old password on admin after i change it, it should be not be able to use and only the password i set to new should be able to log in in the admin, the old one should not be able"*
+- **Rationale & Implementation:**
+  - Administrators who updated their password discovered they could still log in using the old default password (`realestate2026`) or previous password.
+  - Eliminated legacy demo credential fallbacks in `apiSignIn` (`frontend/shared/js/supabase.js` and `api.js`) where `cleanEmail === 'admin.realestate@gmail.com' && password === 'realestate2026'` was overriding failed hash checks.
+  - Fixed `apiSignIn` Step 1: When local FastAPI returns HTTP 401 Unauthorized, execution halts immediately with `{ success: false, error: 'Invalid email or password.' }` without falling through to offline demo fallbacks.
+  - Fixed `apiSignIn` Step 2 (Supabase Cloud): Enforces that if `remoteUser.password_hash` exists, authentication is determined strictly by `verifyPBKDF2(password, storedHash)`. Default seed passwords are never checked when a user password hash is present.
+  - Fixed `apiSignIn` Step 3 (Offline fallback): Checks `const effectiveAdminPass = locallyUpdated || activePass;`. If set, only that specific updated password is valid, rejecting the old password.
+  - Enhanced `backend/routers/auth.py` with `sync_latest_password_from_supabase(clean_email)`: On login for administrative accounts, the backend proactively synchronizes the latest password hash from Supabase Cloud into local SQLite before validating credentials, ensuring passwords changed on mobile phones immediately invalidate the old password on laptops and local servers.
+  - Enhanced `update_user_password`: Checks Supabase Cloud if the current password was updated remotely before rejecting with HTTP 400.
+  - Verified with automated tests that entering the old password (`realestate2026`) returns HTTP 401 Unauthorized / `Incorrect email or password`, completely preventing sign-in, while only the newly set password authenticates successfully.
+
+---
+
 | Component | Test Performed | Result |
 | :--- | :--- | :--- |
 | **HTTP Routing** | `curl -s -w "%{http_code}" http://127.0.0.1:8000/pages/inquiry/history.html` | `200 OK` |
@@ -388,4 +403,6 @@ This document records all features, enhancements, bug fixes, user requests, arch
 | **Draft Caching** | Verified `sessionStorage` key `urbanscope_register_draft` saving & restoring | Verified |
 | **RBAC Security** | Server-side `rbac_admin_guard_middleware` active on `/pages/admin/*` and `/pages/superadmin/*` | Verified |
 | **Brand Harmonization** | Brand logo and typography pixel match between `inquiry.html` and `history.html` | Verified |
+| **Old Password Rejection** | Tested `POST /api/auth/login` and `apiSignIn` with old password `realestate2026` | `401 Unauthorized` / Rejected |
+| **New Password Acceptance** | Tested `POST /api/auth/login` and `apiSignIn` with newly updated password | `200 OK` / Authenticated |
 

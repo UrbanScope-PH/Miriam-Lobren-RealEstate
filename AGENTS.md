@@ -514,6 +514,24 @@ path when rendering from a page.
     - **UI & UX Styling (`profile.css`)**: Encapsulated inputs inside `.password-input-wrapper` with `padding-right: 42px` to prevent text overlap, placing eye toggle buttons vertically centered on the right with smooth hover elevation, dark-green brand accents, focus rings, and zero interference with form submission.
     - **Dynamic Icon & State Swap (`profile.js`)**: Clicking an eye toggle dynamically flips `type="password"` to `type="text"` (and vice versa) and transitions between eye-open (`Show password`) and eye-slashed (`Hide password`) SVG icons. Automatic reset listener reverts all fields back to masked password mode upon successful password updates.
 
+42. **Complete Invalidation of Old Password on Admin Login & Strict Cloud Authority:**
+    - **Problem Identified**: After an administrator updated their password in Admin Profile Settings (`/pages/admin/profile.html`), the old password (`realestate2026` or the previous password) could still be used to log in successfully on the admin portal.
+    - **Root Causes**:
+      1. *Legacy Default Fallback Bypass*: In `apiSignIn` (`frontend/shared/js/supabase.js` and `api.js`), Step 2 (Supabase Cloud check) and Step 3 (offline check) contained hardcoded fallback blocks (`else if (cleanEmail === 'admin.realestate@gmail.com' && password === 'realestate2026') passValid = true;` and `isValid = (password === 'realestate2026' || password === locallyUpdated || password === activePass)`). Even when PBKDF2 hash verification failed against the new password, the bypass overrode `passValid` to `true` and rewrote `localStorage.adminPassword` back to the old password.
+      2. *Backend Fallthrough on 401*: When the local FastAPI backend rejected the old password with HTTP 401 Unauthorized, `supabase.js` logged a warning and fell through to Step 2 instead of returning the 401 error.
+      3. *Cross-Device Hash Staleness*: When the password was updated on a mobile phone (updating Supabase Cloud), the laptop's SQLite database still held the old hash until an initial login occurred.
+    - **Solution Implemented**:
+      - **Strict Stored Hash Enforcement (`supabase.js` & `api.js`)**:
+        - In `apiSignIn` Step 1: If the local backend returns HTTP 401, it immediately returns `{ success: false, error: 'Invalid email or password.' }`, halting execution without falling through to offline fallbacks.
+        - In `apiSignIn` Step 2 (Supabase Cloud): If `remoteUser.password_hash` exists, validity is determined strictly by `verifyPBKDF2(password, storedHash)`. The legacy hardcoded bypass was completely removed. Default passwords (`realestate2026`) are only checked if NO stored hash and NO updated password exist.
+        - In `apiSignIn` Step 3 (Offline fallback): Checks `const effectiveAdminPass = locallyUpdated || activePass;`. If set, ONLY that updated password is valid; `realestate2026` is strictly rejected.
+        - In `apiUpdateAdminPassword`: If `stored` exists, verification is strictly performed against `stored`.
+      - **Backend Proactive Cloud Sync (`backend/routers/auth.py`)**:
+        - Added `sync_latest_password_from_supabase(clean_email)`: On login for administrative accounts, the backend proactively checks Supabase Cloud and syncs the latest password hash into local SQLite before validating credentials. If the user changed the password on their phone, the laptop immediately invalidates the old password and accepts only the new password.
+        - In `update_user_password`: Verifies current password against Supabase Cloud if SQLite hash was updated remotely before rejecting with 400.
+      - **Profile Settings Fallback (`profile.js`)**:
+        - Form submission fallback strictly verifies `curPass === (updatedPass || activePass || 'realestate2026')`, preventing the old password from changing passwords once an updated password exists.
+
 ---
 
 ## Safety Rules

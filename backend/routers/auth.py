@@ -119,6 +119,31 @@ def sync_password_from_supabase_if_valid(clean_email: str, plain_password: str) 
     return None
 
 
+def sync_latest_password_from_supabase(clean_email: str) -> Optional[str]:
+    """Fetches the latest password_hash from Supabase Cloud if reachable, syncing to local SQLite."""
+    try:
+        encoded_email = urllib.parse.quote(clean_email)
+        url = f"{SUPABASE_URL}/rest/v1/users?email=ilike.{encoded_email}&select=id,email,password_hash"
+        req = urllib.request.Request(url, headers={
+            "apikey": SUPABASE_ANON_KEY,
+            "Authorization": f"Bearer {SUPABASE_ANON_KEY}"
+        })
+        with urllib.request.urlopen(req, timeout=1.5) as resp:
+            data = json.loads(resp.read().decode("utf-8"))
+            if data and isinstance(data, list) and len(data) > 0:
+                remote_hash = data[0].get("password_hash")
+                if remote_hash:
+                    conn = get_db_connection()
+                    c = conn.cursor()
+                    c.execute("UPDATE users SET password_hash = ? WHERE LOWER(email) = ?", (remote_hash, clean_email))
+                    conn.commit()
+                    conn.close()
+                    return remote_hash
+    except Exception:
+        pass
+    return None
+
+
 # ==========================================================
 # AUTHENTICATION ENDPOINTS (WITH RBAC)
 # ==========================================================
@@ -207,17 +232,20 @@ def login_user(payload: UserLogin, response: Response):
     - Authorized admins (admin.realestate@gmail.com) -> /pages/admin/dashboard.html
     - Normal users -> /index.html (User dashboard)
     """
-    conn = get_db_connection()
-    cursor = conn.cursor()
-
     clean_email = payload.email.strip().lower()
 
+    # Synchronize latest password from Supabase Cloud for administrative accounts if updated remotely
+    if clean_email in AUTHORIZED_ADMIN_EMAILS or clean_email in AUTHORIZED_SUPERADMIN_EMAILS:
+        sync_latest_password_from_supabase(clean_email)
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
     cursor.execute("SELECT * FROM users WHERE LOWER(email) = ?", (clean_email,))
     user_row = cursor.fetchone()
     conn.close()
 
     if not user_row or not verify_password(payload.password, user_row["password_hash"]):
-        # Check if password was changed remotely on another device (e.g. phone in Supabase Cloud)
+        # Fallback check if non-admin user updated remotely
         synced_hash = sync_password_from_supabase_if_valid(clean_email, payload.password)
         if synced_hash:
             conn = get_db_connection()
@@ -568,11 +596,18 @@ def update_user_password(
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Not authenticated. Please log in.")
 
     if not verify_password(payload.current_password, target_row["password_hash"]):
-        conn.close()
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="The current password you entered is incorrect."
-        )
+        # Check if password was changed remotely on Supabase Cloud
+        user_email = (target_row["email"] if target_row else payload.email) or ""
+        synced_hash = sync_password_from_supabase_if_valid(user_email, payload.current_password)
+        if synced_hash:
+            cursor.execute("SELECT * FROM users WHERE id = ?", (user_id,))
+            target_row = cursor.fetchone()
+        else:
+            conn.close()
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="The current password you entered is incorrect."
+            )
 
     clean_new_password = payload.new_password.strip()
     if len(clean_new_password) < 6:
