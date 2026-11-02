@@ -8,6 +8,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from backend.auth import hash_password, require_admin, require_superadmin
 from backend.database import DB_PATH, get_db_connection, row_to_dict
 from backend.models import SuperadminCreateUser, SuperadminUpdateUser, UserRoleUpdate
+from backend.routers.auth import sync_password_to_supabase
 
 router = APIRouter()
 
@@ -192,9 +193,11 @@ def superadmin_update_user(user_id: int, payload: SuperadminUpdateUser, current_
         updates.append("role = ?")
         params.append(target_role)
 
+    new_pwd_hash = None
     if payload.password is not None and len(payload.password.strip()) >= 6:
+        new_pwd_hash = hash_password(payload.password.strip())
         updates.append("password_hash = ?")
-        params.append(hash_password(payload.password.strip()))
+        params.append(new_pwd_hash)
 
     if updates:
         params.append(user_id)
@@ -206,6 +209,12 @@ def superadmin_update_user(user_id: int, payload: SuperadminUpdateUser, current_
     cursor.execute("SELECT id, email, full_name, phone, role, created_at FROM users WHERE id = ?", (user_id,))
     updated_user = row_to_dict(cursor.fetchone())
     conn.close()
+
+    if new_pwd_hash and updated_user and updated_user.get("email"):
+        try:
+            sync_password_to_supabase(updated_user["email"], new_pwd_hash)
+        except Exception:
+            pass
 
     return {"success": True, "message": "User account updated successfully.", "user": updated_user}
 

@@ -496,6 +496,16 @@ path when rendering from a page.
       - `init_db()` was previously overwriting existing users' `password_hash` with default seed hashes on every server boot or reload.
       - Updated `init_db()` to check `if not existing[1]:` so that existing users' custom updated passwords and profile info are strictly preserved across server restarts and lifespan reloads.
 
+40. **Cross-Device & Mobile Password Synchronization:**
+    - **Resolution for Mobile Devices, Phones, and Remote Access**:
+      - **Undeclared Variable Bug Fix**: Fixed a fatal `ReferenceError: userId is not defined` in `apiUpdateAdminPassword()` on line 1986 (`frontend/shared/js/supabase.js` & `api.js`) which previously crashed execution when Step 1 (local FastAPI) was skipped or unreachable on mobile browsers.
+      - **Supabase Cloud Seeding & Upsert**: Seeded `admin.realestate@gmail.com` into Supabase Cloud `users` table. If an admin record does not yet exist in Supabase Cloud when changing passwords, `apiUpdateAdminPassword` and `sync_password_to_supabase` dynamically `POST` to insert the user record with the new PBKDF2 hash, ensuring changes persist remotely.
+      - **Two-Way Cross-Device Password Sync**:
+        - *Changed on Phone/Remote*: Phone updates Supabase Cloud with fresh PBKDF2 hash. When signing in on laptop or dev host, backend `login` (`sync_password_from_supabase_if_valid`) checks Supabase Cloud if SQLite hash differs, validates the password, and auto-syncs the new hash into SQLite.
+        - *Changed on Laptop/Local*: Laptop updates SQLite and immediately propagates the new hash to Supabase Cloud via `sync_password_to_supabase`.
+      - **Local Dev Host & Network Binding (`run.py`)**: Changed `run.py` default host from `127.0.0.1` to `0.0.0.0`, allowing phones and other devices on the same Wi-Fi / local network to reach the FastAPI server directly at `http://<laptop-ip>:8000`.
+      - **Safe Endpoint Resolution**: Replaced hardcoded `127.0.0.1:8000` with dynamic host resolution (`http://${location.hostname}:8000/api`) and added HTTPS guard to prevent mixed-content blocks on hosted deployments.
+
 ---
 
 ## Safety Rules

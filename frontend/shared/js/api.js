@@ -1894,12 +1894,12 @@
 
     async function apiUpdateAdminPassword(arg1, arg2, arg3) {
         try {
-            let userId = null;
+            let targetUserId = null;
             let currentPassword = '';
             let newPassword = '';
 
             if (arg3 !== undefined) {
-                userId = arg1;
+                targetUserId = arg1;
                 currentPassword = arg2;
                 newPassword = arg3;
             } else {
@@ -1919,16 +1919,35 @@
 
             const storedAdmin = JSON.parse(localStorage.getItem('adminUser') || localStorage.getItem(USER_KEY) || '{}');
             const adminEmail = (storedAdmin.email || 'admin.realestate@gmail.com').trim().toLowerCase();
+            if (!targetUserId && storedAdmin.id) {
+                targetUserId = storedAdmin.id;
+            }
 
-            // 1. Direct call to FastAPI backend if on local dev host
-            if (isLocalDevHost()) {
-                const localBase = (typeof location !== 'undefined' && location.origin && location.port === '8000') ? `${location.origin}/api` : 'http://127.0.0.1:8000/api';
+            let backendSucceeded = false;
+
+            // 1. Direct call to FastAPI backend if on local dev network and HTTP (avoids Mixed Content on HTTPS)
+            const isHttps = typeof location !== 'undefined' && location.protocol === 'https:';
+            if (isLocalDevHost() && !isHttps) {
+                let localBase = '/api';
+                if (typeof location !== 'undefined') {
+                    if (location.port === '8000') {
+                        localBase = `${location.origin}/api`;
+                    } else {
+                        const host = location.hostname || '127.0.0.1';
+                        localBase = `http://${host}:8000/api`;
+                    }
+                }
+
                 try {
                     const token = localStorage.getItem(TOKEN_KEY) ||
                                   localStorage.getItem('urbanscope_jwt_token') ||
                                   localStorage.getItem('access_token') ||
                                   localStorage.getItem('adminToken') ||
                                   localStorage.getItem('supabase_token') || '';
+
+                    const controller = (typeof AbortController !== 'undefined') ? new AbortController() : null;
+                    const timeoutId = controller ? setTimeout(() => controller.abort(), 4000) : null;
+
                     const res = await fetch(`${localBase}/admin/password`, {
                         method: 'PUT',
                         headers: {
@@ -1940,26 +1959,14 @@
                             current_password: currentPassword,
                             new_password: newPassword,
                             email: adminEmail
-                        })
+                        }),
+                        signal: controller ? controller.signal : undefined
                     });
+                    if (timeoutId) clearTimeout(timeoutId);
 
                     if (res.ok) {
-                        const data = await res.json().catch(() => ({}));
-                        localStorage.setItem('urbanscope_admin_password_updated', newPassword);
-                        localStorage.setItem('adminPassword', newPassword);
-
-                        // Sync PBKDF2 hash to Supabase cloud in background
-                        try {
-                            const newHash = await hashPBKDF2(newPassword);
-                            await fetch(`${REST_BASE}/users?email=ilike.${encodeURIComponent(adminEmail)}`, {
-                                method: 'PATCH',
-                                headers: getHeaders(),
-                                body: JSON.stringify({ password_hash: newHash })
-                            });
-                        } catch (e) {}
-
-                        return { success: true, message: data.message || 'Password updated successfully!' };
-                    } else {
+                        backendSucceeded = true;
+                    } else if (res.status === 400) {
                         const errData = await res.json().catch(() => ({}));
                         return {
                             success: false,
@@ -1971,15 +1978,51 @@
                 }
             }
 
-            // 2. Cloud Supabase & Offline verification
-            let url = `${REST_BASE}/users?email=ilike.${encodeURIComponent(adminEmail)}&select=*`;
-            if (userId) {
-                url = `${REST_BASE}/users?or=(id.eq.${encodeURIComponent(userId)},email.ilike.${encodeURIComponent(adminEmail)})&select=*`;
+            // Generate PBKDF2 hash for new password
+            const newHash = await hashPBKDF2(newPassword);
+
+            if (backendSucceeded) {
+                localStorage.setItem('urbanscope_admin_password_updated', newPassword);
+                localStorage.setItem('adminPassword', newPassword);
+
+                // Push new PBKDF2 hash to Supabase Cloud so phones and other devices immediately stay in sync
+                try {
+                    const checkRes = await fetch(`${REST_BASE}/users?email=ilike.${encodeURIComponent(adminEmail)}&select=*`, {
+                        headers: getHeaders()
+                    });
+                    const cloudUsers = await checkRes.json().catch(() => []);
+                    if (cloudUsers && cloudUsers.length > 0) {
+                        await fetch(`${REST_BASE}/users?id=eq.${cloudUsers[0].id}`, {
+                            method: 'PATCH',
+                            headers: getHeaders(),
+                            body: JSON.stringify({ password_hash: newHash, updated_at: new Date().toISOString() })
+                        });
+                    } else {
+                        await fetch(`${REST_BASE}/users`, {
+                            method: 'POST',
+                            headers: getHeaders(),
+                            body: JSON.stringify({
+                                email: adminEmail,
+                                password_hash: newHash,
+                                full_name: storedAdmin.full_name || storedAdmin.name || 'Miriam Lobren',
+                                phone: storedAdmin.phone || '+63 917 123 4567',
+                                role: storedAdmin.role || 'admin',
+                                avatar_url: storedAdmin.avatar_url || 'assets/images/agent.jpg',
+                                license_number: storedAdmin.license_number || 'PRC REB #0031892',
+                                title: storedAdmin.title || 'Real Estate Agent',
+                                brokerage: storedAdmin.brokerage || 'UrbanScope Realty'
+                            })
+                        });
+                    }
+                } catch (e) {}
+
+                return { success: true, message: 'Password updated successfully!' };
             }
 
+            // 2. Cloud Supabase verification & update (for mobile devices, phones, Vercel, or disconnected sessions)
             let user = null;
             try {
-                const checkRes = await fetch(url, {
+                const checkRes = await fetch(`${REST_BASE}/users?email=ilike.${encodeURIComponent(adminEmail)}&select=*`, {
                     method: 'GET',
                     headers: getHeaders()
                 });
@@ -1991,16 +2034,15 @@
             const locallyUpdated = localStorage.getItem('urbanscope_admin_password_updated') || '';
             const activePass = localStorage.getItem('adminPassword') || '';
 
-            // Verify current password:
-            // If stored remote hash exists, it is the primary authority.
             let isMatch = false;
 
             if (stored && stored.includes('$')) {
                 isMatch = await verifyPBKDF2(currentPassword, stored);
             } else if (stored) {
                 isMatch = (currentPassword === stored);
-            } else {
-                // No stored remote hash (e.g. offline demo fallback)
+            }
+
+            if (!isMatch) {
                 if (locallyUpdated && currentPassword === locallyUpdated) {
                     isMatch = true;
                 } else if (activePass && currentPassword === activePass) {
@@ -2016,31 +2058,42 @@
                 return { success: false, error: 'The current password you entered is incorrect.' };
             }
 
-            // Password verified! Generate new PBKDF2 hash
-            const newHash = await hashPBKDF2(newPassword);
-
-            // Update password in Supabase if record found
-            if (user && user.id) {
-                await fetch(`${REST_BASE}/users?id=eq.${user.id}`, {
-                    method: 'PATCH',
-                    headers: getHeaders(),
-                    body: JSON.stringify({ password_hash: newHash })
-                }).catch(() => {});
-            } else if (adminEmail) {
-                await fetch(`${REST_BASE}/users?email=ilike.${encodeURIComponent(adminEmail)}`, {
-                    method: 'PATCH',
-                    headers: getHeaders(),
-                    body: JSON.stringify({ password_hash: newHash })
-                }).catch(() => {});
+            // Update or insert password in Supabase Cloud
+            try {
+                if (user && user.id) {
+                    await fetch(`${REST_BASE}/users?id=eq.${user.id}`, {
+                        method: 'PATCH',
+                        headers: getHeaders(),
+                        body: JSON.stringify({ password_hash: newHash, updated_at: new Date().toISOString() })
+                    });
+                } else {
+                    await fetch(`${REST_BASE}/users`, {
+                        method: 'POST',
+                        headers: getHeaders(),
+                        body: JSON.stringify({
+                            email: adminEmail,
+                            password_hash: newHash,
+                            full_name: storedAdmin.full_name || storedAdmin.name || 'Miriam Lobren',
+                            phone: storedAdmin.phone || '+63 917 123 4567',
+                            role: storedAdmin.role || 'admin',
+                            avatar_url: storedAdmin.avatar_url || 'assets/images/agent.jpg',
+                            license_number: storedAdmin.license_number || 'PRC REB #0031892',
+                            title: storedAdmin.title || 'Real Estate Agent',
+                            brokerage: storedAdmin.brokerage || 'UrbanScope Realty'
+                        })
+                    });
+                }
+            } catch (patchErr) {
+                console.warn('Supabase password patch error:', patchErr);
             }
 
-            // Store updated password locally for immediate sign-in verification
             localStorage.setItem('urbanscope_admin_password_updated', newPassword);
             localStorage.setItem('adminPassword', newPassword);
 
             return { success: true, message: 'Password has been successfully updated!' };
         } catch (err) {
-            return { success: false, error: err.message };
+            console.error('Password update failure:', err);
+            return { success: false, error: err.message || 'An error occurred while changing password.' };
         }
     }
 
@@ -2141,53 +2194,69 @@
     async function apiSignIn(email, password) {
         try {
             const cleanEmail = email.trim().toLowerCase();
-            const localBase = (typeof location !== 'undefined' && location.origin && location.port === '8000') ? `${location.origin}/api` : 'http://127.0.0.1:8000/api';
 
-            // 1. Direct authentication with FastAPI Backend
-            try {
-                const res = await fetch(`${localBase}/auth/login`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ email: cleanEmail, password: password })
-                });
-
-                if (res.ok) {
-                    const authRes = await res.json();
-                    if (authRes.success && authRes.user) {
-                        const u = authRes.user;
-                        const sessionUser = {
-                            id: u.id,
-                            email: u.email,
-                            name: u.full_name,
-                            full_name: u.full_name,
-                            phone: u.phone || '',
-                            role: u.role || 'user',
-                            avatar_url: u.avatar_url || '',
-                            user_metadata: { full_name: u.full_name, phone: u.phone, avatar_url: u.avatar_url || '' }
-                        };
-
-                        localStorage.setItem(TOKEN_KEY, authRes.token);
-                        localStorage.setItem(USER_KEY, JSON.stringify(sessionUser));
-                        localStorage.setItem(DEMO_KEY, JSON.stringify(sessionUser));
-                        if (sessionUser.role === 'admin' || sessionUser.role === 'superadmin') {
-                            localStorage.setItem('adminUser', JSON.stringify(sessionUser));
-                        }
-
-                        return {
-                            success: true,
-                            data: {
-                                user: sessionUser,
-                                token: authRes.token,
-                                redirect_url: authRes.redirect_url
-                            }
-                        };
+            // 1. Direct authentication with FastAPI Backend if reachable
+            const isHttps = typeof location !== 'undefined' && location.protocol === 'https:';
+            if (isLocalDevHost() && !isHttps) {
+                let localBase = '/api';
+                if (typeof location !== 'undefined') {
+                    if (location.port === '8000') {
+                        localBase = `${location.origin}/api`;
+                    } else {
+                        const host = location.hostname || '127.0.0.1';
+                        localBase = `http://${host}:8000/api`;
                     }
-                } else if (res.status === 401) {
-                    const errData = await res.json().catch(() => ({}));
-                    return { success: false, error: errData.detail || 'Invalid email or password.' };
                 }
-            } catch (backendErr) {
-                console.warn('Backend login attempt notice, falling back:', backendErr);
+
+                try {
+                    const controller = (typeof AbortController !== 'undefined') ? new AbortController() : null;
+                    const timeoutId = controller ? setTimeout(() => controller.abort(), 4000) : null;
+
+                    const res = await fetch(`${localBase}/auth/login`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ email: cleanEmail, password: password }),
+                        signal: controller ? controller.signal : undefined
+                    });
+                    if (timeoutId) clearTimeout(timeoutId);
+
+                    if (res.ok) {
+                        const authRes = await res.json();
+                        if (authRes.success && authRes.user) {
+                            const u = authRes.user;
+                            const sessionUser = {
+                                id: u.id,
+                                email: u.email,
+                                name: u.full_name,
+                                full_name: u.full_name,
+                                phone: u.phone || '',
+                                role: u.role || 'user',
+                                avatar_url: u.avatar_url || '',
+                                user_metadata: { full_name: u.full_name, phone: u.phone, avatar_url: u.avatar_url || '' }
+                            };
+
+                            localStorage.setItem(TOKEN_KEY, authRes.token);
+                            localStorage.setItem(USER_KEY, JSON.stringify(sessionUser));
+                            localStorage.setItem(DEMO_KEY, JSON.stringify(sessionUser));
+                            if (sessionUser.role === 'admin' || sessionUser.role === 'superadmin') {
+                                localStorage.setItem('adminUser', JSON.stringify(sessionUser));
+                            }
+
+                            return {
+                                success: true,
+                                data: {
+                                    user: sessionUser,
+                                    token: authRes.token,
+                                    redirect_url: authRes.redirect_url
+                                }
+                            };
+                        }
+                    } else if (res.status === 401) {
+                        console.warn('Backend login returned 401, verifying against Supabase Cloud...');
+                    }
+                } catch (backendErr) {
+                    console.warn('Backend login attempt notice, falling back:', backendErr);
+                }
             }
 
             // 2. Cloud Supabase authentication if remote or offline

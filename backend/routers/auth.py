@@ -3,7 +3,12 @@ UrbanScope - Authentication, User Profile & Public Agent Profile Router
 Handles registration, sign-in, Google OAuth 2.0, profile updates, and password changes.
 """
 
+import json
 import secrets
+import urllib.error
+import urllib.parse
+import urllib.request
+from datetime import datetime, timezone
 from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Response, status
@@ -32,6 +37,86 @@ from backend.models import (
 )
 
 router = APIRouter()
+
+SUPABASE_URL = "https://vfspjuqymfbagesjxjmc.supabase.co"
+SUPABASE_ANON_KEY = "sb_publishable_96sfQ4F18ypajf6bitBRqg_JtWTL4__"
+
+
+def sync_password_to_supabase(email: str, password_hash: str) -> bool:
+    """Synchronizes updated PBKDF2 password hash to Supabase Cloud so all devices & phones stay in sync."""
+    try:
+        clean_email = email.strip().lower()
+        encoded_email = urllib.parse.quote(clean_email)
+        url = f"{SUPABASE_URL}/rest/v1/users?email=ilike.{encoded_email}"
+        body = json.dumps({
+            "password_hash": password_hash,
+            "updated_at": datetime.now(timezone.utc).isoformat()
+        }).encode("utf-8")
+        req = urllib.request.Request(
+            url,
+            data=body,
+            headers={
+                "apikey": SUPABASE_ANON_KEY,
+                "Authorization": f"Bearer {SUPABASE_ANON_KEY}",
+                "Content-Type": "application/json",
+                "Prefer": "return=representation"
+            },
+            method="PATCH"
+        )
+        with urllib.request.urlopen(req, timeout=4) as resp:
+            res = json.loads(resp.read().decode("utf-8"))
+            if res and len(res) > 0:
+                return True
+
+        # If user did not exist in Supabase yet, insert it
+        create_url = f"{SUPABASE_URL}/rest/v1/users"
+        create_body = json.dumps({
+            "email": clean_email,
+            "password_hash": password_hash,
+            "full_name": "Miriam Lobren",
+            "role": "admin" if clean_email != "urbanscope.cvsu@gmail.com" else "superadmin",
+            "avatar_url": "assets/images/agent.jpg"
+        }).encode("utf-8")
+        req_post = urllib.request.Request(
+            create_url,
+            data=create_body,
+            headers={
+                "apikey": SUPABASE_ANON_KEY,
+                "Authorization": f"Bearer {SUPABASE_ANON_KEY}",
+                "Content-Type": "application/json"
+            },
+            method="POST"
+        )
+        with urllib.request.urlopen(req_post, timeout=4) as resp:
+            return True
+    except Exception:
+        return False
+
+
+def sync_password_from_supabase_if_valid(clean_email: str, plain_password: str) -> Optional[str]:
+    """Checks Supabase Cloud if password was updated remotely from a phone or other device, syncing to SQLite if valid."""
+    try:
+        encoded_email = urllib.parse.quote(clean_email)
+        url = f"{SUPABASE_URL}/rest/v1/users?email=ilike.{encoded_email}&select=id,email,password_hash"
+        req = urllib.request.Request(url, headers={
+            "apikey": SUPABASE_ANON_KEY,
+            "Authorization": f"Bearer {SUPABASE_ANON_KEY}"
+        })
+        with urllib.request.urlopen(req, timeout=3) as resp:
+            data = json.loads(resp.read().decode("utf-8"))
+            if data and isinstance(data, list) and len(data) > 0:
+                remote_hash = data[0].get("password_hash")
+                if remote_hash and verify_password(plain_password, remote_hash):
+                    # Password matches Supabase Cloud! Sync into local SQLite
+                    conn = get_db_connection()
+                    c = conn.cursor()
+                    c.execute("UPDATE users SET password_hash = ? WHERE LOWER(email) = ?", (remote_hash, clean_email))
+                    conn.commit()
+                    conn.close()
+                    return remote_hash
+    except Exception:
+        pass
+    return None
 
 
 # ==========================================================
@@ -130,6 +215,16 @@ def login_user(payload: UserLogin, response: Response):
     cursor.execute("SELECT * FROM users WHERE LOWER(email) = ?", (clean_email,))
     user_row = cursor.fetchone()
     conn.close()
+
+    if not user_row or not verify_password(payload.password, user_row["password_hash"]):
+        # Check if password was changed remotely on another device (e.g. phone in Supabase Cloud)
+        synced_hash = sync_password_from_supabase_if_valid(clean_email, payload.password)
+        if synced_hash:
+            conn = get_db_connection()
+            cursor = conn.cursor()
+            cursor.execute("SELECT * FROM users WHERE LOWER(email) = ?", (clean_email,))
+            user_row = cursor.fetchone()
+            conn.close()
 
     if not user_row or not verify_password(payload.password, user_row["password_hash"]):
         raise HTTPException(
@@ -491,6 +586,14 @@ def update_user_password(
     cursor.execute("UPDATE users SET password_hash = ? WHERE id = ?", (new_hash, user_id))
     conn.commit()
     conn.close()
+
+    # Sync updated password to Supabase Cloud so other devices & phones immediately recognize it
+    try:
+        user_email = (target_row["email"] if target_row else payload.email) or ""
+        if user_email:
+            sync_password_to_supabase(user_email, new_hash)
+    except Exception:
+        pass
 
     return {"success": True, "message": "Password updated successfully."}
 
