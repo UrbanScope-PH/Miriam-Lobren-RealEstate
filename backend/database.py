@@ -200,6 +200,7 @@ def init_db():
 
     accounts_to_sync = [
         ("admin.realestate@gmail.com", admin_pass, "Miriam Lobren (Admin)", "+63 900 000 0000", "admin"),
+        ("miriam@gmail.com", admin_pass, "Miriam Lobren", "09123456789", "admin"),
         ("urbanscope.cvsu@gmail.com", superadmin_pass, "UrbanScope Superadmin (CvSU)", "+63 900 000 0000", "superadmin")
     ]
 
@@ -221,11 +222,11 @@ def init_db():
     cursor.execute("""
         UPDATE users
         SET role = 'user'
-        WHERE LOWER(email) NOT IN ('admin.realestate@gmail.com', 'urbanscope.cvsu@gmail.com')
-          AND role != 'user'
+        WHERE LOWER(email) NOT IN ('admin.realestate@gmail.com', 'miriam@gmail.com', 'urbanscope.cvsu@gmail.com')
+          AND role NOT IN ('user', 'client', 'admin')
     """)
     conn.commit()
-    print("✓ RBAC credentials & database triggers verified (Superadmin: urbanscope.cvsu@gmail.com, Admin: admin.realestate@gmail.com)")
+    print("✓ RBAC credentials & database triggers verified (Superadmin: urbanscope.cvsu@gmail.com, Admin: miriam@gmail.com / admin.realestate@gmail.com)")
 
     # Purge legacy @example.com demo rows left behind by databases seeded before they were removed
     cursor.execute("DELETE FROM inquiries WHERE LOWER(client_email) LIKE '%@example.com'")

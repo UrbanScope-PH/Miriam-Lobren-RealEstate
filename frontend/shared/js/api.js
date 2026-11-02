@@ -1403,12 +1403,21 @@
     }
 
     async function apiGetLeadAgentProfile() {
+        const isRealAgentEmail = (em) => {
+            if (!em) return false;
+            const clean = String(em).trim().toLowerCase();
+            return clean &&
+                   clean !== 'admin.realestate@gmail.com' &&
+                   clean !== 'urbanscope.cvsu@gmail.com' &&
+                   !clean.endsWith('@example.com');
+        };
+
         let cached = null;
         try {
             cached = JSON.parse(localStorage.getItem('urbanscope_admin_profile') || 'null');
             if (!cached) {
                 const adminUser = JSON.parse(localStorage.getItem('adminUser') || 'null');
-                if (adminUser && (adminUser.role === 'admin' || adminUser.email === 'admin.realestate@gmail.com')) {
+                if (adminUser && (adminUser.role === 'admin' || isRealAgentEmail(adminUser.email))) {
                     cached = adminUser;
                 }
             }
@@ -1421,7 +1430,7 @@
                 const res = await fetch(`${localBase}/agent/profile`);
                 if (res.ok) {
                     const data = await res.json();
-                    if (data && data.email) {
+                    if (data && data.email && isRealAgentEmail(data.email)) {
                         const cachedTitle = (cached && cached.title && cached.title.trim()) ? cached.title.trim() : null;
                         const backendTitle = (data.title && data.title.trim()) ? data.title.trim() : null;
                         const effectiveTitle = backendTitle || cachedTitle || 'Real Estate Agent';
@@ -1429,8 +1438,8 @@
                         const merged = {
                             name: data.full_name || data.name || (cached && cached.name) || 'Miriam Lobren',
                             full_name: data.full_name || data.name || (cached && cached.full_name) || 'Miriam Lobren',
-                            email: data.email || 'admin.realestate@gmail.com',
-                            phone: data.phone || (cached && cached.phone) || '+63 900 000 0000',
+                            email: data.email || (cached && cached.email) || 'miriam@gmail.com',
+                            phone: data.phone || (cached && cached.phone) || '09123456789',
                             license: data.license_number || data.license || (cached && cached.license) || 'PRC REB #0031892',
                             license_number: data.license_number || data.license || (cached && cached.license_number) || 'PRC REB #0031892',
                             title: effectiveTitle,
@@ -1441,6 +1450,9 @@
                         try {
                             localStorage.setItem('urbanscope_admin_profile', JSON.stringify(merged));
                         } catch (e) {}
+                        try {
+                            window.dispatchEvent(new CustomEvent('urbanscope:profileUpdated', { detail: merged }));
+                        } catch (ev) {}
                         return merged;
                     }
                 }
@@ -1457,40 +1469,32 @@
                 users = await res.json().catch(() => []);
             }
             if (!Array.isArray(users) || users.length === 0) {
-                const fallbackRes = await fetch(`${REST_BASE}/users?select=*&limit=5`, { headers: getHeaders() });
+                const fallbackRes = await fetch(`${REST_BASE}/users?select=*&limit=10`, { headers: getHeaders() });
                 if (fallbackRes.ok) {
                     users = await fallbackRes.json().catch(() => []);
                 }
             }
             if (Array.isArray(users) && users.length > 0) {
-                const isRealAgentEmail = (em) => {
-                    if (!em) return false;
-                    const clean = String(em).trim().toLowerCase();
-                    return clean &&
-                           clean !== 'admin.realestate@gmail.com' &&
-                           clean !== 'urbanscope.cvsu@gmail.com' &&
-                           !clean.endsWith('@example.com');
-                };
-
-                // Resolution priority:
-                // 1. Explicit match with locally cached email if cached has a real agent email
-                // 2. Remote admin user with a real configured agent email (e.g. miriamlobren@gmail.com)
+                // Remote lead admin resolution priority:
+                // 1. Remote admin user with a real configured agent email (excluding system accounts), sorted by updated_at DESC, id DESC
+                // 2. Any remote user record with a real configured agent email (sorted by id DESC)
                 // 3. Fallback admin user with admin.realestate@gmail.com
-                // 4. First admin record in result set
+                // 4. First user record in result set
                 let u = null;
-                if (cached && cached.email && isRealAgentEmail(cached.email)) {
-                    u = users.find(x => (x.email || '').trim().toLowerCase() === cached.email.trim().toLowerCase());
+                const customAdmins = users.filter(x => (x.role === 'admin' || x.role === 'superadmin') && isRealAgentEmail(x.email));
+                if (customAdmins.length > 0) {
+                    customAdmins.sort((a, b) => {
+                        const dateA = a.updated_at ? new Date(a.updated_at).getTime() : 0;
+                        const dateB = b.updated_at ? new Date(b.updated_at).getTime() : 0;
+                        if (dateB !== dateA) return dateB - dateA; // Most recently updated first
+                        return (b.id || 0) - (a.id || 0);          // Highest ID (newest account) first
+                    });
+                    u = customAdmins[0];
                 }
                 if (!u) {
-                    const customAdmins = users.filter(x => isRealAgentEmail(x.email));
-                    if (customAdmins.length > 0) {
-                        customAdmins.sort((a, b) => {
-                            const dateA = a.updated_at ? new Date(a.updated_at).getTime() : 0;
-                            const dateB = b.updated_at ? new Date(b.updated_at).getTime() : 0;
-                            if (dateB !== dateA) return dateB - dateA;
-                            return (a.id || 0) - (b.id || 0);
-                        });
-                        u = customAdmins[0];
+                    const anyCustom = users.filter(x => isRealAgentEmail(x.email)).sort((a, b) => (b.id || 0) - (a.id || 0));
+                    if (anyCustom.length > 0) {
+                        u = anyCustom[0];
                     }
                 }
                 if (!u) {
@@ -1502,8 +1506,8 @@
                     const remoteTitle = (u.title && u.title.trim()) ? u.title.trim() : null;
                     const effectiveTitle = remoteTitle || cachedTitle || 'Real Estate Agent';
 
-                    const effectiveEmail = u.email || (cached && cached.email) || 'miriamlobren@gmail.com';
-                    const effectivePhone = u.phone || (cached && cached.phone) || '+63 900 000 0000';
+                    const effectiveEmail = u.email || 'miriam@gmail.com';
+                    const effectivePhone = u.phone || (cached && cached.phone) || '09123456789';
 
                     const merged = {
                         name: u.full_name || (cached && cached.name) || 'Miriam Lobren',
@@ -1523,6 +1527,9 @@
                     try {
                         localStorage.setItem('urbanscope_admin_profile', JSON.stringify(merged));
                     } catch (e) {}
+                    try {
+                        window.dispatchEvent(new CustomEvent('urbanscope:profileUpdated', { detail: merged }));
+                    } catch (ev) {}
                     return merged;
                 }
             }
@@ -1535,8 +1542,8 @@
         return {
             name: (cached && cached.name) || 'Miriam Lobren',
             full_name: (cached && cached.full_name) || 'Miriam Lobren',
-            email: (cached && cached.email) || 'miriamlobren@gmail.com',
-            phone: (cached && cached.phone) || '+63 900 000 0000',
+            email: (cached && cached.email) || 'miriam@gmail.com',
+            phone: (cached && cached.phone) || '09123456789',
             license: (cached && cached.license) || 'PRC REB #0031892',
             license_number: (cached && cached.license_number) || 'PRC REB #0031892',
             title: (cached && cached.title) || 'Real Estate Agent',

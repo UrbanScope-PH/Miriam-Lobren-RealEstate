@@ -402,6 +402,8 @@ supabase/
                                              Sets default title to 'Real Estate Agent' and normalizes legacy rows
   migrations/20261102040000_inquiry_lifecycle_notifications.sql
                                              Extends notifications table for admin/client inquiry lifecycle alerts
+  migrations/20261102050000_normalize_lead_admin_role_and_email.sql
+                                             Normalizes lead agent account to miriam@gmail.com (role: admin), sets superadmin role for urbanscope.cvsu@gmail.com, demotes legacy duplicate id 1 to client, and re-points property agent_id
   seed.sql                                   Demo data (users, 6 properties, inquiries, ...)
   scripts/                                   One-off data fixes to paste into the SQL Editor (never auto-run)
 ```

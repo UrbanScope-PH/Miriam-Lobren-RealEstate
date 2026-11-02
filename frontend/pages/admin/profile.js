@@ -103,10 +103,10 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // 4. Populate current admin profile
     const defaultProfile = {
-        name: 'Miriam Lobren (Admin)',
+        name: 'Miriam Lobren',
         title: 'Real Estate Agent',
-        email: 'miriamlobren@gmail.com',
-        phone: '+63 900 000 0000',
+        email: 'miriam@gmail.com',
+        phone: '09123456789',
         license: 'PRC REB #0031892',
         brokerage: 'UrbanScope',
         bio: 'Serving Las Piñas, Cavite, and surrounding prime locations with high-integrity real estate solutions.'

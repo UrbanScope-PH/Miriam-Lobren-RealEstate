@@ -190,6 +190,7 @@ def verify_google_token(
 # Authorized administrator accounts and roles for RBAC
 AUTHORIZED_ADMIN_EMAILS: Set[str] = {
     "admin.realestate@gmail.com",
+    "miriam@gmail.com",
     "urbanscope.cvsu@gmail.com"
 }
 

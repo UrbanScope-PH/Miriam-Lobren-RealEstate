@@ -478,14 +478,14 @@ def get_public_agent_profile():
     cursor.execute("""
         SELECT id, email, full_name, phone, license_number, title, brokerage, bio, avatar_url, role
         FROM users
-        WHERE role IN ('admin', 'superadmin') OR LOWER(email) = 'admin.realestate@gmail.com'
+        WHERE role IN ('admin', 'superadmin') OR LOWER(email) IN ('admin.realestate@gmail.com', 'miriam@gmail.com')
         ORDER BY 
             CASE 
                 WHEN LOWER(email) NOT IN ('admin.realestate@gmail.com', 'urbanscope.cvsu@gmail.com') AND email NOT LIKE '%@example.com' THEN 0 
                 ELSE 1 
             END,
             CASE WHEN role = 'admin' THEN 0 ELSE 1 END,
-            id ASC
+            id DESC
         LIMIT 1
     """)
     row = cursor.fetchone()
@@ -494,8 +494,8 @@ def get_public_agent_profile():
         return {
             "name": "Miriam Lobren",
             "full_name": "Miriam Lobren",
-            "email": "miriamlobren@gmail.com",
-            "phone": "+63 900 000 0000",
+            "email": "miriam@gmail.com",
+            "phone": "09123456789",
             "license": "PRC REB #0031892",
             "license_number": "PRC REB #0031892",
             "title": "Real Estate Agent",

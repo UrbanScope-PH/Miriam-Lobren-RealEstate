@@ -393,6 +393,24 @@ path when rendering from a page.
         - Tactile press state on active click (`transform: scale(0.92)`).
         - Smooth entrance pop-in animation (`modalCloseEntrance`: `scale(0.5) rotate(-45deg)` to `scale(1) rotate(0deg)`) when `.modal-overlay.open` activates.
 
+34. **Lead Agent Email Synchronization Across Other Devices (`miriam@gmail.com`):**
+    - **Problem Identified**: When updating the administrator email to `miriam@gmail.com` (and phone `09123456789`) in Admin Profile Settings, other devices loading the homepage continued to display the previous email (`miriamlobren@gmail.com` or `admin.realestate@gmail.com`).
+    - **Root Causes**:
+      1. *Stale LocalStorage Email Lock*: `apiGetLeadAgentProfile()` in `supabase.js` and `api.js` previously looked for `cached.email` in the remote user list (`users.find(x => x.email === cached.email)`). Because other devices had `miriamlobren@gmail.com` in their local cache, and legacy row `id: 1` still existed in Supabase with `miriamlobren@gmail.com`, other devices matched the legacy row and retained the old email forever.
+      2. *Sort Tie-Breaker Priority*: Because Step D in `apiUpdateAdminProfile` touched all admin rows simultaneously, Supabase triggers updated `updated_at` on both `id: 1` and `id: 15` to the exact same microsecond. The sort tie-breaker `(a.id || 0) - (b.id || 0)` (ascending) sorted `id: 1` before `id: 15`, picking the old account instead of active admin account `id: 15`.
+      3. *Local FastAPI Seed Defaults*: On local networks, `isLocalDevHost()` checked `/api/agent/profile`, which returned seed placeholder `admin.realestate@gmail.com` due to SQLite RBAC resets and stale process binding port 8000.
+    - **Solution Implemented**:
+      - **Remote Truth First**: Removed `cached.email` matching from `apiGetLeadAgentProfile()` so remote Supabase Cloud always dictates the current lead agent.
+      - **Reverse ID Tie-Breaker**: Sorts `customAdmins` by `updated_at DESC` and `(b.id || 0) - (a.id || 0)` (highest/newest ID first), ensuring active admin row `id: 15` (`miriam@gmail.com`) is selected.
+      - **Skip Local Seed Fallback**: In `apiGetLeadAgentProfile()`, if local backend returns generic placeholder `admin.realestate@gmail.com`, it falls through to Supabase Cloud where the live profile was saved.
+      - **Database Normalization (`supabase/migrations/20261102050000_normalize_lead_admin_role_and_email.sql`)**:
+        - Normalized `miriam@gmail.com` (`id: 15`) with `role = 'admin'` and phone `09123456789`.
+        - Set `urbanscope.cvsu@gmail.com` (`id: 11`) to `role = 'superadmin'`.
+        - Demoted legacy duplicate row `id: 1` (`miriamlobren@gmail.com`) to `role = 'client'`.
+        - Re-pointed `properties.agent_id` from legacy `1` to active lead admin `15`.
+      - **Immediate Real-Time Broadcast**: Dispatches `urbanscope:profileUpdated` upon remote resolution, ensuring open tabs, footers, headers, and mailto links instantly render `miriam@gmail.com` and `09123456789`.
+      - **Harmonized Fallbacks**: Synchronized defaults in `index.html`, `index.js`, `session.js`, `terms.html`, `privacy.html`, `Liora.html`, `Airmen.html`, and `property-detail.html`.
+
 ---
 
 ## Safety Rules
