@@ -31,6 +31,8 @@ This document records all features, enhancements, bug fixes, user requests, arch
 | **Nov 2026** | **Professional Title Dynamic Sync** | Dynamic synchronization of lead agent professional title from admin profile to homepage hero, navbar brand, tab title, about section, and footer in real-time across SQLite, Supabase Cloud, and client cache | `profile.html`, `profile.js`, `index.html`, `index.js`, `session.js`, `supabase.js`, `api.js` |
 | **Nov 2026** | **Supabase Migrations as Git History** | Adopted git-like atomic migration history standard (`YYYYMMDDHHMMSS_<feature_name>.sql`), added migrations `20261102020000_expand_inquiry_status_workflow.sql` and `20261102030000_update_default_user_title.sql` | `supabase/migrations/`, `DATABASE.md`, `AGENTS.md` |
 | **Nov 2026** | **Brand Harmonization** | Harmonized logo dimensions (48x42px), Miriam Lobren agent name typography (18px, 700 weight, 1.2px spacing), and title styling between history and submit inquiry topbars | `frontend/pages/inquiry/history.css`, `frontend/shared/js/session.js` |
+| **Nov 2026** | **Cross-Device Password Sync** | Enabled two-way PBKDF2 password sync between SQLite and Supabase Cloud, fixed mobile loopback IP resolution, and set run.py to 0.0.0.0 | `backend/routers/auth.py`, `supabase.js`, `api.js`, `run.py` |
+| **Nov 2026** | **Password Visibility Toggle** | Added interactive show/hide password toggle buttons to Current, New, and Confirm password inputs in admin profile settings | `profile.html`, `profile.css`, `profile.js` |
 
 ---
 
@@ -341,6 +343,28 @@ This document records all features, enhancements, bug fixes, user requests, arch
   - Resolved `init_db()` in `backend/database.py` which was previously resetting existing users' `password_hash` back to seed credentials on every server startup or reload. Added `if not existing[1]:` check to guarantee password updates persist permanently across server restarts.
   - Enhanced `PUT /api/admin/password` in `backend/routers/auth.py` and `PasswordChangeRequest` in `backend/models.py` with fallback account resolution and session credentials.
   - Verified end-to-end update flow, PBKDF2 hashing, and immediate login synchronization.
+
+---
+
+### 24. Cross-Device & Mobile Password Synchronization
+- **User Prompt:** *"the changing password doesnt work on other device or phone it only work on my laptop, fix this"*
+- **Rationale & Implementation:**
+  - Resolved `ReferenceError: userId is not defined` bug in `supabase.js` and `api.js` which caused crashes on mobile/cloud environments where local FastAPI was unreachable.
+  - Replaced hardcoded `127.0.0.1:8000` with dynamic host resolution (`http://${location.hostname}:8000/api`) with HTTPS safety checks.
+  - Seeded `admin.realestate@gmail.com` into Supabase Cloud `users` table and added dynamic upsert logic (`POST` fallback) if missing.
+  - Implemented two-way password sync between SQLite and Supabase Cloud: updates from phone update Supabase Cloud and auto-sync into SQLite upon login, while updates from laptop push PBKDF2 salt-hashes directly to Supabase Cloud.
+  - Bound `run.py` default host to `0.0.0.0` so other devices on the same Wi-Fi/LAN can reach the server.
+
+---
+
+### 25. Admin Password Visibility Toggle (Show / Hide Password)
+- **User Prompt:** *"add here in the admin page settings where they can see the password they want to change"*
+- **Rationale & Implementation:**
+  - Administrators needed the ability to visually verify and review passwords when typing them into the "Change Password" form on `/pages/admin/profile.html`.
+  - Wrapped `currentPassword`, `newPassword`, and `confirmPassword` inputs inside `.password-input-wrapper` with `padding-right: 42px`.
+  - Added `.password-toggle-btn` buttons containing accessible SVG eye icons.
+  - Clicking an eye toggle dynamically toggles the input between `type="password"` and `type="text"` while swapping between eye-open (`Show password`) and eye-slashed (`Hide password`) icons.
+  - Added automatic reset on form submission to restore masked password states.
 
 ---
 

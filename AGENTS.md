@@ -506,6 +506,14 @@ path when rendering from a page.
       - **Local Dev Host & Network Binding (`run.py`)**: Changed `run.py` default host from `127.0.0.1` to `0.0.0.0`, allowing phones and other devices on the same Wi-Fi / local network to reach the FastAPI server directly at `http://<laptop-ip>:8000`.
       - **Safe Endpoint Resolution**: Replaced hardcoded `127.0.0.1:8000` with dynamic host resolution (`http://${location.hostname}:8000/api`) and added HTTPS guard to prevent mixed-content blocks on hosted deployments.
 
+41. **Admin Password Visibility Toggle (Show / Hide Password):**
+    - On the admin settings page (`/pages/admin/profile.html`), added interactive show/hide visibility toggle buttons (`.password-toggle-btn`) to all three password inputs in the Change Password card:
+      - `Current Password` (`#currentPassword`)
+      - `New Password` (`#newPassword`)
+      - `Confirm New Password` (`#confirmPassword`)
+    - **UI & UX Styling (`profile.css`)**: Encapsulated inputs inside `.password-input-wrapper` with `padding-right: 42px` to prevent text overlap, placing eye toggle buttons vertically centered on the right with smooth hover elevation, dark-green brand accents, focus rings, and zero interference with form submission.
+    - **Dynamic Icon & State Swap (`profile.js`)**: Clicking an eye toggle dynamically flips `type="password"` to `type="text"` (and vice versa) and transitions between eye-open (`Show password`) and eye-slashed (`Hide password`) SVG icons. Automatic reset listener reverts all fields back to masked password mode upon successful password updates.
+
 ---
 
 ## Safety Rules
