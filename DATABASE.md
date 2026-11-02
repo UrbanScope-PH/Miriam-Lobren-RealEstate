@@ -376,6 +376,8 @@ supabase/
                                              Sets users.brokerage default to 'UrbanScope' and normalizes legacy rows
   migrations/20261102020000_expand_inquiry_status_workflow.sql
                                              Updates inquiries.status CHECK constraint to include all active CRM workflow statuses
+  migrations/20261102030000_update_default_user_title.sql
+                                             Sets default title to 'Real Estate Agent' and normalizes legacy rows
   seed.sql                                   Demo data (users, 6 properties, inquiries, ...)
   scripts/                                   One-off data fixes to paste into the SQL Editor (never auto-run)
 ```

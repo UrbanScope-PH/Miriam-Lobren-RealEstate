@@ -25,6 +25,12 @@ This document records all features, enhancements, bug fixes, user requests, arch
 | **Oct 2026** | **Database / CI** | Made Supabase migration `20261028000000_initial_schema.sql` idempotent (`IF NOT EXISTS`, drop trigger/policy guards) to fix GitHub Supabase Preview checks | `supabase/migrations/` |
 | **Nov 2026** | **Dark Mode Removal** | Completely removed dark mode feature, styles (`theme.css`), and script (`theme.js`) across all 20 HTML pages per user request | `shared/css/theme.css`, `shared/js/theme.js`, HTML files |
 | **Nov 2026** | **Repo & Backend Organization** | Removed unused `next-app/` prototype and refactored monolithic `backend/app.py` (1,730 lines) into `backend/middleware.py` and modular `backend/routers/` | `backend/app.py`, `backend/middleware.py`, `backend/routers/*`, `.gitignore`, `.vercelignore` |
+| **Nov 2026** | **Rebranding & Standardization** | Removed all legacy CD Miranda references across HTML, JS, backend models, database defaults, and Supabase migrations, standardizing to UrbanScope | Multiple files, `backend/`, `frontend/`, `supabase/migrations/` |
+| **Nov 2026** | **Inquiry Success UX** | Refined inquiry success modal (removed bottom-right "Back to Home", added upper-left back arrow, 48-hour response guarantee notice, removed gold gradients) | `frontend/pages/inquiry/inquiry.html`, `inquiry.css`, `inquiry.js` |
+| **Nov 2026** | **Client Inquiry History & Approval** | Renamed "My Inquiry History" to "Inquiry History", added admin approval action in dashboard & client modals, added "Approved" green status badge & banner, and real-time cross-tab storage sync | `history.html`, `history.css`, `history.js`, `dashboard.js`, `clients.js` |
+| **Nov 2026** | **Professional Title Dynamic Sync** | Dynamic synchronization of lead agent professional title from admin profile to homepage hero, navbar brand, tab title, about section, and footer in real-time across SQLite, Supabase Cloud, and client cache | `profile.html`, `profile.js`, `index.html`, `index.js`, `session.js`, `supabase.js`, `api.js` |
+| **Nov 2026** | **Supabase Migrations as Git History** | Adopted git-like atomic migration history standard (`YYYYMMDDHHMMSS_<feature_name>.sql`), added migrations `20261102020000_expand_inquiry_status_workflow.sql` and `20261102030000_update_default_user_title.sql` | `supabase/migrations/`, `DATABASE.md`, `AGENTS.md` |
+| **Nov 2026** | **Brand Harmonization** | Harmonized logo dimensions (48x42px), Miriam Lobren agent name typography (18px, 700 weight, 1.2px spacing), and title styling between history and submit inquiry topbars | `frontend/pages/inquiry/history.css`, `frontend/shared/js/session.js` |
 
 ---
 
@@ -236,6 +242,80 @@ This document records all features, enhancements, bug fixes, user requests, arch
 
 ---
 
+### 16. Complete Rebranding & Legacy Brokerage Standardization
+- **User Prompt:** Systematic codebase audit to remove all legacy brokerage ("CD Miranda") references.
+- **Rationale & Implementation:**
+  - Removed all legacy brokerage references across public HTML (`index.html`, `pages/auth/login.html`, `pages/auth/register.html`, `pages/legal/terms.html`, `pages/legal/privacy.html`), admin profile settings (`pages/admin/profile.html`, `pages/admin/profile.js`), client/API gateways (`index.js`, `shared/js/supabase.js`, `shared/js/api.js`), FastAPI backend (`run.py`, `backend/app.py`, `backend/models.py`, `backend/database.py`), SQL seeds (`backend/supabase_schema.sql`, `supabase/seed.sql`), and documentation (`AGENTS.md`, `DATABASE.md`, `CHANGELOG.md`), standardizing default brokerage/platform branding to **UrbanScope** / **Miriam Lobren Real Estate**.
+  - Added idempotent migration `supabase/migrations/20261102010000_update_default_brokerage.sql` (preserving historical applied migrations 0001 and 0002 per §Safety Rules) and runtime normalization in `init_db()` and frontend profile loaders so stale `localStorage` or database rows automatically resolve to `'UrbanScope'`.
+
+---
+
+### 17. Inquiry Submission Modal & UX Refinements
+- **User Prompt:** *"in submit inquiry, remove the "back to home" in the bottom right, just add the back arrow on the upper left. only the view in inquiry history and submit another on the bottom. also add a "youll receive a response via email within 48 hours (pls check spam/junk)"*
+- **User Prompt:** *"remove the gold shade gradient here"*
+- **Rationale & Implementation:**
+  - In `frontend/pages/inquiry/inquiry.html` and `inquiry.css`:
+    - Removed the redundant bottom-right "Back to Home" button from the modal footer.
+    - Added a dedicated circular back arrow button (`#modalBackHomeBtn`) in the top-left corner of the modal header, linking directly back to `../../index.html`.
+    - Added a clear SLA notice card: `"You'll receive a response via email within 48 hours (pls check spam/junk)."`
+    - Modal actions in the footer now cleanly consist of only two buttons: `"View in Inquiry History"` (`pages/inquiry/history.html`) and `"Submit Another Inquiry"` (`#submitAnotherBtn`).
+    - Stripped out all lingering gold gradients and shadows in favor of the consistent emerald/dark green design tokens (`var(--dark-green)` and `var(--accent-green)`).
+
+---
+
+### 18. Inquiry History Renaming & Admin Approval Workflow
+- **User Prompt:** *"remove everything that has "my inquiry history" it should be only inquiry history"*
+- **User Prompt:** Admin approval workflow for inquiries.
+- **Rationale & Implementation:**
+  - Renamed all occurrences of `"My Inquiry History"` across the application (navbar profile dropdown, topbar links, modal links, and mobile drawer) to `"Inquiry History"`.
+  - Added an end-to-end admin approval workflow:
+    - On the Admin Dashboard (`pages/admin/dashboard.html`), added an **"Approve Inquiry"** action button (`.btn-modal-approve`) inside the Recent Inquiries detail modal.
+    - On the Admin Clients page (`pages/admin/clients.html`), updated the inquiry view modal and inline table select to support instant approval (`apiUpdateInquiryStatus`).
+    - Backend updates synchronize across SQLite (`UPDATE inquiries SET status = 'Approved'`), Supabase Cloud, and client `localStorage`.
+    - Client Inquiry History page (`pages/inquiry/history.html`): Added a distinct emerald status badge (`.status-approved`) and an approval banner (`.approved-banner`) acknowledging approval from agent Miriam Lobren.
+    - Real-time client sync: Added event listeners for `storage`, `inquiryStatusChanged`, `inquiriesUpdated`, and `visibilitychange` in `history.js`, so when an admin approves an inquiry in another tab or window, the client's history list automatically updates in real-time.
+
+---
+
+### 19. Lead Agent Professional Title Dynamic Synchronization
+- **User Prompt:** *"where can i change this licensed realestate broker agent"*
+- **User Prompt:** *"when i change the professional title role on admin, it should also change on the home page"*
+- **User Prompt:** *"it doesnt change the professional title role on the homepage"*
+- **Rationale & Implementation:**
+  - Diagnosed why updating the professional title in Admin Profile (`pages/admin/profile.html`) failed to immediately reflect on the public homepage:
+    - Frontend cached stale placeholders (`'Licensed Real Estate Broker / Agent'`).
+    - Background synchronization needed to prioritize active server titles and dynamic lead agent fetch.
+  - Implemented dynamic lead agent profile loading:
+    - Added `apiGetLeadAgentProfile()` in `frontend/shared/js/supabase.js` and `frontend/shared/js/api.js`.
+    - In `frontend/index.js`, dynamically updates `#navAgentName`, `#navAgentTitle` (uppercase title), `#aboutAgentName`, `#aboutAgentRoleText` (lowercase role), `#aboutAgentPhoto` (alt text), document tab title, and footer role references.
+    - Added multi-tab sync via `storage` and `urbanscope:profileUpdated` events.
+    - Added atomic migration `supabase/migrations/20261102030000_update_default_user_title.sql` to normalize default title in Supabase to `'Real Estate Agent'`.
+
+---
+
+### 20. Supabase Migrations as Git History Standard
+- **User Prompt:** *"treat supabase migrations like git history, each logical chnage or schema modification should its own seperate migration file"*
+- **Rationale & Implementation:**
+  - Formalized repository architectural rule in `AGENTS.md` and `DATABASE.md`: Supabase migrations must strictly mirror Git commit history.
+  - Every logical schema modification, column addition, constraint update, or data normalization must be placed in its own separate, atomic migration file (`supabase/migrations/YYYYMMDDHHMMSS_<feature_name>.sql`).
+  - Added timestamped atomic migrations:
+    - `20261102020000_expand_inquiry_status_workflow.sql`: Expands inquiry status check constraint to include `'Approved'`.
+    - `20261102030000_update_default_user_title.sql`: Normalizes default user title to `'Real Estate Agent'`.
+
+---
+
+### 21. Topbar Brand & Typography Harmonization
+- **User Prompt:** Visual discrepancies between Submit Inquiry (`inquiry.html`) and Inquiry History (`history.html`) topbars.
+- **Rationale & Implementation:**
+  - Harmonized `.history-topbar` and `.app-brand` in `history.css` with `inquiry.css`:
+    - Brand Logo: Fixed image dimensions to `48px × 42px` (`object-fit: contain`) on desktop and `36px × 32px` on mobile screens.
+    - Agent Name (`<strong>Miriam Lobren</strong>`): Sized to `18px`, `font-weight: 700`, `letter-spacing: 1.2px`, and `var(--dark-green)`.
+    - Professional Title (`<small>REAL ESTATE AGENT</small>`): Sized to `10px`, `font-weight: 700`, `letter-spacing: 1.8px`, and `var(--accent-green)`.
+    - Matched topbar height (`80px`), box shadow, and `.go-back-btn` styling.
+    - Added `applyAgentBranding()` in `frontend/shared/js/session.js` to dynamically update `.app-brand strong` and `.app-brand small` across all pages from live lead agent profile data.
+
+---
+
 ## 🛠️ Verification & Testing Matrix
 
 | Component | Test Performed | Result |
@@ -247,13 +327,15 @@ This document records all features, enhancements, bug fixes, user requests, arch
 | **My Inquiries API** | `GET /api/inquiries/my?email=...` email filter | `200 OK` (list returned) |
 | **Inquiry Modification** | `PUT /api/inquiries/{id}` updates message & phone | `200 OK` (verified in DB) |
 | **Inquiry Cancellation** | `POST /api/inquiries/{id}/cancel` status set to `Cancelled` | `200 OK` (status updated) |
-| **Inquiry Deletion** | `DELETE /api/inquiries/{id}` permanent removal | `200 OK` (subsequent 404 confirmed) |
+| **Inquiry Approval API** | `PUT /api/inquiries/{id}` status updated to `Approved` | `200 OK` (status updated) |
 | **Ownership Security** | Cross-client modification rejection without matching email/token | `403 Forbidden` |
+| **Lead Agent Profile API**| `GET /api/agent/profile` public unauthenticated access | `200 OK` (returns title, name, phone, email) |
+| **Profile Title Dynamic Sync**| Admin updates title -> verifies homepage `#navAgentTitle` and `#aboutAgentRoleText` update | Verified in real-time |
 | **HTTP Routing** | `curl -s -w "%{http_code}" http://127.0.0.1:8000/pages/legal/terms.html` | `200 OK` |
 | **HTTP Routing** | `curl -s -w "%{http_code}" http://127.0.0.1:8000/pages/legal/privacy.html` | `200 OK` |
-| **HTTP Routing** | `curl -s -w "%{http_code}" http://127.0.0.1:8000/pages/legal/legal.css` | `200 OK` |
-| **HTTP Routing** | `curl -s -w "%{http_code}" http://127.0.0.1:8000/pages/legal/legal.js` | `200 OK` |
 | **Link Integrity** | Verified no remaining dead `#` links in footers and forms | Verified |
 | **Link Targets** | Verified no `target="_blank"` on registration legal links | Verified |
 | **Draft Caching** | Verified `sessionStorage` key `urbanscope_register_draft` saving & restoring | Verified |
 | **RBAC Security** | Server-side `rbac_admin_guard_middleware` active on `/pages/admin/*` and `/pages/superadmin/*` | Verified |
+| **Brand Harmonization** | Brand logo and typography pixel match between `inquiry.html` and `history.html` | Verified |
+
