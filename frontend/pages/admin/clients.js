@@ -402,9 +402,18 @@ document.addEventListener('DOMContentLoaded', async () => {
     window.addEventListener('inquiryCancelled', () => loadData());
     window.addEventListener('inquiryStatusChanged', () => loadData());
     window.addEventListener('inquiriesUpdated', () => loadData());
+    window.addEventListener('inquirySubmitted', () => loadData());
+    window.addEventListener('newInquiryReceived', () => loadData());
     document.addEventListener('visibilitychange', () => {
         if (!document.hidden) loadData();
     });
+
+    // Periodic live polling so inquiries table reflects new submissions from other devices without manual refresh
+    setInterval(() => {
+        if (document.visibilityState === 'visible') {
+            loadData();
+        }
+    }, 4000);
 
     // Initial load
     await loadData();

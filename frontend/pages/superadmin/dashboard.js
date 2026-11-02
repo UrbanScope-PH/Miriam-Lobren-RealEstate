@@ -969,6 +969,14 @@
         } catch (e) {
             console.warn('Tab deep-link parse note:', e);
         }
+
+        // Periodic live refresh for inquiries and overview metrics without manual reload
+        setInterval(() => {
+            if (document.visibilityState === 'visible') {
+                loadOverview();
+                loadInquiries();
+            }
+        }, 5000);
     }
 
     if (document.readyState === 'loading') {

@@ -1002,6 +1002,15 @@ window.addEventListener('storage', (e) => {
 window.addEventListener('inquiryCancelled', () => loadDashboardData());
 window.addEventListener('inquiryStatusChanged', () => loadDashboardData());
 window.addEventListener('inquiriesUpdated', () => loadDashboardData());
+window.addEventListener('inquirySubmitted', () => loadDashboardData());
+window.addEventListener('newInquiryReceived', () => loadDashboardData());
 document.addEventListener('visibilitychange', () => {
     if (!document.hidden) loadDashboardData();
 });
+
+// Periodic live polling so admin dashboard automatically reflects new inquiries from other devices without refreshing
+setInterval(() => {
+    if (document.visibilityState === 'visible') {
+        loadDashboardData();
+    }
+}, 4000);

@@ -449,6 +449,28 @@ path when rendering from a page.
         - Deferred `apiMarkNotificationsRead` with a 6-second delay on interactive load and excluded it from background poll ticks so notifications display cleanly before being cleared.
       - **Responsive Live Polling**: Reduced polling intervals from 15 seconds to 4 seconds in `history.js` and 5 seconds in `session.js`, delivering near-instant updates across mobile devices.
 
+37. **Real-Time Admin Inquiry Notifications & Zero-Refresh Live Dashboard/Table Synchronization:**
+    - **Problem Identified**: When a client submitted a new inquiry from another device or phone, an administrator viewing the admin portal on their mobile phone or desktop had to manually refresh the page to see the new inquiry. The topbar notification bell badge did not update, no notification toast appeared, and the Recent Inquiries table / KPI counters on `/pages/admin/dashboard.html` and `/pages/admin/clients.html` remained static.
+    - **Root Causes**:
+      1. *Toast Omission for New Inquiries*: In `admin-shell.js`, `loadNotifications()` only triggered `showAdminShellToast` if `it.type === 'cancelled'`, completely omitting `new_inquiry` items.
+      2. *Absence of Dashboard/Clients Polling*: `dashboard.js` and `clients.js` only loaded data once on `DOMContentLoaded` and on local tab `storage` events. Because `storage` events do not fire across different physical devices or separate browser sessions, data remained frozen until a full page reload.
+      3. *Long Polling Delays in Admin Shell*: `admin-shell.js` polled at 15-second intervals and lacked known inquiry tracking across active sessions.
+    - **Solution Implemented**:
+      - **Active Session Inquiry Tracking (`frontend/pages/admin/admin-shell.js`)**:
+        - Introduced `knownAdminInquiryIds` to snapshot historical inquiry IDs on the initial poll.
+        - On subsequent live poll ticks (every 4 seconds), any incoming inquiry not in `knownAdminInquiryIds` is immediately detected as a new submission from another device.
+        - Triggers upgraded interactive toast alert (`showAdminShellToast('New Inquiry Received!', title, 'inquiry', inqId)` with green `#10b981` border, bell icon, subtitle, close button, and click-through navigation).
+        - Plays an unobtrusive, crystal-clear Web Audio API notification chime (`playAdminNotificationChime()`) using native browser `AudioContext` (0 external dependencies).
+        - Immediately dispatches `inquirySubmitted`, `newInquiryReceived`, and `inquiriesUpdated` events, and increments the topbar notification bell badge count.
+      - **Zero-Refresh Live Dashboard & Clients Table Sync (`dashboard.js` & `clients.js`)**:
+        - Registered event listeners for `newInquiryReceived` and `inquirySubmitted` to reload data instantly when a new inquiry arrives.
+        - Added dedicated 4-second polling loops (`setInterval(..., 4000)`) guarded by `document.visibilityState === 'visible'`.
+        - The Recent Inquiries table, KPI cards ("Total Inquiries", "Pending Review"), donut chart, and client inquiry lists update automatically in real time without refreshing the page.
+      - **Mobile-Responsive Toast Styling (`admin-shell.css`)**:
+        - Added responsive CSS for `.admin-shell-toast` (`max-width: 380px`, elevated box-shadow, pointer events enabled) and anchored centered styling for mobile devices (`bottom: 16px; left: 16px; right: 16px; width: auto;`).
+      - **Superadmin Console Synchronization (`frontend/pages/superadmin/dashboard.js`)**:
+        - Added 5-second background polling for `loadOverview()` and `loadInquiries()` during active visibility, keeping the executive overview live.
+
 ---
 
 ## Safety Rules

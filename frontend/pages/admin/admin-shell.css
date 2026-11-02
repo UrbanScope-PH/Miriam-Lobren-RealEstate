@@ -889,12 +889,14 @@ input:focus-visible {
     z-index: 9999;
     background: #14351e;
     color: #ffffff;
-    padding: 13px 20px;
+    padding: 14px 18px;
     border-radius: 12px;
     font-size: 13px;
-    font-weight: 700;
-    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.22);
-    border-left: 4px solid #ef4444;
+    font-weight: 600;
+    box-shadow: 0 14px 35px rgba(0, 0, 0, 0.32);
+    border-left: 4px solid #10b981;
+    max-width: 380px;
+    width: calc(100% - 48px);
     transform: translateY(20px);
     opacity: 0;
     pointer-events: none;
@@ -904,4 +906,15 @@ input:focus-visible {
 .admin-shell-toast.show {
     transform: translateY(0);
     opacity: 1;
+    pointer-events: auto;
+}
+
+@media (max-width: 600px) {
+    .admin-shell-toast {
+        bottom: 16px;
+        right: 16px;
+        left: 16px;
+        width: auto;
+        max-width: none;
+    }
 }

@@ -261,7 +261,30 @@
             `).join('');
         }
 
-    function showAdminShellToast(message) {
+    function playAdminNotificationChime() {
+        try {
+            const AudioContext = window.AudioContext || window.webkitAudioContext;
+            if (!AudioContext) return;
+            const ctx = new AudioContext();
+            if (ctx.state === 'suspended') {
+                ctx.resume();
+            }
+            const now = ctx.currentTime;
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(587.33, now); // D5
+            osc.frequency.exponentialRampToValueAtTime(880, now + 0.12); // A5
+            gain.gain.setValueAtTime(0.08, now);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            osc.start(now);
+            osc.stop(now + 0.35);
+        } catch (_) {}
+    }
+
+    function showAdminShellToast(title, subtitle = '', type = 'info', inqId = null) {
         let toast = document.getElementById("adminShellToast");
         if (!toast) {
             toast = document.createElement("div");
@@ -271,15 +294,46 @@
             toast.setAttribute("aria-live", "polite");
             document.body.appendChild(toast);
         }
-        toast.textContent = message;
+
+        const borderCol = (type === 'cancelled') ? '#ef4444' : '#10b981';
+        const iconSvg = (type === 'cancelled')
+            ? '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>'
+            : '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2.5"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>';
+
+        toast.style.borderLeftColor = borderCol;
+        toast.innerHTML = `
+            <div style="display:flex;align-items:flex-start;gap:12px;">
+                <div style="margin-top:2px;flex-shrink:0;">${iconSvg}</div>
+                <div style="flex:1;min-width:0;">
+                    <div style="font-weight:800;font-size:13.5px;color:#ffffff;line-height:1.3;">${title}</div>
+                    ${subtitle ? `<div style="font-size:12px;color:rgba(255,255,255,0.85);margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${subtitle}</div>` : ''}
+                </div>
+                <button type="button" class="admin-toast-close" style="background:none;border:none;color:rgba(255,255,255,0.6);font-size:18px;cursor:pointer;padding:0 0 0 8px;line-height:1;">&times;</button>
+            </div>
+        `;
+
+        const closeBtn = toast.querySelector('.admin-toast-close');
+        if (closeBtn) {
+            closeBtn.onclick = function (e) {
+                e.stopPropagation();
+                toast.classList.remove("show");
+            };
+        }
+
+        toast.onclick = function () {
+            const targetUrl = getInquiryPageUrl();
+            window.location.href = targetUrl;
+        };
+
         toast.classList.add("show");
         clearTimeout(toast._hideTimer);
         toast._hideTimer = setTimeout(() => {
             toast.classList.remove("show");
-        }, 4200);
+        }, 6000);
     }
 
     let currentNotificationItems = [];
+    let knownAdminInquiryIds = null;
 
     function markNotificationsAsViewed() {
         const now = Date.now();
@@ -363,21 +417,53 @@
             unreadCount = items.length;
         }
 
-        // Check for newly arrived cancellation notifications to toast for admin
+        // Check for newly arrived notifications (inquiries or cancellations) to alert admin in real-time
         try {
             const toastedKey = "admin_notifs_toasted_keys";
             const toasted = JSON.parse(localStorage.getItem(toastedKey) || "[]");
-            const toastedSet = new Set(Array.isArray(toasted) ? toasted : []);
-            let newestCancel = null;
-            items.forEach(it => {
-                if (it.type === "cancelled" && it.notifKey && !readSet.has(String(it.notifKey)) && !toastedSet.has(String(it.notifKey))) {
-                    toastedSet.add(String(it.notifKey));
-                    if (!newestCancel) newestCancel = it;
-                }
-            });
-            if (newestCancel) {
+            const toastedSet = new Set(Array.isArray(toasted) ? toasted.map(String) : []);
+
+            if (!knownAdminInquiryIds) {
+                // Initial load: seed historical inquiry IDs and existing items so we don't spam old notifications
+                knownAdminInquiryIds = new Set(inquiries.map(i => String(i.id)));
+                items.forEach(it => {
+                    if (it.notifKey) toastedSet.add(String(it.notifKey));
+                });
                 localStorage.setItem(toastedKey, JSON.stringify(Array.from(toastedSet)));
-                showAdminShellToast(`✕ ${ newestCancel.title }`);
+            } else {
+                let newestItemToToast = null;
+                let foundNewInquiry = false;
+
+                items.forEach(it => {
+                    const k = String(it.notifKey || '');
+                    const inqIdStr = String(it.inquiryId || '');
+
+                    const isNewInquiry = (it.type === 'new_inquiry') && (!knownAdminInquiryIds.has(inqIdStr) || (!toastedSet.has(k) && !readSet.has(k)));
+                    const isNewCancel = (it.type === 'cancelled') && !toastedSet.has(k) && !readSet.has(k);
+
+                    if (isNewInquiry || isNewCancel) {
+                        toastedSet.add(k);
+                        if (inqIdStr) knownAdminInquiryIds.add(inqIdStr);
+                        if (!newestItemToToast) newestItemToToast = it;
+                        if (isNewInquiry) foundNewInquiry = true;
+                    }
+                });
+
+                if (newestItemToToast) {
+                    localStorage.setItem(toastedKey, JSON.stringify(Array.from(toastedSet)));
+                    if (newestItemToToast.type === 'cancelled') {
+                        showAdminShellToast(newestItemToToast.title, newestItemToToast.subtitle, 'cancelled', newestItemToToast.inquiryId);
+                    } else {
+                        showAdminShellToast('New Inquiry Received!', newestItemToToast.title, 'inquiry', newestItemToToast.inquiryId);
+                        playAdminNotificationChime();
+                    }
+                }
+
+                if (foundNewInquiry) {
+                    window.dispatchEvent(new CustomEvent('inquirySubmitted', { detail: { inquiries } }));
+                    window.dispatchEvent(new CustomEvent('newInquiryReceived', { detail: { inquiries } }));
+                    window.dispatchEvent(new CustomEvent('inquiriesUpdated', { detail: { inquiries } }));
+                }
             }
         } catch (_) {}
 
@@ -512,7 +598,11 @@
         });
 
         loadNotifications();
-        setInterval(loadNotifications, 15000);
+        setInterval(() => {
+            if (document.visibilityState === "visible") {
+                loadNotifications();
+            }
+        }, 4000);
         window.addEventListener("inquirySubmitted", () => loadNotifications());
         window.addEventListener("inquiryCancelled", () => loadNotifications());
         window.addEventListener("inquiryStatusChanged", () => loadNotifications());
