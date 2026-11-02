@@ -573,6 +573,15 @@ function openInquiryModal(data) {
             approveBtn.disabled = true;
             approveBtn.innerHTML = `<span>Approving...</span>`;
             try {
+                try {
+                    const existingRead = JSON.parse(localStorage.getItem("admin_notifs_read_ids") || "[]");
+                    const readSet = new Set(Array.isArray(existingRead) ? existingRead.map(String) : []);
+                    readSet.add(String(rawId));
+                    readSet.add(`new_inquiry_${rawId}`);
+                    readSet.add(`approved_${rawId}`);
+                    localStorage.setItem("admin_notifs_read_ids", JSON.stringify(Array.from(readSet)));
+                } catch (_) {}
+
                 if (typeof apiUpdateInquiryStatus === 'function') {
                     await apiUpdateInquiryStatus(rawId, 'Approved');
                 }

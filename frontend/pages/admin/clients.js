@@ -245,6 +245,17 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
         updateKPIs();
 
+        if (String(newStatus || '').toLowerCase().trim() === 'approved') {
+            try {
+                const existingRead = JSON.parse(localStorage.getItem("admin_notifs_read_ids") || "[]");
+                const readSet = new Set(Array.isArray(existingRead) ? existingRead.map(String) : []);
+                readSet.add(String(inquiryId));
+                readSet.add(`new_inquiry_${inquiryId}`);
+                readSet.add(`approved_${inquiryId}`);
+                localStorage.setItem("admin_notifs_read_ids", JSON.stringify(Array.from(readSet)));
+            } catch (_) {}
+        }
+
         // Update DB
         try {
             if (typeof apiUpdateInquiryStatus === 'function') {

@@ -43,6 +43,24 @@ def submit_inquiry(payload: InquiryCreate):
     conn.commit()
 
     inq_id = cursor.lastrowid
+
+    # Record notification for admin on new inquiry submission
+    code = f"INQ-2026-{str(inq_id).zfill(3)}"
+    cursor.execute("""
+        INSERT INTO notifications (recipient_role, recipient_email, type, inquiry_id, property_title, client_name, title, message, is_read, is_seen)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0, 0)
+    """, (
+        "admin",
+        "admin.realestate@gmail.com",
+        "new_inquiry",
+        inq_id,
+        payload.property_title or "General Inquiry",
+        payload.client_name.strip(),
+        f"New inquiry submitted by {payload.client_name.strip()}",
+        f"{payload.client_name.strip()} submitted inquiry {code}."
+    ))
+    conn.commit()
+
     cursor.execute("SELECT * FROM inquiries WHERE id = ?", (inq_id,))
     new_inq = row_to_dict(cursor.fetchone())
     conn.close()
@@ -227,6 +245,11 @@ def modify_inquiry(
             f"Inquiry {code} Approved!",
             f"Your inquiry for \"{prop_title}\" has been approved by Miriam Lobren!"
         ))
+        # Mark admin's inquiry notification as read and seen upon approval
+        cursor.execute("""
+            UPDATE notifications SET is_read = 1, is_seen = 1
+            WHERE inquiry_id = ? AND LOWER(recipient_role) = 'admin'
+        """, (inquiry_id,))
 
     conn.commit()
     conn.close()

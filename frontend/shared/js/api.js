@@ -567,7 +567,9 @@
         let items = [];
         try {
             const localEvents = JSON.parse(localStorage.getItem(ADMIN_EVENT_NOTIFS_KEY) || '[]');
-            if (Array.isArray(localEvents)) items = [...localEvents];
+            if (Array.isArray(localEvents)) {
+                items = localEvents.filter(ev => ev && ev.type !== 'approved' && ev.type !== 'completed');
+            }
         } catch (_) {}
 
         if (isLocalDevHost()) {
@@ -580,6 +582,8 @@
                         rows.forEach(r => {
                             const inqId = r.inquiry_id || r.id;
                             const nType = (r.type || 'info').toLowerCase();
+                            // Admin should NEVER receive approval or completed notifications
+                            if (nType === 'approved' || nType === 'completed') return;
                             const createdMs = r.created_at ? new Date(r.created_at).getTime() : Date.now();
                             const notifKey = `${nType}_${inqId}`;
                             if (!items.some(existing => String(existing.inquiryId) === String(inqId) && existing.type === nType)) {
@@ -587,8 +591,8 @@
                                     id: `srv_${r.id}`,
                                     notifKey: notifKey,
                                     type: nType,
-                                    avatarClass: nType === 'cancelled' ? 'cancel' : 'check',
-                                    avatarIcon: nType === 'cancelled' ? '✕' : '✓',
+                                    avatarClass: nType === 'cancelled' ? 'cancel' : 'user',
+                                    avatarIcon: nType === 'cancelled' ? '✕' : '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>',
                                     inquiryId: inqId,
                                     client_name: r.client_name || 'Client',
                                     property_title: r.property_title || 'General Inquiry',
@@ -604,6 +608,7 @@
             } catch (_) {}
         }
 
+        items = items.filter(it => it && it.type !== 'approved' && it.type !== 'completed');
         items.sort((a, b) => (b.time || 0) - (a.time || 0));
         return items;
     }
@@ -1062,8 +1067,18 @@
 
         saveInquiryOverride(id, { status: newStatus, updated_at: nowIso });
 
-        // 4. If admin approved the inquiry, push notification for the user
+        // 4. If admin approved the inquiry, mark as read for admin and push notification for the user
         if (String(newStatus || '').toLowerCase().trim() === 'approved') {
+            // Mark as read in admin notification state immediately so no badge appears for admin
+            try {
+                const existingRead = JSON.parse(localStorage.getItem("admin_notifs_read_ids") || "[]");
+                const readSet = new Set(Array.isArray(existingRead) ? existingRead.map(String) : []);
+                readSet.add(String(id));
+                readSet.add(`new_inquiry_${id}`);
+                readSet.add(`approved_${id}`);
+                localStorage.setItem("admin_notifs_read_ids", JSON.stringify(Array.from(readSet)));
+            } catch (_) {}
+
             if (!targetInquiry) {
                 try {
                     const all = await apiGetInquiries();

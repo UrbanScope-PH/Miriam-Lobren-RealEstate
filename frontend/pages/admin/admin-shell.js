@@ -132,7 +132,9 @@
 
         function buildNotificationItems(inquiries, adminEvents = []) {
             const items = [];
-            const eventsList = Array.isArray(adminEvents) ? adminEvents : [];
+            const eventsList = Array.isArray(adminEvents)
+                ? adminEvents.filter(ev => ev && ev.type !== 'approved' && ev.type !== 'completed')
+                : [];
             const existingInqIds = new Set();
 
             if (Array.isArray(inquiries)) {
@@ -145,75 +147,52 @@
                     const propTitle = inq.property_title || inq.propertyTitle || 'General Inquiry';
                     const status = (inq.status || 'Under Review').trim();
                     const statusLower = status.toLowerCase();
-                    const date = inq.updated_at || inq.created_at || new Date().toISOString();
-                    const timeAgo = formatTimeAgo(date);
 
                     const isCancelled = statusLower === 'cancelled';
-                    const isApproved = statusLower === 'approved';
-                    const isCompleted = statusLower === 'completed';
 
-                        const matchedCancelEv = eventsList.find(
-                            ev => ev && String(ev.inquiryId) === String(id) && ev.type === 'cancelled'
-                        );
+                    const matchedCancelEv = eventsList.find(
+                        ev => ev && String(ev.inquiryId) === String(id) && ev.type === 'cancelled'
+                    );
 
-                        if (isCancelled || matchedCancelEv) {
-                            const evTime = (matchedCancelEv && matchedCancelEv.time)
-                                ? matchedCancelEv.time
-                                : new Date(date).getTime();
-                            const evTimeAgo = formatTimeAgo(new Date(evTime).toISOString());
-                            items.push({
-                                type: 'cancelled',
-                                notifKey: (matchedCancelEv && matchedCancelEv.notifKey)
-                                    ? matchedCancelEv.notifKey
-                                    : `cancelled_${id}`,
-                                avatarClass: 'cancel',
-                                avatarIcon: '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>',
-                                title: `Inquiry ${code} cancelled by ${clientName}`,
-                                subtitle: `${propTitle} &bull; ${evTimeAgo}`,
-                                time: evTime,
-                                inquiryId: id
-                            });
-                        } else if (isApproved) {
-                            items.push({
-                                type: 'approved',
-                                notifKey: `approved_${id}`,
-                                avatarClass: 'check',
-                                avatarIcon: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>',
-                                title: `Inquiry ${code} approved`,
-                                subtitle: `Client: ${clientName} &bull; ${timeAgo}`,
-                                time: new Date(date).getTime(),
-                                inquiryId: id
-                            });
-                        } else if (isCompleted) {
-                            items.push({
-                                type: 'completed',
-                                notifKey: `completed_${id}`,
-                                avatarClass: 'check',
-                                avatarIcon: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>',
-                                title: `Inquiry ${code} completed`,
-                                subtitle: `Client: ${clientName} &bull; ${timeAgo}`,
-                                time: new Date(date).getTime(),
-                                inquiryId: id
-                            });
-                        } else {
-                            const createdDate = inq.created_at || date;
-                            items.push({
-                                type: 'new_inquiry',
-                                notifKey: `new_inquiry_${id}`,
-                                avatarClass: 'user',
-                                avatarIcon: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>',
-                                title: `New inquiry submitted by ${clientName}`,
-                                subtitle: `${code} &bull; ${formatTimeAgo(createdDate)}`,
-                                time: new Date(createdDate).getTime(),
-                                inquiryId: id
-                            });
-                        }
-                    });
+                    if (isCancelled || matchedCancelEv) {
+                        const evTime = (matchedCancelEv && matchedCancelEv.time)
+                            ? matchedCancelEv.time
+                            : (inq.updated_at ? new Date(inq.updated_at).getTime() : (inq.created_at ? new Date(inq.created_at).getTime() : Date.now()));
+                        const evTimeAgo = formatTimeAgo(new Date(evTime).toISOString());
+                        items.push({
+                            type: 'cancelled',
+                            notifKey: (matchedCancelEv && matchedCancelEv.notifKey)
+                                ? matchedCancelEv.notifKey
+                                : `cancelled_${id}`,
+                            avatarClass: 'cancel',
+                            avatarIcon: '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>',
+                            title: `Inquiry ${code} cancelled by ${clientName}`,
+                            subtitle: `${propTitle} &bull; ${evTimeAgo}`,
+                            time: evTime,
+                            inquiryId: id
+                        });
+                    } else {
+                        // All non-cancelled inquiries are new inquiry submission notifications for admin.
+                        // Admin should ONLY be notified when a new inquiry has been submitted, NEVER when an inquiry is approved!
+                        const createdDate = inq.created_at || inq.date || inq.created || new Date().toISOString();
+                        items.push({
+                            type: 'new_inquiry',
+                            notifKey: `new_inquiry_${id}`,
+                            avatarClass: 'user',
+                            avatarIcon: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>',
+                            title: `New inquiry submitted by ${clientName}`,
+                            subtitle: `${code} &bull; ${formatTimeAgo(createdDate)}`,
+                            time: new Date(createdDate).getTime(),
+                            inquiryId: id
+                        });
+                    }
+                });
             }
 
             // Also include admin notification events for inquiries that were deleted by the client
             eventsList.forEach(ev => {
                 if (!ev || existingInqIds.has(String(ev.inquiryId))) return;
+                if (ev.type === 'approved' || ev.type === 'completed') return;
                 const evTime = ev.time || (ev.created_at ? new Date(ev.created_at).getTime() : Date.now());
                 const timeAgo = formatTimeAgo(new Date(evTime).toISOString());
                 const propTitle = ev.property_title || ev.subtitle || 'General Inquiry';
@@ -230,9 +209,12 @@
                 });
             });
 
+            // Filter out any approved or completed items strictly
+            const filteredItems = items.filter(it => it && it.type !== 'approved' && it.type !== 'completed');
+
             // Sort notifications by most recent first
-            items.sort((a, b) => (b.time || 0) - (a.time || 0));
-            return items;
+            filteredItems.sort((a, b) => (b.time || 0) - (a.time || 0));
+            return filteredItems;
         }
 
         function renderNotifHtml(items) {
@@ -376,14 +358,29 @@
             } catch (_) {}
         }
 
+        // Purge any legacy approved/completed events from local storage cache
+        try {
+            const rawEvs = localStorage.getItem("urbanscope_admin_event_notifs");
+            if (rawEvs) {
+                const parsed = JSON.parse(rawEvs);
+                if (Array.isArray(parsed)) {
+                    const cleaned = parsed.filter(ev => ev && ev.type !== 'approved' && ev.type !== 'completed');
+                    if (cleaned.length !== parsed.length) {
+                        localStorage.setItem("urbanscope_admin_event_notifs", JSON.stringify(cleaned));
+                    }
+                }
+            }
+        } catch (_) {}
+
         if (typeof window.apiGetAdminNotifications === "function") {
             try {
                 const evs = await window.apiGetAdminNotifications();
-                if (Array.isArray(evs)) adminEvents = evs;
+                if (Array.isArray(evs)) adminEvents = evs.filter(ev => ev && ev.type !== 'approved' && ev.type !== 'completed');
             } catch (_) {}
         } else {
             try {
                 adminEvents = JSON.parse(localStorage.getItem("urbanscope_admin_event_notifs") || "[]");
+                if (Array.isArray(adminEvents)) adminEvents = adminEvents.filter(ev => ev && ev.type !== 'approved' && ev.type !== 'completed');
             } catch (_) {}
         }
 
@@ -408,13 +405,14 @@
         let unreadCount = 0;
         if (lastViewed > 0 || readSet.size > 0) {
             unreadCount = items.filter(it => {
+                if (it.type === 'approved' || it.type === 'completed') return false;
                 if (it.notifKey && readSet.has(String(it.notifKey))) return false;
                 if (it.type === 'new_inquiry' && it.inquiryId && readSet.has(String(it.inquiryId))) return false;
                 if (it.type !== 'cancelled' && it.time && lastViewed > 0 && it.time <= lastViewed) return false;
                 return true;
             }).length;
         } else {
-            unreadCount = items.length;
+            unreadCount = items.filter(it => it.type !== 'approved' && it.type !== 'completed').length;
         }
 
         // Check for newly arrived notifications (inquiries or cancellations) to alert admin in real-time

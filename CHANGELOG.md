@@ -316,7 +316,23 @@ This document records all features, enhancements, bug fixes, user requests, arch
 
 ---
 
-## 🛠️ Verification & Testing Matrix
+### 22. Admin Notification Scope Isolation (Strict Exclusion of Admin Self-Approval Actions)
+- **User Prompt:** *"in admin page, this doesnt supposed to notify when i approved inquiry. it hsould be only notify when new inquiry has been submitted"*
+- **Rationale & Implementation:**
+  - When an admin approved an inquiry, `buildNotificationItems()` previously generated an admin notification item with `type: 'approved'` and timestamp anchored to `now` (`updated_at`), causing the admin's own topbar bell badge to display `(1)` and showing entries like `"Inquiry INQ-2026-0036 approved • Just now"`.
+  - Approval notifications belong exclusively to the **client**. Administrators must never be notified about actions they themselves just performed.
+  - In `frontend/pages/admin/admin-shell.js`:
+    - Removed `isApproved` and `isCompleted` branches from `buildNotificationItems()`.
+    - Anchored non-cancelled inquiry notifications strictly to their original submission timestamp (`created_at`), never `updated_at`.
+    - Strictly filtered out `approved` and `completed` events from `adminEvents` and local storage caches (`urbanscope_admin_event_notifs`).
+    - Guarded `unreadCount` and toast dispatch so approvals never increment the badge or trigger chimes/toasts for the admin.
+  - In `frontend/pages/admin/dashboard.js`, `clients.js`, `supabase.js`, and `api.js`:
+    - Updated inquiry approval triggers to immediately mark the inquiry ID as read in `admin_notifs_read_ids`.
+  - In `backend/routers/inquiries.py`:
+    - Recorded `new_inquiry` notifications for the admin on client submission.
+    - Marked admin notifications as read and seen when an inquiry transitions to `Approved`.
+
+---
 
 | Component | Test Performed | Result |
 | :--- | :--- | :--- |

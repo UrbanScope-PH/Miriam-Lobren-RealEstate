@@ -471,6 +471,20 @@ path when rendering from a page.
       - **Superadmin Console Synchronization (`frontend/pages/superadmin/dashboard.js`)**:
         - Added 5-second background polling for `loadOverview()` and `loadInquiries()` during active visibility, keeping the executive overview live.
 
+38. **Admin Notification Scope Isolation (Strict Exclusion of Admin Self-Approval Actions):**
+    - **Problem Identified**: When an administrator approved an inquiry (`Approve Inquiry` -> `apiUpdateInquiryStatus`), the admin shell notification builder (`buildNotificationItems` in `frontend/pages/admin/admin-shell.js`) converted every inquiry with status `Approved` into an admin notification item (`Inquiry INQ-2026-XXXX approved`) with its timestamp set to `updated_at` (now). This caused the admin's own topbar bell icon to immediately badge with `(1)` and populated the admin notification dropdown with green checkmark approval items ("Inquiry INQ-2026-0036 approved • Just now"). Administrators were confused because approving an inquiry is an administrative action; approval notifications belong strictly to the **client**, while the admin should ONLY be notified when a new inquiry is submitted (or cancelled by a client).
+    - **Key Solutions & Implementation**:
+      1. *Exclusion of Approvals and Completions in Admin Shell (`frontend/pages/admin/admin-shell.js`)*:
+         - Updated `buildNotificationItems()`: Completely removed the `isApproved` and `isCompleted` branches. Non-cancelled inquiries are strictly represented as `new_inquiry` notifications (`New inquiry submitted by {clientName}`) with timestamps anchored to their original submission date (`created_at`), NEVER `updated_at`.
+         - Filtered `adminEvents`: Strictly excludes any events with `type === 'approved'` or `type === 'completed'`.
+         - Purged legacy approved items: Cleaned up legacy `approved_` keys from `localStorage` (`urbanscope_admin_event_notifs`).
+         - Badge & Toast Guard: Updated `unreadCount` to exclude any approved/completed items, ensuring the admin bell badge never increments when approving inquiries and only counts unread new inquiry submissions and cancellations.
+      2. *Immediate Admin Read State on Approval (`frontend/pages/admin/dashboard.js`, `clients.js`, `supabase.js`, `api.js`)*:
+         - When an admin approves an inquiry (`#modalApproveInquiryBtn` or `updateInquiryStatus`), the inquiry ID and `new_inquiry_${id}` are immediately marked as read in `localStorage` (`admin_notifs_read_ids`), guaranteeing that no unread badge lingers for an inquiry the administrator just reviewed and approved.
+      3. *Backend Server-Side Notification Hygiene (`backend/routers/inquiries.py`)*:
+         - In `submit_inquiry`: Inserts an admin notification row (`recipient_role = 'admin'`, `type = 'new_inquiry'`) so that new inquiries submitted across separate devices notify the administrator in real-time.
+         - In `modify_inquiry`: When an inquiry is approved, SQLite marks any existing admin notification for that inquiry as read and seen (`UPDATE notifications SET is_read = 1, is_seen = 1 WHERE inquiry_id = ? AND LOWER(recipient_role) = 'admin'`).
+
 ---
 
 ## Safety Rules
