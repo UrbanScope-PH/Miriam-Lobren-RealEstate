@@ -14,7 +14,7 @@ schema, seed data, how migrations work, and how the frontend reaches it.
 | :--- | :--- |
 | Engine (runtime) | **SQLite 3** via Python's standard `sqlite3` module |
 | File | `backend/urbanscope.db` (auto-created, **git-ignored** via `*.db`) |
-| Access layer | Raw parameterised SQL in [`backend/app.py`](backend/app.py) — no ORM |
+| Access layer | Raw parameterised SQL in [`backend/routers/`](backend/routers) — no ORM |
 | Connection helper | `get_db_connection()` — `row_factory = sqlite3.Row`, `check_same_thread=False` |
 | Schema bootstrap | `init_db()` — runs on import of `backend.app` **and** in the FastAPI lifespan hook |
 | Optional cloud mirror | [`supabase/migrations/`](supabase/migrations) + [`supabase/seed.sql`](supabase/seed.sql) (Supabase CLI), or the one-shot [`backend/supabase_schema.sql`](backend/supabase_schema.sql) |
@@ -22,7 +22,7 @@ schema, seed data, how migrations work, and how the frontend reaches it.
 ```mermaid
 flowchart LR
     Browser["Frontend pages"] -->|"fetch()"| GW["frontend/shared/js/supabase.js (REST gateway)"]
-    GW -->|"HTTP /api/*"| API["backend/app.py (FastAPI)"]
+    GW -->|"HTTP /api/*"| API["backend/app.py + backend/routers/* (FastAPI)"]
     API --> DB[("backend/urbanscope.db (SQLite)")]
 ```
 
@@ -205,7 +205,7 @@ There is no migration framework. `init_db()` is **idempotent** and non-destructi
 2. Add a matching `if "<col>" not in existing_cols: ALTER TABLE …` guard (for existing databases).
 3. Update the Pydantic models in [`backend/models.py`](backend/models.py)
    (`*Create`, `*Update`, `*Response`).
-4. Update any explicit column lists in `INSERT` statements in [`backend/app.py`](backend/app.py)
+4. Update any explicit column lists in `INSERT` statements in [`backend/routers/`](backend/routers)
    and the seed block in `init_db()`.
 5. Mirror the change in Supabase: add a **new** migration with `supabase migration new <name>`
    (never edit an already-applied file in `supabase/migrations/`), update

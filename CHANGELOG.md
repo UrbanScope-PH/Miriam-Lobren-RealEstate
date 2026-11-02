@@ -24,6 +24,7 @@ This document records all features, enhancements, bug fixes, user requests, arch
 | **Oct 2026** | **Inquiry UX** | Replaced blocking native browser `alert()` on submission with animated success modal (`#inquirySuccessModal`), schedule recap, loading spinner, and toast notice | `inquiry.html`, `inquiry.js`, `inquiry.css` |
 | **Oct 2026** | **Database / CI** | Made Supabase migration `20261028000000_initial_schema.sql` idempotent (`IF NOT EXISTS`, drop trigger/policy guards) to fix GitHub Supabase Preview checks | `supabase/migrations/` |
 | **Nov 2026** | **Dark Mode Removal** | Completely removed dark mode feature, styles (`theme.css`), and script (`theme.js`) across all 20 HTML pages per user request | `shared/css/theme.css`, `shared/js/theme.js`, HTML files |
+| **Nov 2026** | **Repo & Backend Organization** | Removed unused `next-app/` prototype and refactored monolithic `backend/app.py` (1,730 lines) into `backend/middleware.py` and modular `backend/routers/` | `backend/app.py`, `backend/middleware.py`, `backend/routers/*`, `.gitignore`, `.vercelignore` |
 
 ---
 
@@ -223,6 +224,15 @@ This document records all features, enhancements, bug fixes, user requests, arch
   - Removed all `<link rel="stylesheet" href="...shared/css/theme.css">` and `<script src="...shared/js/theme.js"></script>` tags across all 20 HTML pages.
   - Verified zero remaining `themeToggleBtn`, `theme.css`, `theme.js`, or `data-theme` references across the entire repository.
   - Retained the general runtime stability fix in `frontend/pages/admin/add-property.js` (`inquiriesToggle`, `inquiriesGroup`, `propertyForm`, `propertyImages`, `imagePreview`, `selectedFiles`), eliminating uncaught `ReferenceError`s.
+
+---
+
+### 15. Repository Organization & Modular Backend Routers
+- **User Prompt:** *"do you think this repository folder is good, can you organize it, do whatever you want"*
+- **Rationale & Implementation:**
+  - Removed the unfinished, unwired `next-app/` Next.js + Prisma directory and cleaned obsolete Next.js entries from `.gitignore` and `.vercelignore`.
+  - Refactored `backend/app.py` (1,730 lines) into a slim FastAPI assembler (`backend/app.py`), RBAC navigation middleware (`backend/middleware.py`), and domain-focused routers under `backend/routers/` (`system.py`, `auth.py`, `properties.py`, `inquiries.py`, `superadmin.py`, `web.py`).
+  - Verified 100% byte-for-byte OpenAPI specification parity and live HTTP route/redirect/RBAC parity with `run.py`.
 
 ---
 

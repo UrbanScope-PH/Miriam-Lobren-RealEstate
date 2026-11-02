@@ -94,12 +94,14 @@ To reset the data, delete `backend/urbanscope.db` and restart the server.
 
 ```text
 ├── run.py              # Starts the server (site + API)
-├── backend/            # FastAPI app, database, models, auth
+├── backend/            # FastAPI app, RBAC middleware, modular routers/, database, models, auth
+│   └── routers/        # Feature API & web routers (system, auth, properties, inquiries, superadmin, web)
 ├── frontend/
 │   ├── index.html      # Home page
 │   ├── pages/          # One folder per feature (auth, properties, inquiry, legal, admin, superadmin)
 │   ├── shared/         # Shared CSS & JS (navbar, session, splash, API client)
 │   └── assets/images/  # Photos, logos, icons
+├── supabase/           # Supabase CLI migrations, seed data, and SQL scripts
 ├── DATABASE.md         # Database schema & seed data
 ├── CHANGELOG.md        # Session changelog & feature log
 └── AGENTS.md           # Developer & agent guidelines

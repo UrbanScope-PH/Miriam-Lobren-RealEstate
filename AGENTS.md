@@ -48,7 +48,7 @@ and exercising the page / `/docs` endpoint you touched.
 
 ```text
 run.py                 Starts FastAPI + static site (uvicorn backend.app:app)
-backend/               app.py (routes + static mounts + RBAC guard), database.py, models.py, auth.py, seed_rbac.py, migration_rbac.sql
+backend/               app.py (FastAPI assembler), middleware.py (RBAC guard), routers/ (system, auth, properties, inquiries, superadmin, web), database.py, models.py, auth.py, seed_rbac.py, migration_rbac.sql
 frontend/              Everything the browser loads (served at /)
   index.html/.css/.js  Home page
   pages/properties/    property-detail (?id=N), Liora.html & Airmen.html showcases (properties.html catalog was removed)
@@ -61,7 +61,6 @@ frontend/              Everything the browser loads (served at /)
   shared/js/           supabase.js (API gateway), session.js, splash.js, api.js
   assets/images/       Photos, logos, icons
 supabase/              Supabase CLI project: config.toml, migrations/ (timestamped .sql), seed.sql, scripts/ (one-off SQL Editor fixes) — see DATABASE.md §10
-next-app/              Unfinished Next.js + Prisma rewrite — NOT wired up; ignore unless asked
 ```
 
 Rule of thumb: **one folder per feature under `frontend/pages/`, and each page keeps its
@@ -107,15 +106,17 @@ path when rendering from a page.
 
 ### Backend & Authorization
 
-- All routes live in `backend/app.py`. Raw SQL with `?` placeholders — **never** f-string user
-  input into SQL. (The `UPDATE` builder interpolates column names only from Pydantic field names.)
+- Routes are modularized under `backend/routers/` (`system.py`, `auth.py`, `properties.py`,
+  `inquiries.py`, `superadmin.py`, `web.py`) and assembled in `backend/app.py`. Raw SQL with `?`
+  placeholders — **never** f-string user input into SQL. (The `UPDATE` builder interpolates column
+  names only from Pydantic field names.)
 - Always open connections via `get_db_connection()` — it registers the `NORMALIZE()` SQL function
   used for accent-insensitive search.
 - Request/response shapes live in `backend/models.py` (Pydantic v2; use `model_dump`, not `dict`).
 - Schema changes: follow the checklist in [DATABASE.md §5](DATABASE.md#5-migrations).
-- **Server-Side RBAC Guard:** `backend/app.py` enforces `rbac_admin_guard_middleware` on all requests
-  to `/admin`, `/pages/admin/*`, `/superadmin`, and `/pages/superadmin/*`. Unauthenticated users
-  are redirected to `/pages/auth/login.html?redirect=...`.
+- **Server-Side RBAC Guard:** `backend/middleware.py` (`rbac_admin_guard_middleware`, registered in
+  `backend/app.py`) guards all requests to `/admin`, `/pages/admin/*`, `/superadmin`, and
+  `/pages/superadmin/*`. Unauthenticated users are redirected to `/pages/auth/login.html?redirect=...`.
 - **API Protection:** Endpoints creating/modifying listings (`POST/PUT/DELETE /api/properties`),
   accessing client inquiries (`GET /api/inquiries`), and reading metrics (`GET /api/stats`) are
   protected by the `require_admin` dependency. Superadmin endpoints (`/api/superadmin/*`) are
@@ -332,6 +333,19 @@ path when rendering from a page.
     - Removed all `<link rel="stylesheet" href="...shared/css/theme.css">` and `<script src="...shared/js/theme.js"></script>` tags across all 20 HTML pages.
     - Verified zero remaining `themeToggleBtn`, `theme.css`, `theme.js`, or `data-theme` references across the entire repository.
     - Retained the runtime bug fix in `frontend/pages/admin/add-property.js` (`inquiriesToggle`, `inquiriesGroup`, `propertyForm`, `propertyImages`, `imagePreview`, `selectedFiles`), eliminating uncaught `ReferenceError`s.
+
+29. **Repository Cleanup & Modular Backend Router Architecture:**
+    - Deleted the unused, unwired `next-app/` Next.js + Prisma prototype directory and cleaned up obsolete Next.js entries in `.gitignore` and `.vercelignore`.
+    - Split the monolithic 1,730-line `backend/app.py` into clean, single-responsibility modules while keeping `uvicorn backend.app:app` (`run.py`) and every OpenAPI endpoint, redirect, and static mount 100% identical:
+      - `backend/__init__.py` — explicit Python package definition.
+      - `backend/app.py` — slim FastAPI application assembler (lifespan, CORS, RBAC middleware, routers, static web hosting).
+      - `backend/middleware.py` — `rbac_admin_guard_middleware`, request token/role helpers, and 403 HTML error templates.
+      - `backend/routers/system.py` — `/api/health`, `/api/stats`, `/api/view_dashboard_kpis`.
+      - `backend/routers/auth.py` — registration, login, Google OAuth 2.0, logout, profile updates, password updates, and public lead agent profile (`/api/agent/profile`).
+      - `backend/routers/properties.py` — public property catalog search/filtering and admin CRUD (`/api/properties*`).
+      - `backend/routers/inquiries.py` — inquiry submission, admin listing, client history (`/api/inquiries/my`), modification, cancellation, and deletion.
+      - `backend/routers/superadmin.py` — user directory (`/api/users`) and superadmin executive metrics, RBAC user management, and SQLite integrity checks (`/api/superadmin/*`).
+      - `backend/routers/web.py` — `register_web_hosting()` mounting portal shortcut overrides, `StaticFiles` (`pages`, `shared`, `assets`), legacy 301 section redirects, and root landing assets (`/`, `/index.*`, `/favicon.ico`).
 
 ---
 

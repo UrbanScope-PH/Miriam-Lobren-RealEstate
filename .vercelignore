@@ -1,5 +1,4 @@
-# Ignore unfinished Next.js prototype and python backend during Vercel static deployment
-next-app/
+# Ignore Python backend and Supabase CLI directory during Vercel static deployment
 backend/
 supabase/
 __pycache__/
