@@ -63,7 +63,7 @@ def init_db():
             avatar_url TEXT DEFAULT 'assets/images/agent.jpg',
             google_id TEXT,
             license_number TEXT DEFAULT '',
-            title TEXT DEFAULT 'Licensed Real Estate Broker / Agent',
+            title TEXT DEFAULT 'Real Estate Agent',
             brokerage TEXT DEFAULT 'UrbanScope',
             bio TEXT DEFAULT '',
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
@@ -143,7 +143,8 @@ def init_db():
     if "license_number" not in existing_user_cols:
         cursor.execute("ALTER TABLE users ADD COLUMN license_number TEXT DEFAULT ''")
     if "title" not in existing_user_cols:
-        cursor.execute("ALTER TABLE users ADD COLUMN title TEXT DEFAULT 'Licensed Real Estate Broker / Agent'")
+        cursor.execute("ALTER TABLE users ADD COLUMN title TEXT DEFAULT 'Real Estate Agent'")
+    cursor.execute("UPDATE users SET title = 'Real Estate Agent' WHERE title IS NULL OR title = 'Licensed Real Estate Broker / Agent'")
     if "brokerage" not in existing_user_cols:
         cursor.execute("ALTER TABLE users ADD COLUMN brokerage TEXT DEFAULT 'UrbanScope'")
     cursor.execute("UPDATE users SET brokerage = 'UrbanScope' WHERE brokerage IS NULL OR (LOWER(brokerage) LIKE 'cd %' AND LOWER(brokerage) LIKE '%realty%')")

@@ -101,7 +101,7 @@ Client and admin accounts.
 | `avatar_url` | TEXT | `DEFAULT 'assets/images/agent.jpg'` | Profile picture image path, Google avatar URL, or data URL (max client upload size: 5MB) |
 | `google_id` | TEXT | Partial `UNIQUE` (`idx_users_google_id`) | Google OpenID `sub` identifier linked on Google Sign-In (*added by non-destructive migration*) |
 | `license_number` | TEXT | `DEFAULT ''` | Professional real estate broker / agent PRC registration identifier |
-| `title` | TEXT | `DEFAULT 'Licensed Real Estate Broker / Agent'` | Professional title or organizational role |
+| `title` | TEXT | `DEFAULT 'Real Estate Agent'` | Professional title or organizational role |
 | `brokerage` | TEXT | `DEFAULT 'UrbanScope'` | Accredited brokerage or realty firm |
 | `bio` | TEXT | `DEFAULT ''` | Professional biography and summary |
 | `created_at` | TIMESTAMP | `CURRENT_TIMESTAMP` | UTC, `YYYY-MM-DD HH:MM:SS` |

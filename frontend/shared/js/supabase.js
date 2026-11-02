@@ -878,17 +878,28 @@
                 avatar_url: avatarUrl
             };
 
-            const sendSupabasePatch = async (url) => {
+            const safePayload = {
+                full_name: fullName,
+                phone: phone,
+                license_number: license,
+                title: title,
+                brokerage: brokerage,
+                bio: bio,
+                avatar_url: avatarUrl
+            };
+
+            const sendSupabasePatch = async (url, customBody = payload) => {
                 let res = await fetch(url, {
                     method: 'PATCH',
                     headers: getHeaders(),
-                    body: JSON.stringify(payload)
+                    body: JSON.stringify(customBody)
                 });
-                if (!res.ok && res.status === 400) {
+                if (!res.ok && (res.status === 400 || res.status === 409)) {
+                    const fallback = (res.status === 409) ? safePayload : corePayload;
                     res = await fetch(url, {
                         method: 'PATCH',
                         headers: getHeaders(),
-                        body: JSON.stringify(corePayload)
+                        body: JSON.stringify(fallback)
                     });
                 }
                 return res;
@@ -897,20 +908,8 @@
             try {
                 let sbUpdated = false;
 
-                // A. Try updating by original email first
-                if (originalEmail) {
-                    const res = await sendSupabasePatch(`${REST_BASE}/users?email=ilike.${encodeURIComponent(originalEmail)}`);
-                    if (res.ok) {
-                        const updated = await res.json().catch(() => []);
-                        if (Array.isArray(updated) && updated.length > 0) {
-                            updatedUser = { ...(updatedUser || {}), ...updated[0] };
-                            sbUpdated = true;
-                        }
-                    }
-                }
-
-                // B. If not updated by original email, try target email
-                if (!sbUpdated && targetEmail) {
+                // A. Try updating by target email first (if target user row exists)
+                if (targetEmail) {
                     const res = await sendSupabasePatch(`${REST_BASE}/users?email=ilike.${encodeURIComponent(targetEmail)}`);
                     if (res.ok) {
                         const updated = await res.json().catch(() => []);
@@ -921,26 +920,20 @@
                     }
                 }
 
-                // C. If still not updated, locate lead admin row in Supabase and patch by ID
-                if (!sbUpdated) {
-                    const getAdminRes = await fetch(`${REST_BASE}/users?role=eq.admin&order=id.desc&limit=1`, {
-                        headers: getHeaders()
-                    });
-                    if (getAdminRes.ok) {
-                        const adminRows = await getAdminRes.json().catch(() => []);
-                        if (Array.isArray(adminRows) && adminRows.length > 0) {
-                            const adminId = adminRows[0].id;
-                            const patchByIdRes = await sendSupabasePatch(`${REST_BASE}/users?id=eq.${adminId}`);
-                            if (patchByIdRes.ok) {
-                                const patched = await patchByIdRes.json().catch(() => []);
-                                if (Array.isArray(patched) && patched.length > 0) {
-                                    updatedUser = { ...(updatedUser || {}), ...patched[0] };
-                                    sbUpdated = true;
-                                }
-                            }
+                // B. If original email differs and not updated yet, try original email
+                if (!sbUpdated && originalEmail && originalEmail !== targetEmail) {
+                    const res = await sendSupabasePatch(`${REST_BASE}/users?email=ilike.${encodeURIComponent(originalEmail)}`);
+                    if (res.ok) {
+                        const updated = await res.json().catch(() => []);
+                        if (Array.isArray(updated) && updated.length > 0) {
+                            updatedUser = { ...(updatedUser || {}), ...updated[0] };
+                            sbUpdated = true;
                         }
                     }
                 }
+
+                // C. Synchronize all admin accounts in Supabase with safePayload (title, name, phone, avatar)
+                await sendSupabasePatch(`${REST_BASE}/users?role=eq.admin`, safePayload).catch(() => {});
             } catch (sbErr) {
                 console.warn('Supabase profile sync notice:', sbErr);
             }
@@ -995,6 +988,10 @@
                 avatar_url: avatarUrl
             }));
 
+            try {
+                window.dispatchEvent(new CustomEvent('urbanscope:profileUpdated', { detail: merged }));
+            } catch (ev) {}
+
             return { success: true, user: merged };
         } catch (err) {
             console.warn('apiUpdateAdminProfile notice:', err);
@@ -1034,9 +1031,7 @@
                     if (data && data.email) {
                         const cachedTitle = (cached && cached.title && cached.title.trim()) ? cached.title.trim() : null;
                         const backendTitle = (data.title && data.title.trim()) ? data.title.trim() : null;
-                        const effectiveTitle = (backendTitle && backendTitle !== 'Licensed Real Estate Broker / Agent')
-                            ? backendTitle
-                            : (cachedTitle || backendTitle || 'Licensed Real Estate Broker / Agent');
+                        const effectiveTitle = backendTitle || cachedTitle || 'Real Estate Agent';
 
                         const merged = {
                             name: data.full_name || data.name || (cached && cached.name) || 'Miriam Lobren',
@@ -1084,9 +1079,7 @@
                 const u = users[0];
                 const cachedTitle = (cached && cached.title && cached.title.trim()) ? cached.title.trim() : null;
                 const remoteTitle = (u.title && u.title.trim()) ? u.title.trim() : null;
-                const effectiveTitle = (remoteTitle && remoteTitle !== 'Licensed Real Estate Broker / Agent')
-                    ? remoteTitle
-                    : (cachedTitle || remoteTitle || 'Licensed Real Estate Broker / Agent');
+                const effectiveTitle = remoteTitle || cachedTitle || 'Real Estate Agent';
 
                 const merged = {
                     name: u.full_name || (cached && cached.name) || 'Miriam Lobren',
@@ -1121,7 +1114,7 @@
             phone: (cached && cached.phone) || '+63 900 000 0000',
             license: (cached && cached.license) || 'PRC REB #0031892',
             license_number: (cached && cached.license_number) || 'PRC REB #0031892',
-            title: (cached && cached.title) || 'Licensed Real Estate Broker / Agent',
+            title: (cached && cached.title) || 'Real Estate Agent',
             brokerage: (cached && cached.brokerage) || 'UrbanScope',
             bio: (cached && cached.bio) || 'Serving Las Piñas, Cavite, and surrounding prime locations with high-integrity real estate solutions.',
             avatar_url: (cached && cached.avatar_url) || 'assets/images/agent.jpg'

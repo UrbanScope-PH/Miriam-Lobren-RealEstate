@@ -514,7 +514,10 @@ function renderHomepageAgentDetails(profile) {
 
     const rawName = profile.name || profile.full_name || 'Miriam Lobren';
     const cleanName = String(rawName).replace(/\s*\((?:Admin|Administrator)\)\s*$/i, '').trim() || rawName;
-    const title = profile.title || 'Real Estate Agent';
+    let title = (profile.title && profile.title.trim()) || 'Real Estate Agent';
+    if (/^licensed real estate broker\s*\/\s*agent$/i.test(title)) {
+        title = 'Real Estate Agent';
+    }
     const rawBrok = String(profile.brokerage || '').trim();
     const brokerage = (!rawBrok || /^cd\s.*realty$/i.test(rawBrok)) ? 'UrbanScope' : rawBrok;
     const phone = profile.phone || '+63 900 000 0000';
@@ -599,6 +602,12 @@ async function initDynamicAgentDetails() {
     } catch (e) { }
 
     if (localProfile) {
+        if (localProfile.title && /^licensed real estate broker\s*\/\s*agent$/i.test(localProfile.title.trim())) {
+            localProfile.title = 'Real Estate Agent';
+            try {
+                localStorage.setItem('urbanscope_admin_profile', JSON.stringify(localProfile));
+            } catch (e) {}
+        }
         renderHomepageAgentDetails(localProfile);
     }
 

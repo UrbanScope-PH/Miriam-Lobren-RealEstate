@@ -104,7 +104,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     // 4. Populate current admin profile
     const defaultProfile = {
         name: 'Miriam Lobren (Admin)',
-        title: 'Licensed Real Estate Broker / Agent',
+        title: 'Real Estate Agent',
         email: 'admin.realestate@gmail.com',
         phone: '+63 900 000 0000',
         license: 'PRC REB #0031892',
@@ -140,7 +140,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     if (adminNameDisplay) adminNameDisplay.textContent = currentProfile.name || 'Miriam Lobren';
     if (bannerName) bannerName.textContent = currentProfile.name || 'Miriam Lobren';
-    if (adminTitleDisplay) adminTitleDisplay.textContent = currentProfile.title || 'Licensed Real Estate Broker / Agent';
+    if (adminTitleDisplay) adminTitleDisplay.textContent = currentProfile.title || 'Real Estate Agent';
 
     // Asynchronously refresh with server profile if available
     (async function refreshWithRemoteProfile() {
@@ -370,7 +370,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
 
             const newName = fullNameInput.value.trim();
-            const newTitle = titleInput.value.trim();
+            const newTitle = titleInput.value.trim() || 'Real Estate Agent';
             const newEmail = emailInput.value.trim();
             const newPhone = phoneInput.value.trim();
             const newLicense = licenseInput.value.trim();

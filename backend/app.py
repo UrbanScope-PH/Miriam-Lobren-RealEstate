@@ -903,7 +903,7 @@ def get_public_agent_profile():
             "phone": "+63 900 000 0000",
             "license": "PRC REB #0031892",
             "license_number": "PRC REB #0031892",
-            "title": "Licensed Real Estate Broker / Agent",
+            "title": "Real Estate Agent",
             "brokerage": "UrbanScope",
             "bio": "Serving Las Piñas, Cavite, and surrounding prime locations with high-integrity real estate solutions.",
             "avatar_url": "assets/images/agent.jpg"
