@@ -537,8 +537,8 @@ path when rendering from a page.
     - **Scroll-to-Unlock Enforcement (`register.js` & `auth.css`)**:
       - Renders both **Part I: Terms of Service** (RA No. 9646 / RESA) and **Part II: Privacy Policy** (RA No. 10173 / DPA) inside `#termsModalBody` with a live reading progress bar (`#termsScrollBar`) and status banner (`#termsScrollHint`).
       - The **I Agree** button (`#acceptTermsBtn`) starts locked (`disabled = true` with lock icon) and unlocks only when the user scrolls to the bottom of `#termsModalBody` (`scrollHeight - scrollTop - clientHeight <= 16`).
-      - Clicking **I Agree** marks `hasAcceptedTerms = true`, checks `#terms`, highlights `.terms-label.is-accepted`, closes the modal, and focuses **Create Account**.
-      - Closing the modal early (`#closeTermsModalBtn`, backdrop click, `Escape`, or `#declineTermsBtn`) leaves `#terms` unchecked, and attempting to submit `#registerForm` without accepting automatically opens `#termsModalOverlay` with an attention prompt.
+      - Clicking **I Agree** marks `hasAcceptedTerms = true`, checks `#terms`, highlights `.terms-label.is-accepted`, closes the modal, and focuses **Create Account** (or immediately launches Google OAuth if triggered via **Sign up with Google**).
+      - Closing the modal early (`#closeTermsModalBtn`, backdrop click, `Escape`, or `#declineTermsBtn`) leaves `#terms` unchecked, and attempting to submit `#registerForm` or click **Sign up with Google** (`#googleSignup`) without accepting automatically intercepts the action (`ensureTermsAcceptedForGoogleSignup()` / `window.urbanscopeCheckRegisterTermsForGoogle` in `register.js` + `attachGoogleButton` guard in `auth.js`) and opens `#termsModalOverlay` with an attention prompt.
       - Uses `position: fixed; inset: 0; width: 100%; height: 100%;` (avoiding `100vw/100vh` skew) so the modal centers accurately under `html { zoom: 1.25; }` on desktop as well as `zoom: 1` on tablet and mobile viewports.
 
 44. **Superadmin Console Cloud + Local Dual-Tier RBAC Governance & `Failed to fetch` Fix:**

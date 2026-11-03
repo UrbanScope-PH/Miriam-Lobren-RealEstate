@@ -86,14 +86,18 @@
     const declineTermsBtn = document.getElementById('declineTermsBtn');
     const closeTermsModalBtn = document.getElementById('closeTermsModalBtn');
     const registerForm = document.getElementById('registerForm');
+    const googleSignupBtn = document.getElementById('googleSignup');
 
     let hasScrolledToBottom = false;
     let hasAcceptedTerms = false;
     let isTermsModalOpen = false;
+    let pendingGoogleSignup = false;
 
     const DEFAULT_LOCKED_HINT = 'Scroll down to read the entire agreement to enable \u201cI Agree\u201d';
     const SUBMIT_LOCKED_HINT = 'Please scroll to the bottom and click \u201cI Agree\u201d before creating your account';
+    const GOOGLE_LOCKED_HINT = 'Please scroll to the bottom and click \u201cI Agree\u201d before signing up with Google';
     const READY_HINT = 'You have read the agreement \u2014 click \u201cI Agree\u201d to continue';
+    const GOOGLE_READY_HINT = 'You have read the agreement \u2014 click \u201cI Agree\u201d to continue with Google';
 
     if (termsCheckbox) {
         termsCheckbox.checked = false;
@@ -119,8 +123,9 @@
             termsScrollHint.classList.toggle('is-ready', Boolean(unlocked));
         }
         if (termsScrollHintText) {
+            const readyText = pendingGoogleSignup ? GOOGLE_READY_HINT : READY_HINT;
             termsScrollHintText.textContent = unlocked
-                ? READY_HINT
+                ? readyText
                 : (customLockedMessage || DEFAULT_LOCKED_HINT);
         }
     }
@@ -150,7 +155,7 @@
         }
     }
 
-    function openTermsModal(sectionTarget, fromSubmitAttempt) {
+    function openTermsModal(sectionTarget, fromSubmitAttempt, triggerSource) {
         if (!termsModalOverlay || !termsModalBody) return;
 
         isTermsModalOpen = true;
@@ -160,7 +165,10 @@
 
         if (!hasAcceptedTerms) {
             hasScrolledToBottom = false;
-            setAcceptButtonUnlocked(false, fromSubmitAttempt ? SUBMIT_LOCKED_HINT : DEFAULT_LOCKED_HINT);
+            const lockedMsg = triggerSource === 'google'
+                ? GOOGLE_LOCKED_HINT
+                : (fromSubmitAttempt ? SUBMIT_LOCKED_HINT : DEFAULT_LOCKED_HINT);
+            setAcceptButtonUnlocked(false, lockedMsg);
             if (termsScrollBar) termsScrollBar.style.width = '0%';
         } else {
             hasScrolledToBottom = true;
@@ -255,13 +263,19 @@
                 pulseScrollHint();
                 return;
             }
+            const shouldContinueWithGoogle = pendingGoogleSignup;
+            pendingGoogleSignup = false;
             hasAcceptedTerms = true;
             if (termsCheckbox) {
                 termsCheckbox.checked = true;
             }
             updateTermsLabelUI();
             const submitBtn = registerForm ? registerForm.querySelector('.btn-submit') : termsCheckbox;
-            closeTermsModal(submitBtn);
+            closeTermsModal(shouldContinueWithGoogle && googleSignupBtn ? googleSignupBtn : submitBtn);
+
+            if (shouldContinueWithGoogle && googleSignupBtn) {
+                googleSignupBtn.click();
+            }
         });
     }
 
@@ -277,25 +291,31 @@
 
     if (declineTermsBtn) {
         declineTermsBtn.addEventListener('click', function () {
+            const returnFocusEl = pendingGoogleSignup && googleSignupBtn ? googleSignupBtn : termsCheckbox;
+            pendingGoogleSignup = false;
             hasAcceptedTerms = false;
             hasScrolledToBottom = false;
             if (termsCheckbox) {
                 termsCheckbox.checked = false;
             }
-            closeTermsModal(termsCheckbox);
+            closeTermsModal(returnFocusEl);
         });
     }
 
     if (closeTermsModalBtn) {
         closeTermsModalBtn.addEventListener('click', function () {
-            closeTermsModal(termsCheckbox);
+            const returnFocusEl = pendingGoogleSignup && googleSignupBtn ? googleSignupBtn : termsCheckbox;
+            pendingGoogleSignup = false;
+            closeTermsModal(returnFocusEl);
         });
     }
 
     if (termsModalOverlay) {
         termsModalOverlay.addEventListener('click', function (e) {
             if (e.target === termsModalOverlay) {
-                closeTermsModal(termsCheckbox);
+                const returnFocusEl = pendingGoogleSignup && googleSignupBtn ? googleSignupBtn : termsCheckbox;
+                pendingGoogleSignup = false;
+                closeTermsModal(returnFocusEl);
             }
         });
     }
@@ -303,9 +323,36 @@
     window.addEventListener('keydown', function (e) {
         if (e.key === 'Escape' && isTermsModalOpen) {
             e.preventDefault();
-            closeTermsModal(termsCheckbox);
+            const returnFocusEl = pendingGoogleSignup && googleSignupBtn ? googleSignupBtn : termsCheckbox;
+            pendingGoogleSignup = false;
+            closeTermsModal(returnFocusEl);
         }
     });
+
+    // Enforce Terms of Service & Privacy Policy approval before Google OAuth sign-up
+    function ensureTermsAcceptedForGoogleSignup() {
+        if (hasAcceptedTerms && termsCheckbox && termsCheckbox.checked) {
+            return true;
+        }
+        pendingGoogleSignup = true;
+        saveRegisterDraft();
+        if (termsCheckbox) {
+            termsCheckbox.checked = false;
+        }
+        openTermsModal('terms', true, 'google');
+        return false;
+    }
+
+    window.urbanscopeCheckRegisterTermsForGoogle = ensureTermsAcceptedForGoogleSignup;
+
+    if (googleSignupBtn) {
+        googleSignupBtn.addEventListener('click', function (e) {
+            if (!ensureTermsAcceptedForGoogleSignup()) {
+                e.preventDefault();
+                e.stopImmediatePropagation();
+            }
+        }, true);
+    }
 
     // ==========================================
     // 3. REGISTRATION SUBMISSION
