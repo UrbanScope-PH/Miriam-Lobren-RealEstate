@@ -1,1 +1,0 @@
-Fix in the inquiry history where when the admin already approved the inquiry, it should be no longer modify details, but if it is under review then they still can. when they cancel inquiry or delete inquiry, it should notify the admin that they cancel it. The user should receive a notification when the admin approved the inquiry
