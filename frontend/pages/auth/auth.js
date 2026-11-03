@@ -279,6 +279,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const registerForm = document.querySelector("form[action='register.php']") || document.getElementById("registerForm");
     if (registerForm) {
         registerForm.addEventListener("submit", (e) => {
+            if (e.defaultPrevented) return;
             const pwd = document.getElementById("password");
             const confirmPwd = document.getElementById("confirm_password");
 

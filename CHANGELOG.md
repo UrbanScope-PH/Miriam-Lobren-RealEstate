@@ -34,6 +34,7 @@ This document records all features, enhancements, bug fixes, user requests, arch
 | **Nov 2026** | **Cross-Device Password Sync** | Enabled two-way PBKDF2 password sync between SQLite and Supabase Cloud, fixed mobile loopback IP resolution, and set run.py to 0.0.0.0 | `backend/routers/auth.py`, `supabase.js`, `api.js`, `run.py` |
 | **Nov 2026** | **Password Visibility Toggle** | Added interactive show/hide password toggle buttons to Current, New, and Confirm password inputs in admin profile settings | `profile.html`, `profile.css`, `profile.js` |
 | **Nov 2026** | **Admin Password Invalidation** | Complete invalidation of old passwords upon update, proactive cloud sync on login, and removal of default credential bypasses | `backend/routers/auth.py`, `supabase.js`, `api.js`, `profile.js` |
+| **Nov 2026** | **Registration Terms Modal** | Added mandatory scroll-to-accept Terms of Service & Privacy Policy popup modal on registration page before allowing account creation | `register.html`, `register.js`, `auth.css`, `auth.js` |
 
 ---
 
@@ -380,6 +381,17 @@ This document records all features, enhancements, bug fixes, user requests, arch
   - Enhanced `backend/routers/auth.py` with `sync_latest_password_from_supabase(clean_email)`: On login for administrative accounts, the backend proactively synchronizes the latest password hash from Supabase Cloud into local SQLite before validating credentials, ensuring passwords changed on mobile phones immediately invalidate the old password on laptops and local servers.
   - Enhanced `update_user_password`: Checks Supabase Cloud if the current password was updated remotely before rejecting with HTTP 400.
   - Verified with automated tests that entering the old password (`realestate2026`) returns HTTP 401 Unauthorized / `Incorrect email or password`, completely preventing sign-in, while only the newly set password authenticates successfully.
+
+---
+
+### 27. Registration Mandatory Scroll-to-Accept Terms of Service Modal
+- **User Prompt:** *"in registration page, when they click the i agree to terms of service, it should pop up and they are required to scroll and click the i agree before continue to register"*
+- **Rationale & Implementation:**
+  - Built an interactive agreement modal (`#termsModalOverlay`) in `frontend/pages/auth/register.html` containing **Part I: Terms of Service** (RA 9646 / RESA) and **Part II: Privacy Policy** (RA 10173 / DPA).
+  - Clicking the `"I agree to the Terms of Service and Privacy Policy"` checkbox (`#terms`), label (`#termsLabel`), or inline links (`#openTermsLink`, `#openPrivacyLink`) intercepts immediate checking/navigation and opens the popup modal.
+  - Added scroll tracking (`evaluateTermsScroll()` in `register.js`) with a live reading progress bar (`#termsScrollBar`) and status banner (`#termsScrollHint`).
+  - Kept the **I Agree** button (`#acceptTermsBtn`) locked (`disabled`) until the user scrolls to the bottom of the agreement (`scrollHeight - scrollTop - clientHeight <= 16`).
+  - Clicking **I Agree** checks `#terms`, applies `.is-accepted` styling, closes the modal, and focuses **Create Account**; closing early or clicking **Cancel** leaves `#terms` unchecked, and attempting form submission without accepting automatically opens the modal.
 
 ---
 
