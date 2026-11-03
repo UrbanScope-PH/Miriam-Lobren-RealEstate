@@ -407,6 +407,8 @@ supabase/
                                              Normalizes lead agent account to miriam@gmail.com (role: admin), sets superadmin role for urbanscope.cvsu@gmail.com, demotes legacy duplicate id 1 to client, and re-points property agent_id
   migrations/20261103000000_notification_seen_sync.sql
                                              Adds is_seen column to notifications table for persistent cross-device seen and toast suppression sync
+  migrations/20261103231500_allow_delete_users_rls.sql
+                                             Adds "Allow delete users" RLS policy on users for Superadmin account deletion and purges soft-deleted rows
   seed.sql                                   Demo data (users, 6 properties, inquiries, ...)
   scripts/                                   One-off data fixes to paste into the SQL Editor (never auto-run)
 ```

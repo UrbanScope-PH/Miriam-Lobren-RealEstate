@@ -4,6 +4,7 @@ Handles registration, sign-in, Google OAuth 2.0, profile updates, and password c
 """
 
 import json
+import os
 import secrets
 import urllib.error
 import urllib.parse
@@ -42,8 +43,27 @@ SUPABASE_URL = "https://vfspjuqymfbagesjxjmc.supabase.co"
 SUPABASE_ANON_KEY = "sb_publishable_96sfQ4F18ypajf6bitBRqg_JtWTL4__"
 
 
+def _is_cloud_sync_disabled() -> bool:
+    return os.environ.get("URBANSCOPE_DISABLE_CLOUD_SYNC") == "1"
+
+
+def normalize_db_role(role: Optional[str], email: str = "") -> str:
+    """Normalizes role values (e.g. Supabase 'client' -> SQLite 'user') to match SQLite CHECK constraints."""
+    clean_email = (email or "").strip().lower()
+    if clean_email == "urbanscope.cvsu@gmail.com":
+        return "superadmin"
+    clean_role = (role or "").strip().lower()
+    if clean_role == "superadmin":
+        return "superadmin"
+    if clean_role in ("admin", "agent") or clean_email == "admin.realestate@gmail.com":
+        return "admin"
+    return "user"
+
+
 def sync_password_to_supabase(email: str, password_hash: str) -> bool:
     """Synchronizes updated PBKDF2 password hash to Supabase Cloud so all devices & phones stay in sync."""
+    if _is_cloud_sync_disabled():
+        return False
     try:
         clean_email = email.strip().lower()
         encoded_email = urllib.parse.quote(clean_email)
@@ -93,11 +113,87 @@ def sync_password_to_supabase(email: str, password_hash: str) -> bool:
         return False
 
 
+def sync_new_user_to_supabase(user_dict: dict, password_hash: str) -> bool:
+    """Synchronizes a newly registered or Google-authenticated user to Supabase Cloud."""
+    if _is_cloud_sync_disabled():
+        return False
+    try:
+        clean_email = (user_dict.get("email") or "").strip().lower()
+        if not clean_email:
+            return False
+        encoded_email = urllib.parse.quote(clean_email)
+        check_url = f"{SUPABASE_URL}/rest/v1/users?email=ilike.{encoded_email}&select=id,bio"
+        req_check = urllib.request.Request(check_url, headers={
+            "apikey": SUPABASE_ANON_KEY,
+            "Authorization": f"Bearer {SUPABASE_ANON_KEY}"
+        })
+        with urllib.request.urlopen(req_check, timeout=2.5) as resp:
+            existing = json.loads(resp.read().decode("utf-8"))
+
+        role_val = normalize_db_role(user_dict.get("role"), clean_email)
+        if existing and isinstance(existing, list) and len(existing) > 0:
+            if existing[0].get("bio") == "__URBANSCOPE_DELETED__":
+                patch_url = f"{SUPABASE_URL}/rest/v1/users?id=eq.{existing[0]['id']}"
+                patch_body = json.dumps({
+                    "email": clean_email,
+                    "password_hash": password_hash,
+                    "full_name": user_dict.get("full_name") or clean_email.split("@")[0],
+                    "phone": user_dict.get("phone") or "",
+                    "role": role_val,
+                    "bio": "",
+                    "updated_at": datetime.now(timezone.utc).isoformat()
+                }).encode("utf-8")
+                req_patch = urllib.request.Request(
+                    patch_url,
+                    data=patch_body,
+                    headers={
+                        "apikey": SUPABASE_ANON_KEY,
+                        "Authorization": f"Bearer {SUPABASE_ANON_KEY}",
+                        "Content-Type": "application/json"
+                    },
+                    method="PATCH"
+                )
+                with urllib.request.urlopen(req_patch, timeout=2.5):
+                    return True
+            return True
+
+        post_url = f"{SUPABASE_URL}/rest/v1/users"
+        post_body = json.dumps({
+            "email": clean_email,
+            "password_hash": password_hash,
+            "full_name": user_dict.get("full_name") or clean_email.split("@")[0],
+            "phone": user_dict.get("phone") or "",
+            "role": role_val,
+            "avatar_url": user_dict.get("avatar_url") or "",
+            "google_id": user_dict.get("google_id") or None
+        }).encode("utf-8")
+        req_post = urllib.request.Request(
+            post_url,
+            data=post_body,
+            headers={
+                "apikey": SUPABASE_ANON_KEY,
+                "Authorization": f"Bearer {SUPABASE_ANON_KEY}",
+                "Content-Type": "application/json"
+            },
+            method="POST"
+        )
+        with urllib.request.urlopen(req_post, timeout=2.5):
+            return True
+    except Exception:
+        return False
+
+
 def sync_password_from_supabase_if_valid(clean_email: str, plain_password: str) -> Optional[str]:
-    """Checks Supabase Cloud if password was updated remotely from a phone or other device, syncing to SQLite if valid."""
+    """Checks Supabase Cloud if account or password was created/updated remotely, syncing to SQLite if valid."""
+    if _is_cloud_sync_disabled():
+        return None
     try:
         encoded_email = urllib.parse.quote(clean_email)
-        url = f"{SUPABASE_URL}/rest/v1/users?email=ilike.{encoded_email}&select=id,email,password_hash"
+        url = (
+            f"{SUPABASE_URL}/rest/v1/users"
+            f"?email=ilike.{encoded_email}"
+            f"&select=id,email,password_hash,full_name,phone,role,avatar_url,google_id,bio"
+        )
         req = urllib.request.Request(url, headers={
             "apikey": SUPABASE_ANON_KEY,
             "Authorization": f"Bearer {SUPABASE_ANON_KEY}"
@@ -105,14 +201,43 @@ def sync_password_from_supabase_if_valid(clean_email: str, plain_password: str) 
         with urllib.request.urlopen(req, timeout=3) as resp:
             data = json.loads(resp.read().decode("utf-8"))
             if data and isinstance(data, list) and len(data) > 0:
-                remote_hash = data[0].get("password_hash")
+                row = data[0]
+                if row.get("bio") == "__URBANSCOPE_DELETED__" or row.get("password_hash") == "__DELETED_ACCOUNT__":
+                    return None
+                remote_hash = row.get("password_hash")
                 if remote_hash and verify_password(plain_password, remote_hash):
-                    # Password matches Supabase Cloud! Sync into local SQLite
+                    norm_role = normalize_db_role(row.get("role"), clean_email)
                     conn = get_db_connection()
                     c = conn.cursor()
-                    c.execute("UPDATE users SET password_hash = ? WHERE LOWER(email) = ?", (remote_hash, clean_email))
+                    c.execute("SELECT id FROM users WHERE LOWER(email) = ?", (clean_email,))
+                    local_row = c.fetchone()
+                    if local_row:
+                        c.execute(
+                            "UPDATE users SET password_hash = ?, role = ? WHERE id = ?",
+                            (remote_hash, norm_role, local_row["id"])
+                        )
+                    else:
+                        c.execute(
+                            """
+                            INSERT INTO users (email, password_hash, full_name, phone, role, avatar_url, google_id)
+                            VALUES (?, ?, ?, ?, ?, ?, ?)
+                            """,
+                            (
+                                clean_email,
+                                remote_hash,
+                                (row.get("full_name") or clean_email.split("@")[0]).strip(),
+                                (row.get("phone") or "").strip(),
+                                norm_role,
+                                row.get("avatar_url") or "assets/images/agent.jpg",
+                                row.get("google_id") or None
+                            )
+                        )
+                        new_local_id = c.lastrowid
+                        c.execute("UPDATE users SET role = ? WHERE id = ?", (norm_role, new_local_id))
                     conn.commit()
                     conn.close()
+                    if norm_role == "admin":
+                        AUTHORIZED_ADMIN_EMAILS.add(clean_email)
                     return remote_hash
     except Exception:
         pass
@@ -121,6 +246,8 @@ def sync_password_from_supabase_if_valid(clean_email: str, plain_password: str) 
 
 def sync_latest_password_from_supabase(clean_email: str) -> Optional[str]:
     """Fetches the latest password_hash from Supabase Cloud if reachable, syncing to local SQLite."""
+    if _is_cloud_sync_disabled():
+        return None
     try:
         encoded_email = urllib.parse.quote(clean_email)
         url = f"{SUPABASE_URL}/rest/v1/users?email=ilike.{encoded_email}&select=id,email,password_hash"
@@ -187,6 +314,12 @@ def register_user(payload: UserRegister, response: Response):
     )
     user_dict = row_to_dict(cursor.fetchone())
     conn.close()
+
+    # Best-effort sync to Supabase Cloud so cloud & mobile deployments recognize the new account
+    try:
+        sync_new_user_to_supabase(user_dict, pwd_hash)
+    except Exception:
+        pass
 
     # Issue JWT containing user id, email, and role
     token = create_access_token({

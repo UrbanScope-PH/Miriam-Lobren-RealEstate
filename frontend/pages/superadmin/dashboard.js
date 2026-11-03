@@ -43,7 +43,11 @@
         kpiTotalInquiries: document.getElementById('kpiTotalInquiries'),
         kpiInquiriesBreakdown: document.getElementById('kpiInquiriesBreakdown'),
         kpiDbSize: document.getElementById('kpiDbSize'),
+        kpiDbSub: document.getElementById('kpiDbSub'),
         diagDbSize: document.getElementById('diagDbSize'),
+        diagDbLocation: document.getElementById('diagDbLocation'),
+        diagEngineEyebrow: document.getElementById('diagEngineEyebrow'),
+        saDbEngineTitle: document.getElementById('saDbEngineTitle'),
         saDbFileStatus: document.getElementById('saDbFileStatus'),
 
         // Tables & Filters
@@ -94,9 +98,24 @@
         toastContainer: document.getElementById('saToastContainer')
     };
 
-    // Helper: Base API URL
+    // Helper: Detect local HTTP development server (never trigger loopback requests on HTTPS/Vercel)
+    function isLocalDevBackend() {
+        const h = window.location.hostname;
+        const isLocal = h === 'localhost' ||
+                        h === '127.0.0.1' ||
+                        h === '[::1]' ||
+                        /^192\.168\./.test(h) ||
+                        /^10\./.test(h) ||
+                        /^172\.(1[6-9]|2[0-9]|3[0-1])\./.test(h) ||
+                        window.location.port === '8000';
+        return isLocal && window.location.protocol !== 'https:';
+    }
+
+    // Helper: Base API URL (local dev only)
     function getApiBase() {
-        return (window.location.port === '8000') ? '/api' : 'http://127.0.0.1:8000/api';
+        if (window.location.port === '8000') return '/api';
+        const host = window.location.hostname || '127.0.0.1';
+        return `http://${host}:8000/api`;
     }
 
     // Helper: Request headers with Bearer token
@@ -107,6 +126,17 @@
             headers['Authorization'] = 'Bearer ' + token;
         }
         return headers;
+    }
+
+    // Helper: Normalize account role ('client' & 'user' -> 'user')
+    function normalizeRole(role, email) {
+        const cleanEmail = String(email || '').trim().toLowerCase();
+        if (cleanEmail === 'urbanscope.cvsu@gmail.com') return 'superadmin';
+        const r = String(role || '').trim().toLowerCase();
+        if (r === 'superadmin') return 'superadmin';
+        if (r === 'admin' || r === 'agent') return 'admin';
+        if (cleanEmail === 'admin.realestate@gmail.com') return 'admin';
+        return 'user';
     }
 
     // Toast Notification
@@ -181,21 +211,24 @@
             }
 
             if (!user) {
-                const storedUser = localStorage.getItem('urbanscope_user');
+                const storedUser = localStorage.getItem('urbanscope_user') || localStorage.getItem('adminUser');
                 if (storedUser) {
                     user = JSON.parse(storedUser);
                 }
             }
 
-            // Verify with FastAPI backend /api/auth/me
-            try {
-                const res = await fetch(`${getApiBase()}/auth/me`, {
-                    headers: getAuthHeaders()
-                });
-                if (res.ok) {
-                    user = await res.json();
-                }
-            } catch (e) {}
+            // Verify with FastAPI backend /api/auth/me only when running on local HTTP dev host
+            if (isLocalDevBackend()) {
+                try {
+                    const res = await fetch(`${getApiBase()}/auth/me`, {
+                        headers: getAuthHeaders(),
+                        credentials: 'include'
+                    });
+                    if (res.ok) {
+                        user = await res.json();
+                    }
+                } catch (e) {}
+            }
 
             if (!user) {
                 window.location.href = '../auth/login.html?redirect=pages/superadmin/dashboard.html';
@@ -203,7 +236,7 @@
             }
 
             const cleanEmail = (user.email || '').trim().toLowerCase();
-            const role = (user.role || '').trim().toLowerCase();
+            const role = normalizeRole(user.role, cleanEmail);
 
             // Strict check: only urbanscope.cvsu@gmail.com with superadmin role
             if (cleanEmail !== 'urbanscope.cvsu@gmail.com' || role !== 'superadmin') {
@@ -232,17 +265,25 @@
     // 1. Overview KPIs
     async function loadOverview() {
         try {
-            const res = await fetch(`${getApiBase()}/superadmin/overview`, {
-                headers: getAuthHeaders()
-            });
+            let data = null;
+            if (typeof apiGetSuperadminOverview === 'function') {
+                data = await apiGetSuperadminOverview();
+            } else if (isLocalDevBackend()) {
+                const res = await fetch(`${getApiBase()}/superadmin/overview`, {
+                    headers: getAuthHeaders(),
+                    credentials: 'include'
+                });
+                if (res.ok) data = await res.json();
+            }
 
-            if (res.ok) {
-                const data = await res.json();
-                const m = data.metrics || {};
+            if (data && data.metrics) {
+                const m = data.metrics;
+                const adminCount = m.admins ?? 1;
+                const clientCount = m.regular_users ?? 0;
 
                 if (elements.kpiTotalUsers) elements.kpiTotalUsers.textContent = m.total_users ?? '--';
                 if (elements.kpiUsersBreakdown) {
-                    elements.kpiUsersBreakdown.textContent = `${m.superadmins || 1} Superadmin · ${m.admins || 1} Admin · ${m.regular_users || 0} Clients`;
+                    elements.kpiUsersBreakdown.textContent = `${m.superadmins || 1} Superadmin · ${adminCount} ${adminCount === 1 ? 'Admin' : 'Admins'} · ${clientCount} ${clientCount === 1 ? 'Client' : 'Clients'}`;
                 }
 
                 if (elements.kpiTotalProperties) elements.kpiTotalProperties.textContent = m.total_properties ?? '--';
@@ -255,10 +296,25 @@
                     elements.kpiInquiriesBreakdown.textContent = `${m.pending_inquiries || 0} Pending · ${m.approved_inquiries || 0} Approved`;
                 }
 
+                const isCloudEngine = data.engine === 'supabase';
                 if (elements.kpiDbSize) elements.kpiDbSize.textContent = `${m.db_size_kb || 0} KB`;
+                if (elements.kpiDbSub) {
+                    elements.kpiDbSub.textContent = isCloudEngine ? 'Supabase PostgreSQL Cloud' : 'SQLite 3 Persistent File';
+                }
                 if (elements.diagDbSize) elements.diagDbSize.textContent = `${m.db_size_kb || 0} KB`;
+                if (elements.diagDbLocation) {
+                    elements.diagDbLocation.textContent = isCloudEngine ? 'supabase.co/rest/v1 (PostgreSQL)' : 'backend/urbanscope.db';
+                }
+                if (elements.diagEngineEyebrow) {
+                    elements.diagEngineEyebrow.textContent = isCloudEngine ? 'SUPABASE CLOUD ENGINE' : 'SQLITE ENGINE';
+                }
+                if (elements.saDbEngineTitle) {
+                    elements.saDbEngineTitle.textContent = isCloudEngine ? 'Supabase Cloud Status' : 'SQLite Engine Status';
+                }
                 if (elements.saDbFileStatus) {
-                    elements.saDbFileStatus.textContent = `Database: urbanscope.db (${m.db_size_kb || 0} KB)`;
+                    elements.saDbFileStatus.textContent = isCloudEngine
+                        ? `Database: Supabase Cloud (${m.db_size_kb || 0} KB)`
+                        : `Database: urbanscope.db (${m.db_size_kb || 0} KB)`;
                 }
 
                 if (elements.usersCountBadge) elements.usersCountBadge.textContent = m.total_users ?? '--';
@@ -281,13 +337,20 @@
     // 1b. Real Database Integrity Check
     async function executeIntegrityCheck(silent = false) {
         try {
-            if (!silent) showToast('Running SQLite integrity checks...');
-            const res = await fetch(`${getApiBase()}/superadmin/integrity`, {
-                headers: getAuthHeaders()
-            });
+            if (!silent) showToast('Running database integrity checks...');
+            let data = null;
 
-            if (res.ok) {
-                const data = await res.json();
+            if (typeof apiRunSuperadminIntegrityCheck === 'function') {
+                data = await apiRunSuperadminIntegrityCheck();
+            } else if (isLocalDevBackend()) {
+                const res = await fetch(`${getApiBase()}/superadmin/integrity`, {
+                    headers: getAuthHeaders(),
+                    credentials: 'include'
+                });
+                if (res.ok) data = await res.json();
+            }
+
+            if (data) {
                 if (elements.diagIntegrity) {
                     if (data.success) {
                         elements.diagIntegrity.className = 'sa-badge-green';
@@ -313,10 +376,10 @@
                     elements.saTriggerStatusBadge.textContent = data.trigger_active ? 'Trigger: Active' : 'Trigger: Inactive';
                 }
                 if (!silent) {
-                    showToast(`SQLite integrity check: ${data.success ? 'PASSED (0 violations)' : 'Issues detected'}.`);
+                    showToast(`Database integrity check: ${data.success ? 'PASSED (0 violations)' : 'Issues detected'}.`);
                 }
             } else {
-                if (!silent) showToast('Integrity check endpoint returned HTTP ' + res.status, true);
+                if (!silent) showToast('Unable to reach database diagnostics endpoint.', true);
             }
         } catch (err) {
             console.error('Integrity check error:', err);
@@ -327,15 +390,30 @@
     // 2. Users Table
     async function loadUsers() {
         try {
-            const res = await fetch(`${getApiBase()}/superadmin/users`, {
-                headers: getAuthHeaders()
-            });
+            let users = null;
+            if (typeof apiGetSuperadminUsers === 'function') {
+                users = await apiGetSuperadminUsers();
+            } else if (typeof apiGetUsers === 'function') {
+                users = await apiGetUsers();
+            } else if (isLocalDevBackend()) {
+                const res = await fetch(`${getApiBase()}/superadmin/users`, {
+                    headers: getAuthHeaders(),
+                    credentials: 'include'
+                });
+                if (res.ok) users = await res.json();
+            }
 
-            if (res.ok) {
-                allUsers = await res.json();
-                renderUsersTable(allUsers);
+            if (Array.isArray(users)) {
+                allUsers = users.map(u => ({
+                    ...u,
+                    role: normalizeRole(u.role, u.email)
+                }));
+                if (elements.usersCountBadge) {
+                    elements.usersCountBadge.textContent = allUsers.length;
+                }
+                applyUserFilters();
             } else {
-                elements.usersTableBody.innerHTML = `<tr><td colspan="6" class="text-center py-4" style="color:var(--sa-danger)">Failed to load users (HTTP ${res.status}).</td></tr>`;
+                elements.usersTableBody.innerHTML = `<tr><td colspan="6" class="text-center py-4" style="color:var(--sa-danger)">Unable to load user accounts.</td></tr>`;
             }
         } catch (err) {
             elements.usersTableBody.innerHTML = `<tr><td colspan="6" class="text-center py-4" style="color:var(--sa-danger)">Error loading users: ${escapeHtml(err.message)}</td></tr>`;
@@ -352,9 +430,10 @@
 
         elements.usersTableBody.innerHTML = users.map(u => {
             const cleanEmail = (u.email || '').toLowerCase().trim();
-            const role = (u.role || 'user').toLowerCase().trim();
+            const role = normalizeRole(u.role, cleanEmail);
             const isRootSuperadmin = cleanEmail === 'urbanscope.cvsu@gmail.com';
             const isPrimaryAdmin = cleanEmail === 'admin.realestate@gmail.com';
+            const safeIdAttr = escapeHtml(String(u.id));
 
             let roleBadge = '';
             if (role === 'superadmin') {
@@ -365,20 +444,20 @@
                 roleBadge = `<span class="sa-badge-gray">CLIENT USER</span>`;
             }
 
-            const initials = (u.full_name || u.email || 'U').split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+            const initials = (u.full_name || u.email || 'U').split(' ').filter(Boolean).map(n => n[0]).join('').substring(0, 2).toUpperCase();
 
             // Action buttons
             let actionsHtml = '';
             if (isRootSuperadmin) {
                 actionsHtml = `
                     <div class="action-btns-group">
-                        <button type="button" class="btn-table-action" onclick="window.saEditUserPrompt(${u.id})">Edit</button>
+                        <button type="button" class="btn-table-action" onclick="window.saEditUserPrompt('${safeIdAttr}')">Edit</button>
                         <span class="sa-badge-gold" title="Root account cannot be demoted">Root</span>
                     </div>`;
             } else if (isPrimaryAdmin) {
                 actionsHtml = `
                     <div class="action-btns-group">
-                        <button type="button" class="btn-table-action" onclick="window.saEditUserPrompt(${u.id})">Edit</button>
+                        <button type="button" class="btn-table-action" onclick="window.saEditUserPrompt('${safeIdAttr}')">Edit</button>
                         <span class="sa-badge-emerald" title="Primary Agent Admin">Realty Admin</span>
                     </div>`;
             } else {
@@ -388,13 +467,13 @@
 
                 actionsHtml = `
                     <div class="action-btns-group">
-                        <button type="button" class="btn-table-action" onclick="window.saEditUserPrompt(${u.id})">
+                        <button type="button" class="btn-table-action" onclick="window.saEditUserPrompt('${safeIdAttr}')">
                             Edit
                         </button>
-                        <button type="button" class="btn-table-action" onclick="window.saRoleChangePrompt(${u.id}, '${escapeHtml(u.email)}', '${nextRole}')">
+                        <button type="button" class="btn-table-action" onclick="window.saRoleChangePrompt('${safeIdAttr}', '${nextRole}')">
                             ${nextRoleLabel}
                         </button>
-                        <button type="button" class="btn-table-action danger" onclick="window.saDeleteUserPrompt(${u.id}, '${escapeHtml(u.email)}')">
+                        <button type="button" class="btn-table-action danger" onclick="window.saDeleteUserPrompt('${safeIdAttr}')">
                             Delete
                         </button>
                     </div>
@@ -402,11 +481,11 @@
             }
 
             return `
-                <tr id="user-row-${u.id}">
-                    <td><strong>#${u.id}</strong></td>
+                <tr id="user-row-${safeIdAttr}">
+                    <td><strong>#${escapeHtml(String(u.id))}</strong></td>
                     <td>
                         <div class="user-cell">
-                            <div class="table-avatar">${initials}</div>
+                            <div class="table-avatar">${escapeHtml(initials)}</div>
                             <div>
                                 <strong>${escapeHtml(u.full_name || 'No Name Provided')}</strong>
                                 <small>${escapeHtml(u.email)}</small>
@@ -428,13 +507,16 @@
             let props = [];
             if (typeof apiGetProperties === 'function') {
                 props = await apiGetProperties({ type: 'all' }) || [];
-            } else {
+            } else if (isLocalDevBackend()) {
                 const res = await fetch(`${getApiBase()}/properties`);
                 if (res.ok) props = await res.json();
             }
 
-            allProperties = props;
-            renderPropertiesTable(props);
+            allProperties = Array.isArray(props) ? props : [];
+            if (elements.propsCountBadge) {
+                elements.propsCountBadge.textContent = allProperties.length;
+            }
+            applyPropFilters();
         } catch (err) {
             elements.propertiesTableBody.innerHTML = `<tr><td colspan="7" class="text-center py-4" style="color:var(--sa-danger)">Error loading properties.</td></tr>`;
         }
@@ -477,15 +559,36 @@
     }
 
     // 4. Inquiries Table
+    function applyInqFilters() {
+        const q = (elements.inqFilterInput ? elements.inqFilterInput.value : '').toLowerCase().trim();
+        const filtered = allInquiries.filter(i => {
+            return !q ||
+                (i.client_name && i.client_name.toLowerCase().includes(q)) ||
+                (i.client_email && i.client_email.toLowerCase().includes(q)) ||
+                (i.property_title && i.property_title.toLowerCase().includes(q));
+        });
+        renderInquiriesTable(filtered);
+    }
+
     async function loadInquiries() {
         try {
-            const res = await fetch(`${getApiBase()}/inquiries`, {
-                headers: getAuthHeaders()
-            });
+            let inquiries = null;
+            if (typeof apiGetInquiries === 'function') {
+                inquiries = await apiGetInquiries();
+            } else if (isLocalDevBackend()) {
+                const res = await fetch(`${getApiBase()}/inquiries`, {
+                    headers: getAuthHeaders(),
+                    credentials: 'include'
+                });
+                if (res.ok) inquiries = await res.json();
+            }
 
-            if (res.ok) {
-                allInquiries = await res.json();
-                renderInquiriesTable(allInquiries);
+            if (Array.isArray(inquiries)) {
+                allInquiries = inquiries;
+                if (elements.inqCountBadge) {
+                    elements.inqCountBadge.textContent = allInquiries.length;
+                }
+                applyInqFilters();
             } else {
                 elements.inquiriesTableBody.innerHTML = `<tr><td colspan="6" class="text-center py-4 text-muted">No inquiries available.</td></tr>`;
             }
@@ -530,34 +633,48 @@
     // ==============================================================
 
     // Prompts
-    window.saRoleChangePrompt = function (userId, email, newRole) {
+    window.saRoleChangePrompt = function (userId, arg2, arg3) {
+        const matched = allUsers.find(u => String(u.id) === String(userId));
+        const newRole = arg3 !== undefined ? arg3 : arg2;
+        const email = arg3 !== undefined ? arg2 : (matched ? matched.email : `#${userId}`);
+
         pendingRoleChange = { userId, email, newRole };
         if (elements.roleChangeMessage) {
-            elements.roleChangeMessage.innerHTML = `Are you sure you want to change the role of <strong>${escapeHtml(email)}</strong> to <strong>${newRole.toUpperCase()}</strong>?`;
+            elements.roleChangeMessage.innerHTML = `Are you sure you want to change the role of <strong>${escapeHtml(email)}</strong> to <strong>${escapeHtml(String(newRole || '').toUpperCase())}</strong>?`;
         }
         if (elements.roleChangeModal) {
             elements.roleChangeModal.hidden = false;
         }
     };
 
-    window.saDeleteUserPrompt = async function (userId, email) {
+    window.saDeleteUserPrompt = async function (userId, maybeEmail) {
+        const matched = allUsers.find(u => String(u.id) === String(userId));
+        const email = maybeEmail || (matched ? matched.email : `#${userId}`);
+
         if (!confirm(`Are you sure you want to permanently delete the account for ${email}? This action cannot be undone.`)) {
             return;
         }
 
         try {
-            const res = await fetch(`${getApiBase()}/superadmin/users/${userId}`, {
-                method: 'DELETE',
-                headers: getAuthHeaders()
-            });
+            let result = null;
+            if (typeof apiSuperadminDeleteUser === 'function') {
+                result = await apiSuperadminDeleteUser(userId, email);
+            } else if (isLocalDevBackend()) {
+                const res = await fetch(`${getApiBase()}/superadmin/users/${encodeURIComponent(userId)}`, {
+                    method: 'DELETE',
+                    headers: getAuthHeaders(),
+                    credentials: 'include'
+                });
+                const data = await res.json().catch(() => ({}));
+                result = { success: res.ok && data.success, error: data.detail };
+            }
 
-            const data = await res.json();
-            if (res.ok && data.success) {
+            if (result && result.success) {
                 showToast(`Account ${email} deleted successfully.`);
                 await loadUsers();
                 await loadOverview();
             } else {
-                showToast(data.detail || 'Failed to delete account.', true);
+                showToast((result && result.error) || 'Failed to delete account.', true);
             }
         } catch (err) {
             showToast('Delete error: ' + err.message, true);
@@ -569,26 +686,39 @@
         elements.btnConfirmRoleChange.addEventListener('click', async () => {
             if (!pendingRoleChange) return;
             const { userId, email, newRole } = pendingRoleChange;
+            const btn = elements.btnConfirmRoleChange;
+            btn.disabled = true;
+            btn.textContent = 'Updating...';
 
             try {
-                const res = await fetch(`${getApiBase()}/superadmin/users/${userId}/role`, {
-                    method: 'PUT',
-                    headers: getAuthHeaders(),
-                    body: JSON.stringify({ role: newRole })
-                });
+                let result = null;
+                if (typeof apiSuperadminUpdateUserRole === 'function') {
+                    result = await apiSuperadminUpdateUserRole(userId, newRole, email);
+                } else if (isLocalDevBackend()) {
+                    const res = await fetch(`${getApiBase()}/superadmin/users/${encodeURIComponent(userId)}/role`, {
+                        method: 'PUT',
+                        headers: getAuthHeaders(),
+                        credentials: 'include',
+                        body: JSON.stringify({ role: newRole })
+                    });
+                    const data = await res.json().catch(() => ({}));
+                    result = { success: res.ok && data.success, error: data.detail };
+                }
 
-                const data = await res.json();
-                if (res.ok && data.success) {
+                if (result && result.success) {
                     showToast(`Role for ${email} updated to ${newRole.toUpperCase()}.`);
                     elements.roleChangeModal.hidden = true;
                     pendingRoleChange = null;
                     await loadUsers();
                     await loadOverview();
                 } else {
-                    showToast(data.detail || 'Failed to update role.', true);
+                    showToast((result && result.error) || 'Failed to update role.', true);
                 }
             } catch (err) {
                 showToast('Role update error: ' + err.message, true);
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Confirm Change';
             }
         });
     }
@@ -610,21 +740,28 @@
             };
 
             try {
-                const res = await fetch(`${getApiBase()}/superadmin/users`, {
-                    method: 'POST',
-                    headers: getAuthHeaders(),
-                    body: JSON.stringify(payload)
-                });
+                let result = null;
+                if (typeof apiSuperadminCreateUser === 'function') {
+                    result = await apiSuperadminCreateUser(payload);
+                } else if (isLocalDevBackend()) {
+                    const res = await fetch(`${getApiBase()}/superadmin/users`, {
+                        method: 'POST',
+                        headers: getAuthHeaders(),
+                        credentials: 'include',
+                        body: JSON.stringify(payload)
+                    });
+                    const data = await res.json().catch(() => ({}));
+                    result = { success: res.ok && data.success, error: data.detail };
+                }
 
-                const data = await res.json();
-                if (res.ok && data.success) {
+                if (result && result.success) {
                     showToast(`Account for ${payload.email} created as ${payload.role.toUpperCase()}!`);
                     elements.createUserModal.hidden = true;
                     elements.createUserForm.reset();
                     await loadUsers();
                     await loadOverview();
                 } else {
-                    showToast(data.detail || 'Failed to create account.', true);
+                    showToast((result && result.error) || 'Failed to create account.', true);
                 }
             } catch (err) {
                 showToast('Create user error: ' + err.message, true);
@@ -654,29 +791,36 @@
     if (elements.btnCancelRoleChange) elements.btnCancelRoleChange.addEventListener('click', () => elements.roleChangeModal.hidden = true);
 
     // Edit User modal logic
+    const editUserForm = document.getElementById('editUserForm');
+    const editModalEl = document.getElementById('editUserModal');
+
     window.saEditUserPrompt = function (userId) {
-        const u = allUsers.find(user => user.id === Number(userId));
+        const u = allUsers.find(user => String(user.id) === String(userId));
         if (!u) return;
 
-        const isRoot = (u.email || '').toLowerCase().trim() === 'urbanscope.cvsu@gmail.com';
+        const cleanEmail = (u.email || '').toLowerCase().trim();
+        const isRoot = cleanEmail === 'urbanscope.cvsu@gmail.com';
+        const normalizedRole = normalizeRole(u.role, cleanEmail);
 
         document.getElementById('editUserId').value = u.id;
         document.getElementById('editFullName').value = u.full_name || '';
         document.getElementById('editEmail').value = u.email || '';
         document.getElementById('editPhone').value = u.phone || '';
-        document.getElementById('editRole').value = (u.role || 'user').toLowerCase().trim();
+        document.getElementById('editRole').value = normalizedRole;
         document.getElementById('editPassword').value = '';
+
+        if (editUserForm) {
+            editUserForm.dataset.originalEmail = u.email || '';
+        }
 
         const emailInput = document.getElementById('editEmail');
         const roleSelect = document.getElementById('editRole');
         if (emailInput) emailInput.disabled = isRoot;
         if (roleSelect) roleSelect.disabled = isRoot;
 
-        const editModal = document.getElementById('editUserModal');
-        if (editModal) editModal.hidden = false;
+        if (editModalEl) editModalEl.hidden = false;
     };
 
-    const editUserForm = document.getElementById('editUserForm');
     if (editUserForm) {
         editUserForm.addEventListener('submit', async (e) => {
             e.preventDefault();
@@ -685,34 +829,59 @@
             btn.textContent = 'Saving...';
 
             const userId = document.getElementById('editUserId').value;
+            const originalEmail = editUserForm.dataset.originalEmail || '';
             const payload = {
                 full_name: document.getElementById('editFullName').value.trim(),
                 email: document.getElementById('editEmail').value.trim(),
+                original_email: originalEmail,
                 phone: document.getElementById('editPhone').value.trim(),
                 role: document.getElementById('editRole').value
             };
 
             const newPass = document.getElementById('editPassword').value;
+            if (newPass && newPass.trim().length > 0 && newPass.trim().length < 6) {
+                showToast('New password must be at least 6 characters long.', true);
+                btn.disabled = false;
+                btn.textContent = 'Save Changes';
+                return;
+            }
             if (newPass && newPass.trim().length >= 6) {
                 payload.password = newPass.trim();
             }
 
             try {
-                const res = await fetch(`${getApiBase()}/superadmin/users/${userId}`, {
-                    method: 'PUT',
-                    headers: getAuthHeaders(),
-                    body: JSON.stringify(payload)
-                });
+                let result = null;
+                if (typeof apiSuperadminUpdateUser === 'function') {
+                    result = await apiSuperadminUpdateUser(userId, payload);
+                } else if (isLocalDevBackend()) {
+                    const res = await fetch(`${getApiBase()}/superadmin/users/${encodeURIComponent(userId)}`, {
+                        method: 'PUT',
+                        headers: getAuthHeaders(),
+                        credentials: 'include',
+                        body: JSON.stringify(payload)
+                    });
+                    const data = await res.json().catch(() => ({}));
+                    result = { success: res.ok && data.success, error: data.detail };
+                }
 
-                const data = await res.json();
-                if (res.ok && data.success) {
+                if (result && result.success) {
+                    if (payload.email.toLowerCase() === 'urbanscope.cvsu@gmail.com' && payload.full_name) {
+                        if (elements.adminName) elements.adminName.textContent = payload.full_name;
+                        try {
+                            const sessionRaw = localStorage.getItem('urbanscope_user');
+                            if (sessionRaw) {
+                                const sessionObj = JSON.parse(sessionRaw);
+                                sessionObj.full_name = payload.full_name;
+                                localStorage.setItem('urbanscope_user', JSON.stringify(sessionObj));
+                            }
+                        } catch (e) {}
+                    }
                     showToast(`User ${payload.email} updated successfully!`);
-                    const modal = document.getElementById('editUserModal');
-                    if (modal) modal.hidden = true;
+                    if (editModalEl) editModalEl.hidden = true;
                     await loadUsers();
                     await loadOverview();
                 } else {
-                    showToast(data.detail || 'Failed to update user account.', true);
+                    showToast((result && result.error) || 'Failed to update user account.', true);
                 }
             } catch (err) {
                 showToast('Update user error: ' + err.message, true);
@@ -726,12 +895,26 @@
     const btnCloseEditUser = document.getElementById('btnCloseEditUserModal');
     const btnCancelEditUser = document.getElementById('btnCancelEditUser');
     if (btnCloseEditUser) btnCloseEditUser.addEventListener('click', () => {
-        const modal = document.getElementById('editUserModal');
-        if (modal) modal.hidden = true;
+        if (editModalEl) editModalEl.hidden = true;
     });
     if (btnCancelEditUser) btnCancelEditUser.addEventListener('click', () => {
-        const modal = document.getElementById('editUserModal');
-        if (modal) modal.hidden = true;
+        if (editModalEl) editModalEl.hidden = true;
+    });
+
+    // Backdrop click & Escape key close support for all Superadmin modals
+    [elements.createUserModal, editModalEl, elements.roleChangeModal].forEach(modal => {
+        if (!modal) return;
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) modal.hidden = true;
+        });
+    });
+
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+            if (elements.createUserModal && !elements.createUserModal.hidden) elements.createUserModal.hidden = true;
+            if (editModalEl && !editModalEl.hidden) editModalEl.hidden = true;
+            if (elements.roleChangeModal && !elements.roleChangeModal.hidden) elements.roleChangeModal.hidden = true;
+        }
     });
 
     // Filter Listeners
@@ -745,7 +928,8 @@
                 (u.full_name && u.full_name.toLowerCase().includes(query)) ||
                 (u.phone && u.phone.includes(query));
 
-            const matchesRole = (role === 'all') || (u.role && u.role.toLowerCase() === role);
+            const normalizedUserRole = normalizeRole(u.role, u.email);
+            const matchesRole = (role === 'all') || (normalizedUserRole === role);
 
             return matchesQuery && matchesRole;
         });
@@ -778,16 +962,7 @@
     if (elements.propStatusFilter) elements.propStatusFilter.addEventListener('change', applyPropFilters);
 
     if (elements.inqFilterInput) {
-        elements.inqFilterInput.addEventListener('input', (e) => {
-            const q = e.target.value.toLowerCase().trim();
-            const filtered = allInquiries.filter(i => {
-                return !q ||
-                    (i.client_name && i.client_name.toLowerCase().includes(q)) ||
-                    (i.client_email && i.client_email.toLowerCase().includes(q)) ||
-                    (i.property_title && i.property_title.toLowerCase().includes(q));
-            });
-            renderInquiriesTable(filtered);
-        });
+        elements.inqFilterInput.addEventListener('input', applyInqFilters);
     }
 
     // Global Search: searches active tab or intelligently routes to users/properties/inquiries
@@ -970,13 +1145,27 @@
             console.warn('Tab deep-link parse note:', e);
         }
 
-        // Periodic live refresh for inquiries and overview metrics without manual reload
-        setInterval(() => {
+        // Periodic live refresh for overview metrics, users, and inquiries without manual reload
+        const refreshActiveData = () => {
             if (document.visibilityState === 'visible') {
+                const anyModalOpen = (elements.createUserModal && !elements.createUserModal.hidden) ||
+                                     (editModalEl && !editModalEl.hidden) ||
+                                     (elements.roleChangeModal && !elements.roleChangeModal.hidden);
                 loadOverview();
                 loadInquiries();
+                if (!anyModalOpen) {
+                    loadUsers();
+                }
             }
-        }, 5000);
+        };
+
+        document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState === 'visible') {
+                refreshActiveData();
+            }
+        });
+
+        setInterval(refreshActiveData, 15000);
     }
 
     if (document.readyState === 'loading') {

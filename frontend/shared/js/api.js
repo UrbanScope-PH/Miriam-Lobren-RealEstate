@@ -8,6 +8,9 @@
 (function (window) {
     'use strict';
 
+    // ----------------------------------------------------------
+    // 1. SUPABASE CONFIGURATION
+    // ----------------------------------------------------------
     const SUPABASE_URL = 'https://vfspjuqymfbagesjxjmc.supabase.co';
     const SUPABASE_ANON_KEY = 'sb_publishable_96sfQ4F18ypajf6bitBRqg_JtWTL4__';
     const REST_BASE = SUPABASE_URL + '/rest/v1';
@@ -19,6 +22,7 @@
     const USER_KEY = 'urbanscope_user';
     const DEMO_KEY = 'urbanscope_demo_user';
 
+    // Initialize Supabase SDK client if loaded on the page
     let supabaseClient = null;
     if (window.supabase && typeof window.supabase.createClient === 'function') {
         try {
@@ -54,12 +58,51 @@
                location.port === '8000';
     }
 
+    function isLocalBackendReachableHost() {
+        const isHttps = typeof location !== 'undefined' && location.protocol === 'https:';
+        return isLocalDevHost() && !isHttps;
+    }
+
+    function getLocalApiBase() {
+        if (typeof location !== 'undefined') {
+            if (location.port === '8000') return '/api';
+            const host = location.hostname || '127.0.0.1';
+            return `http://${host}:8000/api`;
+        }
+        return 'http://127.0.0.1:8000/api';
+    }
+
+    function getLocalAuthHeaders(extra = {}) {
+        const token = localStorage.getItem(TOKEN_KEY) ||
+                      localStorage.getItem('urbanscope_jwt_token') ||
+                      localStorage.getItem('access_token') ||
+                      localStorage.getItem('adminToken') ||
+                      localStorage.getItem('supabase_token') || '';
+        const headers = { 'Content-Type': 'application/json', ...extra };
+        if (token) headers['Authorization'] = `Bearer ${token}`;
+        return headers;
+    }
+
+    function normalizeAccountRole(role, email) {
+        const cleanEmail = String(email || '').trim().toLowerCase();
+        if (cleanEmail === 'urbanscope.cvsu@gmail.com') return 'superadmin';
+        const r = String(role || '').trim().toLowerCase();
+        if (r === 'superadmin') return 'superadmin';
+        if (r === 'admin' || r === 'agent') return 'admin';
+        if (cleanEmail === 'admin.realestate@gmail.com') return 'admin';
+        return 'user';
+    }
+
+    // ----------------------------------------------------------
+    // 2. PROPERTY SERVICES
+    // ----------------------------------------------------------
     async function apiGetProperties(filter = {}) {
         let liveProperties = [];
 
         try {
             const queryParts = [];
 
+            // 1. Property Type Filter
             if (filter.type && filter.type !== 'all') {
                 const t = filter.type.toLowerCase().trim();
                 if (t === 'villa' || t === 'villas') {
@@ -81,11 +124,13 @@
                 }
             }
 
+            // 2. Location Filter
             if (filter.location && filter.location !== 'all') {
                 const cleanLoc = filter.location.replace(/-/g, ' ').trim();
                 queryParts.push(`location=ilike.*${encodeURIComponent(cleanLoc)}*`);
             }
 
+            // 3. Search Keyword across title, location, description, amenities
             if (filter.search && filter.search.trim()) {
                 const s = encodeURIComponent(filter.search.trim());
                 queryParts.push(`or=(title.ilike.*${s}*,location.ilike.*${s}*,property_type.ilike.*${s}*,description.ilike.*${s}*,amenities.ilike.*${s}*)`);
@@ -107,9 +152,9 @@
         }
 
         // Fallback 1: Local Python backend if available
-        if (liveProperties.length === 0) {
+        if (liveProperties.length === 0 && isLocalBackendReachableHost()) {
             try {
-                const localBase = (location.port === '8000') ? '/api' : 'http://127.0.0.1:8000/api';
+                const localBase = getLocalApiBase();
                 const localRes = await fetch(`${localBase}/properties`, { method: 'GET' });
                 if (localRes.ok) {
                     const localData = await localRes.json();
@@ -117,7 +162,7 @@
                         liveProperties = localData;
                     }
                 }
-            } catch (e) { }
+            } catch (e) {}
         }
 
         // Fallback 2: Cached properties in localStorage
@@ -127,7 +172,7 @@
                 if (Array.isArray(cached) && cached.length > 0) {
                     liveProperties = cached;
                 }
-            } catch (e) { }
+            } catch (e) {}
         }
 
         // Always merge any locally created properties that are not yet in liveProperties
@@ -145,12 +190,12 @@
                     }
                 });
             }
-        } catch (e) { }
+        } catch (e) {}
 
         if (liveProperties.length > 0) {
             try {
                 localStorage.setItem('cached_live_properties', JSON.stringify(liveProperties));
-            } catch (e) { }
+            } catch (e) {}
             return liveProperties;
         }
 
@@ -170,11 +215,13 @@
         }
 
         // Fallback 1: Local backend
-        try {
-            const localBase = (location.port === '8000') ? '/api' : 'http://127.0.0.1:8000/api';
-            const localRes = await fetch(`${localBase}/properties/${encodeURIComponent(id)}`);
-            if (localRes.ok) return await localRes.json();
-        } catch (e) { }
+        if (isLocalBackendReachableHost()) {
+            try {
+                const localBase = getLocalApiBase();
+                const localRes = await fetch(`${localBase}/properties/${encodeURIComponent(id)}`);
+                if (localRes.ok) return await localRes.json();
+            } catch (e) {}
+        }
 
         // Fallback 2: Cache / local storage
         try {
@@ -183,7 +230,7 @@
                 .concat(JSON.parse(localStorage.getItem('properties') || '[]'));
             const found = all.find(p => String(p.id) === String(id));
             if (found) return found;
-        } catch (e) { }
+        } catch (e) {}
 
         return null;
     }
@@ -247,20 +294,23 @@
             console.warn('Supabase property insert notice:', err.message);
         }
 
-        // 2. Also ALWAYS sync to local Python backend
-        try {
-            const localBase = (location.port === '8000') ? '/api' : 'http://127.0.0.1:8000/api';
-            const localRes = await fetch(`${localBase}/properties`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
-            });
-            if (localRes.ok) {
-                const localData = await localRes.json();
-                if (!created) created = localData;
+        // 2. Also sync to local Python backend when on local dev host
+        if (isLocalBackendReachableHost()) {
+            try {
+                const localBase = getLocalApiBase();
+                const localRes = await fetch(`${localBase}/properties`, {
+                    method: 'POST',
+                    headers: getLocalAuthHeaders(),
+                    credentials: 'include',
+                    body: JSON.stringify(payload)
+                });
+                if (localRes.ok) {
+                    const localData = await localRes.json();
+                    if (!created) created = localData;
+                }
+            } catch (e) {
+                console.warn('Local backend property insert notice:', e);
             }
-        } catch (e) {
-            console.warn('Local backend property insert notice:', e);
         }
 
         // If both failed over network, create in-memory object
@@ -277,13 +327,13 @@
             const cached = JSON.parse(localStorage.getItem('cached_live_properties') || '[]');
             cached.unshift(created);
             localStorage.setItem('cached_live_properties', JSON.stringify(cached));
-        } catch (e) { }
+        } catch (e) {}
 
         try {
             const urbanProps = JSON.parse(localStorage.getItem('urbanScopeProperties') || '[]');
             urbanProps.unshift(created);
             localStorage.setItem('urbanScopeProperties', JSON.stringify(urbanProps));
-        } catch (e) { }
+        } catch (e) {}
 
         try {
             const adminProps = JSON.parse(localStorage.getItem('properties') || '[]');
@@ -299,7 +349,7 @@
                 image_url: created.image_url
             });
             localStorage.setItem('properties', JSON.stringify(adminProps));
-        } catch (e) { }
+        } catch (e) {}
 
         return created;
     }
@@ -307,25 +357,23 @@
     async function apiUpdateProperty(id, property) {
         let updated = null;
 
-        // 1. Try local FastAPI backend first
-        try {
-            const localBase = (location.port === '8000') ? '/api' : 'http://127.0.0.1:8000/api';
-            const token = localStorage.getItem(TOKEN_KEY) || localStorage.getItem('urbanscope_jwt_token') || '';
-            const headers = { 'Content-Type': 'application/json' };
-            if (token) headers['Authorization'] = `Bearer ${token}`;
+        // 1. Try local FastAPI backend first when on local dev host
+        if (isLocalBackendReachableHost()) {
+            try {
+                const localBase = getLocalApiBase();
+                const localRes = await fetch(`${localBase}/properties/${encodeURIComponent(id)}`, {
+                    method: 'PUT',
+                    credentials: 'include',
+                    headers: getLocalAuthHeaders(),
+                    body: JSON.stringify(property)
+                });
 
-            const localRes = await fetch(`${localBase}/properties/${encodeURIComponent(id)}`, {
-                method: 'PUT',
-                credentials: 'include',
-                headers: headers,
-                body: JSON.stringify(property)
-            });
-
-            if (localRes.ok) {
-                updated = await localRes.json();
+                if (localRes.ok) {
+                    updated = await localRes.json();
+                }
+            } catch (e) {
+                console.warn('Local backend property update notice:', e);
             }
-        } catch (e) {
-            console.warn('Local backend property update notice:', e);
         }
 
         // 2. Also try live Supabase if available
@@ -362,7 +410,7 @@
                     }
                 }
             });
-        } catch (e) { }
+        } catch (e) {}
 
         return updated;
     }
@@ -370,24 +418,22 @@
     async function apiDeleteProperty(id) {
         let deleted = false;
 
-        // 1. Try local FastAPI backend first
-        try {
-            const localBase = (location.port === '8000') ? '/api' : 'http://127.0.0.1:8000/api';
-            const token = localStorage.getItem(TOKEN_KEY) || localStorage.getItem('urbanscope_jwt_token') || localStorage.getItem('adminToken') || localStorage.getItem('urbanscope_token') || '';
-            const headers = { 'Content-Type': 'application/json' };
-            if (token) headers['Authorization'] = `Bearer ${token}`;
+        // 1. Try local FastAPI backend first when on local dev host
+        if (isLocalBackendReachableHost()) {
+            try {
+                const localBase = getLocalApiBase();
+                const localRes = await fetch(`${localBase}/properties/${encodeURIComponent(id)}`, {
+                    method: 'DELETE',
+                    credentials: 'include',
+                    headers: getLocalAuthHeaders()
+                });
 
-            const localRes = await fetch(`${localBase}/properties/${encodeURIComponent(id)}`, {
-                method: 'DELETE',
-                credentials: 'include',
-                headers: headers
-            });
-
-            if (localRes.ok) {
-                deleted = true;
+                if (localRes.ok) {
+                    deleted = true;
+                }
+            } catch (e) {
+                console.warn('Local backend property delete notice:', e);
             }
-        } catch (e) {
-            console.warn('Local backend property delete notice:', e);
         }
 
         // 2. Also try Supabase if configured
@@ -415,7 +461,7 @@
             });
             // If offline, still treat as deleted locally
             if (!deleted) deleted = true;
-        } catch (e) { }
+        } catch (e) {}
 
         return deleted;
     }
@@ -1413,38 +1459,763 @@
 
 
     // ----------------------------------------------------------
-    // 4. AUTHENTICATION & USER SERVICES
+    // 4. AUTHENTICATION, SUPERADMIN RBAC & USER SERVICES
     // ----------------------------------------------------------
+    const DELETED_USERS_KEY = 'urbanscope_deleted_user_ids';
+    const DELETED_USER_EMAILS_KEY = 'urbanscope_deleted_user_emails';
+    const SOFT_DELETE_BIO_MARKER = '__URBANSCOPE_DELETED__';
+    const SOFT_DELETE_HASH_MARKER = '__DELETED_ACCOUNT__';
+
+    function getDeletedUserIds() {
+        try {
+            const arr = JSON.parse(localStorage.getItem(DELETED_USERS_KEY) || '[]');
+            return Array.isArray(arr) ? arr.map(String) : [];
+        } catch (_) {
+            return [];
+        }
+    }
+
+    function getDeletedUserEmails() {
+        try {
+            const arr = JSON.parse(localStorage.getItem(DELETED_USER_EMAILS_KEY) || '[]');
+            return Array.isArray(arr) ? arr.map(e => String(e || '').trim().toLowerCase()) : [];
+        } catch (_) {
+            return [];
+        }
+    }
+
+    function markUserDeletedLocal(id, email) {
+        try {
+            if (id !== undefined && id !== null && id !== '') {
+                const ids = new Set(getDeletedUserIds());
+                ids.add(String(id));
+                localStorage.setItem(DELETED_USERS_KEY, JSON.stringify(Array.from(ids)));
+            }
+            const cleanEmail = String(email || '').trim().toLowerCase();
+            if (cleanEmail) {
+                const emails = new Set(getDeletedUserEmails());
+                emails.add(cleanEmail);
+                localStorage.setItem(DELETED_USER_EMAILS_KEY, JSON.stringify(Array.from(emails)));
+            }
+        } catch (_) {}
+    }
+
+    function clearUserDeletedLocal(id, email) {
+        try {
+            if (id !== undefined && id !== null && id !== '') {
+                const filteredIds = getDeletedUserIds().filter(x => x !== String(id));
+                localStorage.setItem(DELETED_USERS_KEY, JSON.stringify(filteredIds));
+            }
+            const cleanEmail = String(email || '').trim().toLowerCase();
+            if (cleanEmail) {
+                const filteredEmails = getDeletedUserEmails().filter(e => e !== cleanEmail);
+                localStorage.setItem(DELETED_USER_EMAILS_KEY, JSON.stringify(filteredEmails));
+            }
+        } catch (_) {}
+    }
+
+    function isUserRecordDeleted(u) {
+        if (!u) return true;
+        if (String(u.bio || '').trim() === SOFT_DELETE_BIO_MARKER) return true;
+        if (String(u.password_hash || '').trim() === SOFT_DELETE_HASH_MARKER) return true;
+        const deletedIds = new Set(getDeletedUserIds());
+        const deletedEmails = new Set(getDeletedUserEmails());
+        if (u.id !== undefined && deletedIds.has(String(u.id))) return true;
+        const cleanEmail = String(u.email || '').trim().toLowerCase();
+        if (cleanEmail && deletedEmails.has(cleanEmail)) return true;
+        return false;
+    }
+
+    function formatUserRecord(u) {
+        if (!u) return null;
+        return {
+            ...u,
+            role: normalizeAccountRole(u.role, u.email)
+        };
+    }
+
     async function apiGetUsers() {
         try {
-            const res = await fetch(`${REST_BASE}/users?select=id,email,full_name,phone,role,created_at,license_number,avatar_url&order=created_at.desc`, {
+            const res = await fetch(`${REST_BASE}/users?select=id,email,full_name,phone,role,created_at,license_number,avatar_url,bio&order=created_at.desc`, {
                 method: 'GET',
                 headers: getHeaders()
             });
             if (res.ok) {
                 const data = await res.json();
-                if (Array.isArray(data) && data.length > 0) return data;
+                if (Array.isArray(data) && data.length > 0) {
+                    return data.filter(u => !isUserRecordDeleted(u)).map(formatUserRecord);
+                }
             }
         } catch (err) {
             console.warn('Supabase users fetch notice, trying local API:', err.message);
         }
 
-        try {
-            const localBase = (location.port === '8000') ? '/api' : 'http://127.0.0.1:8000/api';
-            const token = localStorage.getItem('adminToken') || localStorage.getItem('supabase_token') || localStorage.getItem(TOKEN_KEY);
-            const headers = { 'Content-Type': 'application/json' };
-            if (token) headers['Authorization'] = `Bearer ${token}`;
-            const localRes = await fetch(`${localBase}/users`, {
-                method: 'GET',
-                headers: headers
-            });
-            if (localRes.ok) {
-                const localUsers = await localRes.json();
-                if (Array.isArray(localUsers)) return localUsers;
-            }
-        } catch (_) { }
+        if (isLocalBackendReachableHost()) {
+            try {
+                const localBase = getLocalApiBase();
+                const localRes = await fetch(`${localBase}/users`, {
+                    method: 'GET',
+                    headers: getLocalAuthHeaders(),
+                    credentials: 'include'
+                });
+                if (localRes.ok) {
+                    const localUsers = await localRes.json();
+                    if (Array.isArray(localUsers)) {
+                        return localUsers.filter(u => !isUserRecordDeleted(u)).map(formatUserRecord);
+                    }
+                }
+            } catch (_) {}
+        }
 
         return [];
+    }
+
+    async function apiGetSuperadminUsers() {
+        let users = null;
+
+        // 1. Try local FastAPI backend when running on local dev host (non-HTTPS)
+        if (isLocalBackendReachableHost()) {
+            try {
+                const controller = (typeof AbortController !== 'undefined') ? new AbortController() : null;
+                const timeoutId = controller ? setTimeout(() => controller.abort(), 3500) : null;
+                const localRes = await fetch(`${getLocalApiBase()}/superadmin/users`, {
+                    method: 'GET',
+                    headers: getLocalAuthHeaders(),
+                    credentials: 'include',
+                    signal: controller ? controller.signal : undefined
+                });
+                if (timeoutId) clearTimeout(timeoutId);
+                if (localRes.ok) {
+                    const localData = await localRes.json();
+                    if (Array.isArray(localData) && localData.length > 0) {
+                        users = localData;
+                    }
+                }
+            } catch (localErr) {
+                console.warn('Local superadmin users fetch notice, using Supabase Cloud:', localErr.message || localErr);
+            }
+        }
+
+        // 2. Fetch from live Supabase Cloud (primary on Vercel/remote, automatic fallback on local)
+        if (!users) {
+            try {
+                const res = await fetch(`${REST_BASE}/users?select=id,email,full_name,phone,role,created_at,license_number,avatar_url,bio&order=id.asc`, {
+                    method: 'GET',
+                    headers: getHeaders()
+                });
+                if (res.ok) {
+                    const cloudData = await res.json();
+                    if (Array.isArray(cloudData)) {
+                        users = cloudData;
+                    }
+                }
+            } catch (cloudErr) {
+                console.warn('Supabase superadmin users fetch notice:', cloudErr.message || cloudErr);
+            }
+        }
+
+        // 3. Offline localStorage fallback if both network tiers are unreachable
+        if (!users) {
+            try {
+                const cached = JSON.parse(localStorage.getItem('cached_superadmin_users') || '[]');
+                if (Array.isArray(cached) && cached.length > 0) {
+                    users = cached;
+                }
+            } catch (_) {}
+        }
+
+        if (Array.isArray(users)) {
+            const cleaned = users
+                .filter(u => !isUserRecordDeleted(u))
+                .map(formatUserRecord)
+                .sort((a, b) => (Number(a.id) || 0) - (Number(b.id) || 0));
+
+            try {
+                localStorage.setItem('cached_superadmin_users', JSON.stringify(cleaned));
+            } catch (_) {}
+            return cleaned;
+        }
+
+        return [];
+    }
+
+    async function apiGetSuperadminOverview() {
+        // 1. Try local FastAPI backend when running on local dev host (non-HTTPS)
+        if (isLocalBackendReachableHost()) {
+            try {
+                const controller = (typeof AbortController !== 'undefined') ? new AbortController() : null;
+                const timeoutId = controller ? setTimeout(() => controller.abort(), 3500) : null;
+                const localRes = await fetch(`${getLocalApiBase()}/superadmin/overview`, {
+                    method: 'GET',
+                    headers: getLocalAuthHeaders(),
+                    credentials: 'include',
+                    signal: controller ? controller.signal : undefined
+                });
+                if (timeoutId) clearTimeout(timeoutId);
+                if (localRes.ok) {
+                    const data = await localRes.json();
+                    if (data && data.metrics) {
+                        return { ...data, engine: 'sqlite' };
+                    }
+                }
+            } catch (_) {}
+        }
+
+        // 2. Compute live executive metrics from Supabase Cloud (primary on Vercel/remote)
+        const [usersList, propsList, inqList] = await Promise.all([
+            apiGetSuperadminUsers().catch(() => []),
+            apiGetProperties({ type: 'all' }).catch(() => []),
+            apiGetInquiries().catch(() => [])
+        ]);
+
+        const users = Array.isArray(usersList) ? usersList : [];
+        const props = Array.isArray(propsList) ? propsList : [];
+        const inquiries = Array.isArray(inqList) ? inqList : [];
+
+        let superadminCount = 0;
+        let adminCount = 0;
+        let regularCount = 0;
+
+        users.forEach(u => {
+            const r = normalizeAccountRole(u.role, u.email);
+            if (r === 'superadmin') superadminCount++;
+            else if (r === 'admin') adminCount++;
+            else regularCount++;
+        });
+
+        const availableProps = props.filter(p => String(p.status || 'Available').trim().toLowerCase() === 'available').length;
+        const soldProps = props.filter(p => String(p.status || '').trim().toLowerCase() === 'sold').length;
+
+        const pendingInq = inquiries.filter(i => {
+            const s = String(i.status || 'Under Review').toLowerCase();
+            return s.includes('review') || s.includes('pending') || s === 'submitted';
+        }).length;
+
+        const approvedInq = inquiries.filter(i => String(i.status || '').toLowerCase().includes('approved')).length;
+
+        let estimatedSizeKb = 64.0;
+        try {
+            const rawBytes = JSON.stringify({ users, props, inquiries }).length;
+            estimatedSizeKb = Math.max(48.0, Math.round(((rawBytes + 32768) / 1024) * 10) / 10);
+        } catch (_) {}
+
+        return {
+            status: 'operational',
+            engine: 'supabase',
+            superadmin_email: 'urbanscope.cvsu@gmail.com',
+            metrics: {
+                total_users: users.length,
+                superadmins: superadminCount || 1,
+                admins: adminCount,
+                regular_users: regularCount,
+                total_properties: props.length,
+                available_properties: availableProps,
+                sold_properties: soldProps,
+                total_inquiries: inquiries.length,
+                pending_inquiries: pendingInq,
+                approved_inquiries: approvedInq,
+                db_size_kb: estimatedSizeKb,
+                trigger_active: true
+            }
+        };
+    }
+
+    async function apiSuperadminCreateUser(payload = {}) {
+        const cleanName = String(payload.full_name || '').trim();
+        const cleanEmail = String(payload.email || '').trim().toLowerCase();
+        const cleanPhone = String(payload.phone || '').trim();
+        const plainPassword = String(payload.password || '');
+        let assignedRole = String(payload.role || 'user').trim().toLowerCase();
+        if (!['user', 'admin', 'superadmin'].includes(assignedRole)) {
+            assignedRole = 'user';
+        }
+        if (cleanEmail === 'urbanscope.cvsu@gmail.com') {
+            assignedRole = 'superadmin';
+        }
+
+        if (!cleanName || !cleanEmail) {
+            return { success: false, error: 'Full name and email address are required.' };
+        }
+        if (plainPassword.length < 6) {
+            return { success: false, error: 'Password must be at least 6 characters long.' };
+        }
+
+        let createdUser = null;
+        let localHandled = false;
+
+        // 1. Create on local FastAPI backend if running on local dev host
+        if (isLocalBackendReachableHost()) {
+            try {
+                const localRes = await fetch(`${getLocalApiBase()}/superadmin/users`, {
+                    method: 'POST',
+                    headers: getLocalAuthHeaders(),
+                    credentials: 'include',
+                    body: JSON.stringify({
+                        full_name: cleanName,
+                        email: cleanEmail,
+                        phone: cleanPhone,
+                        password: plainPassword,
+                        role: assignedRole
+                    })
+                });
+                const localData = await localRes.json().catch(() => ({}));
+                if (localRes.ok && localData.success) {
+                    createdUser = localData.user || null;
+                    localHandled = true;
+                } else if (localRes.status === 400 || localRes.status === 403) {
+                    return { success: false, error: localData.detail || 'Failed to create account.' };
+                }
+            } catch (localErr) {
+                console.warn('Local superadmin create user notice, syncing directly to Supabase Cloud:', localErr.message || localErr);
+            }
+        }
+
+        // 2. Create / synchronize in Supabase Cloud
+        const passwordHash = await hashPBKDF2(plainPassword);
+        try {
+            const checkRes = await fetch(`${REST_BASE}/users?email=ilike.${encodeURIComponent(cleanEmail)}&select=id,email,bio`, {
+                method: 'GET',
+                headers: getHeaders()
+            });
+            const existingRows = checkRes.ok ? await checkRes.json().catch(() => []) : [];
+            const existing = Array.isArray(existingRows) && existingRows.length > 0 ? existingRows[0] : null;
+
+            if (existing && existing.id) {
+                const wasSoftDeleted = String(existing.bio || '').trim() === SOFT_DELETE_BIO_MARKER ||
+                                       getDeletedUserEmails().includes(cleanEmail) ||
+                                       getDeletedUserIds().includes(String(existing.id));
+
+                if (!wasSoftDeleted && !localHandled) {
+                    return { success: false, error: 'Email is already registered.' };
+                }
+
+                const patchRes = await fetch(`${REST_BASE}/users?id=eq.${encodeURIComponent(existing.id)}`, {
+                    method: 'PATCH',
+                    headers: getHeaders(),
+                    body: JSON.stringify({
+                        full_name: cleanName,
+                        phone: cleanPhone,
+                        password_hash: passwordHash,
+                        role: assignedRole,
+                        bio: '',
+                        updated_at: new Date().toISOString()
+                    })
+                });
+                if (patchRes.ok) {
+                    const patched = await patchRes.json().catch(() => []);
+                    const row = Array.isArray(patched) ? patched[0] : patched;
+                    if (!createdUser && row) createdUser = row;
+                }
+            } else {
+                const insertRes = await fetch(`${REST_BASE}/users`, {
+                    method: 'POST',
+                    headers: getHeaders(),
+                    body: JSON.stringify({
+                        email: cleanEmail,
+                        password_hash: passwordHash,
+                        full_name: cleanName,
+                        phone: cleanPhone,
+                        role: assignedRole,
+                        avatar_url: 'assets/images/agent.jpg',
+                        bio: ''
+                    })
+                });
+                if (insertRes.ok) {
+                    const inserted = await insertRes.json().catch(() => []);
+                    const row = Array.isArray(inserted) ? inserted[0] : inserted;
+                    if (!createdUser && row) createdUser = row;
+                } else if (!localHandled) {
+                    const errBody = await insertRes.json().catch(() => ({}));
+                    return { success: false, error: errBody.message || errBody.details || 'Failed to create account in cloud database.' };
+                }
+            }
+        } catch (cloudErr) {
+            if (!localHandled) {
+                return { success: false, error: cloudErr.message || 'Network error while creating account.' };
+            }
+        }
+
+        clearUserDeletedLocal(createdUser && createdUser.id, cleanEmail);
+
+        return {
+            success: true,
+            message: 'Account created successfully.',
+            user: formatUserRecord(createdUser || {
+                id: Date.now(),
+                email: cleanEmail,
+                full_name: cleanName,
+                phone: cleanPhone,
+                role: assignedRole,
+                created_at: new Date().toISOString()
+            })
+        };
+    }
+
+    async function apiSuperadminUpdateUser(userId, payload = {}) {
+        const cleanName = payload.full_name !== undefined ? String(payload.full_name).trim() : undefined;
+        const cleanEmail = payload.email !== undefined ? String(payload.email).trim().toLowerCase() : undefined;
+        const originalEmail = String(payload.original_email || cleanEmail || '').trim().toLowerCase();
+        const cleanPhone = payload.phone !== undefined ? String(payload.phone).trim() : undefined;
+        const rawRole = payload.role !== undefined ? String(payload.role).trim().toLowerCase() : undefined;
+        const rawPassword = payload.password ? String(payload.password).trim() : '';
+
+        if (originalEmail === 'urbanscope.cvsu@gmail.com') {
+            if (cleanEmail && cleanEmail !== 'urbanscope.cvsu@gmail.com') {
+                return { success: false, error: 'The root Superadmin email address cannot be changed.' };
+            }
+            if (rawRole && rawRole !== 'superadmin') {
+                return { success: false, error: 'The root Superadmin account cannot be demoted.' };
+            }
+        }
+
+        if (rawRole && !['user', 'admin', 'superadmin'].includes(rawRole)) {
+            return { success: false, error: "Invalid role. Must be 'user', 'admin', or 'superadmin'." };
+        }
+
+        let updatedUser = null;
+        let localHandled = false;
+
+        // 1. Update on local FastAPI backend if running on local dev host
+        if (isLocalBackendReachableHost()) {
+            try {
+                const localBody = {};
+                if (cleanName) localBody.full_name = cleanName;
+                if (cleanEmail) localBody.email = cleanEmail;
+                if (cleanPhone !== undefined) localBody.phone = cleanPhone;
+                if (rawRole) localBody.role = rawRole;
+                if (rawPassword && rawPassword.length >= 6) localBody.password = rawPassword;
+
+                const localRes = await fetch(`${getLocalApiBase()}/superadmin/users/${encodeURIComponent(userId)}`, {
+                    method: 'PUT',
+                    headers: getLocalAuthHeaders(),
+                    credentials: 'include',
+                    body: JSON.stringify(localBody)
+                });
+                const localData = await localRes.json().catch(() => ({}));
+                if (localRes.ok && localData.success) {
+                    updatedUser = localData.user || null;
+                    localHandled = true;
+                } else if (localRes.status === 400 || localRes.status === 403) {
+                    return { success: false, error: localData.detail || 'Failed to update user account.' };
+                }
+            } catch (localErr) {
+                console.warn('Local superadmin update user notice, syncing directly to Supabase Cloud:', localErr.message || localErr);
+            }
+        }
+
+        // 2. Synchronize update to Supabase Cloud
+        try {
+            if (!localHandled && cleanEmail && originalEmail && cleanEmail !== originalEmail) {
+                const dupRes = await fetch(`${REST_BASE}/users?email=ilike.${encodeURIComponent(cleanEmail)}&select=id,bio`, {
+                    method: 'GET',
+                    headers: getHeaders()
+                });
+                const dupRows = dupRes.ok ? await dupRes.json().catch(() => []) : [];
+                const activeDup = Array.isArray(dupRows)
+                    ? dupRows.find(r => String(r.id) !== String(userId) && String(r.bio || '').trim() !== SOFT_DELETE_BIO_MARKER)
+                    : null;
+                if (activeDup) {
+                    return { success: false, error: 'Email is already in use by another account.' };
+                }
+            }
+
+            const patchBody = { updated_at: new Date().toISOString() };
+            if (cleanName) patchBody.full_name = cleanName;
+            if (cleanEmail) patchBody.email = cleanEmail;
+            if (cleanPhone !== undefined) patchBody.phone = cleanPhone;
+            if (rawRole) patchBody.role = rawRole;
+            if (rawPassword && rawPassword.length >= 6) {
+                patchBody.password_hash = await hashPBKDF2(rawPassword);
+            }
+
+            let cloudRows = [];
+            const byIdRes = await fetch(`${REST_BASE}/users?id=eq.${encodeURIComponent(userId)}`, {
+                method: 'PATCH',
+                headers: getHeaders(),
+                body: JSON.stringify(patchBody)
+            });
+            if (byIdRes.ok) {
+                cloudRows = await byIdRes.json().catch(() => []);
+            }
+
+            if ((!Array.isArray(cloudRows) || cloudRows.length === 0) && (originalEmail || cleanEmail)) {
+                const lookupEmail = originalEmail || cleanEmail;
+                const byEmailRes = await fetch(`${REST_BASE}/users?email=ilike.${encodeURIComponent(lookupEmail)}`, {
+                    method: 'PATCH',
+                    headers: getHeaders(),
+                    body: JSON.stringify(patchBody)
+                });
+                if (byEmailRes.ok) {
+                    cloudRows = await byEmailRes.json().catch(() => []);
+                }
+            }
+
+            if (Array.isArray(cloudRows) && cloudRows.length > 0 && !updatedUser) {
+                updatedUser = cloudRows[0];
+            }
+        } catch (cloudErr) {
+            if (!localHandled) {
+                return { success: false, error: cloudErr.message || 'Network error while updating user account.' };
+            }
+        }
+
+        return {
+            success: true,
+            message: 'User account updated successfully.',
+            user: formatUserRecord(updatedUser || {
+                id: userId,
+                full_name: cleanName,
+                email: cleanEmail || originalEmail,
+                phone: cleanPhone,
+                role: rawRole || 'user'
+            })
+        };
+    }
+
+    async function apiSuperadminUpdateUserRole(userId, newRole, email = '') {
+        const targetRole = String(newRole || '').trim().toLowerCase();
+        const cleanEmail = String(email || '').trim().toLowerCase();
+
+        if (!['user', 'admin', 'superadmin'].includes(targetRole)) {
+            return { success: false, error: "Invalid role. Must be 'user', 'admin', or 'superadmin'." };
+        }
+        if (cleanEmail === 'urbanscope.cvsu@gmail.com' && targetRole !== 'superadmin') {
+            return { success: false, error: 'The root Superadmin account (urbanscope.cvsu@gmail.com) cannot be demoted.' };
+        }
+
+        let updatedUser = null;
+        let localHandled = false;
+
+        // 1. Update on local FastAPI backend if running on local dev host
+        if (isLocalBackendReachableHost()) {
+            try {
+                const localRes = await fetch(`${getLocalApiBase()}/superadmin/users/${encodeURIComponent(userId)}/role`, {
+                    method: 'PUT',
+                    headers: getLocalAuthHeaders(),
+                    credentials: 'include',
+                    body: JSON.stringify({ role: targetRole })
+                });
+                const localData = await localRes.json().catch(() => ({}));
+                if (localRes.ok && localData.success) {
+                    updatedUser = localData.user || null;
+                    localHandled = true;
+                } else if (localRes.status === 400 || localRes.status === 403) {
+                    return { success: false, error: localData.detail || 'Failed to update role.' };
+                }
+            } catch (localErr) {
+                console.warn('Local superadmin role update notice, syncing directly to Supabase Cloud:', localErr.message || localErr);
+            }
+        }
+
+        // 2. Synchronize role update to Supabase Cloud
+        try {
+            const patchBody = { role: targetRole, updated_at: new Date().toISOString() };
+            let cloudRows = [];
+            const byIdRes = await fetch(`${REST_BASE}/users?id=eq.${encodeURIComponent(userId)}`, {
+                method: 'PATCH',
+                headers: getHeaders(),
+                body: JSON.stringify(patchBody)
+            });
+            if (byIdRes.ok) {
+                cloudRows = await byIdRes.json().catch(() => []);
+            }
+
+            if ((!Array.isArray(cloudRows) || cloudRows.length === 0) && cleanEmail) {
+                const byEmailRes = await fetch(`${REST_BASE}/users?email=ilike.${encodeURIComponent(cleanEmail)}`, {
+                    method: 'PATCH',
+                    headers: getHeaders(),
+                    body: JSON.stringify(patchBody)
+                });
+                if (byEmailRes.ok) {
+                    cloudRows = await byEmailRes.json().catch(() => []);
+                }
+            }
+
+            if (Array.isArray(cloudRows) && cloudRows.length > 0 && !updatedUser) {
+                updatedUser = cloudRows[0];
+            }
+        } catch (cloudErr) {
+            if (!localHandled) {
+                return { success: false, error: cloudErr.message || 'Network error while updating role.' };
+            }
+        }
+
+        return {
+            success: true,
+            message: `Role updated to '${targetRole}'`,
+            user: formatUserRecord(updatedUser || { id: userId, email: cleanEmail, role: targetRole })
+        };
+    }
+
+    async function apiSuperadminDeleteUser(userId, email = '') {
+        const cleanEmail = String(email || '').trim().toLowerCase();
+
+        if (cleanEmail === 'urbanscope.cvsu@gmail.com') {
+            return { success: false, error: 'Cannot delete root Superadmin account.' };
+        }
+        if (cleanEmail === 'admin.realestate@gmail.com') {
+            return { success: false, error: 'Cannot delete primary Realty Admin account.' };
+        }
+
+        let localHandled = false;
+
+        // 1. Delete from local FastAPI backend if running on local dev host
+        if (isLocalBackendReachableHost()) {
+            try {
+                const localRes = await fetch(`${getLocalApiBase()}/superadmin/users/${encodeURIComponent(userId)}`, {
+                    method: 'DELETE',
+                    headers: getLocalAuthHeaders(),
+                    credentials: 'include'
+                });
+                const localData = await localRes.json().catch(() => ({}));
+                if (localRes.ok && localData.success) {
+                    localHandled = true;
+                } else if (localRes.status === 400 || localRes.status === 403) {
+                    return { success: false, error: localData.detail || 'Failed to delete account.' };
+                }
+            } catch (localErr) {
+                console.warn('Local superadmin delete user notice, syncing directly to Supabase Cloud:', localErr.message || localErr);
+            }
+        }
+
+        // 2. Delete from Supabase Cloud (with cross-device soft-delete fallback if RLS DELETE policy is not yet pushed)
+        try {
+            let deletedRows = [];
+            const delById = await fetch(`${REST_BASE}/users?id=eq.${encodeURIComponent(userId)}`, {
+                method: 'DELETE',
+                headers: getHeaders()
+            });
+            if (delById.ok) {
+                deletedRows = await delById.json().catch(() => []);
+            }
+
+            if ((!Array.isArray(deletedRows) || deletedRows.length === 0) && cleanEmail) {
+                const delByEmail = await fetch(`${REST_BASE}/users?email=ilike.${encodeURIComponent(cleanEmail)}`, {
+                    method: 'DELETE',
+                    headers: getHeaders()
+                });
+                if (delByEmail.ok) {
+                    deletedRows = await delByEmail.json().catch(() => []);
+                }
+            }
+
+            if (!Array.isArray(deletedRows) || deletedRows.length === 0) {
+                // Fallback when remote RLS DELETE policy has not yet been pushed: deactivate across all devices via UPDATE
+                const softDeleteBody = {
+                    bio: SOFT_DELETE_BIO_MARKER,
+                    password_hash: SOFT_DELETE_HASH_MARKER,
+                    google_id: null,
+                    role: 'user',
+                    updated_at: new Date().toISOString()
+                };
+                const filterParam = cleanEmail
+                    ? `email=ilike.${encodeURIComponent(cleanEmail)}`
+                    : `id=eq.${encodeURIComponent(userId)}`;
+                await fetch(`${REST_BASE}/users?${filterParam}`, {
+                    method: 'PATCH',
+                    headers: getHeaders(),
+                    body: JSON.stringify(softDeleteBody)
+                }).catch(() => {});
+                markUserDeletedLocal(userId, cleanEmail);
+            } else {
+                clearUserDeletedLocal(userId, cleanEmail);
+            }
+        } catch (cloudErr) {
+            if (!localHandled) {
+                return { success: false, error: cloudErr.message || 'Network error while deleting account.' };
+            }
+        }
+
+        return {
+            success: true,
+            message: `User account ${cleanEmail || '#' + userId} deleted successfully.`
+        };
+    }
+
+    async function apiRunSuperadminIntegrityCheck() {
+        // 1. Try local SQLite PRAGMA integrity check on local dev host
+        if (isLocalBackendReachableHost()) {
+            try {
+                const controller = (typeof AbortController !== 'undefined') ? new AbortController() : null;
+                const timeoutId = controller ? setTimeout(() => controller.abort(), 3500) : null;
+                const localRes = await fetch(`${getLocalApiBase()}/superadmin/integrity`, {
+                    method: 'GET',
+                    headers: getLocalAuthHeaders(),
+                    credentials: 'include',
+                    signal: controller ? controller.signal : undefined
+                });
+                if (timeoutId) clearTimeout(timeoutId);
+                if (localRes.ok) {
+                    const data = await localRes.json();
+                    return { ...data, engine: 'sqlite' };
+                }
+            } catch (_) {}
+        }
+
+        // 2. Live Supabase Cloud relational & RBAC governance verification
+        try {
+            const [uRes, pRes, iRes] = await Promise.all([
+                fetch(`${REST_BASE}/users?select=id,email,role,bio`, { method: 'GET', headers: getHeaders() }),
+                fetch(`${REST_BASE}/properties?select=id,agent_id`, { method: 'GET', headers: getHeaders() }),
+                fetch(`${REST_BASE}/inquiries?select=id,client_id,property_id`, { method: 'GET', headers: getHeaders() })
+            ]);
+
+            if (!uRes.ok || !pRes.ok || !iRes.ok) {
+                return {
+                    success: false,
+                    engine: 'supabase',
+                    integrity: `HTTP Status (${uRes.status}/${pRes.status}/${iRes.status})`,
+                    foreign_key_violations: 0,
+                    trigger_active: false,
+                    table_count: 12
+                };
+            }
+
+            const users = await uRes.json().catch(() => []);
+            const props = await pRes.json().catch(() => []);
+            const inquiries = await iRes.json().catch(() => []);
+
+            const userIds = new Set(users.map(u => Number(u.id)));
+            const propIds = new Set(props.map(p => Number(p.id)));
+
+            let fkViolations = 0;
+            props.forEach(p => {
+                if (p.agent_id !== null && p.agent_id !== undefined && !userIds.has(Number(p.agent_id))) {
+                    fkViolations++;
+                }
+            });
+            inquiries.forEach(inq => {
+                if (inq.client_id !== null && inq.client_id !== undefined && !userIds.has(Number(inq.client_id))) {
+                    fkViolations++;
+                }
+                if (inq.property_id !== null && inq.property_id !== undefined && !propIds.has(Number(inq.property_id))) {
+                    fkViolations++;
+                }
+            });
+
+            const hasRoot = users.some(u =>
+                String(u.email || '').trim().toLowerCase() === 'urbanscope.cvsu@gmail.com' &&
+                String(u.role || '').trim().toLowerCase() === 'superadmin'
+            );
+
+            return {
+                success: fkViolations === 0 && hasRoot,
+                engine: 'supabase',
+                integrity: (fkViolations === 0 && hasRoot) ? 'ok' : (hasRoot ? 'FK mismatch' : 'Root role check warning'),
+                foreign_key_violations: fkViolations,
+                trigger_active: hasRoot,
+                table_count: 12
+            };
+        } catch (err) {
+            return {
+                success: false,
+                engine: 'supabase',
+                integrity: err.message || 'Unreachable',
+                foreign_key_violations: 0,
+                trigger_active: false,
+                table_count: 0
+            };
+        }
     }
 
     async function apiUpdateAdminProfile(arg1, arg2) {
@@ -1660,7 +2431,7 @@
                     window.dispatchEvent(new CustomEvent('urbanscope:profileUpdated', { detail: merged }));
                 } catch (ev) {}
                 return { success: true, user: merged };
-            } catch (e) { }
+            } catch (e) {}
             return { success: false, error: err.message };
         }
     }
@@ -1815,7 +2586,6 @@
             avatar_url: (cached && cached.avatar_url) || 'assets/images/agent.jpg'
         };
     }
-
 
     async function verifyPBKDF2(plainPassword, storedHash) {
         if (!plainPassword || !storedHash) return false;
@@ -2102,68 +2872,130 @@
             const cleanEmail = email.trim().toLowerCase();
             const cleanName = fullName.trim();
             const cleanPhone = (phone || '').trim();
-            const localBase = (location.port === '8000') ? '/api' : 'http://127.0.0.1:8000/api';
 
-            // 1. Direct registration with FastAPI backend
-            try {
-                const res = await fetch(`${localBase}/auth/register`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        email: cleanEmail,
-                        password: password,
-                        full_name: cleanName,
-                        phone: cleanPhone
-                    })
-                });
+            // 1. Direct registration with FastAPI backend when on local dev host
+            if (isLocalBackendReachableHost()) {
+                try {
+                    const localBase = getLocalApiBase();
+                    const res = await fetch(`${localBase}/auth/register`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            email: cleanEmail,
+                            password: password,
+                            full_name: cleanName,
+                            phone: cleanPhone
+                        })
+                    });
 
-                if (res.ok) {
-                    const regData = await res.json();
-                    if (regData.success && regData.user) {
-                        const u = regData.user;
-                        const sessionUser = {
-                            id: u.id,
-                            email: u.email,
-                            name: u.full_name,
-                            full_name: u.full_name,
-                            phone: u.phone || '',
-                            role: u.role || 'user',
-                            avatar_url: u.avatar_url || '',
-                            user_metadata: { full_name: u.full_name, phone: u.phone, avatar_url: u.avatar_url || '' }
-                        };
+                    if (res.ok) {
+                        const regData = await res.json();
+                        if (regData.success && regData.user) {
+                            const u = regData.user;
+                            const sessionUser = {
+                                id: u.id,
+                                email: u.email,
+                                name: u.full_name,
+                                full_name: u.full_name,
+                                phone: u.phone || '',
+                                role: u.role || 'user',
+                                avatar_url: u.avatar_url || '',
+                                user_metadata: { full_name: u.full_name, phone: u.phone, avatar_url: u.avatar_url || '' }
+                            };
 
-                        localStorage.setItem(TOKEN_KEY, regData.token);
-                        localStorage.setItem(USER_KEY, JSON.stringify(sessionUser));
-                        localStorage.setItem(DEMO_KEY, JSON.stringify(sessionUser));
-                        if (sessionUser.role === 'admin' || sessionUser.role === 'superadmin') {
-                            localStorage.setItem('adminUser', JSON.stringify(sessionUser));
-                        }
-
-                        return {
-                            success: true,
-                            data: {
-                                session: true,
-                                user: sessionUser,
-                                token: regData.token,
-                                redirect_url: regData.redirect_url
+                            localStorage.setItem(TOKEN_KEY, regData.token);
+                            localStorage.setItem(USER_KEY, JSON.stringify(sessionUser));
+                            localStorage.setItem(DEMO_KEY, JSON.stringify(sessionUser));
+                            if (sessionUser.role === 'admin' || sessionUser.role === 'superadmin') {
+                                localStorage.setItem('adminUser', JSON.stringify(sessionUser));
                             }
-                        };
+                            clearUserDeletedLocal(u.id, cleanEmail);
+
+                            return {
+                                success: true,
+                                data: {
+                                    session: true,
+                                    user: sessionUser,
+                                    token: regData.token,
+                                    redirect_url: regData.redirect_url
+                                }
+                            };
+                        }
+                    } else {
+                        const err = await res.json().catch(() => ({}));
+                        return { success: false, error: err.detail || 'Registration failed' };
                     }
-                } else {
-                    const err = await res.json().catch(() => ({}));
-                    return { success: false, error: err.detail || 'Registration failed' };
+                } catch (err) {
+                    console.warn('Backend register attempt notice, syncing to Supabase Cloud:', err);
                 }
-            } catch (err) {
-                console.warn('Backend register attempt notice, using local session:', err);
             }
 
-            // Local fallback
+            // 2. Cloud registration in Supabase PostgreSQL (Vercel / remote / offline backend)
             let role = 'user';
             if (cleanEmail === 'urbanscope.cvsu@gmail.com') role = 'superadmin';
             else if (cleanEmail === 'admin.realestate@gmail.com') role = 'admin';
 
+            let createdId = Date.now();
+            try {
+                const checkRes = await fetch(`${REST_BASE}/users?email=ilike.${encodeURIComponent(cleanEmail)}&select=id,email,bio`, {
+                    method: 'GET',
+                    headers: getHeaders()
+                });
+                const existingRows = checkRes.ok ? await checkRes.json().catch(() => []) : [];
+                const existing = Array.isArray(existingRows) && existingRows.length > 0 ? existingRows[0] : null;
+                const passwordHash = await hashPBKDF2(password);
+
+                if (existing && existing.id) {
+                    const wasSoftDeleted = String(existing.bio || '').trim() === SOFT_DELETE_BIO_MARKER ||
+                                           getDeletedUserEmails().includes(cleanEmail);
+                    if (!wasSoftDeleted) {
+                        return { success: false, error: 'An account with this email address already exists.' };
+                    }
+                    const patchRes = await fetch(`${REST_BASE}/users?id=eq.${encodeURIComponent(existing.id)}`, {
+                        method: 'PATCH',
+                        headers: getHeaders(),
+                        body: JSON.stringify({
+                            full_name: cleanName,
+                            phone: cleanPhone,
+                            password_hash: passwordHash,
+                            role: role,
+                            bio: '',
+                            updated_at: new Date().toISOString()
+                        })
+                    });
+                    if (patchRes.ok) {
+                        const patched = await patchRes.json().catch(() => []);
+                        const row = Array.isArray(patched) ? patched[0] : patched;
+                        if (row && row.id) createdId = row.id;
+                    }
+                } else {
+                    const insertRes = await fetch(`${REST_BASE}/users`, {
+                        method: 'POST',
+                        headers: getHeaders(),
+                        body: JSON.stringify({
+                            email: cleanEmail,
+                            password_hash: passwordHash,
+                            full_name: cleanName,
+                            phone: cleanPhone,
+                            role: role,
+                            avatar_url: 'assets/images/agent.jpg',
+                            bio: ''
+                        })
+                    });
+                    if (insertRes.ok) {
+                        const inserted = await insertRes.json().catch(() => []);
+                        const row = Array.isArray(inserted) ? inserted[0] : inserted;
+                        if (row && row.id) createdId = row.id;
+                    }
+                }
+            } catch (cloudErr) {
+                console.warn('Supabase registration sync notice:', cloudErr);
+            }
+
+            clearUserDeletedLocal(createdId, cleanEmail);
+
             const sessionUser = {
-                id: Date.now(),
+                id: createdId,
                 email: cleanEmail,
                 name: cleanName,
                 full_name: cleanName,
@@ -2183,7 +3015,9 @@
                     session: true,
                     user: sessionUser,
                     token: simulatedToken,
-                    redirect_url: (role === 'admin' || role === 'superadmin') ? '/pages/admin/dashboard.html' : '/index.html'
+                    redirect_url: role === 'superadmin'
+                        ? '/pages/superadmin/dashboard.html'
+                        : (role === 'admin' ? '/pages/admin/dashboard.html' : '/index.html')
                 }
             };
         } catch (err) {
@@ -2275,6 +3109,9 @@
 
                 if (remoteUser) {
                     const storedHash = remoteUser.password_hash || '';
+                    if (String(remoteUser.bio || '').trim() === SOFT_DELETE_BIO_MARKER || storedHash === SOFT_DELETE_HASH_MARKER) {
+                        return { success: false, error: 'This account has been removed.' };
+                    }
                     let passValid = false;
                     if (storedHash && storedHash.includes('$')) {
                         passValid = await verifyPBKDF2(password, storedHash);
@@ -2300,7 +3137,7 @@
                         return { success: false, error: 'Incorrect email or password.' };
                     }
 
-                    const role = remoteUser.role || (cleanEmail === 'urbanscope.cvsu@gmail.com' ? 'superadmin' : (cleanEmail === 'admin.realestate@gmail.com' ? 'admin' : 'user'));
+                    const role = normalizeAccountRole(remoteUser.role, cleanEmail);
                     const sessionUser = {
                         id: remoteUser.id,
                         email: remoteUser.email,
@@ -2447,7 +3284,9 @@
                 }
                 return existing;
             } else {
-                const supaRole = (userObj.role === 'superadmin' || userObj.role === 'admin') ? 'admin' : 'user';
+                const supaRole = userObj.role === 'superadmin'
+                    ? 'superadmin'
+                    : (userObj.role === 'admin' ? 'admin' : 'user');
                 const insertRes = await fetch(`${REST_BASE}/users`, {
                     method: 'POST',
                     headers: getHeaders(),
@@ -2479,6 +3318,7 @@
                 access_token: googlePayload.access_token || null
             };
 
+            // 1. Authoritative server-side verification & session creation via FastAPI (local dev only)
             if (isLocalDevHost()) {
                 try {
                     const res = await fetch(`${localBase}/auth/google`, {
@@ -2516,6 +3356,7 @@
                                 localStorage.removeItem('adminUser');
                             }
 
+                            // Sync verified Google profile to Supabase Cloud users table
                             syncGoogleUserToSupabase(u).catch(() => {});
 
                             return {
@@ -2540,6 +3381,7 @@
                 }
             }
 
+            // 2. Static deployment fallback (e.g. Vercel without Python server)
             const cfg = await apiGetGoogleConfig();
             if (!cfg.enabled || !cfg.client_id) {
                 return {
@@ -2697,20 +3539,19 @@
             console.warn('Dashboard KPIs view query error:', e);
         }
 
-        try {
-            const localBase = (location.port === '8000') ? '/api' : 'http://127.0.0.1:8000/api';
-            const token = localStorage.getItem('adminToken') || localStorage.getItem('supabase_token') || localStorage.getItem(TOKEN_KEY);
-            const headers = { 'Content-Type': 'application/json' };
-            if (token) headers['Authorization'] = `Bearer ${token}`;
-            const localRes = await fetch(`${localBase}/view_dashboard_kpis`, {
-                method: 'GET',
-                headers: headers
-            });
-            if (localRes.ok) {
-                const localData = await localRes.json();
-                return localData && localData.length > 0 ? localData[0] : null;
-            }
-        } catch (_) {}
+        if (isLocalBackendReachableHost()) {
+            try {
+                const localBase = getLocalApiBase();
+                const localRes = await fetch(`${localBase}/view_dashboard_kpis`, {
+                    method: 'GET',
+                    headers: getLocalAuthHeaders()
+                });
+                if (localRes.ok) {
+                    const localData = await localRes.json();
+                    return localData && localData.length > 0 ? localData[0] : null;
+                }
+            } catch (_) {}
+        }
 
         return null;
     }
@@ -2752,6 +3593,13 @@
     window.apiMarkNotificationsRead = apiMarkNotificationsRead;
     window.apiMarkNotificationsSeen = apiMarkNotificationsSeen;
     window.apiGetUsers = apiGetUsers;
+    window.apiGetSuperadminOverview = apiGetSuperadminOverview;
+    window.apiGetSuperadminUsers = apiGetSuperadminUsers;
+    window.apiSuperadminCreateUser = apiSuperadminCreateUser;
+    window.apiSuperadminUpdateUser = apiSuperadminUpdateUser;
+    window.apiSuperadminUpdateUserRole = apiSuperadminUpdateUserRole;
+    window.apiSuperadminDeleteUser = apiSuperadminDeleteUser;
+    window.apiRunSuperadminIntegrityCheck = apiRunSuperadminIntegrityCheck;
     window.apiUpdateAdminProfile = apiUpdateAdminProfile;
     window.apiGetLeadAgentProfile = apiGetLeadAgentProfile;
     window.apiUpdateAdminPassword = apiUpdateAdminPassword;

@@ -84,9 +84,9 @@ To reset the data, delete `backend/urbanscope.db` and restart the server.
 - **Profile Picture Upload & Settings:** Visit `profile.html` to update contact details, change passwords, and upload custom profile photos (< 5MB limit) with automatic canvas optimization, live topbar avatar synchronization, and one-click photo reset. User account directory and role management are reserved for the Superadmin.
 
 ### 3. Superadministrator Guide
-- **Master Overview:** Access `/pages/superadmin/dashboard.html` for elevated system diagnostics and security governance.
-- **RBAC Role & Account Management:** Full user account modification (edit full name, email, contact phone, account role `user`/`admin`/`superadmin`, and password resets) with protected root superadmin credentials.
-- **System Health:** Run diagnostics on the SQLite database, triggers, and monitor API connectivity.
+- **Master Overview:** Access `/pages/superadmin/dashboard.html` for elevated system diagnostics, live KPI metrics, and security governance across both local FastAPI/SQLite and cloud deployments.
+- **RBAC Role & Account Management:** Full user account governance (create client/admin accounts, edit full name, email, contact phone, account role `user`/`admin`/`superadmin`, promote/demote permissions, delete non-protected accounts, and reset passwords) synchronized across local SQLite and Supabase Cloud with protected root superadmin credentials.
+- **System Health:** Run live diagnostics on database storage, foreign-key/schema integrity, role triggers, and API connectivity.
 
 ---
 

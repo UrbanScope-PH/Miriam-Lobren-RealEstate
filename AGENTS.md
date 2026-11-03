@@ -541,6 +541,19 @@ path when rendering from a page.
       - Closing the modal early (`#closeTermsModalBtn`, backdrop click, `Escape`, or `#declineTermsBtn`) leaves `#terms` unchecked, and attempting to submit `#registerForm` without accepting automatically opens `#termsModalOverlay` with an attention prompt.
       - Uses `position: fixed; inset: 0; width: 100%; height: 100%;` (avoiding `100vw/100vh` skew) so the modal centers accurately under `html { zoom: 1.25; }` on desktop as well as `zoom: 1` on tablet and mobile viewports.
 
+44. **Superadmin Console Cloud + Local Dual-Tier RBAC Governance & `Failed to fetch` Fix:**
+    - **Problem Identified**: On remote HTTPS deployments (`https://miriam-lobren-real-estate.vercel.app/pages/superadmin/dashboard.html`), opening **Users & RBAC Roles** threw `Error loading users: Failed to fetch` and left sidebar badges at `--`.
+    - **Root Causes**:
+      1. `frontend/pages/superadmin/dashboard.js` previously hardcoded raw `fetch('http://127.0.0.1:8000/api/...')` calls (`getApiBase()`) instead of using the dual-tier `supabase.js` gateway, triggering browser Mixed Content / Private Network Access network failures on HTTPS hosts.
+      2. Supabase Cloud `users` rows use `role = 'client'` (default from initial Postgres schema) alongside `'user'`, whereas `#userRoleFilter` and `#editRole` only matched `'user'`.
+      3. `supabase/migrations/20261028000000_initial_schema.sql` enabled RLS on `users` with `SELECT`, `INSERT`, and `UPDATE` policies, but omitted `FOR DELETE`, causing PostgREST `DELETE /rest/v1/users` to return `[]`.
+      4. In local SQLite (`backend/database.py`), `trg_user_role_insert` reset newly inserted Superadmin-created `'admin'` accounts back to `'user'` unless re-applied after `INSERT`.
+    - **Solution Implemented**:
+      - **Dual-Tier Superadmin Gateway (`frontend/shared/js/supabase.js` & `api.js`)**: Added `isLocalBackendReachableHost()` (`isLocalDevHost() && location.protocol !== 'https:'`) across all remaining loopback calls and exposed `apiGetSuperadminOverview`, `apiGetSuperadminUsers`, `apiSuperadminCreateUser` (with Web Crypto PBKDF2 hashing), `apiSuperadminUpdateUser`, `apiSuperadminUpdateUserRole`, `apiSuperadminDeleteUser`, and `apiRunSuperadminIntegrityCheck`.
+      - **Role Normalization & UI Sync (`frontend/pages/superadmin/dashboard.js` & `dashboard.html`)**: Wired all Superadmin loaders, modals, and diagnostics through the gateway, normalized `'client'` -> `'user'` via `normalizeRole()`, populated sidebar count badges immediately, and dynamically adapted database status labels (`Supabase Cloud Status` vs `SQLite Engine Status`).
+      - **Supabase `DELETE` RLS Migration & Cross-Device Fallback (`supabase/migrations/20261103231500_allow_delete_users_rls.sql`)**: Added atomic idempotent `"Allow delete users"` RLS policy on `users` (mirrored in `backend/supabase_schema.sql`), plus a cross-device soft-delete `PATCH` fallback (`bio = '__URBANSCOPE_DELETED__'`, `password_hash = '__DELETED_ACCOUNT__'`) in `supabase.js` / `superadmin.py` if physical `DELETE` returns `[]` prior to migration push.
+      - **Backend Trigger & Cloud Sync (`backend/routers/superadmin.py` & `backend/routers/auth.py`)**: Re-applies `assigned_role` after `INSERT` in `POST /api/superadmin/users` so `trg_user_role_insert` preserves Superadmin-created `'admin'` accounts, and synchronizes user directory / Superadmin CRUD / sign-ups non-blockingly with Supabase Cloud (controllable via `URBANSCOPE_DISABLE_CLOUD_SYNC=1` for isolated offline tests).
+
 ---
 
 ## Safety Rules

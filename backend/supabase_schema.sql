@@ -518,10 +518,11 @@ CREATE POLICY "Allow read appointments" ON appointments FOR SELECT USING (true);
 CREATE POLICY "Allow update appointments" ON appointments FOR UPDATE USING (true);
 CREATE POLICY "Allow delete appointments" ON appointments FOR DELETE USING (true);
 
--- Users: Authentication, profile lookup, and sign up
+-- Users: Authentication, profile lookup, sign up, and superadmin account management
 CREATE POLICY "Allow read users" ON users FOR SELECT USING (true);
 CREATE POLICY "Allow insert users" ON users FOR INSERT WITH CHECK (true);
 CREATE POLICY "Allow update users" ON users FOR UPDATE USING (true);
+CREATE POLICY "Allow delete users" ON users FOR DELETE USING (true);
 
 -- Saved Properties & Notifications
 CREATE POLICY "Allow manage saved properties" ON saved_properties FOR ALL USING (true);

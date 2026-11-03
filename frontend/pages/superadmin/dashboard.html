@@ -200,7 +200,7 @@
                 <div class="sa-sys-card">
                     <div class="sa-sys-header">
                         <span class="status-indicator online"></span>
-                        <strong>SQLite Engine Status</strong>
+                        <strong id="saDbEngineTitle">SQLite Engine Status</strong>
                     </div>
                     <p class="sa-sys-details" id="saDbFileStatus">Database: urbanscope.db</p>
                     <span class="sa-sys-badge" id="saTriggerStatusBadge">Trigger: Active</span>
@@ -302,7 +302,7 @@
                         <div class="kpi-info">
                             <span class="kpi-label">Database Storage</span>
                             <strong class="kpi-value" id="kpiDbSize">-- KB</strong>
-                            <span class="kpi-sub">SQLite 3 Persistent File</span>
+                            <span class="kpi-sub" id="kpiDbSub">SQLite 3 Persistent File</span>
                         </div>
                     </article>
                 </div>
@@ -646,7 +646,7 @@
                     <article class="sa-card feature-card">
                         <div class="feature-card-header">
                             <div>
-                                <span class="section-eyebrow">SQLITE ENGINE</span>
+                                <span class="section-eyebrow" id="diagEngineEyebrow">SQLITE ENGINE</span>
                                 <h3>Database Diagnostics</h3>
                                 <p>File structure and integrity check status</p>
                             </div>
@@ -662,7 +662,7 @@
                             <ul class="sa-diag-list">
                                 <li>
                                     <span>Database File Location</span>
-                                    <code>backend/urbanscope.db</code>
+                                    <code id="diagDbLocation">backend/urbanscope.db</code>
                                 </li>
                                 <li>
                                     <span>Database File Size</span>

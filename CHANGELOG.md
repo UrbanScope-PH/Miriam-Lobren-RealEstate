@@ -35,6 +35,7 @@ This document records all features, enhancements, bug fixes, user requests, arch
 | **Nov 2026** | **Password Visibility Toggle** | Added interactive show/hide password toggle buttons to Current, New, and Confirm password inputs in admin profile settings | `profile.html`, `profile.css`, `profile.js` |
 | **Nov 2026** | **Admin Password Invalidation** | Complete invalidation of old passwords upon update, proactive cloud sync on login, and removal of default credential bypasses | `backend/routers/auth.py`, `supabase.js`, `api.js`, `profile.js` |
 | **Nov 2026** | **Registration Terms Modal** | Added mandatory scroll-to-accept Terms of Service & Privacy Policy popup modal on registration page before allowing account creation | `register.html`, `register.js`, `auth.css`, `auth.js` |
+| **Nov 2026** | **Superadmin RBAC Cloud Sync** | Fixed `Error loading users: Failed to fetch` on Vercel Superadmin Console, added dual-tier Supabase Cloud + FastAPI Superadmin gateway methods, `'client'`/`'user'` role normalization, `users` DELETE RLS migration, and SQLite trigger preservation for admin creation | `pages/superadmin/dashboard.js`, `dashboard.html`, `supabase.js`, `api.js`, `backend/routers/superadmin.py`, `backend/routers/auth.py`, `supabase/migrations/20261103231500_allow_delete_users_rls.sql` |
 
 ---
 
@@ -392,6 +393,16 @@ This document records all features, enhancements, bug fixes, user requests, arch
   - Added scroll tracking (`evaluateTermsScroll()` in `register.js`) with a live reading progress bar (`#termsScrollBar`) and status banner (`#termsScrollHint`).
   - Kept the **I Agree** button (`#acceptTermsBtn`) locked (`disabled`) until the user scrolls to the bottom of the agreement (`scrollHeight - scrollTop - clientHeight <= 16`).
   - Clicking **I Agree** checks `#terms`, applies `.is-accepted` styling, closes the modal, and focuses **Create Account**; closing early or clicking **Cancel** leaves `#terms` unchecked, and attempting form submission without accepting automatically opens the modal.
+
+---
+
+### 23. Superadmin Console Users & RBAC Roles Cloud Fix (`Failed to fetch`)
+- **User Prompt:** *"fix this error in user and rbac on superadmin page"*
+- **Rationale & Implementation:**
+  - Replaced hardcoded `http://127.0.0.1:8000/api` requests in `frontend/pages/superadmin/dashboard.js` with dual-tier gateway methods in `frontend/shared/js/supabase.js` and `frontend/shared/js/api.js` (`apiGetSuperadminOverview`, `apiGetSuperadminUsers`, `apiSuperadminCreateUser`, `apiSuperadminUpdateUser`, `apiSuperadminUpdateUserRole`, `apiSuperadminDeleteUser`, `apiRunSuperadminIntegrityCheck`) guarded by `isLocalBackendReachableHost()` so HTTPS/Vercel deployments connect directly to Supabase Cloud without loopback network errors.
+  - Normalized `'client'` and `'user'` account roles across Superadmin table badges, role filters, edit modals, and SQLite sync.
+  - Added atomic idempotent Supabase migration `supabase/migrations/20261103231500_allow_delete_users_rls.sql` granting `DELETE` RLS policy on `users`, with an automatic soft-delete `PATCH` fallback before migration push.
+  - Updated `backend/routers/superadmin.py` to preserve Superadmin-assigned `'admin'` roles after `trg_user_role_insert` and synchronize Superadmin CRUD operations with Supabase Cloud.
 
 ---
 
