@@ -503,6 +503,23 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         btn.addEventListener("click", async () => {
+            // On the Registration page, require Terms of Service & Privacy Policy approval before Google OAuth
+            const isRegisterGoogleBtn = btn.id === "googleSignup" || Boolean(document.getElementById("registerForm"));
+            if (isRegisterGoogleBtn) {
+                if (typeof window.urbanscopeCheckRegisterTermsForGoogle === "function") {
+                    if (!window.urbanscopeCheckRegisterTermsForGoogle()) {
+                        return;
+                    }
+                } else {
+                    const termsBox = document.getElementById("terms");
+                    if (termsBox && !termsBox.checked) {
+                        const termsLabelEl = document.getElementById("termsLabel");
+                        if (termsLabelEl) termsLabelEl.click();
+                        return;
+                    }
+                }
+            }
+
             renderGoogleBanner(btn, "");
             setLoadingState(true, "Connecting to Google...");
 

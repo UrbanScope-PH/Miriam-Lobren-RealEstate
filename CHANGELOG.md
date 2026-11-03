@@ -36,6 +36,7 @@ This document records all features, enhancements, bug fixes, user requests, arch
 | **Nov 2026** | **Admin Password Invalidation** | Complete invalidation of old passwords upon update, proactive cloud sync on login, and removal of default credential bypasses | `backend/routers/auth.py`, `supabase.js`, `api.js`, `profile.js` |
 | **Nov 2026** | **Registration Terms Modal** | Added mandatory scroll-to-accept Terms of Service & Privacy Policy popup modal on registration page before allowing account creation | `register.html`, `register.js`, `auth.css`, `auth.js` |
 | **Nov 2026** | **Superadmin RBAC Cloud Sync** | Fixed `Error loading users: Failed to fetch` on Vercel Superadmin Console, added dual-tier Supabase Cloud + FastAPI Superadmin gateway methods, `'client'`/`'user'` role normalization, `users` DELETE RLS migration, and SQLite trigger preservation for admin creation | `pages/superadmin/dashboard.js`, `dashboard.html`, `supabase.js`, `api.js`, `backend/routers/superadmin.py`, `backend/routers/auth.py`, `supabase/migrations/20261103231500_allow_delete_users_rls.sql` |
+| **Nov 2026** | **Google Sign-Up Terms Gate** | Enforced mandatory scroll-to-accept Terms of Service & Privacy Policy approval before launching Google OAuth on registration (`#googleSignup`), seamlessly continuing into Google sign-up upon clicking **I Agree** | `frontend/pages/auth/register.js`, `frontend/pages/auth/auth.js` |
 
 ---
 
@@ -403,6 +404,15 @@ This document records all features, enhancements, bug fixes, user requests, arch
   - Normalized `'client'` and `'user'` account roles across Superadmin table badges, role filters, edit modals, and SQLite sync.
   - Added atomic idempotent Supabase migration `supabase/migrations/20261103231500_allow_delete_users_rls.sql` granting `DELETE` RLS policy on `users`, with an automatic soft-delete `PATCH` fallback before migration push.
   - Updated `backend/routers/superadmin.py` to preserve Superadmin-assigned `'admin'` roles after `trg_user_role_insert` and synchronize Superadmin CRUD operations with Supabase Cloud.
+
+---
+
+### 24. Mandatory Terms of Service & Privacy Policy Gate on Google OAuth Registration
+- **User Prompt:** *"when im registering using google oauth, it there should still be a needed for terms of condition and privacy to be approve or check"*
+- **Rationale & Implementation:**
+  - Intercepted clicks on **Sign up with Google** (`#googleSignup`) in `frontend/pages/auth/register.js` (`ensureTermsAcceptedForGoogleSignup` / `window.urbanscopeCheckRegisterTermsForGoogle`) and `frontend/pages/auth/auth.js` (`attachGoogleButton`) whenever the Terms of Service & Privacy Policy checkbox (`#terms`) has not yet been scrolled and accepted.
+  - Clicking **Sign up with Google** without prior acceptance opens `#termsModalOverlay` with contextual guidance (*"Please scroll to the bottom and click 'I Agree' before signing up with Google"*).
+  - Once scrolled to the bottom, clicking **I Agree** (`#acceptTermsBtn`) checks `#terms` and immediately launches the Google OAuth account picker within the user gesture; cancelling or closing early leaves `#terms` unchecked without opening Google OAuth.
 
 ---
 
