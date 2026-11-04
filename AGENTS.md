@@ -558,6 +558,11 @@ path when rendering from a page.
     - The console is limited to the superadmin overview, account and role governance, and system health diagnostics. Property catalog and client inquiry operations remain in the Agent Admin portal.
     - The overview reports account totals, privileged account totals, and database storage; the account table has a focused account search and a single `Joined Date` column. The redundant cross-workflow global search and duplicate table heading were removed.
     - Superadmin data loading and deep links now cover only overview, users, and system health. The responsive KPI layout uses three desktop columns and collapses for narrower screens.
+    - The Superadmin sidebar uses the shared forest-green navigation treatment, standardized 20px line icons, and clear active-state marker. KPI and governance action icons use the shared green palette while role badges keep their role-specific colors.
+
+46. **Admin Navigation & Brand Consistency (`frontend/pages/admin/admin-shell.css` and admin pages):**
+    - Admin sidebars share the Dashboard, Properties, Clients, Inquiries, and Profile & Security labels and a matching SVG icon set across the dashboard, property list, client, profile, add-property, and edit-property screens.
+    - Shared shell styles define the active navigation color and icon stroke treatment. Dashboard KPI/action icons and primary form/action controls use the UrbanScope green tokens rather than separate hard-coded brand greens.
 
 ---
 

@@ -74,6 +74,7 @@ To reset the data, delete `backend/urbanscope.db` and restart the server.
 
 ### 2. Administrator Guide (Miriam Lobren & Team)
 - **Unified Sign-In:** Log in via `/pages/auth/login.html`. Authorized administrative accounts are automatically routed to the Admin Dashboard.
+- **Shared Admin Navigation:** Dashboard, Properties, Clients, Inquiries, and Profile & Security use the same sidebar icons, section labels, active state, and UrbanScope green palette across admin screens.
 - **Dashboard Overview & Inquiry Modal:** Monitor business health with key metrics: Total Properties, Total Inquiries, Pending Follow-ups, and recent activity streams. Click **View** on any inquiry to open an interactive modal with full message details, tour schedule, direct email reply, and instant **Approve Inquiry** action that immediately updates the client's inquiry history in real time.
 - **Managing Properties (CRUD):**
   - **View Listings:** Access `propertylist.html` to browse active catalog listings with status indicators.
@@ -84,6 +85,7 @@ To reset the data, delete `backend/urbanscope.db` and restart the server.
 - **Profile Picture Upload & Settings:** Visit `profile.html` to update contact details, change passwords, and upload custom profile photos (< 5MB limit) with automatic canvas optimization, live topbar avatar synchronization, and one-click photo reset. User account directory and role management are reserved for the Superadmin.
 
 ### 3. Superadministrator Guide
+- **Console Navigation & Visuals:** The sidebar contains only Overview, Accounts & Roles, and System Health. Its navigation, icons, KPI tiles, and governance actions use the shared UrbanScope green treatment.
 - **Master Overview:** Access `/pages/superadmin/dashboard.html` for account totals, privileged-role counts, and database storage status across local FastAPI/SQLite and cloud deployments.
 - **Console Sections:** Use **Accounts & Roles** to manage user accounts and access levels, and **System Health** to run database integrity and role-trigger checks. Property listings and client inquiries are handled through the linked Admin Portal.
 - **RBAC Role & Account Management:** Full user account governance (create client/admin accounts, edit full name, email, contact phone, account role `user`/`admin`/`superadmin`, promote/demote permissions, delete non-protected accounts, and reset passwords) synchronized across local SQLite and Supabase Cloud with protected root superadmin credentials.

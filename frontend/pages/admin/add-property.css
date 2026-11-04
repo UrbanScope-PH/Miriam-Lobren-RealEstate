@@ -65,7 +65,7 @@
     border-radius: 7px;
 
     background: var(--white);
-    color: #356f36;
+    color: var(--accent-green);
 
     font-size: 13px;
     font-weight: 600;
@@ -194,7 +194,7 @@
 .form-group input:focus,
 .form-group select:focus,
 .form-group textarea:focus {
-    border-color: #356f36;
+    border-color: var(--accent-green);
     box-shadow: 0 0 0 3px rgba(53, 111, 54, 0.08);
 }
 
@@ -236,7 +236,7 @@
 }
 
 .input-with-prefix:focus-within {
-    border-color: #356f36;
+    border-color: var(--accent-green);
     box-shadow: 0 0 0 3px rgba(53, 111, 54, 0.08);
 }
 
@@ -285,7 +285,7 @@
 }
 
 .input-with-suffix:focus-within {
-    border-color: #356f36;
+    border-color: var(--accent-green);
     box-shadow: 0 0 0 3px rgba(53, 111, 54, 0.08);
 }
 
@@ -330,7 +330,7 @@
 }
 
 .upload-area:hover {
-    border-color: #356f36;
+    border-color: var(--accent-green);
     background: #f7faf7;
 }
 
@@ -345,8 +345,8 @@
 
     border-radius: 50%;
 
-    background: #e8f0e8;
-    color: #356f36;
+    background: var(--light-green);
+    color: var(--accent-green);
 
     font-size: 25px;
 }
@@ -377,7 +377,7 @@
     border: none;
     border-radius: 6px;
 
-    background: #356f36;
+    background: var(--accent-green);
     color: var(--white);
 
     font-size: 13px;
@@ -390,7 +390,7 @@
 }
 
 .upload-btn:hover {
-    background: #2b5c2e;
+    background: var(--green);
 }
 
 .upload-area small {
@@ -487,14 +487,14 @@
 }
 
 .save-btn {
-    border-color: #356f36;
-    background: #356f36;
+    border-color: var(--accent-green);
+    background: var(--accent-green);
     color: var(--white);
 }
 
 .save-btn:hover {
-    border-color: #2b5c2e;
-    background: #2b5c2e;
+    border-color: var(--green);
+    background: var(--green);
 }
 
 
