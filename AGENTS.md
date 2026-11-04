@@ -641,7 +641,7 @@ path when rendering from a page.
 
 50. **Admin Property Viewing Calendar Date Sync (`frontend/pages/admin/dashboard.html` and `dashboard.js`):**
     - The calendar initializes to the browser's current local date, refreshes its today marker at local midnight and when the page regains focus, and keeps the selected agenda date aligned while navigating months.
-    - Calendar markers and agenda cards are built from configured appointment records; hard-coded sample events were removed and cancelled appointments are hidden.
+    - Calendar markers and agenda cards combine configured appointment records with client inquiry messages containing `[Preferred Schedule: YYYY-MM-DD | time]`. Submitted requests appear promptly from inquiry refreshes, cancelled inquiries/appointments are hidden, and hard-coded sample events are not used.
 
 ---
 

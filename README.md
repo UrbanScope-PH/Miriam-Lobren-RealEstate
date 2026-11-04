@@ -76,7 +76,7 @@ To reset the data, delete `backend/urbanscope.db` and restart the server.
 - **Unified Sign-In:** Log in via `/pages/auth/login.html`. Authorized administrative accounts are automatically routed to the Admin Dashboard.
 - **Shared Admin Navigation:** Dashboard, Properties, Clients, Inquiries, and Profile & Security use the same sidebar icons, section labels, active state, and UrbanScope green palette across admin screens.
 - **Dashboard Overview & Inquiry Modal:** Monitor business health with key metrics: Total Properties, Total Inquiries, Pending Follow-ups, and recent activity streams. Click **View** on any inquiry to open an interactive modal with full message details, tour schedule, direct email reply, and instant **Approve Inquiry** action that immediately updates the client's inquiry history in real time.
-- **Property Viewing Calendar:** Opens on today's browser-local date, marks the current day, supports month and date selection, and displays configured appointment records on their scheduled dates.
+- **Property Viewing Calendar:** Opens on today's browser-local date, marks the current day, supports month and date selection, and shows configured appointments plus client inquiry requests with preferred dates and times.
 - **Managing Properties (CRUD):**
   - **View Listings:** Access `propertylist.html` to browse active catalog listings with status indicators.
   - **Add Property:** Click **Add New Property** (`add-property.html`) to input property name, category, price (₱), location, bedrooms, bathrooms, dimensions, amenities, and upload images.

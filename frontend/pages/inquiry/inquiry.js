@@ -376,8 +376,13 @@ window.addEventListener('DOMContentLoaded', () => {
     // Set min date on datepicker to today
     const dateInput = document.getElementById('preferredDate');
     if (dateInput) {
-        const today = new Date().toISOString().split('T')[0];
-        dateInput.min = today;
+        const today = new Date();
+        const localToday = [
+            today.getFullYear(),
+            String(today.getMonth() + 1).padStart(2, '0'),
+            String(today.getDate()).padStart(2, '0')
+        ].join('-');
+        dateInput.min = localToday;
     }
 
     // Modal close handlers

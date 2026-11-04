@@ -46,6 +46,9 @@ let selectedDate = formatDateKey(
 );
 let lastCalendarTodayKey = selectedDate;
 let calendarAppointments = Object.create(null);
+let calendarAppointmentRecords = [];
+let calendarInquiryRequests = [];
+let calendarInquiryRequestSignature = "";
 let calendarAppointmentsLoaded = false;
 let calendarMidnightTimer = null;
 
@@ -84,10 +87,15 @@ function normalizeCalendarDateKey(value) {
     );
 }
 
-function setCalendarAppointments(appointments) {
+function rebuildCalendarSchedule() {
     const nextAppointments = Object.create(null);
+    const addAppointment = (dateKey, appointment) => {
+        if (!dateKey) return;
+        if (!nextAppointments[dateKey]) nextAppointments[dateKey] = [];
+        nextAppointments[dateKey].push(appointment);
+    };
 
-    (Array.isArray(appointments) ? appointments : []).forEach(appointment => {
+    calendarAppointmentRecords.forEach(appointment => {
         if (!appointment || typeof appointment !== "object") return;
 
         const dateKey = normalizeCalendarDateKey(appointment.appointment_date);
@@ -95,8 +103,7 @@ function setCalendarAppointments(appointments) {
 
         if (!dateKey || status === "cancelled" || status === "canceled") return;
 
-        if (!nextAppointments[dateKey]) nextAppointments[dateKey] = [];
-        nextAppointments[dateKey].push({
+        addAppointment(dateKey, {
             time: appointment.appointment_time || "Time to be confirmed",
             title: appointment.title || appointment.property_title || "Client property viewing",
             description: appointment.description
@@ -104,10 +111,80 @@ function setCalendarAppointments(appointments) {
         });
     });
 
+    calendarInquiryRequests.forEach(request => {
+        addAppointment(request.dateKey, {
+            time: request.time,
+            title: request.title,
+            description: request.description
+        });
+    });
+
     calendarAppointments = nextAppointments;
-    calendarAppointmentsLoaded = true;
     renderCalendar();
     renderAgenda();
+}
+
+function setCalendarAppointments(appointments) {
+    calendarAppointmentRecords = Array.isArray(appointments) ? appointments : [];
+    calendarAppointmentsLoaded = true;
+    rebuildCalendarSchedule();
+}
+
+function getInquiryCalendarRequest(inquiry) {
+    if (!inquiry || typeof inquiry !== "object") return null;
+
+    const status = String(inquiry.status || "Under Review").trim();
+    if (["cancelled", "canceled"].includes(status.toLowerCase())) return null;
+
+    const message = String(inquiry.message || "");
+    const scheduleMatch = message.match(
+        /\[Preferred Schedule:\s*(\d{4}-\d{2}-\d{2})\s*\|\s*([^\]\r\n]*)\]/i
+    );
+    if (!scheduleMatch) return null;
+
+    const dateKey = normalizeCalendarDateKey(scheduleMatch[1]);
+    if (!dateKey) return null;
+
+    const clientName = String(inquiry.client_name || "").trim() || "Client";
+    const inquiryTitle = String(inquiry.property_title || "").trim() || "Property viewing";
+    const time = scheduleMatch[2].trim() || "Flexible / Any Time";
+    const isViewingRequest = /view|tripping|site/i.test(inquiryTitle);
+    const identity = [
+        dateKey,
+        time.toLowerCase(),
+        String(inquiry.client_email || clientName).trim().toLowerCase(),
+        inquiryTitle.toLowerCase()
+    ].join("|");
+
+    return {
+        dateKey,
+        time,
+        title: `${isViewingRequest ? "Viewing" : "Consultation"} request · ${inquiryTitle}`,
+        description: `Requested by ${clientName} · ${status}`,
+        identity
+    };
+}
+
+function setCalendarInquiryRequests(inquiries) {
+    const uniqueRequests = new Map();
+    (Array.isArray(inquiries) ? inquiries : []).forEach(inquiry => {
+        const request = getInquiryCalendarRequest(inquiry);
+        if (request) uniqueRequests.set(request.identity, request);
+    });
+
+    const requests = Array.from(uniqueRequests.values()).sort((a, b) =>
+        a.dateKey.localeCompare(b.dateKey)
+        || a.time.localeCompare(b.time)
+        || a.identity.localeCompare(b.identity)
+    );
+    const signature = JSON.stringify(requests);
+
+    if (signature === calendarInquiryRequestSignature) return;
+
+    calendarInquiryRequestSignature = signature;
+    calendarInquiryRequests = requests;
+    calendarAppointmentsLoaded = true;
+    rebuildCalendarSchedule();
 }
 
 async function loadCalendarAppointments() {
@@ -255,7 +332,7 @@ function renderCalendar() {
 
         if (calendarAppointments[dateKey]?.length) {
             dayButton.classList.add("has-event");
-            dayButton.title = "Scheduled property viewing";
+            dayButton.title = "Viewing request or scheduled appointment";
         }
 
         dayButton.addEventListener("click", () => {
@@ -887,6 +964,7 @@ async function loadDashboardData() {
         } else {
             inquiries = JSON.parse(localStorage.getItem("inquiries") || "[]");
         }
+        setCalendarInquiryRequests(inquiries);
 
         let properties = [];
         if (propertiesRes.status === "fulfilled" && Array.isArray(propertiesRes.value)) {
