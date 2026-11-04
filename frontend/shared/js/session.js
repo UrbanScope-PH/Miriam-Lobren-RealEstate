@@ -544,11 +544,11 @@
         var inAdmin = path.includes('/pages/admin/') || path.includes('/pages/superadmin/');
         if (inAdmin) return;
 
-        var navbar = document.querySelector('.navbar');
+        var navbar = document.querySelector('.navbar, .app-topbar');
         var nav = document.getElementById('mainNav');
         if (!navbar || !nav) return;
 
-        var acts = navbar.querySelector('.nav-acts');
+        var acts = navbar.querySelector('.nav-acts, .topbar-right');
         var toggle = document.getElementById('mobileNavToggle');
         if (!toggle) {
             toggle = document.createElement('button');
@@ -605,6 +605,14 @@
             toggle.setAttribute('aria-expanded', String(open));
             backdrop.classList.toggle('active', open);
             document.body.classList.toggle('nav-locked', open);
+
+            if (open) {
+                navbar.querySelectorAll('.profile-menu.open, .client-notif-wrap.open').forEach(function (menu) {
+                    menu.classList.remove('open');
+                    var button = menu.querySelector('[aria-expanded="true"]');
+                    if (button) button.setAttribute('aria-expanded', 'false');
+                });
+            }
         }
 
         toggle.onclick = function (e) {
@@ -615,6 +623,14 @@
         backdrop.onclick = function () {
             setMenuOpen(false);
         };
+
+        if (acts) {
+            acts.addEventListener('click', function (e) {
+                if (nav.classList.contains('mobile-open') && e.target.closest('#profileChip, #clientNotifBtn')) {
+                    setMenuOpen(false);
+                }
+            });
+        }
 
         nav.onclick = function (e) {
             if (e.target.tagName === 'A' || e.target.closest('a')) {

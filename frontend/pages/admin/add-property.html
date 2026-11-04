@@ -6,6 +6,7 @@
 
     <title>Add Property | Miriam Lobren</title>
     <link rel="stylesheet" href="add-property.css">
+    <link rel="stylesheet" href="../../shared/css/mobile-shell.css">
 </head>
 <body>
     <!-- TOP NAVIGATION BAR -->
@@ -16,6 +17,8 @@
                 class="hamburger-btn"
                 id="sidebarToggle"
                 type="button"
+                aria-controls="adminSidebar"
+                aria-expanded="false"
                 aria-label="Toggle sidebar menu"
             >
                 <svg width="24" height="24" viewBox="0 0 24 24"
@@ -129,7 +132,7 @@
             </button>
         </div>
 
-        <nav class="sidebar-nav">
+        <nav class="sidebar-nav" aria-label="Admin navigation">
             <a href="dashboard.html" class="nav-item">
                 <svg width="20" height="20" viewBox="0 0 24 24"
                     fill="none" stroke="currentColor" stroke-width="2">

@@ -16,6 +16,7 @@
 
         function openSidebar() {
             sidebar.classList.add("open");
+            if (toggleBtn) toggleBtn.setAttribute("aria-expanded", "true");
             if (backdrop) {
                 backdrop.classList.add("active");
                 backdrop.classList.add("show");
@@ -25,6 +26,7 @@
 
         function closeSidebar() {
             sidebar.classList.remove("open");
+            if (toggleBtn) toggleBtn.setAttribute("aria-expanded", "false");
             if (backdrop) {
                 backdrop.classList.remove("active");
                 backdrop.classList.remove("show");
@@ -57,10 +59,18 @@
             };
         }
 
+        sidebar.addEventListener("click", function (e) {
+            if (e.target.closest("a")) closeSidebar();
+        });
+
         document.addEventListener("keydown", function (e) {
             if (e.key === "Escape" && sidebar.classList.contains("open")) {
                 closeSidebar();
             }
+        });
+
+        window.addEventListener("resize", function () {
+            if (window.innerWidth > 768 && sidebar.classList.contains("open")) closeSidebar();
         });
     }
 

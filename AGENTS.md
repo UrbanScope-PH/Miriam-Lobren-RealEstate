@@ -629,6 +629,14 @@ path when rendering from a page.
       - SQLite `backend/urbanscope.db` updated with `UPDATE properties SET title = ...`.
       - SQL seeds `backend/database.py`, `backend/supabase_schema.sql`, and `supabase/seed.sql` updated to maintain the standardized names.
 
+50. **Admin Property Viewing Calendar Date Sync (`frontend/pages/admin/dashboard.html` and `dashboard.js`):**
+    - The calendar initializes to the browser's current local date, refreshes its today marker at local midnight and when the page regains focus, and keeps the selected agenda date aligned while navigating months.
+    - Calendar markers and agenda cards combine configured appointment records with client inquiry messages containing `[Preferred Schedule: YYYY-MM-DD | time]`. Submitted requests appear promptly from inquiry refreshes, cancelled inquiries/appointments are hidden, and hard-coded sample events are not used.
+
+51. **Inquiry Details Modal — Preferred Schedule Extraction (`dashboard.js` & `clients.js`):**
+    - The inquiry form (`pages/inquiry/inquiry.js`) does not store a separate schedule column; it prepends `[Preferred Schedule: YYYY-MM-DD | Time]` (or `[Preferred Slot: Time]` when no date is picked) to the inquiry `message`.
+    - `parseInquirySchedule(rawMessage, explicitSchedule)` (defined in both `frontend/pages/admin/dashboard.js` and `frontend/pages/admin/clients.js`) extracts that tag, formats it as e.g. `Sat, Nov 7, 2026 · Afternoon (1:00 PM - 5:00 PM)` for the **Preferred Schedule** box, and strips the tag from the **Message / Client Request** box. A real `schedule_date` / `preferred_date` value, if present, still takes priority. Inquiries without a tag show `No schedule requested`.
+
 ---
 
 ## Safety Rules
