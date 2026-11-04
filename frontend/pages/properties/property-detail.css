@@ -396,6 +396,14 @@
     text-align: center;
 }
 
+/* Hide inquiry note when user is logged in */
+html.logged-in .inquiry-note,
+body.logged-in .inquiry-note,
+html[data-auth-state="logged-in"] .inquiry-note,
+.logged-in .inquiry-note {
+    display: none !important;
+}
+
 /* RESPONSIVE */
 @media (max-width: 900px) {
     .detail-container {
