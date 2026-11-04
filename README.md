@@ -9,7 +9,7 @@ Built for **Miriam Lobren Real Estate Agent** (Las Piñas & Cavite, Philippines)
 
 ## ✨ Features
 
-- **Property Showcase** — featured listings with category tabs, detail pages with photo galleries, specs, and maps.
+- **Property Showcase** — featured accredited listings (Casasuerte, Kathleen, Liora Homes, Airmen's Village Triplex) with category tabs, detail showcases, photo galleries, accurate zoomed-in location maps, and Total Contract Price (TCP) financing computations (Pag-IBIG & Bank Financing).
 - **Client Accounts & Google Sign-In** — registration with PH phone validation and password strength meter, plus one-click **Google Authentication** (OAuth 2.0 via Google Identity Services); unified sign-in that routes users by role.
 - **Consultations & Inquiries** — interactive consultation intent flow allowing clients to book general consultations (free site tripping, loan pre-approval, property advice) or inquire about specific accredited listings, with client inquiry history tracking and cross-device notification synchronization.
 - **Admin Dashboard** — KPI cards, inquiry charts, property CRUD, client inquiry tracking, and user overview.

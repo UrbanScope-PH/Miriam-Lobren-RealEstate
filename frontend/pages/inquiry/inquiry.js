@@ -135,32 +135,48 @@ async function loadPropertiesCatalog() {
         loadedProperties = [
             {
                 id: 1,
-                title: "Residential Lot",
-                location: "Manuyo, Las Piñas City",
-                property_type: "Residential Lot",
-                price: 3500000,
-                lot_area: 200,
-                image_url: "assets/images/property1.jpg"
+                title: "Casasuerte",
+                location: "Barangay San Agustin, Trece Martires City, Cavite",
+                property_type: "Townhouse",
+                price: 2500000,
+                lot_area: 50,
+                image_url: "assets/images/casasuerte.jpg"
             },
             {
                 id: 2,
-                title: "Liora Homes",
-                location: "Pasong Buaya II, Imus, Cavite",
+                title: "Kathleen",
+                location: "Molino 7, Bacoor, Cavite",
                 property_type: "Townhouse",
-                price: 2850000,
-                lot_area: 72,
-                image_url: "assets/images/liora.png"
+                price: 6200000,
+                lot_area: 112,
+                image_url: "assets/images/kathleen-facade.jpg"
             },
             {
                 id: 3,
-                title: "Airmen's Village",
+                title: "Liora Homes",
+                location: "Brgy. Malainen Bago, Naic, Cavite",
+                property_type: "Townhouse",
+                price: 2462400,
+                lot_area: 50,
+                image_url: "assets/images/LioraHomes.jpg"
+            },
+            {
+                id: 4,
+                title: "Airmen's Village Triplex",
                 location: "Pulang Lupa Dos, Las Piñas City",
-                property_type: "Subdivision",
-                price: 4200000,
-                lot_area: 120,
-                image_url: "assets/images/airmen.png"
+                property_type: "Triplex",
+                price: 8900000,
+                lot_area: 83.25,
+                image_url: "assets/images/AirmenTriplex.WEBP"
             }
         ];
+    } else {
+        loadedProperties.forEach(p => {
+            if (!p || !p.title) return;
+            const t = p.title.toLowerCase();
+            if (t.includes('suerte')) p.title = 'Casasuerte';
+            else if (t.includes('kathleen')) p.title = 'Kathleen';
+        });
     }
 
     // Populate propertySelect dropdown

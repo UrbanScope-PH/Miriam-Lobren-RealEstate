@@ -192,9 +192,111 @@
             }
         } catch (e) {}
 
+        // Strictly retain only accredited properties: Airmen, Casasuerte, Kathleen, Liora
+        liveProperties = liveProperties.filter(p => {
+            if (!p) return false;
+            const t = (p.title || p.propertyName || p.name || '').toLowerCase().trim();
+            return t.includes('airmen') || t.includes('suerte') || t.includes('kathleen') || t.includes('liora');
+        }).map(p => {
+            if (!p) return p;
+            const t = (p.title || p.propertyName || p.name || '').toLowerCase().trim();
+            if (t.includes('suerte')) p.title = 'Casasuerte';
+            else if (t.includes('kathleen')) p.title = 'Kathleen';
+            return p;
+        });
+
+        // Fallback to static accredited properties if list is empty
+        if (liveProperties.length === 0) {
+            liveProperties = [
+                {
+                    id: 1,
+                    title: "Casasuerte",
+                    location: "Barangay San Agustin, Trece Martires City, Cavite",
+                    property_type: "Townhouse",
+                    price: 2500000.0,
+                    bedrooms: 2,
+                    bathrooms: 1,
+                    lot_area: 50.0,
+                    floor_area: 50.8,
+                    carports: 1,
+                    storeys: 2,
+                    status: "Available",
+                    image_url: "assets/images/casasuerte.jpg",
+                    description: "Casasuerte stands out as an attractive option for first-time homebuyers and modern families looking for a sustainable yet affordable home. Equipped with built-in solar power system.",
+                    amenities: "Gated Entrance, Clubhouse, Basketball Court, Parks & Playgrounds, Built-in Solar Power System"
+                },
+                {
+                    id: 2,
+                    title: "Kathleen",
+                    location: "Molino 7, Bacoor, Cavite",
+                    property_type: "Townhouse",
+                    price: 6200000.0,
+                    bedrooms: 3,
+                    bathrooms: 2,
+                    lot_area: 112.0,
+                    floor_area: 112.0,
+                    carports: 1,
+                    storeys: 2,
+                    status: "Available",
+                    image_url: "assets/images/kathleen-facade.jpg",
+                    description: "Kathleen is a secure, family-friendly residential community offering 275 premium zen-inspired townhouses in Molino VII, Bacoor.",
+                    amenities: "Gated Entrance, Clubhouse, Park, Basketball Court, CCTV, Green-Oriented Community"
+                },
+                {
+                    id: 3,
+                    title: "Liora Homes",
+                    location: "Brgy. Malainen Bago, Naic, Cavite",
+                    property_type: "Townhouse",
+                    price: 2462400.0,
+                    bedrooms: 2,
+                    bathrooms: 1,
+                    lot_area: 50.0,
+                    floor_area: 44.0,
+                    carports: 1,
+                    storeys: 2,
+                    status: "Available",
+                    image_url: "assets/images/LioraHomes.jpg",
+                    description: "Award-winning Amora EcoLove townhomes equipped with solar panel systems and rainwater harvesting in Naic, Cavite.",
+                    amenities: "Clubhouse, Covered Basketball Court, Swimming Pool, Playground & Park, Solar-Ready System"
+                },
+                {
+                    id: 4,
+                    title: "Airmen's Village Triplex",
+                    location: "Pulang Lupa Dos, Las Piñas City",
+                    property_type: "Triplex",
+                    price: 8900000.0,
+                    bedrooms: 3,
+                    bathrooms: 3,
+                    lot_area: 83.25,
+                    floor_area: 143.78,
+                    carports: 2,
+                    storeys: 2,
+                    status: "Available",
+                    image_url: "assets/images/AirmenTriplex.WEBP",
+                    description: "Modern, Ready-for-Occupancy (RFO) triplex residential townhouse located in a secure and peaceful community in Las Piñas.",
+                    amenities: "Clubhouse, Basketball Court, Swimming Pool, Playground & Park, 24/7 Security, Balcony"
+                }
+            ];
+        }
+
         if (liveProperties.length > 0) {
             try {
                 localStorage.setItem('cached_live_properties', JSON.stringify(liveProperties));
+                ['urbanScopeProperties', 'properties'].forEach(k => {
+                    const raw = localStorage.getItem(k);
+                    if (raw) {
+                        try {
+                            const parsed = JSON.parse(raw);
+                            if (Array.isArray(parsed)) {
+                                const clean = parsed.filter(p => {
+                                    const t = (p.title || p.propertyName || p.name || '').toLowerCase().trim();
+                                    return t.includes('airmen') || t.includes('suerte') || t.includes('kathleen') || t.includes('liora');
+                                });
+                                localStorage.setItem(k, JSON.stringify(clean));
+                            }
+                        } catch (_) {}
+                    }
+                });
             } catch (e) {}
             return liveProperties;
         }

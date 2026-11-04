@@ -31,6 +31,19 @@ async function loadSavedProperties() {
                      JSON.parse(localStorage.getItem("cached_live_properties")) || [];
     }
 
+    // Strictly show only the 4 accredited properties: Airmen, Casasuerte, Kathleen, Liora
+    properties = properties.filter(p => {
+        if (!p) return false;
+        const t = (p.title || p.name || p.propertyName || '').toLowerCase().trim();
+        return t.includes('airmen') || t.includes('suerte') || t.includes('kathleen') || t.includes('liora');
+    }).map(p => {
+        if (!p) return p;
+        const t = (p.title || p.name || p.propertyName || '').toLowerCase().trim();
+        if (t.includes('suerte')) p.title = 'Casasuerte';
+        else if (t.includes('kathleen')) p.title = 'Kathleen';
+        return p;
+    });
+
     propertyTableBody.innerHTML = "";
     if (properties.length === 0) {
         propertyTableBody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding: 30px; color:#6b7f70;">No property records found.</td></tr>`;
@@ -56,9 +69,17 @@ function addPropertyRow(property) {
     const isSold = rawStatus.toLowerCase() === 'sold' || rawStatus.toLowerCase() === 'sold out';
     const displayStatus = isSold ? 'Sold' : 'Available';
 
-    const imgSrc = property.image_url ? 
+    let imgSrc = property.image_url ? 
         (property.image_url.startsWith('http') || property.image_url.startsWith('data:') ? property.image_url : '../../' + property.image_url.replace(/^(\.\.\/)+/, '')) : 
-        '../../assets/images/property1.jpg';
+        '';
+
+    const tLower = title.toLowerCase();
+    if (!imgSrc || imgSrc.includes('property1.jpg') || imgSrc.includes('property2.jpg') || imgSrc.includes('property3.jpg')) {
+        if (tLower.includes('suerte')) imgSrc = '../../assets/images/casasuerte.jpg';
+        else if (tLower.includes('kathleen')) imgSrc = '../../assets/images/kathleen-facade.jpg';
+        else if (tLower.includes('liora')) imgSrc = '../../assets/images/LioraHomes.jpg';
+        else if (tLower.includes('airmen')) imgSrc = '../../assets/images/AirmenTriplex.WEBP';
+    }
 
     const row = document.createElement("tr");
     if (isSold) {

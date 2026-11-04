@@ -84,7 +84,7 @@ INSERT INTO property_types (id, name, slug, description) VALUES
 ALTER SEQUENCE property_types_id_seq RESTART WITH 10;
 
 -- ------------------------------------------------------------------------------
--- 8.3 Seed: Properties Catalog (All 6 Website Properties)
+-- 8.3 Seed: Properties Catalog (4 Accredited Featured Properties)
 -- ------------------------------------------------------------------------------
 INSERT INTO properties (
     id, agent_id, property_type_id, title, subdivision_name,
@@ -95,211 +95,156 @@ INSERT INTO properties (
 (
     1,
     1,
-    1,
-    'Velemont Residences',
-    'Velemont Village',
-    'Phase 2, Manuyo Uno',
-    'Las Piñas City',
-    'Metro Manila',
-    'Manuyo, Las Piñas City',
-    'Subdivision',
-    6880000.00,
-    3,
-    2,
-    120.00,
-    95.00,
-    2,
-    2,
-    'Available',
-    'Clean Title',
-    'assets/images/property1.jpg',
-    'Modern suburban residence with spacious layout, 24/7 security, and convenient access to Metro Manila commercial hubs.',
-    '24/7 Security, Clubhouse & Function Hall, Swimming Pool, Landscaped Parks, Perimeter Fence',
-    14.4842,
-    120.9852
-),
-(
-    2,
-    1,
-    2,
-    'Green Valley Villa',
-    'Green Valley Heights',
-    'Governor Drive, Salawag',
-    'Dasmariñas',
-    'Cavite',
-    'Dasmariñas, Cavite',
-    'Villa',
-    5200000.00,
-    3,
-    2,
-    95.00,
-    82.00,
-    1,
-    2,
-    'Available',
-    'Clean Title',
-    'assets/images/property2.jpg',
-    'Contemporary family villa featuring private vehicle parking, landscaped pocket gardens, and clubhouse amenities.',
-    'Gated Community, Pocket Garden, Swimming Pool, Clubhouse, 24/7 Guardhouse',
-    14.3294,
-    120.9367
-),
-(
-    3,
-    1,
-    3,
-    'Horizon Heights',
-    'Horizon Tower Residences',
-    'Alabang-Zapote Road, Pamplona Uno',
-    'Las Piñas City',
-    'Metro Manila',
-    'Pamplona, Las Piñas City',
-    'Condominium',
-    3450000.00,
-    1,
-    1,
-    42.00,
-    42.00,
-    1,
-    15,
-    'Available',
-    'CCT Ready',
-    'assets/images/property3.jpg',
-    'High-rise condominium overlooking scenic city views, featuring rooftop infinity pool, fitness gym, and concierge.',
-    'Infinity Pool, Rooftop Fitness Gym, Concierge Service, Passenger Elevators, CCTV Surveillance',
-    14.4445,
-    120.9782
-),
-(
     4,
-    1,
-    4,
-    'Liora Homes Executive Townhouse',
-    'Liora Homes Subdivision',
-    'Pasong Buaya II',
-    'Imus',
+    'Casasuerte',
+    'Casasuerte Phase 1',
+    'Panungyanan Road',
+    'Trece Martires City',
     'Cavite',
-    'Pasong Buaya II, Imus, Cavite',
+    'Barangay San Agustin, Trece Martires City, Cavite',
     'Townhouse',
-    2400000.00,
+    2500000.00,
     2,
     1,
-    48.00,
-    43.00,
+    50.00,
+    50.80,
+    1,
+    2,
+    'Available',
+    'Clean Title',
+    'assets/images/casasuerte.jpg',
+    'Casasuerte stands out as an attractive option for first-time homebuyers and modern families looking for a sustainable yet affordable home. The neighborhood is meticulously designed to support a growing community, featuring concrete, well-paved roads, a secured entrance gate, and pocket parks. Its standout selling point is that its units come equipped with a built-in solar power system, offering permanent, eco-friendly savings on monthly electricity bills.',
+    'Gated Entrance, Clubhouse, Basketball Court, Parks & Playgrounds, Built-in Solar Power System, Paved Concrete Roads',
+    14.28315,
+    120.86832
+),
+(
+    2,
+    1,
+    4,
+    'Kathleen',
+    'Kathleen',
+    'Magdiwang Road / Marcos Alvarez Ext.',
+    'Bacoor',
+    'Cavite',
+    'Molino 7, Bacoor, Cavite',
+    'Townhouse',
+    6200000.00,
+    3,
+    2,
+    112.00,
+    112.00,
+    1,
+    2,
+    'Available',
+    'Clean Title',
+    'assets/images/kathleen-facade.jpg',
+    'Kathleen is a secure, family-friendly residential community offering 275 premium townhouses in Molino VII, Bacoor, Cavite (border Las Pinas). Just 12 minutes from EVIA Lifestyle Center along Daang-Hari and MCX. This development features zen-inspired 2-storey townhouses with complete finishes including steel gates and modular cabinets in all rooms. The project offers quality units built to last, located in a thriving community with easy access to shopping centers, schools, hospitals, and major thoroughfares.',
+    'Gated Entrance, Clubhouse, Park, Basketball Court, CCTV, Green-Oriented Community, Steel Gates Included, Modular Cabinets',
+    14.41600,
+    120.97500
+),
+(
+    3,
+    1,
+    4,
+    'Liora Homes',
+    'Liora Homes Naic',
+    'Brgy. Malainen Bago',
+    'Naic',
+    'Cavite',
+    'Brgy. Malainen Bago, Naic, Cavite',
+    'Townhouse',
+    2462400.00,
+    2,
+    1,
+    50.00,
+    44.00,
     1,
     2,
     'Available',
     'Clean Title',
     'assets/images/LioraHomes.jpg',
-    'Eco-friendly, modern townhouse community in Imus, Cavite equipped with solar-ready fixtures and community leisure facilities.',
-    'Solar-Ready System, Eco-Friendly Lighting, Basketball Court, Children Playground, Multi-purpose Hall',
-    14.3850,
-    120.9570
+    'Liora Homes Naic represents the next generation of housing developments by CBDI. Located in Brgy. Malainen Bago, Naic, Cavite, its 3,345 Amora EcoLove townhomes are equipped with solar panel systems and rainwater storage tanks, awarded 3 Stars by PHILGBC under the BERDE program.',
+    'Clubhouse, Covered Basketball Court, Swimming Pool, Playground & Park, Solar-Ready System, Rainwater Harvesting',
+    14.31028,
+    120.76329
 ),
 (
-    5,
+    4,
     1,
     5,
-    'Airmen Triplex Modern Residence',
-    'Airmen Village',
-    'Poblacion',
-    'Naic',
-    'Cavite',
-    'Poblacion, Naic, Cavite',
+    'Airmen''s Village Triplex',
+    'Airmen''s Village',
+    'Jumbo Street, Pulang Lupa Dos',
+    'Las Piñas City',
+    'Metro Manila',
+    'Pulang Lupa Dos, Las Piñas City',
     'Triplex',
-    3100000.00,
+    8900000.00,
     3,
+    3,
+    83.25,
+    143.78,
     2,
-    80.00,
-    72.00,
-    1,
     2,
     'Available',
     'Clean Title',
     'assets/images/AirmenTriplex.WEBP',
-    'Triplex residential home featuring a master balcony, built-in car garage, contemporary finishes, and proximity to major schools.',
-    'Master Bedroom Balcony, Built-in Garage, Modern Kitchen Counter, Cable & Fiber Ready, Accessible to Transport',
-    14.3210,
-    120.7680
-),
-(
-    6,
-    1,
-    4,
-    'Sunset Heights Executive Townhouse',
-    'Sunset Heights Phase 1',
-    'Habay I, Tirona Highway',
-    'Bacoor',
-    'Cavite',
-    'Habay, Bacoor, Cavite',
-    'Townhouse',
-    3800000.00,
-    3,
-    2,
-    100.00,
-    75.00,
-    1,
-    2,
-    'Available',
-    'Clean Title',
-    'assets/images/property3.jpg',
-    'Charming 2-storey executive townhouse in Bacoor with immediate access to expressways, schools, and shopping malls.',
-    '24/7 Security, Clubhouse, Playground, Basketball Court',
-    14.4410,
-    120.9420
+    'This modern, Ready-for-Occupancy (RFO) triplex townhouse offers the perfect blend of space, comfort, and accessibility. Located in a secure and peaceful community in Las Piñas, it is highly accessible to major roads, commercial hubs, schools, and airports.',
+    'Clubhouse, Basketball Court, Swimming Pool, Playground & Park, 24/7 Security, Balcony',
+    14.46610,
+    120.99110
 );
 
 ALTER SEQUENCE properties_id_seq RESTART WITH 20;
 
 -- ------------------------------------------------------------------------------
--- 8.4 Seed: Property Gallery Images (Supports Liora & Airmen Showcases)
+-- 8.4 Seed: Property Gallery Images (4 Accredited Properties)
 -- ------------------------------------------------------------------------------
 INSERT INTO property_images (property_id, image_url, caption, display_order, is_primary) VALUES
--- Velemont Residences (ID: 1)
-(1, 'assets/images/property1.jpg', 'Exterior Front View', 1, TRUE),
-(1, 'assets/images/property2.jpg', 'Living Room & Dining Area', 2, FALSE),
-(1, 'assets/images/property3.jpg', 'Master Bedroom', 3, FALSE),
+-- Casasuerte (ID: 1)
+(1, 'assets/images/casasuerte.jpg', 'Facade & Built-in Solar', 1, TRUE),
+(1, 'assets/images/casasuerte-living.jpg', 'Living Area & Inverter', 2, FALSE),
+(1, 'assets/images/casasuerte-dining.jpg', 'Dining Hall', 3, FALSE),
+(1, 'assets/images/casasuerte-bedroom1.jpg', 'Master Bedroom', 4, FALSE),
 
--- Green Valley Villa (ID: 2)
-(2, 'assets/images/property2.jpg', 'Villa Front Elevation', 1, TRUE),
-(2, 'assets/images/property1.jpg', 'Backyard & Pocket Garden', 2, FALSE),
+-- Kathleen (ID: 2)
+(2, 'assets/images/kathleen-facade.jpg', 'Zen Townhouse Facade', 1, TRUE),
+(2, 'assets/images/kathleen-living.jpg', 'Open Plan Living Room', 2, FALSE),
+(2, 'assets/images/kathleen-dining.jpg', 'Dining & Modular Kitchen', 3, FALSE),
+(2, 'assets/images/kathleen-gate.jpg', 'Included Steel Gate Entry', 4, FALSE),
 
--- Horizon Heights (ID: 3)
-(3, 'assets/images/property3.jpg', 'Building Facade & Amenities', 1, TRUE),
-(3, 'assets/images/property1.jpg', 'Studio / 1BR Unit Layout', 2, FALSE),
+-- Liora Homes (ID: 3)
+(3, 'assets/images/LioraHomes.jpg', 'Liora Homes EcoLove Exterior', 1, TRUE),
+(3, 'assets/images/liora-aerial.jpg', 'Aerial Solar Roof View', 2, FALSE),
+(3, 'assets/images/liora-pool.jpg', 'Swimming Pool & Amenities', 3, FALSE),
+(3, 'assets/images/liora-living.jpg', 'Living Room & Solar Inverter', 4, FALSE),
+(3, 'assets/images/liora-dining.jpg', 'Dining Room & Kitchen', 5, FALSE),
+(3, 'assets/images/liora-bedroom.jpg', 'Second Floor Bedroom', 6, FALSE),
+(3, 'assets/images/liora-solar.jpg', 'Built-in Solar Panels', 7, FALSE),
+(3, 'assets/images/liora-rainwater.jpg', 'Rainwater Harvesting Storage', 8, FALSE),
 
--- Liora Homes (ID: 4) - Exact match to Liora.html carousel slides
-(4, 'assets/images/LioraHomes.jpg', 'Liora Homes Exterior Front', 1, TRUE),
-(4, 'assets/images/liora2.JPG', 'Patio Garden', 2, FALSE),
-(4, 'assets/images/liora3.JPG', 'Carport Entry', 3, FALSE),
-(4, 'assets/images/liora4.JPG', 'Dining Room', 4, FALSE),
-
--- Airmen Triplex (ID: 5) - Exact match to Airmen.html carousel slides
-(5, 'assets/images/AirmenTriplex.WEBP', 'Airmen Triplex Modern Elevation', 1, TRUE),
-(5, 'assets/images/liora2.JPG', 'Patio Garden', 2, FALSE),
-(5, 'assets/images/liora3.JPG', 'Carport Entry', 3, FALSE),
-(5, 'assets/images/liora4.JPG', 'Dining Room', 4, FALSE),
-
--- Sunset Heights (ID: 6)
-(6, 'assets/images/property3.jpg', 'Townhouse Front Elevation', 1, TRUE);
+-- Airmen's Village Triplex (ID: 4)
+(4, 'assets/images/AirmenTriplex.WEBP', 'Airmen Triplex Modern Elevation', 1, TRUE),
+(4, 'assets/images/airmen-flyer.jpg', 'RFO Triplex House Elevation & Details', 2, FALSE),
+(4, 'assets/images/airmen-tcp.jpg', 'Bank Financing Computation Sheet', 3, FALSE);
 
 -- ------------------------------------------------------------------------------
 -- 8.5 Seed: Property Normalized Features
 -- ------------------------------------------------------------------------------
 INSERT INTO property_features (property_id, feature_name) VALUES
-(1, '24/7 Security'), (1, 'Clubhouse'), (1, 'Swimming Pool'), (1, 'Landscaped Parks'),
-(2, 'Gated Community'), (2, 'Pocket Garden'), (2, 'Swimming Pool'), (2, 'Guardhouse'),
-(3, 'Infinity Pool'), (3, 'Fitness Gym'), (3, 'Concierge Service'), (3, 'Elevators'),
-(4, 'Solar-Ready System'), (4, 'Eco-Friendly Lighting'), (4, 'Basketball Court'), (4, 'Playground'),
-(5, 'Master Bedroom Balcony'), (5, 'Built-in Garage'), (5, 'Modern Kitchen Counter'), (5, 'Fiber Ready'),
-(6, '24/7 Security'), (6, 'Clubhouse'), (6, 'Playground'), (6, 'Basketball Court');
+(1, 'Gated Entrance'), (1, 'Clubhouse'), (1, 'Basketball Court'), (1, 'Parks & Playgrounds'), (1, 'Built-in Solar Power System'),
+(2, 'Gated Entrance'), (2, 'Clubhouse'), (2, 'Park'), (2, 'Basketball Court'), (2, 'CCTV'), (2, 'Steel Gates Included'),
+(3, 'Solar-Ready System'), (3, 'Eco-Friendly Lighting'), (3, 'Basketball Court'), (3, 'Playground & Park'), (3, 'Rainwater Harvesting'),
+(4, 'Master Bedroom Balcony'), (4, 'Built-in Garage'), (4, 'Modern Kitchen Counter'), (4, 'Fiber Ready'), (4, 'Swimming Pool');
 
 -- ------------------------------------------------------------------------------
 -- 8.6 Seed: Saved Properties (Client Favorites)
 -- ------------------------------------------------------------------------------
 INSERT INTO saved_properties (user_id, property_id) VALUES
-(2, 4), -- Client bookmarked Liora Homes
-(2, 5); -- Client bookmarked Airmen Triplex
+(2, 3), -- Client bookmarked Liora Homes
+(2, 4); -- Client bookmarked Airmen Triplex
 
 -- ------------------------------------------------------------------------------
 -- 8.7 Seed: Inquiries (Connected with Foreign Keys & Codes)
@@ -314,33 +259,33 @@ INSERT INTO inquiries (
     3,
     1,
     1,
-    'Velemont Residences',
+    'Casasuerte',
     'Sarah Jenkins',
     'sarah.j@gmail.com',
     '+63 917 111 2233',
-    'Good day! I would like to schedule an in-person viewing this coming Saturday afternoon.',
+    'Good day! I would like to schedule an in-person viewing this coming Saturday afternoon for Casasuerte.',
     'Under Review'
 ),
 (
     2,
     'INQ-2026-0002',
     4,
-    3,
+    2,
     1,
-    'Horizon Heights',
+    'Kathleen',
     'Mark Anthony Cruz',
     'mark.cruz@gmail.com',
     '+63 928 444 5566',
-    'Inquiring about payment terms and bank financing requirements for the 1-bedroom unit.',
+    'Inquiring about payment terms and bank promo financing requirements for Kathleen.',
     'Approved'
 ),
 (
     3,
     'INQ-2026-0003',
     5,
-    4,
+    3,
     1,
-    'Liora Homes Executive Townhouse',
+    'Liora Homes',
     'Maria Elena Santos',
     'maria.santos@gmail.com',
     '+63 905 777 8899',
@@ -367,12 +312,12 @@ INSERT INTO appointments (client_id, agent_id, property_id, client_name, client_
     3, 1, 1,
     'Sarah Jenkins', 'sarah.j@gmail.com', '+63 917 111 2233',
     '2026-10-09', '10:00 AM',
-    'Client viewing · Velemont Residences',
+    'Client viewing · Casasuerte',
     'Scheduled in-person property walkthrough with buyer and family.',
     'completed'
 ),
 (
-    5, 1, 4,
+    5, 1, 3,
     'Maria Elena Santos', 'maria.santos@gmail.com', '+63 905 777 8899',
     '2026-10-15', '2:00 PM',
     'Client viewing · Liora Homes',
@@ -380,11 +325,11 @@ INSERT INTO appointments (client_id, agent_id, property_id, client_name, client_
     'confirmed'
 ),
 (
-    4, 1, 1,
+    4, 1, 2,
     'Mark Anthony Cruz', 'mark.cruz@gmail.com', '+63 928 444 5566',
     '2026-10-22', '9:30 AM',
-    'Client viewing · Victoria Park Residences',
-    'Orientation and Pag-IBIG housing loan requirements submission.',
+    'Client viewing · Kathleen',
+    'Orientation and bank promo housing loan requirements submission.',
     'scheduled'
 );
 
@@ -397,7 +342,7 @@ INSERT INTO testimonials (user_id, author_name, location, rating, quote, is_feat
     'Sarah Jenkins',
     'Las Piñas City',
     5,
-    'Ms. Miriam Lobren made buying our first home at Velemont Residences so seamless and stress-free! She guided us through every bank requirement and inspection step with great patience.',
+    'Ms. Miriam Lobren made buying our first home at Kathleen so seamless and stress-free! She guided us through every bank requirement and inspection step with great patience.',
     TRUE
 ),
 (
@@ -411,7 +356,7 @@ INSERT INTO testimonials (user_id, author_name, location, rating, quote, is_feat
 (
     5,
     'Maria Elena Santos',
-    'Imus, Cavite',
+    'Naic, Cavite',
     5,
     'From our very first website inquiry to our house turnover at Liora Homes, Miriam Lobren provided top-notch assistance. Thank you for our family dream home!',
     TRUE
@@ -421,6 +366,6 @@ INSERT INTO testimonials (user_id, author_name, location, rating, quote, is_feat
 -- 8.11 Seed: Notifications (Header Bell Icon)
 -- ------------------------------------------------------------------------------
 INSERT INTO notifications (user_id, title, message, reference_type, reference_id, is_read) VALUES
-(1, 'New Property Inquiry', 'Sarah Jenkins submitted a viewing request for Velemont Residences.', 'inquiry', 1, FALSE),
-(1, 'Document Uploaded', 'Mark Anthony Cruz submitted Proof of Income for Horizon Heights.', 'inquiry', 2, FALSE),
+(1, 'New Property Inquiry', 'Sarah Jenkins submitted a viewing request for Casasuerte.', 'inquiry', 1, FALSE),
+(1, 'Document Uploaded', 'Mark Anthony Cruz submitted Proof of Income for Kathleen.', 'inquiry', 2, FALSE),
 (1, 'Appointment Reminder', 'Upcoming viewing today at 2:00 PM: Maria Elena Santos at Liora Homes.', 'appointment', 2, FALSE);

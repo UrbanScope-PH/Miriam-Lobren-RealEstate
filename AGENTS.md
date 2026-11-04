@@ -51,7 +51,7 @@ run.py                 Starts FastAPI + static site (uvicorn backend.app:app)
 backend/               app.py (FastAPI assembler), middleware.py (RBAC guard), routers/ (system, auth, properties, inquiries, superadmin, web), database.py, models.py, auth.py, seed_rbac.py, migration_rbac.sql
 frontend/              Everything the browser loads (served at /)
   index.html/.css/.js  Home page
-  pages/properties/    property-detail (?id=N), Liora.html & Airmen.html showcases (properties.html catalog was removed)
+  pages/properties/    property-detail (?id=N), casasuerte.html, kathleen.html, Liora.html & Airmen.html showcases (properties.html catalog was removed)
   pages/inquiry/       Inquiry form (inquiry.html) & client history (history.html) (requires login: <html data-require-auth>)
   pages/auth/          Unified login (auto-routes by role) & register
   pages/legal/         Terms of Service (terms.html) & Privacy Policy (privacy.html)
@@ -562,6 +562,72 @@ path when rendering from a page.
       - `session.js`: Performs an early synchronous `localStorage` check (`urbanscope_user` / `urbanscope_jwt_token` / `urbanscope_demo_user`) to immediately apply `root.classList.add('logged-in')` and prevent layout/text flash.
       - `updateInquiryNoteVisibility(isLoggedIn)` dynamically toggles `.inquiry-note` on `init()`, `logout()`, `storage` sync, and `DOMContentLoaded`.
       - `property-detail.js`: `checkInquiryAuthNote()` validates authentication state and hides `.inquiry-note` upon detail page load and `urbanscope:user` events.
+45. **Accredited Property Catalog Expansion (Casa Suerte & Kathleen Place 5), TCP Integration & Map Accuracy:**
+    - Integrated full property details, photo assets, and Total Contract Price (TCP) computation sheets for newly added accredited real estate developments:
+      - **Casa Suerte (Townhouse)**: Barangay San Agustin, Trece Martires City, Cavite; ₱2.50M - ₱3M; 2 bedrooms, 1 bath, 50-80 sqm (Camila model: 50.8 sqm floor area); equipped with built-in solar power system; Pag-IBIG financing computation from ₱12,249.70/mo. Dedicated showcase page: `pages/properties/casasuerte.html`.
+      - **Kathleen Place 5 (Townhouse)**: Molino 7, Bacoor, Cavite; ₱6.2M - ₱9M; 3 bedrooms, 2 baths, 112 sqm; Zen-inspired 2-storey community with modular cabinets & steel gates; Bank financing promo computation from ₱52,381.72/mo (4% net downpayment after 11% promo discount). Dedicated showcase page: `pages/properties/kathleen.html`.
+      - **Liora Homes & Airmen's Village Triplex**: Updated with high-resolution TCP computation tables, financing breakdown cards, and document lightbox viewer.
+    - **Accurate Zoomed-in Google Maps Embeds**:
+      - Replaced placeholder coordinates with exact street-level coordinates and street zoom `z=17` with custom pin markers:
+        - Casa Suerte: `14.28315, 120.86832` (Panungyanan Rd, Brgy San Agustin, Trece Martires City, Cavite)
+        - Kathleen Place 5: `14.416, 120.975` (Magdiwang Rd / Marcos Alvarez Ext., Molino VII, Bacoor, Cavite)
+        - Liora Homes: `14.31028, 120.76329` (Brgy. Malainen Bago, Naic, Cavite)
+        - Airmen's Village Triplex: `14.4661, 120.9911` (Jumbo St., Pulang Lupa Dos, Las Piñas City)
+    - **Total Contract Price (TCP) UI Integration**:
+      - Homepage (`index.html`, `index.js`, `index.css`): Added `.property-tcp-container` featuring `.tcp-pill-tag` ('TCP Available • Pag-IBIG' / 'Bank Financing'), price range, and estimated monthly amortizations.
+      - Property Detail (`property-detail.html`, `property-detail.js`, `property-detail.css`): Added dynamic TCP container with breakdown KPI cards, sample computation tables, and clickable document lightbox for official pricelists.
+    - **Backend & Inquiry Catalog Synchronization**:
+      - `backend/database.py` and SQLite `backend/urbanscope.db` updated with all 4 accredited properties and accurate specs, seeded with full descriptions and amenities.
+      - `frontend/pages/inquiry/inquiry.js` property fallback and dropdown updated to align with the 4 accredited properties.
+    - **`newproperty` Asset Folder Organization**:
+      - Structured into clean subfolders `AIRMEN_TRIPLEX/`, `CASASUERTE/`, `KATHLEEN/place_5/`, `LIORA/` with standardized numbered file names, TCP subdirectories, and no duplicate files.
+
+46. **Complete Purge of Unused Legacy Properties (Airmen, Casa Suerte, Kathleen, and Liora Exclusivity):**
+    - **Catalog Scope Enforcement**: The property catalog was strictly restricted to only the 4 accredited properties:
+      1. **Airmen's Village Triplex** (Las Piñas City)
+      2. **Casa Suerte** (Barangay San Agustin, Trece Martires City, Cavite)
+      3. **Kathleen Place 5** (Molino 7, Bacoor, Cavite)
+      4. **Liora Homes** (Brgy. Malainen Bago, Naic, Cavite)
+    - **Supabase Cloud Purge**: Deleted all legacy unused mock listings (`Velemont Residences` [ID 27], `Green Valley Villa` [ID 28], `Sunset Heights` [ID 6], `Siargao house` [ID 29]) from remote Supabase Cloud `properties` table. Updated `Airmen's Village Triplex` (ID 5) and `Liora Homes` (ID 4) with accredited pricing, titles, and descriptions, and inserted `Casa Suerte` and `Kathleen Place 5`.
+    - **SQL Seed Harmonization**: Updated `backend/supabase_schema.sql` and `supabase/seed.sql` to remove all unused properties, gallery images, features, appointments, notifications, and client testimonials.
+    - **Frontend & Gateway Sanitization**:
+      - `frontend/shared/js/supabase.js` & `api.js`: Added `isAccreditedListing` filter in `apiGetProperties` to guarantee that only the 4 accredited listings are returned and stored in `cached_live_properties`, and added proactive cleanup of `urbanScopeProperties` and `properties` local storage keys.
+      - `frontend/index.html`: Cleaned hero search bar type options (All, Townhouses, Triplex, House & Lot), location options (All, Las Piñas, Bacoor, Naic, Trece Martires City), category tabs (All, Townhouses, Triplex, House & Lot), and updated client testimonial quote to reference Kathleen Place 5.
+      - `frontend/index.js`: Added category filter support for `triplex` and active filtering to ensure `allCachedProperties` always strictly matches the 4 accredited properties.
+      - `frontend/pages/admin/properties.js`, `dashboard.js`, `propertylist.html`: Sanitized property list and dashboard KPI counters to strictly count and display only the 4 accredited listings.
+
+47. **Designated House Photos Integration from `newproperty/` across all 4 Listings:**
+    - Replaced all placeholder photos with the high-resolution house photos uploaded in `newproperty/`:
+      - **Casa Suerte**: Facade (`casasuerte.jpg`), Living area & inverter (`casasuerte-living.jpg`), Dining room (`casasuerte-dining.jpg`), Master bedroom (`casasuerte-bedroom1.jpg`), Second bedroom (`casasuerte-bedroom2.jpg`), Bathroom (`casasuerte-bathroom.jpg`), Service laundry (`casasuerte-service.jpg`), Subdivision plan (`casasuerte-subdivision-plan.jpg`), and Pag-IBIG computation (`casasuerte-tcp.jpg`).
+      - **Kathleen Place 5**: Zen facade (`kathleen-facade.jpg`), Living room (`kathleen-living.jpg`), Dining & open plan (`kathleen-dining.jpg`), Modular kitchen & stairs (`kathleen-interior.jpg`), Steel gate & entry (`kathleen-gate.jpg`), Covered carport (`kathleen-carport.jpg`), Second floor hallway (`kathleen-hallway.jpg`), Location map (`kathleen-map.jpg`), and Bank promo TCP sheets (`kathleen-tcp.jpg`, `kathleen-tcp2.jpg`).
+      - **Liora Homes**: Replaced outdated placeholder images (`liora2.JPG`, `liora3.JPG`, `liora4.JPG`) with the 12 uploaded real photos: Facade (`LioraHomes.jpg`), Aerial solar roof view (`liora-aerial.jpg`), Swimming pool & clubhouse (`liora-pool.jpg`), Living room with inverter (`liora-living.jpg`), Dining & modular kitchen (`liora-dining.jpg`), Open interior (`liora-interior.jpg`), Second floor bedroom (`liora-bedroom.jpg`), Staircase with built-in storage (`liora-stairs.jpg`), Rooftop solar panels (`liora-solar.jpg`), Rainwater storage tanks (`liora-rainwater.jpg`), and Community view (`liora-community.jpg`).
+      - **Airmen's Village Triplex**: Replaced cross-property placeholder images with the actual Triplex facade (`AirmenTriplex.WEBP`), official developer RFO promo flyer with elevations and unit specifications (`airmen-flyer.jpg`), and official bank financing sheet (`airmen-tcp.jpg`).
+    - **Dynamic Detail & Fallback Integration**:
+      - `property-detail.html` & `property-detail.js`: Dynamic gallery initialization updates thumbnail row, carousel, and zoom lightbox to the designated photo set when navigating by property ID.
+      - `index.html` & `index.js`: `resolveCardImage()` and fallback attributes link directly to the designated property facades.
+
+48. **Property Detail Gallery Click & Lightbox Resolution:**
+    - Fixed a JavaScript parsing error in `frontend/pages/properties/property-detail.js` where duplicate variable declaration (`const tLower`) halted script execution, preventing `selectThumb`, `changeSlide`, `initGallery`, and `openLightbox` from being registered.
+    - Moved all lightbox controller state variables (`lightboxOpen`, `zoomLevel`, `panX`, `panY`, `isPanning`, `panStartX`, `panStartY`) to the top of `property-detail.js` above `initGallery` and `updateGallery`, resolving ES6 Temporal Dead Zone (TDZ) access errors.
+    - Exposed all gallery and lightbox handlers (`initGallery`, `updateGallery`, `changeSlide`, `selectThumb`, `openLightbox`, `closeLightbox`, `changeLightboxSlide`, `selectLightboxSlide`, `zoomLightbox`, `resetLightboxZoom`) onto `window` to guarantee inline HTML `onclick` attributes execute reliably across all browsers and Live Server environments.
+    - Attached redundant `click` event listeners to all thumbnail elements (`.thumb`) and main gallery image (`#mainGalleryImg`) during `initGallery()` for rock-solid interaction resilience.
+    - Updated `casasuerte.html`, `kathleen.html`, and `Liora.html` thumbnail rows to include their respective TCP computation sheet thumbnails (`casasuerte-tcp.jpg`, `kathleen-tcp.jpg`, `kathleen-tcp2.jpg`, `liora-tcp.jpg`), allowing users to click and zoom the computation sheets directly from the thumbnail grid.
+
+49. **Property Brand Name Standardization (`Casasuerte` and `Kathleen`):**
+    - Standardized listing brand titles across all application layers:
+      - `Casa Suerte` -> `Casasuerte`
+      - `Kathleen Place 5` -> `Kathleen`
+    - **Frontend Card & Detail Presentation**:
+      - `frontend/index.html` & `frontend/index.js`: Standardized property cards with dedicated title normalization helper `formatPropertyTitle(title)`, updating fallback cards, card image alt tags, and featured property rendering.
+      - `frontend/pages/properties/casasuerte.html` & `kathleen.html`: Updated page titles, main headings (`.property-title`), image alt texts, about section headers, inquiry prefill buttons, and footer cross-navigation links.
+      - `frontend/pages/properties/property-detail.html` & `property-detail.js`: Title resolver normalizes and displays "Casasuerte" and "Kathleen", and updated Google Map label queries.
+      - `frontend/pages/inquiry/inquiry.js`: Property select dropdown and pre-selection logic normalize and display "Casasuerte" and "Kathleen".
+      - `frontend/shared/js/supabase.js` & `api.js`: Fallback array and `apiGetProperties` data pipeline sanitize remote and cached property titles to "Casasuerte" and "Kathleen".
+      - `frontend/pages/admin/properties.js` & `propertylist.html`: Property list table normalizes row titles and updated new property input placeholder.
+    - **Database & Cloud Synchronization**:
+      - Supabase Cloud (`properties` table) patched via REST API to `title = 'Casasuerte'` and `title = 'Kathleen'`.
+      - SQLite `backend/urbanscope.db` updated with `UPDATE properties SET title = ...`.
+      - SQL seeds `backend/database.py`, `backend/supabase_schema.sql`, and `supabase/seed.sql` updated to maintain the standardized names.
 
 ---
 
