@@ -647,6 +647,11 @@ path when rendering from a page.
     - The inquiry form (`pages/inquiry/inquiry.js`) does not store a separate schedule column; it prepends `[Preferred Schedule: YYYY-MM-DD | Time]` (or `[Preferred Slot: Time]` when no date is picked) to the inquiry `message`.
     - `parseInquirySchedule(rawMessage, explicitSchedule)` (defined in both `frontend/pages/admin/dashboard.js` and `frontend/pages/admin/clients.js`) extracts that tag, formats it as e.g. `Sat, Nov 7, 2026 · Afternoon (1:00 PM - 5:00 PM)` for the **Preferred Schedule** box, and strips the tag from the **Message / Client Request** box. A real `schedule_date` / `preferred_date` value, if present, still takes priority. Inquiries without a tag show `No schedule requested`.
 
+52. **Mobile Navigation Drawer & Toggle Icon Animation Refinement (`mobile-shell.css`, `common.css`, `session.js`):**
+    - **Toggle Animation**: Standardized `.mobile-nav-toggle` to 44px × 44px with `flex-direction: column`, `justify-content: center`, `gap: 5px`, and `padding: 0`. In idle state, three 20px × 2px lines (`.hamburger-line`) are spaced with 5px gaps rather than collapsing into a solid block. When activated (`.active`), line 1 translates down 7px and rotates 45°, line 2 fades out (`opacity: 0, scaleX: 0`), and line 3 translates up 7px and rotates -45°, forming a symmetrical `✕` icon rather than an asymmetric chevron (`<`).
+    - **Drawer Contents**: Removed redundant `.mobile-drawer-user` (user profile badge, "Submit an Inquiry", "Inquiry History", and "Sign Out") from the mobile navigation drawer. For logged-in users, account operations remain centralized in the topbar profile chip avatar dropdown (`#profileChip`), keeping the mobile slide-down drawer dedicated exclusively to primary navigation links (Home, Properties, About, FAQs, Contact).
+    - **Drawer Slide Animation**: Unified drop-down slide/fade transition across `.navbar nav` and `.app-topbar #mainNav` using `cubic-bezier(0.16, 1, 0.3, 1)` for smooth expansion without stutter.
+
 ---
 
 ## Safety Rules

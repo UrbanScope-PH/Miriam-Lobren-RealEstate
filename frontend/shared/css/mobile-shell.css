@@ -2,32 +2,37 @@
 
 .mobile-nav-toggle {
     display: none;
-    width: 40px;
-    height: 40px;
-    padding: 9px 8px;
+    width: 44px;
+    height: 44px;
+    padding: 0;
     flex-direction: column;
     align-items: center;
-    justify-content: space-around;
-    border: 0;
-    border-radius: 8px;
+    justify-content: center;
+    gap: 5px;
+    border: 1px solid transparent;
+    border-radius: 10px;
     background: transparent;
     cursor: pointer;
-    transition: background-color 0.2s ease;
+    transition: background-color 0.2s ease, border-color 0.2s ease;
+    -webkit-tap-highlight-color: transparent;
 }
 
 .mobile-nav-toggle:hover,
 .mobile-nav-toggle.active {
     background: var(--light-green, #eef5ef);
+    border-color: rgba(45, 92, 57, 0.2);
 }
 
 .hamburger-line {
     display: block;
-    width: 22px;
-    height: 2.2px;
+    width: 20px;
+    height: 2px;
     border-radius: 2px;
     background: var(--dark-green, #1a3b23);
     transform-origin: center;
-    transition: transform 0.25s ease, opacity 0.25s ease;
+    transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1),
+                opacity 0.2s ease,
+                background-color 0.2s ease;
 }
 
 .mobile-nav-toggle.active .hamburger-line:nth-child(1) {
@@ -187,7 +192,6 @@
         display: none !important;
     }
 
-    .mobile-nav-toggle,
     .hamburger-btn,
     .sa-hamburger-btn,
     .close-sidebar-btn,
@@ -219,7 +223,15 @@
 
     .mobile-nav-toggle {
         display: flex;
-        padding: 9px;
+        width: 44px;
+        min-width: 44px;
+        height: 44px;
+        min-height: 44px;
+        padding: 0;
+        flex: 0 0 44px;
+        align-items: center;
+        justify-content: center;
+        gap: 5px;
     }
 
     .navbar nav {
@@ -227,6 +239,9 @@
         max-height: calc(100vh - 64px);
         max-height: calc(100dvh - 64px);
         padding-bottom: calc(20px + env(safe-area-inset-bottom, 0px));
+        transition: opacity 0.25s cubic-bezier(0.16, 1, 0.3, 1),
+                    transform 0.25s cubic-bezier(0.16, 1, 0.3, 1),
+                    visibility 0.25s ease;
     }
 
     .mobile-nav-backdrop {
@@ -254,7 +269,9 @@
         opacity: 0;
         visibility: hidden;
         transform: translateY(-12px);
-        transition: opacity 0.22s ease, transform 0.22s ease, visibility 0.22s ease;
+        transition: opacity 0.25s cubic-bezier(0.16, 1, 0.3, 1),
+                    transform 0.25s cubic-bezier(0.16, 1, 0.3, 1),
+                    visibility 0.25s ease;
         -webkit-overflow-scrolling: touch;
     }
 
@@ -284,14 +301,18 @@
         color: var(--green, #2d5c39);
     }
 
-    .mobile-drawer-auth,
-    .mobile-drawer-user {
+    .mobile-drawer-auth {
         display: flex;
         flex-direction: column;
         gap: 10px;
         margin-top: 14px;
         padding-top: 14px;
         border-top: 1px solid #e5ede7;
+    }
+
+    /* Mobile drawer user section - removed so mobile menu displays exclusively primary nav links */
+    .mobile-drawer-user {
+        display: none !important;
     }
 
     .mobile-drawer-auth .m-login-btn,
@@ -316,51 +337,6 @@
     .mobile-drawer-auth .m-signup-btn {
         background: var(--green, #2d5c39);
         color: #ffffff;
-    }
-
-    .mobile-user-info {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        min-width: 0;
-        padding: 10px 12px;
-        border-radius: 10px;
-        background: var(--light-green, #eef5ef);
-        color: var(--text-dark, #1b2e21);
-        font-size: 14px;
-        font-weight: 600;
-    }
-
-    .mobile-user-info > span:last-child {
-        min-width: 0;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-    }
-
-    .mobile-drawer-user a.m-inquiry-link,
-    .mobile-drawer-user .m-signout-btn {
-        display: flex;
-        align-items: center;
-        justify-content: flex-start;
-        min-height: 44px;
-        padding: 11px 14px;
-        border: 0;
-        border-radius: 10px;
-        background: #f7faf8;
-        color: var(--dark-green, #1a3b23);
-        font: inherit;
-        font-size: 14.5px;
-        font-weight: 600;
-        text-decoration: none;
-        cursor: pointer;
-    }
-
-    .mobile-drawer-user .m-signout-btn {
-        justify-content: center;
-        border: 1.5px solid #e2b3b0;
-        background: transparent;
-        color: #b3382c;
     }
 
     .mobile-nav-backdrop {

@@ -572,24 +572,15 @@
             document.body.appendChild(backdrop);
         }
 
-        // Render mobile auth/user drawer section
+        // Remove any previous drawer auth/user sections so the mobile drawer contains only primary nav links
         var existingAuth = nav.querySelector('.mobile-drawer-auth, .mobile-drawer-user');
         if (existingAuth) existingAuth.remove();
 
         var base = getBasePath();
         if (user) {
-            var userSection = document.createElement('div');
-            userSection.className = 'mobile-drawer-user';
-            userSection.innerHTML =
-                '<div class="mobile-user-info">' +
-                '<span class="profile-avatar" style="width:30px;height:30px;font-size:0.75rem;flex-shrink:0;">' + avatarInnerHtml(user) + '</span>' +
-                '<span>' + esc(user.name) + '</span>' +
-                '</div>' +
-                '<a href="' + base + 'pages/inquiry/inquiry.html" class="m-inquiry-link">Submit an Inquiry</a>' +
-                '<a href="' + base + 'pages/inquiry/history.html" class="m-inquiry-link">Inquiry History</a>' +
-                '<button type="button" class="m-signout-btn" data-action="signout">Sign Out</button>';
-            wireAvatarFallbacks(userSection);
-            nav.appendChild(userSection);
+            // For logged-in users, the topbar profile chip (#profileChip) already handles
+            // user identity, Submit an Inquiry, Inquiry History, and Sign Out.
+            // Mobile navigation menu displays exclusively primary navigation links (Home, Properties, About, FAQs, Contact).
         } else {
             var authSection = document.createElement('div');
             authSection.className = 'mobile-drawer-auth';

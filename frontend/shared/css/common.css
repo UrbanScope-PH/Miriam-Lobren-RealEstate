@@ -307,32 +307,38 @@ img, video, canvas, svg {
 /* MOBILE NAV TOGGLE & DRAWER */
 .mobile-nav-toggle {
     display: none;
-    width: 40px;
-    height: 40px;
+    width: 44px;
+    height: 44px;
     background: transparent;
-    border: none;
-    border-radius: 8px;
+    border: 1px solid transparent;
+    border-radius: 10px;
     cursor: pointer;
-    padding: 9px 8px;
+    padding: 0;
     flex-direction: column;
-    justify-content: space-around;
+    justify-content: center;
     align-items: center;
-    transition: background-color 0.2s ease;
+    gap: 5px;
+    transition: background-color 0.2s ease, border-color 0.2s ease;
     z-index: 101;
+    -webkit-tap-highlight-color: transparent;
 }
 
-.mobile-nav-toggle:hover {
+.mobile-nav-toggle:hover,
+.mobile-nav-toggle.active {
     background-color: var(--light-green);
+    border-color: rgba(45, 92, 57, 0.2);
 }
 
 .hamburger-line {
     display: block;
-    width: 22px;
-    height: 2.2px;
+    width: 20px;
+    height: 2px;
     background-color: var(--dark-green);
     border-radius: 2px;
-    transition: transform 0.25s ease, opacity 0.25s ease;
     transform-origin: center;
+    transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1),
+                opacity 0.2s ease,
+                background-color 0.2s ease;
 }
 
 .mobile-nav-toggle.active .hamburger-line:nth-child(1) {
@@ -386,8 +392,7 @@ img, video, canvas, svg {
     }
 
     .login-btn,
-    .signup-btn,
-    .mobile-nav-toggle {
+    .signup-btn {
         min-height: 40px;
     }
 
@@ -440,7 +445,15 @@ img, video, canvas, svg {
 
     .mobile-nav-toggle {
         display: flex;
-        flex-shrink: 0;
+        width: 44px;
+        min-width: 44px;
+        height: 44px;
+        min-height: 44px;
+        flex: 0 0 44px;
+        align-items: center;
+        justify-content: center;
+        gap: 5px;
+        padding: 0;
     }
 
     .nav-acts {
@@ -472,7 +485,9 @@ img, video, canvas, svg {
         opacity: 0;
         visibility: hidden;
         transform: translateY(-12px);
-        transition: opacity 0.25s ease, transform 0.25s ease, visibility 0.25s ease;
+        transition: opacity 0.25s cubic-bezier(0.16, 1, 0.3, 1),
+                    transform 0.25s cubic-bezier(0.16, 1, 0.3, 1),
+                    visibility 0.25s ease;
         max-height: calc(100vh - 70px);
         max-height: calc(100dvh - 70px);
         overflow-y: auto;
@@ -554,73 +569,9 @@ img, video, canvas, svg {
         background-color: var(--dark-green);
     }
 
-    /* Mobile drawer user section */
+    /* Mobile drawer user section - removed so mobile menu displays exclusively primary nav links */
     .mobile-drawer-user {
-        margin-top: 14px;
-        padding-top: 14px;
-        border-top: 1px solid #e5ede7;
-        display: flex;
-        flex-direction: column;
-        gap: 8px;
-    }
-
-    .mobile-user-info {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        padding: 10px 12px;
-        background: var(--light-green);
-        border-radius: 10px;
-        font-size: 14px;
-        color: var(--text-dark);
-        font-weight: 600;
-        min-width: 0;
-    }
-
-    .mobile-user-info > span:last-child {
-        min-width: 0;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-    }
-
-    .mobile-drawer-user a.m-inquiry-link {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        padding: 11px 14px;
-        font-size: 14.5px;
-        font-weight: 600;
-        color: var(--dark-green);
-        border-radius: 10px;
-        border-left: none;
-        background: #f7faf8;
-        text-decoration: none;
-    }
-
-    .mobile-drawer-user a.m-inquiry-link:hover {
-        background: var(--light-green);
-        color: var(--green);
-        padding-left: 14px;
-    }
-
-    .mobile-drawer-user .m-signout-btn {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        padding: 10px;
-        background: transparent;
-        border: 1.5px solid #e2b3b0;
-        border-radius: 10px;
-        color: #b3382c;
-        font-weight: 600;
-        font-size: 14px;
-        cursor: pointer;
-        transition: all 0.2s;
-    }
-
-    .mobile-drawer-user .m-signout-btn:hover {
-        background: #fdeeec;
+        display: none !important;
     }
 
     /* Backdrop */

@@ -484,10 +484,13 @@ html.auth-checking body {
         }
     }
 
+    .mobile-drawer-user {
+        display: none !important;
+    }
+
     @media (min-width: 769px) {
 
-        .mobile-drawer-auth,
-        .mobile-drawer-user {
+        .mobile-drawer-auth {
             display: none !important;
         }
     }
