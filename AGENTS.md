@@ -563,6 +563,7 @@ path when rendering from a page.
 46. **Admin Navigation & Brand Consistency (`frontend/pages/admin/admin-shell.css` and admin pages):**
     - Admin sidebars share the Dashboard, Properties, Clients, Inquiries, and Profile & Security labels and a matching SVG icon set across the dashboard, property list, client, profile, add-property, and edit-property screens.
     - Shared shell styles define the active navigation color and icon stroke treatment. Dashboard KPI/action icons and primary form/action controls use the UrbanScope green tokens rather than separate hard-coded brand greens.
+
 45. **Authenticated Client Inquiry Note Visibility (`.inquiry-note`):**
     - The guest prompt `"*Please log in or create an account to submit an inquiry."` below `.submit-inquiry-btn` is automatically hidden whenever a user is authenticated.
     - **CSS Rules (`session.css` & `property-detail.css`)**:
@@ -637,6 +638,10 @@ path when rendering from a page.
       - Supabase Cloud (`properties` table) patched via REST API to `title = 'Casasuerte'` and `title = 'Kathleen'`.
       - SQLite `backend/urbanscope.db` updated with `UPDATE properties SET title = ...`.
       - SQL seeds `backend/database.py`, `backend/supabase_schema.sql`, and `supabase/seed.sql` updated to maintain the standardized names.
+
+50. **Admin Property Viewing Calendar Date Sync (`frontend/pages/admin/dashboard.html` and `dashboard.js`):**
+    - The calendar initializes to the browser's current local date, refreshes its today marker at local midnight and when the page regains focus, and keeps the selected agenda date aligned while navigating months.
+    - Calendar markers and agenda cards are built from configured appointment records; hard-coded sample events were removed and cancelled appointments are hidden.
 
 ---
 

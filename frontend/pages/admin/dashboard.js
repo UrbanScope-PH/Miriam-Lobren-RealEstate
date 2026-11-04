@@ -33,34 +33,21 @@ const calendarAgenda = document.getElementById("calendarAgenda");
 const previousMonthBtn = document.getElementById("previousMonth");
 const nextMonthBtn = document.getElementById("nextMonth");
 
-let calendarDate = new Date(2026, 9, 1);
-let selectedDate = "2026-10-10";
-
-const sampleAppointments = {
-    "2026-10-09": [
-        {
-            time: "10:00 AM",
-            title: "Client viewing · Velmont Residences",
-            description: "Sample appointment for a property viewing."
-        }
-    ],
-
-    "2026-10-15": [
-        {
-            time: "2:00 PM",
-            title: "Client viewing · Liora Homes",
-            description: "Sample appointment for a property viewing."
-        }
-    ],
-
-    "2026-10-22": [
-        {
-            time: "9:30 AM",
-            title: "Client viewing · Victoria Park Residences",
-            description: "Sample appointment for a property viewing."
-        }
-    ]
-};
+const initialCalendarToday = new Date();
+let calendarDate = new Date(
+    initialCalendarToday.getFullYear(),
+    initialCalendarToday.getMonth(),
+    1
+);
+let selectedDate = formatDateKey(
+    initialCalendarToday.getFullYear(),
+    initialCalendarToday.getMonth(),
+    initialCalendarToday.getDate()
+);
+let lastCalendarTodayKey = selectedDate;
+let calendarAppointments = Object.create(null);
+let calendarAppointmentsLoaded = false;
+let calendarMidnightTimer = null;
 
 function formatDateKey(year, month, day) {
     return [
@@ -68,6 +55,136 @@ function formatDateKey(year, month, day) {
         String(month + 1).padStart(2, "0"),
         String(day).padStart(2, "0")
     ].join("-");
+}
+
+function normalizeCalendarDateKey(value) {
+    const rawDate = String(value || "").trim();
+    const dateOnlyMatch = rawDate.match(/^(\d{4})-(\d{2})-(\d{2})(?:$|[T\s])/);
+
+    if (dateOnlyMatch) {
+        const year = Number(dateOnlyMatch[1]);
+        const month = Number(dateOnlyMatch[2]) - 1;
+        const day = Number(dateOnlyMatch[3]);
+        const date = new Date(year, month, day);
+
+        if (date.getFullYear() === year && date.getMonth() === month && date.getDate() === day) {
+            return formatDateKey(year, month, day);
+        }
+
+        return null;
+    }
+
+    const parsedDate = new Date(rawDate);
+    if (Number.isNaN(parsedDate.getTime())) return null;
+
+    return formatDateKey(
+        parsedDate.getFullYear(),
+        parsedDate.getMonth(),
+        parsedDate.getDate()
+    );
+}
+
+function setCalendarAppointments(appointments) {
+    const nextAppointments = Object.create(null);
+
+    (Array.isArray(appointments) ? appointments : []).forEach(appointment => {
+        if (!appointment || typeof appointment !== "object") return;
+
+        const dateKey = normalizeCalendarDateKey(appointment.appointment_date);
+        const status = String(appointment.status || "scheduled").trim().toLowerCase();
+
+        if (!dateKey || status === "cancelled" || status === "canceled") return;
+
+        if (!nextAppointments[dateKey]) nextAppointments[dateKey] = [];
+        nextAppointments[dateKey].push({
+            time: appointment.appointment_time || "Time to be confirmed",
+            title: appointment.title || appointment.property_title || "Client property viewing",
+            description: appointment.description
+                || (appointment.client_name ? `Client: ${appointment.client_name}` : "Scheduled property viewing.")
+        });
+    });
+
+    calendarAppointments = nextAppointments;
+    calendarAppointmentsLoaded = true;
+    renderCalendar();
+    renderAgenda();
+}
+
+async function loadCalendarAppointments() {
+    if (typeof apiGetAppointments !== "function") {
+        setCalendarAppointments([]);
+        return;
+    }
+
+    try {
+        const appointments = await apiGetAppointments();
+        setCalendarAppointments(appointments);
+    } catch (error) {
+        console.warn("Unable to load property viewing appointments:", error);
+        setCalendarAppointments([]);
+    }
+}
+
+function syncCalendarToToday() {
+    const today = new Date();
+    const todayKey = formatDateKey(today.getFullYear(), today.getMonth(), today.getDate());
+
+    if (todayKey !== lastCalendarTodayKey) {
+        const previousTodayParts = lastCalendarTodayKey.split("-").map(Number);
+        const wasViewingCurrentMonth = calendarDate.getFullYear() === previousTodayParts[0]
+            && calendarDate.getMonth() === previousTodayParts[1] - 1;
+
+        if (wasViewingCurrentMonth) {
+            calendarDate = new Date(today.getFullYear(), today.getMonth(), 1);
+            selectedDate = todayKey;
+        }
+
+        lastCalendarTodayKey = todayKey;
+        renderCalendar();
+        renderAgenda();
+    }
+
+    scheduleCalendarMidnightSync();
+}
+
+function scheduleCalendarMidnightSync() {
+    if (calendarMidnightTimer) window.clearTimeout(calendarMidnightTimer);
+
+    const now = new Date();
+    const nextMidnight = new Date(
+        now.getFullYear(),
+        now.getMonth(),
+        now.getDate() + 1,
+        0,
+        0,
+        1
+    );
+
+    calendarMidnightTimer = window.setTimeout(
+        syncCalendarToToday,
+        Math.max(1000, nextMidnight.getTime() - now.getTime())
+    );
+}
+
+function changeCalendarMonth(offset) {
+    const selectedDay = Number(selectedDate.split("-")[2]);
+    const targetMonth = new Date(calendarDate.getFullYear(), calendarDate.getMonth() + offset, 1);
+    const lastDayOfTargetMonth = new Date(
+        targetMonth.getFullYear(),
+        targetMonth.getMonth() + 1,
+        0
+    ).getDate();
+    const dayToKeep = selectedDay || 1;
+
+    calendarDate = targetMonth;
+    selectedDate = formatDateKey(
+        targetMonth.getFullYear(),
+        targetMonth.getMonth(),
+        Math.min(dayToKeep, lastDayOfTargetMonth)
+    );
+
+    renderCalendar();
+    renderAgenda();
 }
 
 function renderCalendar() {
@@ -126,6 +243,7 @@ function renderCalendar() {
 
         if (dateKey === todayKey) {
             dayButton.classList.add("is-today");
+            dayButton.setAttribute("aria-current", "date");
         }
 
         if (dateKey === selectedDate) {
@@ -135,7 +253,7 @@ function renderCalendar() {
             dayButton.setAttribute("aria-pressed", "false");
         }
 
-        if (sampleAppointments[dateKey]?.length) {
+        if (calendarAppointments[dateKey]?.length) {
             dayButton.classList.add("has-event");
             dayButton.title = "Scheduled property viewing";
         }
@@ -154,7 +272,8 @@ function renderCalendar() {
 function renderAgenda() {
     if (!calendarAgenda || !selectedDateLabel) return;
 
-    const date = new Date(`${selectedDate}T12:00:00`);
+    const [year, month, day] = selectedDate.split("-").map(Number);
+    const date = new Date(year, month - 1, day, 12);
 
     selectedDateLabel.textContent = date.toLocaleDateString("en-US", {
         month: "long",
@@ -162,14 +281,25 @@ function renderAgenda() {
         year: "numeric"
     });
 
-    const appointments = sampleAppointments[selectedDate] || [];
+    if (!calendarAppointmentsLoaded) {
+        calendarAgenda.innerHTML = `
+            <div class="agenda-empty">
+                <strong>Loading scheduled viewings</strong>
+                <p>Checking appointment records for this date.</p>
+            </div>
+        `;
+
+        return;
+    }
+
+    const appointments = calendarAppointments[selectedDate] || [];
 
     if (appointments.length === 0) {
         calendarAgenda.innerHTML = `
             <div class="agenda-empty">
                 <span class="agenda-empty-icon">✓</span>
                 <strong>No scheduled viewings</strong>
-                <p>There are no sample appointments for this date.</p>
+                <p>There are no appointments scheduled for this date.</p>
             </div>
         `;
 
@@ -191,17 +321,13 @@ function renderAgenda() {
 
 if (previousMonthBtn) {
     previousMonthBtn.addEventListener("click", () => {
-        calendarDate.setMonth(calendarDate.getMonth() - 1);
-
-        renderCalendar();
+        changeCalendarMonth(-1);
     });
 }
 
 if (nextMonthBtn) {
     nextMonthBtn.addEventListener("click", () => {
-        calendarDate.setMonth(calendarDate.getMonth() + 1);
-
-        renderCalendar();
+        changeCalendarMonth(1);
     });
 }
 
@@ -843,27 +969,6 @@ async function loadDashboardData() {
             window.loadAdminNotifications();
         }
 
-        if (typeof apiGetAppointments === "function") {
-            const appointmentsList = await apiGetAppointments();
-            if (Array.isArray(appointmentsList) && appointmentsList.length > 0) {
-                appointmentsList.forEach(apt => {
-                    const dateKey = apt.appointment_date;
-                    if (!sampleAppointments[dateKey]) {
-                        sampleAppointments[dateKey] = [];
-                    }
-                    const exists = sampleAppointments[dateKey].some(a => a.title === apt.title);
-                    if (!exists) {
-                        sampleAppointments[dateKey].push({
-                            time: apt.appointment_time,
-                            title: apt.title,
-                            description: apt.description || "Client property consultation & viewing walkthrough."
-                        });
-                    }
-                });
-                renderCalendar();
-                renderAgenda();
-            }
-        }
     } catch (error) {
         console.error("Unable to load dashboard data:", error);
     }
@@ -994,6 +1099,8 @@ window.deletePropertyListing = async function(id, title) {
 document.addEventListener("DOMContentLoaded", () => {
     renderCalendar();
     renderAgenda();
+    syncCalendarToToday();
+    loadCalendarAppointments();
     loadDashboardData();
 
     document.querySelectorAll('.profile-signout, .logout-link').forEach(el => {
@@ -1021,7 +1128,15 @@ window.addEventListener('inquiriesUpdated', () => loadDashboardData());
 window.addEventListener('inquirySubmitted', () => loadDashboardData());
 window.addEventListener('newInquiryReceived', () => loadDashboardData());
 document.addEventListener('visibilitychange', () => {
-    if (!document.hidden) loadDashboardData();
+    if (!document.hidden) {
+        syncCalendarToToday();
+        loadCalendarAppointments();
+        loadDashboardData();
+    }
+});
+
+window.addEventListener("focus", () => {
+    syncCalendarToToday();
 });
 
 // Periodic live polling so admin dashboard automatically reflects new inquiries from other devices without refreshing
