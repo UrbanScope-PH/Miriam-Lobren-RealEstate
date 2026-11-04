@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Casasuerte - Miriam Lobren Real Estate</title>
+    <link rel="icon" href="../../assets/images/favicon.jpg" type="image/x-icon">
+    <link rel="stylesheet" href="property-detail.css">
+    <link rel="stylesheet" href="../../shared/css/splash.css">
+    <link rel="stylesheet" href="../../shared/css/session.css">
+    <script src="../../shared/js/splash.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="../../shared/js/supabase.js"></script>
+    <script src="../../shared/js/session.js"></script>
+</head>
+<body>
+    <!-- NAVBAR -->
+    <header class="navbar">
+        <a class="Cname" href="../../index.html">
+            <img src="../../assets/images/logo.png" alt="ML Logo" class="brand-logo" onerror="this.style.display='none'">
+            <span>
+                <strong>Miriam Lobren</strong>
+                <small>REAL ESTATE AGENT</small>
+            </span>
+        </a>
+
+        <nav id="mainNav">
+            <a href="../../index.html">Home</a>
+            <a href="../../index.html#properties" class="active">Properties</a>
+            <a href="../../index.html#about">About Us</a>
+            <a href="../../index.html#contact">Contact</a>
+        </nav>
+
+        <div class="nav-acts">
+            <button class="s-icon-btn" id="searchToggle" aria-label="Search">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#1f4928" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="11" cy="11" r="8"></circle>
+                    <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                </svg>
+            </button>
+
+            <a href="../auth/login.html" class="login-btn" id="loginBtn">Log In</a>
+            <a href="../auth/register.html" class="signup-btn" id="signupBtn">Sign Up</a>
+
+            <button class="mobile-nav-toggle" id="mobileNavToggle" type="button" aria-label="Toggle navigation menu" aria-expanded="false">
+                <span class="hamburger-line"></span>
+                <span class="hamburger-line"></span>
+                <span class="hamburger-line"></span>
+            </button>
+        </div>
+    </header>
+
+    <main class="detail-container">
+        <!-- PROPERTY HEADER -->
+        <div class="detail-header">
+            <div class="header-left">
+                <span class="status-badge available">Available</span>
+                <h1 class="property-title">Casasuerte</h1>
+                <p class="property-loc">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                    Barangay San Agustin, Trece Martires City, Cavite
+                </p>
+            </div>
+            <div class="header-right">
+                <span class="detail-price">₱2,500,000 - ₱3,000,000</span>
+            </div>
+        </div>
+
+        <!-- IMAGE GALLERY CAROUSEL -->
+        <section class="gallery-section">
+            <div class="main-carousel">
+                <button class="carousel-arrow prev" type="button" aria-label="Previous image" onclick="changeSlide(-1)">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"></polyline></svg>
+                </button>
+                <img id="mainGalleryImg" src="../../assets/images/casasuerte.jpg" alt="Casasuerte Townhouse Exterior" onclick="openLightbox()" title="Click to zoom image">
+                <button class="carousel-arrow next" type="button" aria-label="Next image" onclick="changeSlide(1)">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                </button>
+                <button class="carousel-zoom-btn" type="button" aria-label="Zoom image" title="Click to zoom image" onclick="openLightbox()">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="11" cy="11" r="8"></circle>
+                        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                        <line x1="11" y1="8" x2="11" y2="14"></line>
+                        <line x1="8" y1="11" x2="14" y2="11"></line>
+                    </svg>
+                    <span>Zoom</span>
+                </button>
+            </div>
+
+            <!-- THUMBNAIL ROW -->
+            <div class="thumbnails-row">
+                <div class="thumb active" onclick="selectThumb(0, '../../assets/images/casasuerte.jpg')">
+                    <img src="../../assets/images/casasuerte.jpg" alt="Casasuerte Exterior">
+                </div>
+                <div class="thumb" onclick="selectThumb(1, '../../assets/images/casasuerte-living.jpg')">
+                    <img src="../../assets/images/casasuerte-living.jpg" alt="Living Room & Solar Inverter">
+                </div>
+                <div class="thumb" onclick="selectThumb(2, '../../assets/images/casasuerte-dining.jpg')">
+                    <img src="../../assets/images/casasuerte-dining.jpg" alt="Spacious Ground Floor">
+                </div>
+                <div class="thumb" onclick="selectThumb(3, '../../assets/images/casasuerte-bedroom1.jpg')">
+                    <img src="../../assets/images/casasuerte-bedroom1.jpg" alt="Master Bedroom">
+                </div>
+                <div class="thumb" onclick="selectThumb(4, '../../assets/images/casasuerte-bedroom2.jpg')">
+                    <img src="../../assets/images/casasuerte-bedroom2.jpg" alt="Second Bedroom">
+                </div>
+                <div class="thumb" onclick="selectThumb(5, '../../assets/images/casasuerte-bathroom.jpg')">
+                    <img src="../../assets/images/casasuerte-bathroom.jpg" alt="Modern Bathroom">
+                </div>
+                <div class="thumb" onclick="selectThumb(6, '../../assets/images/casasuerte-service.jpg')">
+                    <img src="../../assets/images/casasuerte-service.jpg" alt="Service & Laundry Area">
+                </div>
+                <div class="thumb" onclick="selectThumb(7, '../../assets/images/casasuerte-subdivision-plan.jpg')">
+                    <img src="../../assets/images/casasuerte-subdivision-plan.jpg" alt="Subdivision Site Plan">
+                </div>
+                <div class="thumb" onclick="selectThumb(8, '../../assets/images/casasuerte-tcp.jpg')">
+                    <img src="../../assets/images/casasuerte-tcp.jpg" alt="Sample TCP Computation">
+                </div>
+            </div>
+        </section>
+
+        <!-- SPECS BAR -->
+        <div class="specs-bar">
+            <div class="spec-item">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M2 4v16M2 8h18a2 2 0 0 1 2 2v10M2 17h20M6 8v9"/></svg>
+                <div class="spec-info">
+                    <strong>2</strong>
+                    <span>Bed Rooms</span>
+                </div>
+            </div>
+            <div class="spec-item">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 12v7a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-7M2 12h20M7 12V5a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v7"/></svg>
+                <div class="spec-info">
+                    <strong>1</strong>
+                    <span>Toilet &amp; Bath</span>
+                </div>
+            </div>
+            <div class="spec-item">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 3v18M15 3v18M3 9h18M3 15h18"/></svg>
+                <div class="spec-info">
+                    <strong>50 sqm - 80 sqm</strong>
+                    <span>Lot Area</span>
+                </div>
+            </div>
+            <div class="spec-item">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 21h18M5 21V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16M9 9h6M9 13h6M9 17h6"/></svg>
+                <div class="spec-info">
+                    <strong>50.80 sqm</strong>
+                    <span>Floor Area</span>
+                </div>
+            </div>
+            <div class="spec-item">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+                <div class="spec-info">
+                    <strong>Townhouse</strong>
+                    <span>Property Type</span>
+                </div>
+            </div>
+            <div class="spec-item">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                <div class="spec-info">
+                    <strong>Trece Martires City</strong>
+                    <span>Cavite</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- ABOUT & FEATURES -->
+        <section class="details-section">
+            <div class="detail-block">
+                <h2>About This Property</h2>
+                <p>Casasuerte stands out as an attractive option for first-time homebuyers and modern families looking for a sustainable yet affordable home. The neighborhood is meticulously designed to support a growing community, featuring concrete, well-paved roads, a secured entrance gate, and pocket parks. Its standout selling point is that its units come equipped with a built-in solar power system, offering permanent, eco-friendly savings on monthly electricity bills.</p>
+            </div>
+
+            <div class="detail-block">
+                <h2>Features &amp; Amenities</h2>
+                <div class="amenities-grid">
+                    <ul>
+                        <li><span class="bullet">&bull;</span> Gated Entrance &amp; Guardhouse</li>
+                        <li><span class="bullet">&bull;</span> Multi-purpose Community Clubhouse</li>
+                        <li><span class="bullet">&bull;</span> Full-sized Basketball Court</li>
+                    </ul>
+                    <ul>
+                        <li><span class="bullet">&bull;</span> Parks &amp; Children's Playgrounds</li>
+                        <li><span class="bullet">&bull;</span> Built-in Solar Power System (Grid-Tied)</li>
+                        <li><span class="bullet">&bull;</span> Concrete Roads, Curbs &amp; Gutters</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- SAMPLE COMPUTATION & TOTAL CONTRACT PRICE (TCP) SECTION -->
+        <section class="tcp-section">
+            <div class="tcp-section-header">
+                <div class="tcp-title-group">
+                    <h2>Total Contract Price (TCP) &amp; Sample Computation</h2>
+                    <p>Accredited Pag-IBIG (HDMF) &amp; Bank Financing options with low monthly amortization.</p>
+                </div>
+                <div class="tcp-badge-pill">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                    <span>Pag-IBIG Accredited • LTS #0001645</span>
+                </div>
+            </div>
+
+            <!-- Key Figures KPI Grid -->
+            <div class="tcp-grid">
+                <div class="tcp-kpi-card">
+                    <span class="kpi-label">Total Contract Price (TCP)</span>
+                    <span class="kpi-val">₱2,454,378</span>
+                    <span class="kpi-sub">Standard Lot Area 50 sqm • Camila Model</span>
+                </div>
+                <div class="tcp-kpi-card">
+                    <span class="kpi-label">Reservation Fee</span>
+                    <span class="kpi-val">₱20,000</span>
+                    <span class="kpi-sub">Deducted from Total Downpayment</span>
+                </div>
+                <div class="tcp-kpi-card">
+                    <span class="kpi-label">20% Down Payment</span>
+                    <span class="kpi-val">₱39,795 / mo</span>
+                    <span class="kpi-sub">Payable in 18 months without interest</span>
+                </div>
+                <div class="tcp-kpi-card">
+                    <span class="kpi-label">Est. Pag-IBIG Amortization</span>
+                    <span class="kpi-val">₱12,250 / mo</span>
+                    <span class="kpi-sub">30 Years Term @ 6.25% fixed 3 yrs</span>
+                </div>
+            </div>
+
+            <!-- Detailed Computation Breakdown Table -->
+            <div class="tcp-table-wrapper">
+                <table class="tcp-table">
+                    <thead>
+                        <tr>
+                            <th>Financing Package</th>
+                            <th>Loan Term</th>
+                            <th>Loanable Amount (80%)</th>
+                            <th>Monthly Amortization</th>
+                            <th>Gross Monthly Income</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Pag-IBIG (HDMF)</strong></td>
+                            <td>30 Years</td>
+                            <td>₱1,963,502.40</td>
+                            <td><strong>₱12,249.70 / mo</strong></td>
+                            <td>~₱35,000 - ₱41,000 / mo</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Pag-IBIG (HDMF)</strong></td>
+                            <td>25 Years</td>
+                            <td>₱1,963,502.40</td>
+                            <td><strong>₱13,105.79 / mo</strong></td>
+                            <td>~₱38,000 - ₱44,000 / mo</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Pag-IBIG (HDMF)</strong></td>
+                            <td>20 Years</td>
+                            <td>₱1,963,502.40</td>
+                            <td><strong>₱14,495.20 / mo</strong></td>
+                            <td>~₱42,000 - ₱49,000 / mo</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Pag-IBIG (HDMF)</strong></td>
+                            <td>15 Years</td>
+                            <td>₱1,963,502.40</td>
+                            <td><strong>₱16,969.57 / mo</strong></td>
+                            <td>~₱49,000 - ₱57,000 / mo</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Official Computation Document Preview -->
+            <div class="tcp-doc-card" onclick="openLightbox(8)" title="Click to inspect official Pag-IBIG pricelist document">
+                <div class="tcp-doc-info">
+                    <div class="tcp-doc-icon">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+                    </div>
+                    <div class="tcp-doc-text">
+                        <h4>Official Pag-IBIG Sample Computation &amp; Pricelist Sheet</h4>
+                        <p>Developer: RubySapphire Land Corp · DHSUD LTS No. 0001645 · As of September 1, 2026</p>
+                    </div>
+                </div>
+                <button type="button" class="tcp-doc-btn" onclick="event.stopPropagation(); openLightbox(8);">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line><line x1="11" y1="8" x2="11" y2="14"></line><line x1="8" y1="11" x2="14" y2="11"></line></svg>
+                    <span>View Official Pricelist</span>
+                </button>
+            </div>
+            <p class="tcp-disclaimer">*Estimated amortization figures are based on Pag-IBIG prevailing indicative rates (6.25% fixed for 3 years). Final loan approval and terms are subject to Pag-IBIG credit assessment.</p>
+        </section>
+
+        <!-- LOCATION & INQUIRY -->
+        <section class="location-inquiry-grid">
+            <!-- Property Location Map -->
+            <div class="location-box">
+                <div class="location-header">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                    <div>
+                        <h3>Property Location</h3>
+                        <p>Panungyanan Road, Barangay San Agustin, Trece Martires City, Cavite</p>
+                    </div>
+                </div>
+
+                <div class="map-container">
+                    <iframe
+                        src="https://maps.google.com/maps?q=14.28315,120.86832+(Casa+Suerte+Trece+Martires)&amp;t=&amp;z=17&amp;ie=UTF8&amp;iwloc=B&amp;output=embed"
+                        width="100%" height="280" style="border:0; border-radius: 12px;" allowfullscreen="" loading="lazy">
+                    </iframe>
+                    <a href="https://www.google.com/maps/search/?api=1&amp;query=14.28315,120.86832" target="_blank" rel="noopener noreferrer" class="view-map-link">View Larger Map</a>
+                </div>
+            </div>
+
+            <!-- Interested in Property CTA Card -->
+            <div class="inquiry-card">
+                <div class="inquiry-card-header">
+                    <div class="inquiry-icon-circle">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+                    </div>
+                    <div>
+                        <h3>Interested in Casasuerte?</h3>
+                        <p>Submit an inquiry to book a free site tripping or request complete computation sheets.</p>
+                    </div>
+                </div>
+
+                <a href="../inquiry/inquiry.html?type=property&amp;title=Casasuerte" class="submit-inquiry-btn">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+                    <span>Submit Inquiry</span>
+                </a>
+
+                <p class="inquiry-note">*Please log in or create an account to submit an inquiry.</p>
+            </div>
+        </section>
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="footer">
+        <div class="footer-top">
+            <div class="footer-about">
+                <h3>Miriam Lobren</h3>
+                <p>Licensed real estate assistance for Cavite &amp; Las Piñas premier subdivisions and townhouses. Connecting families to sustainable, high-value dream homes.</p>
+            </div>
+
+            <div class="footer-links-column">
+                <h3>QUICK LINKS</h3>
+                <ul>
+                    <li><a href="../../index.html">Home</a></li>
+                    <li><a href="../../index.html#about">About</a></li>
+                    <li><a href="../../index.html#properties">Listings</a></li>
+                    <li><a href="../inquiry/inquiry.html">Consultation</a></li>
+                </ul>
+            </div>
+
+            <div class="footer-links-column">
+                <h3>FEATURED HOMES</h3>
+                <ul>
+                    <li><a href="casasuerte.html">Casasuerte</a></li>
+                    <li><a href="kathleen.html">Kathleen</a></li>
+                    <li><a href="Liora.html">Liora Homes</a></li>
+                    <li><a href="Airmen.html">Airmen's Triplex</a></li>
+                </ul>
+            </div>
+
+            <div class="footer-contact-info">
+                <h3>CONTACT</h3>
+                <p>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                    Las Piñas City &amp; Cavite, Philippines
+                </p>
+                <p>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                    admin.realestate@gmail.com
+                </p>
+            </div>
+        </div>
+
+        <div class="footer-bottom">
+            <p>&copy; 2026 Miriam Lobren Real Estate. All rights reserved.</p>
+            <div class="footer-legal">
+                <a href="../legal/privacy.html">Privacy Policy</a>
+                <a href="../legal/terms.html">Terms of Service</a>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Gallery images list for Casasuerte (including TCP and subdivision map)
+        window.galleryImages = [
+            '../../assets/images/casasuerte.jpg',
+            '../../assets/images/casasuerte-living.jpg',
+            '../../assets/images/casasuerte-dining.jpg',
+            '../../assets/images/casasuerte-bedroom1.jpg',
+            '../../assets/images/casasuerte-bedroom2.jpg',
+            '../../assets/images/casasuerte-bathroom.jpg',
+            '../../assets/images/casasuerte-service.jpg',
+            '../../assets/images/casasuerte-subdivision-plan.jpg',
+            '../../assets/images/casasuerte-tcp.jpg'
+        ];
+    </script>
+    <script src="property-detail.js"></script>
+</body>
+</html>
+

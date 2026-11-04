@@ -491,3 +491,11 @@ html.auth-checking body {
             display: none !important;
         }
     }
+
+/* Automatically hide guest login reminders when logged in */
+html.logged-in .inquiry-note,
+body.logged-in .inquiry-note,
+html[data-auth-state="logged-in"] .inquiry-note,
+.logged-in .inquiry-note {
+    display: none !important;
+}

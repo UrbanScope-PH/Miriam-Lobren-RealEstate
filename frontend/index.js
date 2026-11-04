@@ -27,8 +27,25 @@ function normalizeStr(val) {
         .trim();
 }
 
-function resolveCardImage(url) {
-    if (!url) return 'assets/images/property1.jpg';
+function formatPropertyTitle(title) {
+    if (!title) return '';
+    const t = String(title).toLowerCase();
+    if (t.includes('suerte')) return 'Casasuerte';
+    if (t.includes('kathleen')) return 'Kathleen';
+    if (t.includes('liora')) return 'Liora Homes';
+    if (t.includes('airmen')) return "Airmen's Village Triplex";
+    return title;
+}
+
+function resolveCardImage(url, item) {
+    if (item) {
+        const t = (item.title || item.propertyName || item.name || '').toLowerCase();
+        if (t.includes('suerte')) return 'assets/images/casasuerte.jpg';
+        if (t.includes('kathleen')) return 'assets/images/kathleen-facade.jpg';
+        if (t.includes('liora')) return 'assets/images/LioraHomes.jpg';
+        if (t.includes('airmen')) return 'assets/images/AirmenTriplex.WEBP';
+    }
+    if (!url) return 'assets/images/casasuerte.jpg';
     if (url.startsWith('http') || url.startsWith('data:')) return url;
     if (url.startsWith('../')) return url.substring(3);
     return url;
@@ -38,7 +55,43 @@ function getPropertyDetailUrl(item) {
     const title = (item.title || item.propertyName || '').toLowerCase();
     if (title.includes('liora')) return 'pages/properties/Liora.html';
     if (title.includes('airmen')) return 'pages/properties/Airmen.html';
+    if (title.includes('suerte')) return 'pages/properties/casasuerte.html';
+    if (title.includes('kathleen')) return 'pages/properties/kathleen.html';
     return `pages/properties/property-detail.html?id=${item.id}`;
+}
+
+function getPropertyPricingMeta(item) {
+    const t = (item.title || item.propertyName || '').toLowerCase();
+    if (t.includes('suerte')) {
+        return {
+            priceDisplay: '₱2.50M - ₱3M',
+            tcpTag: 'TCP Available • Pag-IBIG',
+            tcpSubtext: 'Est. Amort: ₱12,250/mo • Res: ₱20,000'
+        };
+    } else if (t.includes('kathleen')) {
+        return {
+            priceDisplay: '₱6.2M - ₱9M',
+            tcpTag: 'TCP Available • Bank Financing',
+            tcpSubtext: 'Est. Amort: ₱52,382/mo • Res: ₱50,000'
+        };
+    } else if (t.includes('liora')) {
+        return {
+            priceDisplay: '₱2,462,400 - ₱2,894,400',
+            tcpTag: 'TCP Available • Pag-IBIG & Bank',
+            tcpSubtext: 'Est. Amort: ₱14,476/mo • Res: ₱12,000'
+        };
+    } else if (t.includes('airmen')) {
+        return {
+            priceDisplay: '₱8,900,000 - ₱9,029,240',
+            tcpTag: 'TCP Available • Bank Financing',
+            tcpSubtext: 'Est. Amort: ₱53,658/mo • Res: ₱50,000'
+        };
+    }
+    return {
+        priceDisplay: '₱' + Number(item.price || 0).toLocaleString(),
+        tcpTag: 'Total Contract Price (TCP)',
+        tcpSubtext: 'Sample computation available upon inquiry'
+    };
 }
 
 function copyPropertyLink(id) {
@@ -90,12 +143,15 @@ function renderFeaturedGrid(list) {
     }
 
     grid.innerHTML = list.map(item => {
-        const imgSrc = resolveCardImage(item.image_url);
+        const imgSrc = resolveCardImage(item.image_url, item);
         const detailUrl = getPropertyDetailUrl(item);
         const specsLot = item.lot_area ? `${item.lot_area} sqm` : (item.floor_area ? `${item.floor_area} sqm` : 'N/A');
         const rawStatus = String(item.status || 'Available').trim().toLowerCase();
         const isSold = rawStatus === 'sold' || rawStatus === 'sold out';
         const statusLabel = isSold ? 'Sold Out' : 'Available';
+        const pricing = getPropertyPricingMeta(item);
+
+        const displayTitle = formatPropertyTitle(item.title);
 
         return `
         <article class="property-card ${isSold ? 'card-sold' : ''}" onclick="location.href='${detailUrl}'">
@@ -103,7 +159,7 @@ function renderFeaturedGrid(list) {
                 <span class="property-status-badge ${isSold ? 'badge-sold' : 'badge-available'}">
                     ${statusLabel}
                 </span>
-                <img src="${imgSrc}" alt="${item.title}" onerror="this.src='assets/images/property1.jpg'">
+                <img src="${imgSrc}" alt="${displayTitle}" onerror="this.src='assets/images/property1.jpg'">
                 <div class="card-actions">
                     <button class="card-icon-btn share-btn" type="button" aria-label="Share property"
                         onclick="event.stopPropagation(); copyPropertyLink('${item.id}')">
@@ -119,7 +175,7 @@ function renderFeaturedGrid(list) {
                 </div>
             </div>
             <div class="property-info">
-                <h3>${item.title}</h3>
+                <h3>${displayTitle}</h3>
                 <p class="property-location">${item.location}</p>
                 <div class="property-details">
                     <span><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -135,7 +191,17 @@ function renderFeaturedGrid(list) {
                             <rect x="3" y="3" width="18" height="18" rx="2" />
                         </svg> ${specsLot}</span>
                 </div>
-                <strong class="property-price">₱${Number(item.price || 0).toLocaleString()}</strong>
+                <div class="property-tcp-container">
+                    <div class="tcp-pill-tag">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+                        <span>${pricing.tcpTag}</span>
+                    </div>
+                    <div class="property-price-row">
+                        <span class="price-prefix">TCP:</span>
+                        <strong class="property-price">${pricing.priceDisplay}</strong>
+                    </div>
+                    <p class="tcp-subtext">${pricing.tcpSubtext}</p>
+                </div>
             </div>
         </article>
         `;
@@ -163,11 +229,13 @@ function filterPropertyList(list, category, location, keyword) {
             } else if (cat === 'apartments' || cat === 'apartment') {
                 matchesCat = type.includes('apartment') || type.includes('condo') || title.includes('apartment') || title.includes('condo');
             } else if (cat === 'townhouses' || cat === 'townhouse') {
-                matchesCat = type.includes('townhouse') || type.includes('triplex') || type.includes('single attached') || title.includes('townhouse');
+                matchesCat = type.includes('townhouse') || title.includes('townhouse') || title.includes('suerte') || title.includes('kathleen') || title.includes('liora');
+            } else if (cat === 'triplex' || cat === 'triplexes') {
+                matchesCat = type.includes('triplex') || title.includes('triplex') || title.includes('airmen');
             } else if (cat === 'luxury' || cat === 'luxury villas') {
                 matchesCat = type.includes('villa') || price >= 5000000 || title.includes('luxury') || desc.includes('luxury');
             } else if (cat === 'house-lot' || cat === 'house & lot') {
-                matchesCat = type.includes('house') || type.includes('townhouse') || type.includes('subdivision') || type.includes('single attached') || type.includes('triplex') || type.includes('villa');
+                matchesCat = true;
             } else if (cat === 'subdivision') {
                 matchesCat = type.includes('subdivision') || title.includes('subdivision') || (item.subdivision_name && item.subdivision_name.trim().length > 0);
             } else {
@@ -287,11 +355,32 @@ function handleSearchSubmit(e) {
     scrollToFeatured();
 }
 
+function isAccreditedPropertyItem(item) {
+    if (!item) return false;
+    const t = (item.title || item.propertyName || item.name || '').toLowerCase().trim();
+    return t.includes('airmen') || t.includes('suerte') || t.includes('kathleen') || t.includes('liora');
+}
+
 async function loadHomeProperties(category = 'all') {
     activeCategory = category;
 
+    // Purge any stale legacy properties from browser caches
+    try {
+        ['cached_live_properties', 'urbanScopeProperties', 'properties'].forEach(k => {
+            const raw = localStorage.getItem(k);
+            if (raw) {
+                const parsed = JSON.parse(raw);
+                if (Array.isArray(parsed)) {
+                    const clean = parsed.filter(isAccreditedPropertyItem);
+                    localStorage.setItem(k, JSON.stringify(clean));
+                }
+            }
+        });
+    } catch (_) {}
+
     // Fast-path: if properties are already loaded in memory, filter and render instantly
     if (allCachedProperties.length > 0) {
+        allCachedProperties = allCachedProperties.filter(isAccreditedPropertyItem);
         applyCurrentFiltersAndRender();
         return;
     }
@@ -300,8 +389,10 @@ async function loadHomeProperties(category = 'all') {
     try {
         const cached = JSON.parse(localStorage.getItem('cached_live_properties') || localStorage.getItem('urbanScopeProperties') || '[]');
         if (Array.isArray(cached) && cached.length > 0) {
-            allCachedProperties = cached;
-            applyCurrentFiltersAndRender();
+            allCachedProperties = cached.filter(isAccreditedPropertyItem);
+            if (allCachedProperties.length > 0) {
+                applyCurrentFiltersAndRender();
+            }
         }
     } catch (e) { }
 
@@ -310,7 +401,7 @@ async function loadHomeProperties(category = 'all') {
         try {
             const data = await apiGetProperties({});
             if (data && Array.isArray(data) && data.length > 0) {
-                allCachedProperties = data;
+                allCachedProperties = data.filter(isAccreditedPropertyItem);
                 applyCurrentFiltersAndRender();
                 return;
             }

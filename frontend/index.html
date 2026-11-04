@@ -61,25 +61,21 @@
                 <label>
                     <span>TYPE</span>
                     <select id="typeFilter" name="type">
-                        <option value="all">Property Type</option>
-                        <option value="villa">Villa</option>
-                        <option value="apartment">Apartments</option>
+                        <option value="all">All Property Types</option>
                         <option value="townhouse">Townhouses</option>
-                        <option value="luxury">Luxury Villas</option>
+                        <option value="triplex">Triplex</option>
                         <option value="house-lot">House &amp; Lot</option>
-                        <option value="subdivision">Subdivision</option>
                     </select>
                 </label>
 
                 <label>
                     <span>LOCATIONS</span>
                     <select id="locationFilter" name="location">
-                        <option value="all">All Cities</option>
+                        <option value="all">All Locations</option>
                         <option value="las-pinas">Las Piñas City</option>
-                        <option value="dasmarinas">Dasmariñas, Cavite</option>
                         <option value="bacoor">Bacoor, Cavite</option>
-                        <option value="imus">Imus, Cavite</option>
                         <option value="naic">Naic, Cavite</option>
+                        <option value="trece-martires">Trece Martires City, Cavite</option>
                     </select>
                 </label>
 
@@ -109,7 +105,7 @@
                     <label for="homeSortSelect">Sort by:</label>
                     <select id="homeSortSelect">
                         <option value="featured">Featured</option>
-                        <option value="type">Property Type: Villas, Apartments, etc.</option>
+                        <option value="type">Property Type</option>
                         <option value="newest">Newest First</option>
                         <option value="price-low">Price: Low to High</option>
                         <option value="price-high">Price: High to Low</option>
@@ -128,12 +124,9 @@
                 </button>
                 <div class="category-tabs" id="categoryTabs">
                     <button type="button" data-category="all" class="cat-tab active">All</button>
-                    <button type="button" data-category="villas" class="cat-tab">Villas</button>
-                    <button type="button" data-category="apartments" class="cat-tab">Apartments</button>
                     <button type="button" data-category="townhouses" class="cat-tab">Townhouses</button>
-                    <button type="button" data-category="luxury" class="cat-tab">Luxury Villas</button>
+                    <button type="button" data-category="triplex" class="cat-tab">Triplex</button>
                     <button type="button" data-category="house-lot" class="cat-tab">House &amp; Lot</button>
-                    <button type="button" data-category="subdivision" class="cat-tab">Subdivision</button>
                 </div>
                 <button class="cat-arrow right" type="button" aria-label="Next categories"
                     onclick="scrollCategories(1)">
@@ -146,16 +139,120 @@
 
             <!-- PROPERTY CARDS GRID -->
             <div class="property-grid" id="propertyGrid">
-                <!-- Property 1 -->
+                <!-- Property 1: Casasuerte -->
+                <article class="property-card" onclick="location.href='pages/properties/casasuerte.html'">
+                    <div class="property-image">
+                        <span class="property-status-badge badge-available">
+                            Available
+                        </span>
+                        <img src="assets/images/casasuerte.jpg" alt="Casasuerte Townhouse" onerror="this.src='assets/images/property1.jpg'">
+                        <div class="card-actions">
+                            <button class="card-icon-btn share-btn" type="button" aria-label="Share property"
+                                onclick="event.stopPropagation(); copyPropertyLink('1')">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <circle cx="18" cy="5" r="3"></circle>
+                                    <circle cx="6" cy="12" r="3"></circle>
+                                    <circle cx="18" cy="19" r="3"></circle>
+                                    <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line>
+                                    <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="property-info">
+                        <h3>Casasuerte</h3>
+                        <p class="property-location">Barangay San Agustin, Trece Martires City, Cavite</p>
+                        <div class="property-details">
+                            <span><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2">
+                                    <path d="M2 4v16M2 8h18a2 2 0 0 1 2 2v10M2 17h20M6 8v9" />
+                                </svg> 2 Beds</span>
+                            <span><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2">
+                                    <path d="M9 6h6a2 2 0 0 1 2 2v10H7V8a2 2 0 0 1 2-2z" />
+                                </svg> 1 Baths</span>
+                            <span><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2">
+                                    <rect x="3" y="3" width="18" height="18" rx="2" />
+                                </svg> 50-80 sqm</span>
+                        </div>
+                        <div class="property-tcp-container">
+                            <div class="tcp-pill-tag">
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+                                <span>TCP Available • Pag-IBIG</span>
+                            </div>
+                            <div class="property-price-row">
+                                <span class="price-prefix">TCP:</span>
+                                <strong class="property-price">₱2.50M - ₱3M</strong>
+                            </div>
+                            <p class="tcp-subtext">Est. Amort: ₱12,250/mo • Res: ₱20,000</p>
+                        </div>
+                    </div>
+                </article>
+
+                <!-- Property 2: Kathleen -->
+                <article class="property-card" onclick="location.href='pages/properties/kathleen.html'">
+                    <div class="property-image">
+                        <span class="property-status-badge badge-available">
+                            Available
+                        </span>
+                        <img src="assets/images/kathleen-facade.jpg" alt="Kathleen Townhouse" onerror="this.src='assets/images/property1.jpg'">
+                        <div class="card-actions">
+                            <button class="card-icon-btn share-btn" type="button" aria-label="Share property"
+                                onclick="event.stopPropagation(); copyPropertyLink('2')">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <circle cx="18" cy="5" r="3"></circle>
+                                    <circle cx="6" cy="12" r="3"></circle>
+                                    <circle cx="18" cy="19" r="3"></circle>
+                                    <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line>
+                                    <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="property-info">
+                        <h3>Kathleen</h3>
+                        <p class="property-location">Molino 7, Bacoor, Cavite</p>
+                        <div class="property-details">
+                            <span><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2">
+                                    <path d="M2 4v16M2 8h18a2 2 0 0 1 2 2v10M2 17h20M6 8v9" />
+                                </svg> 3 Beds</span>
+                            <span><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2">
+                                    <path d="M9 6h6a2 2 0 0 1 2 2v10H7V8a2 2 0 0 1 2-2z" />
+                                </svg> 2 Baths</span>
+                            <span><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2">
+                                    <rect x="3" y="3" width="18" height="18" rx="2" />
+                                </svg> 112 sqm</span>
+                        </div>
+                        <div class="property-tcp-container">
+                            <div class="tcp-pill-tag">
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+                                <span>TCP Available • Bank Financing</span>
+                            </div>
+                            <div class="property-price-row">
+                                <span class="price-prefix">TCP:</span>
+                                <strong class="property-price">₱6.2M - ₱9M</strong>
+                            </div>
+                            <p class="tcp-subtext">Est. Amort: ₱52,382/mo • Res: ₱50,000</p>
+                        </div>
+                    </div>
+                </article>
+
+                <!-- Property 3: Liora Homes -->
                 <article class="property-card" onclick="location.href='pages/properties/Liora.html'">
                     <div class="property-image">
                         <span class="property-status-badge badge-available">
                             Available
                         </span>
-                        <img src="assets/images/LioraHomes.jpg" alt="Liora Homes">
+                        <img src="assets/images/LioraHomes.jpg" alt="Liora Homes" onerror="this.src='assets/images/property1.jpg'">
                         <div class="card-actions">
                             <button class="card-icon-btn share-btn" type="button" aria-label="Share property"
-                                onclick="event.stopPropagation(); alert('Link copied to clipboard!')">
+                                onclick="event.stopPropagation(); copyPropertyLink('3')">
                                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                                     stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                     <circle cx="18" cy="5" r="3"></circle>
@@ -184,20 +281,30 @@
                                     <rect x="3" y="3" width="18" height="18" rx="2" />
                                 </svg> 50-75 sqm</span>
                         </div>
-                        <strong class="property-price">₱2,462,400</strong>
+                        <div class="property-tcp-container">
+                            <div class="tcp-pill-tag">
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+                                <span>TCP Available • Pag-IBIG &amp; Bank</span>
+                            </div>
+                            <div class="property-price-row">
+                                <span class="price-prefix">TCP:</span>
+                                <strong class="property-price">₱2,462,400 - ₱2,894,400</strong>
+                            </div>
+                            <p class="tcp-subtext">Est. Amort: ₱14,476/mo • Res: ₱12,000</p>
+                        </div>
                     </div>
                 </article>
 
-                <!-- Property 2 -->
+                <!-- Property 4: Airmen's Village Triplex -->
                 <article class="property-card" onclick="location.href='pages/properties/Airmen.html'">
                     <div class="property-image">
                         <span class="property-status-badge badge-available">
                             Available
                         </span>
-                        <img src="assets/images/AirmenTriplex.WEBP" alt="Airmen's Village Triplex">
+                        <img src="assets/images/AirmenTriplex.WEBP" alt="Airmen's Village Triplex" onerror="this.src='assets/images/property1.jpg'">
                         <div class="card-actions">
                             <button class="card-icon-btn share-btn" type="button" aria-label="Share property"
-                                onclick="event.stopPropagation(); alert('Link copied to clipboard!')">
+                                onclick="event.stopPropagation(); copyPropertyLink('4')">
                                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                                     stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                     <circle cx="18" cy="5" r="3"></circle>
@@ -211,7 +318,7 @@
                     </div>
                     <div class="property-info">
                         <h3>Airmen's Village Triplex</h3>
-                        <p class="property-location">Pulang Lupa Dos, Las piñas City</p>
+                        <p class="property-location">Pulang Lupa Dos, Las Piñas City</p>
                         <div class="property-details">
                             <span><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                                     stroke-width="2">
@@ -226,49 +333,17 @@
                                     <rect x="3" y="3" width="18" height="18" rx="2" />
                                 </svg> 64-83.25 sqm</span>
                         </div>
-                        <strong class="property-price">₱8,200,000.00</strong>
-                    </div>
-                </article>
-
-                <!-- Property 3 -->
-                <article class="property-card" onclick="location.href='pages/properties/property-detail.html'">
-                    <div class="property-image">
-                        <span class="property-status-badge badge-available">
-                            Available
-                        </span>
-                        <img src="assets/images/property3.jpg" alt="Velemont Residences">
-                        <div class="card-actions">
-                            <button class="card-icon-btn share-btn" type="button" aria-label="Share property"
-                                onclick="event.stopPropagation(); alert('Link copied to clipboard!')">
-                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                    <circle cx="18" cy="5" r="3"></circle>
-                                    <circle cx="6" cy="12" r="3"></circle>
-                                    <circle cx="18" cy="19" r="3"></circle>
-                                    <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line>
-                                    <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line>
-                                </svg>
-                            </button>
+                        <div class="property-tcp-container">
+                            <div class="tcp-pill-tag">
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+                                <span>TCP Available • Bank Financing</span>
+                            </div>
+                            <div class="property-price-row">
+                                <span class="price-prefix">TCP:</span>
+                                <strong class="property-price">₱8,900,000 - ₱9,029,240</strong>
+                            </div>
+                            <p class="tcp-subtext">Est. Amort: ₱53,658/mo • Res: ₱50,000</p>
                         </div>
-                    </div>
-                    <div class="property-info">
-                        <h3>Velemont Residences</h3>
-                        <p class="property-location">Manuyo, Las pinas City</p>
-                        <div class="property-details">
-                            <span><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                    stroke-width="2">
-                                    <path d="M2 4v16M2 8h18a2 2 0 0 1 2 2v10M2 17h20M6 8v9" />
-                                </svg> 3 Beds</span>
-                            <span><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                    stroke-width="2">
-                                    <path d="M9 6h6a2 2 0 0 1 2 2v10H7V8a2 2 0 0 1 2-2z" />
-                                </svg> 2 Baths</span>
-                            <span><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                    stroke-width="2">
-                                    <rect x="3" y="3" width="18" height="18" rx="2" />
-                                </svg> 120 sqm</span>
-                        </div>
-                        <strong class="property-price">₱3,800,000.00</strong>
                     </div>
                 </article>
             </div>
@@ -507,7 +582,7 @@
             <div class="testimonials-grid">
                 <article class="testimonial-card">
                     <div class="stars">★★★★★</div>
-                    <p class="testimonial-quote">"Ms. Miriam Lobren made buying our first home at Velemont Residences so seamless and stress-free! She guided us through every bank requirement and inspection step with great patience."</p>
+                    <p class="testimonial-quote">"Ms. Miriam Lobren made buying our first home at Kathleen so seamless and stress-free! She guided us through every bank requirement and inspection step with great patience."</p>
                     <h4 class="testimonial-author">Sarah Jenkins</h4>
                     <span class="testimonial-location" style="font-size: 13px; color: var(--text-muted); display: block; margin-top: 2px;">Las Piñas City</span>
                 </article>

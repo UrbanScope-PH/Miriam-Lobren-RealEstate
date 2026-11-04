@@ -251,100 +251,68 @@ def init_db():
     if prop_count == 0:
         properties_seed = [
             (
-                "Velemont Residences",
-                "Manuyo, Las Piñas City",
-                "Subdivision",
-                6880000,
-                3,
-                2,
-                120,
-                95,
-                2,
-                2,
-                "Available",
-                "assets/images/property1.jpg",
-                "Modern suburban residence with spacious layout, 24/7 security, and convenient access to Metro Manila commercial hubs.",
-                "24/7 Security, Clubhouse & Function Hall, Swimming Pool, Landscaped Parks, Perimeter Fence"
-            ),
-            (
-                "Green Valley Villa",
-                "Dasmariñas, Cavite",
-                "Villa",
-                5200000,
-                3,
-                2,
-                95,
-                82,
-                1,
-                2,
-                "Available",
-                "assets/images/property2.jpg",
-                "Contemporary family villa featuring private vehicle parking, landscaped pocket gardens, and clubhouse amenities.",
-                "Gated Community, Pocket Garden, Swimming Pool, Clubhouse, 24/7 Guardhouse"
-            ),
-            (
-                "Horizon Heights",
-                "Pamplona, Las Piñas City",
-                "Condominium",
-                3450000,
-                1,
-                1,
-                42,
-                42,
-                1,
-                15,
-                "Available",
-                "assets/images/property3.jpg",
-                "High-rise condominium overlooking scenic city views, featuring rooftop infinity pool, fitness gym, and concierge.",
-                "Infinity Pool, Rooftop Fitness Gym, Concierge Service, Passenger Elevators, CCTV Surveillance"
-            ),
-            (
-                "Liora Homes Executive Townhouse",
-                "Pasong Buaya II, Imus, Cavite",
+                "Casasuerte",
+                "Barangay San Agustin, Trece Martires City, Cavite",
                 "Townhouse",
-                2400000,
+                2500000.0,
                 2,
                 1,
-                48,
-                43,
+                50.0,
+                50.8,
+                1,
+                2,
+                "Available",
+                "assets/images/casasuerte.jpg",
+                "Casasuerte stands out as an attractive option for first-time homebuyers and modern families looking for a sustainable yet affordable home. The neighborhood is meticulously designed to support a growing community, featuring concrete, well-paved roads, a secured entrance gate, and pocket parks. Its standout selling point is that its units come equipped with a built-in solar power system, offering permanent, eco-friendly savings on monthly electricity bills.",
+                "Gated Entrance, Clubhouse, Basketball Court, Parks & Playgrounds, Built-in Solar Power System, Paved Concrete Roads"
+            ),
+            (
+                "Kathleen",
+                "Molino 7, Bacoor, Cavite",
+                "Townhouse",
+                6200000.0,
+                3,
+                2,
+                112.0,
+                112.0,
+                1,
+                2,
+                "Available",
+                "assets/images/kathleen-facade.jpg",
+                "Kathleen is a secure, family-friendly residential community offering 275 premium townhouses in Molino VII, Bacoor, Cavite (border Las Pinas). Just 12 minutes from EVIA Lifestyle Center along Daang-Hari and MCX. This development features zen-inspired 2-storey townhouses with complete finishes including steel gates and modular cabinets in all rooms. The project offers quality units built to last, located in a thriving community with easy access to shopping centers, schools, hospitals, and major thoroughfares.",
+                "Gated Entrance, Clubhouse, Park, Basketball Court, CCTV, Green-Oriented Community, Steel Gates Included, Modular Cabinets"
+            ),
+            (
+                "Liora Homes",
+                "Brgy. Malainen Bago, Naic, Cavite",
+                "Townhouse",
+                2462400.0,
+                2,
+                1,
+                50.0,
+                44.0,
                 1,
                 2,
                 "Available",
                 "assets/images/LioraHomes.jpg",
-                "Eco-friendly, modern townhouse community in Imus, Cavite equipped with solar-ready fixtures and community leisure facilities.",
-                "Solar-Ready System, Eco-Friendly Lighting, Basketball Court, Children Playground, Multi-purpose Hall"
+                "Liora Homes Naic represents the next generation of housing developments by CBDI. Located in Brgy. Malainen Bago, Naic, Cavite, its 3,345 Amora EcoLove townhomes are equipped with solar panel systems and rainwater storage tanks, awarded 3 Stars by PHILGBC under the BERDE program.",
+                "Clubhouse, Covered Basketball Court, Swimming Pool, Playground & Park, Solar-Ready System, Rainwater Harvesting"
             ),
             (
-                "Airmen Triplex Modern Residence",
-                "Poblacion, Naic, Cavite",
+                "Airmen's Village Triplex",
+                "Pulang Lupa Dos, Las Piñas City",
                 "Triplex",
-                3100000,
+                8900000.0,
                 3,
+                3,
+                83.25,
+                143.78,
                 2,
-                80,
-                72,
-                1,
                 2,
                 "Available",
                 "assets/images/AirmenTriplex.WEBP",
-                "Triplex residential home featuring a master balcony, built-in car garage, contemporary finishes, and proximity to major schools.",
-                "Master Bedroom Balcony, Built-in Garage, Modern Kitchen Counter, Cable & Fiber Ready, Accessible to Transport"
-            ),
-            (
-                "Sunset Heights Executive Townhouse",
-                "Habay, Bacoor, Cavite",
-                "Townhouse",
-                3800000,
-                3,
-                2,
-                100,
-                75,
-                1,
-                2,
-                "Available",
-                "assets/images/property3.jpg",
-                "Charming 2-storey executive townhouse in Bacoor with immediate access to expressways, schools, and shopping malls.",
-                "24/7 Security, Clubhouse, Playground, Basketball Court"
+                "This modern, Ready-for-Occupancy (RFO) triplex townhouse offers the perfect blend of space, comfort, and accessibility. Located in a secure and peaceful community in Las Piñas, it is highly accessible to major roads, commercial hubs, schools, and airports.",
+                "Clubhouse, Basketball Court, Swimming Pool, Playground & Park, 24/7 Security, Balcony"
             )
         ]
 
@@ -357,7 +325,7 @@ def init_db():
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """, properties_seed)
         conn.commit()
-        print("✓ Database seeded with 5 initial featured properties")
+        print("✓ Database seeded with 4 accredited featured properties")
 
     # Inquiries table is ready for client submissions
 
