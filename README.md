@@ -15,7 +15,7 @@ Built for **Miriam Lobren Real Estate Agent** (Las Piñas & Cavite, Philippines)
 - **Admin Dashboard** — KPI cards, inquiry charts, property CRUD, client inquiry tracking, and user overview.
 - **Superadmin Console** — focused account and role governance, privileged-account overview, and database health checks. Property and inquiry workflows stay in the Agent Admin portal.
 - **Legal & Privacy Hub** — comprehensive Terms of Service (aligned with RESA RA 9646) and Privacy Policy (compliant with Philippine Data Privacy Act RA 10173).
-- **Responsive Design** — optimized for desktop, tablet, and mobile.
+- **Responsive Design** — optimized for desktop, tablet, and mobile, with a shared mobile navigation shell across public, client, Admin, and Superadmin pages. Public and client pages use the same primary links; Admin and Superadmin retain role-specific menus with consistent mobile drawers and touch targets.
 
 ---
 
