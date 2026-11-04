@@ -157,9 +157,9 @@
     display: inline-flex;
     align-items: center;
     gap: 6px;
-    background: #eef6f0;
-    color: #1e5c33;
-    border: 1px solid #cbe0d1;
+    background: var(--light-green);
+    color: var(--green);
+    border: 1px solid var(--border-color);
     font-size: 0.8rem;
     font-weight: 700;
     padding: 7px 14px;
@@ -171,7 +171,7 @@
 .btn-change-avatar:hover {
     background: #dff0e3;
     border-color: #9fccaa;
-    color: #123d20;
+    color: var(--dark-green);
     transform: translateY(-1px);
 }
 

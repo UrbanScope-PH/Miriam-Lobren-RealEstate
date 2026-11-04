@@ -3,8 +3,6 @@
  * Aligned 100% with Miriam Lobren Admin Visual Design System & Palette
  */
 
-@import url('https://fonts.googleapis.com/css2?family=Dancing+Script:wght@600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
-
 :root {
     /* Admin Design Tokens */
     --green: #2d5c39;
@@ -17,6 +15,10 @@
     --bg-main: #f4f8f5;
     --white: #ffffff;
     --shadow: 0 8px 26px rgba(27, 46, 33, 0.055);
+    --sidebar-gradient-start: #17321e;
+    --sidebar-gradient-end: #0d2113;
+    --sidebar-active-bg: rgba(52, 124, 71, 0.32);
+    --sidebar-active-edge: #9bd3a5;
     
     --danger: #c53030;
     --danger-light: #fee2e2;
@@ -167,41 +169,6 @@ select:focus-visible {
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.5px;
-}
-
-/* TOPBAR SEARCH */
-.topbar-search,
-.sa-topbar-center {
-    position: relative;
-    display: flex;
-    align-items: center;
-    flex: 1;
-    max-width: 460px;
-}
-
-.topbar-search svg {
-    position: absolute;
-    left: 14px;
-    color: var(--text-muted);
-    pointer-events: none;
-}
-
-.topbar-search input {
-    width: 100%;
-    height: 44px;
-    padding: 0 16px 0 42px;
-    border: 1px solid var(--border-color);
-    border-radius: 10px;
-    background: #fbfdfb;
-    color: var(--text-dark);
-    font-size: 12.5px;
-    outline: none;
-    transition: border-color 0.18s, background 0.18s;
-}
-
-.topbar-search input:focus {
-    border-color: var(--accent-green);
-    background: #ffffff;
 }
 
 /* TOPBAR RIGHT */
@@ -411,6 +378,11 @@ select:focus-visible {
     color: var(--green);
 }
 
+.sa-mobile-portal-link,
+.sa-mobile-portal-divider {
+    display: none;
+}
+
 .profile-signout,
 .sa-signout-btn {
     color: var(--danger) !important;
@@ -452,8 +424,8 @@ select:focus-visible {
 .admin-sidebar,
 .sa-sidebar {
     width: var(--sidebar-w);
-    background: #ffffff;
-    border-right: 1px solid var(--border-color);
+    background: linear-gradient(180deg, var(--sidebar-gradient-start), var(--sidebar-gradient-end));
+    border-right: 1px solid rgba(255, 255, 255, 0.1);
     display: flex;
     flex-direction: column;
     justify-content: space-between;
@@ -469,7 +441,7 @@ select:focus-visible {
 .sidebar-header,
 .sa-sidebar-header {
     padding: 16px 16px 14px;
-    border-bottom: 1px solid #eef2ef;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.12);
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -480,8 +452,8 @@ select:focus-visible {
     display: flex;
     align-items: center;
     gap: 10px;
-    background: var(--light-green);
-    border: 1px solid var(--border-color);
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.13);
     border-radius: 10px;
     padding: 10px 12px;
     flex: 1;
@@ -495,22 +467,22 @@ select:focus-visible {
     width: 32px;
     height: 32px;
     border-radius: 8px;
-    background: rgba(45, 92, 57, 0.12);
-    color: var(--green);
+    background: rgba(255, 255, 255, 0.12);
+    color: var(--sidebar-active-edge);
     flex-shrink: 0;
 }
 
 .role-title {
     font-size: 10.5px;
     font-weight: 800;
-    color: var(--dark-green);
+    color: #ffffff;
     letter-spacing: 0.5px;
     text-transform: uppercase;
 }
 
 .role-desc {
     font-size: 10.5px;
-    color: var(--text-muted);
+    color: rgba(255, 255, 255, 0.68);
 }
 
 .close-sidebar-btn,
@@ -518,7 +490,7 @@ select:focus-visible {
     display: none;
     border: 0;
     background: transparent;
-    color: var(--text-muted);
+    color: rgba(255, 255, 255, 0.78);
     font-size: 26px;
     cursor: pointer;
     line-height: 1;
@@ -544,7 +516,7 @@ select:focus-visible {
     border: 0;
     border-radius: 9px;
     background: transparent;
-    color: var(--text-dark);
+    color: rgba(255, 255, 255, 0.84);
     font-size: 13px;
     font-weight: 600;
     text-align: left;
@@ -555,26 +527,37 @@ select:focus-visible {
 
 .nav-item:hover,
 .sa-nav-item:hover {
-    background: var(--light-green);
-    color: var(--green);
+    background: rgba(255, 255, 255, 0.1);
+    color: #ffffff;
 }
 
 .nav-item.active,
 .sa-nav-item.active {
-    background: var(--green);
+    background: var(--sidebar-active-bg);
     color: #ffffff;
     font-weight: 700;
+    box-shadow: inset 3px 0 var(--sidebar-active-edge);
+}
+
+.nav-item svg,
+.sa-nav-item svg {
+    width: 20px;
+    height: 20px;
+    flex-shrink: 0;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
 }
 
 .nav-item.active svg,
 .sa-nav-item.active svg {
-    color: #ffffff;
+    color: var(--sidebar-active-edge);
 }
 
 .sa-badge-count {
     margin-left: auto;
-    background: var(--light-green);
-    color: var(--green);
+    background: rgba(255, 255, 255, 0.14);
+    color: #ffffff;
     padding: 2px 8px;
     border-radius: var(--radius-pill);
     font-size: 10.5px;
@@ -591,20 +574,12 @@ select:focus-visible {
 .sidebar-footer,
 .sa-sidebar-footer {
     padding: 16px;
-    border-top: 1px solid #eef2ef;
-}
-
-.cursive-tagline {
-    margin-bottom: 14px;
-    color: var(--green);
-    font-family: 'Dancing Script', cursive;
-    font-size: 21px;
-    line-height: 1.3;
+    border-top: 1px solid rgba(255, 255, 255, 0.12);
 }
 
 .sa-sys-card {
-    background: #f8faf8;
-    border: 1px solid var(--border-color);
+    background: rgba(255, 255, 255, 0.07);
+    border: 1px solid rgba(255, 255, 255, 0.13);
     border-radius: 10px;
     padding: 12px;
 }
@@ -615,7 +590,7 @@ select:focus-visible {
     gap: 8px;
     font-size: 11.5px;
     font-weight: 700;
-    color: var(--dark-green);
+    color: #ffffff;
     margin-bottom: 4px;
 }
 
@@ -629,15 +604,15 @@ select:focus-visible {
 
 .sa-sys-details {
     font-size: 11px;
-    color: var(--text-muted);
+    color: rgba(255, 255, 255, 0.68);
     margin-bottom: 6px;
 }
 
 .sa-sys-badge {
     display: inline-block;
     padding: 2px 8px;
-    background: #dcfce7;
-    color: #15803d;
+    background: rgba(155, 211, 165, 0.18);
+    color: #b8e2c0;
     border-radius: var(--radius-pill);
     font-size: 10px;
     font-weight: 800;
@@ -676,10 +651,15 @@ select:focus-visible {
 .sa-hero-card {
     margin-bottom: 26px;
     display: flex;
-    align-items: flex-end;
+    align-items: center;
     justify-content: space-between;
     flex-wrap: wrap;
     gap: 16px;
+    padding: 24px 26px;
+    border: 1px solid #dce9de;
+    border-radius: 18px;
+    background: linear-gradient(125deg, #edf6ef 0%, #ffffff 78%);
+    box-shadow: var(--shadow);
 }
 
 .welcome-eyebrow,
@@ -723,7 +703,7 @@ select:focus-visible {
     padding: 10px 18px;
     border: 0;
     border-radius: 11px;
-    background: linear-gradient(135deg, #347c47, #245e35);
+    background: linear-gradient(135deg, var(--accent-green), var(--green));
     box-shadow: 0 6px 15px rgba(45, 92, 57, 0.14);
     color: #ffffff;
     font-size: 12.5px;
@@ -768,7 +748,7 @@ select:focus-visible {
 .kpi-grid,
 .sa-stats-grid {
     display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 16px;
     margin-bottom: 28px;
 }
@@ -801,31 +781,8 @@ select:focus-visible {
     height: 46px;
     flex-shrink: 0;
     border-radius: 13px;
-}
-
-.kpi-icon.blue {
-    background: #dbeafe;
-    color: #2563eb;
-}
-
-.kpi-icon.green {
-    background: #dcfce7;
-    color: #16a34a;
-}
-
-.kpi-icon.purple {
-    background: #f3e8ff;
-    color: #9333ea;
-}
-
-.kpi-icon.orange {
-    background: #ffedd5;
-    color: #ea580c;
-}
-
-.kpi-icon.emerald {
-    background: #ccfbf1;
-    color: #0d9488;
+    background: var(--light-green);
+    color: var(--accent-green);
 }
 
 .kpi-info,
@@ -892,7 +849,7 @@ select:focus-visible {
 .section-eyebrow {
     display: block;
     margin-bottom: 7px;
-    color: #558363;
+    color: var(--accent-green);
     font-size: 9.5px;
     font-weight: 800;
     letter-spacing: 1.25px;
@@ -1044,13 +1001,13 @@ select:focus-visible {
 }
 
 .add-icon {
-    background: #e1f2e5;
-    color: #287344;
+    background: var(--light-green);
+    color: var(--accent-green);
 }
 
-.inquiry-icon {
-    background: #e5eefc;
-    color: #416db2;
+.security-icon {
+    background: var(--light-green);
+    color: var(--accent-green);
 }
 
 .quick-action-item strong,
@@ -1073,7 +1030,7 @@ select:focus-visible {
     position: absolute;
     top: 14px;
     right: 14px;
-    color: #4d8a5c;
+    color: var(--accent-green);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -1622,11 +1579,6 @@ tr:hover td {
         display: flex;
     }
 
-    .topbar-search,
-    .sa-topbar-center {
-        max-width: 280px;
-    }
-
     .sa-time-chip {
         display: none;
     }
@@ -1723,11 +1675,6 @@ tr:hover td {
         text-overflow: ellipsis;
     }
 
-    .topbar-search,
-    .sa-topbar-center {
-        display: none;
-    }
-
     .sa-time-chip,
     .sa-quick-btn {
         display: none;
@@ -1757,6 +1704,14 @@ tr:hover td {
         z-index: 1100;
     }
 
+    .sa-mobile-portal-link {
+        display: flex;
+    }
+
+    .sa-mobile-portal-divider {
+        display: block;
+    }
+
     .dashboard-content,
     .sa-content {
         margin-left: 0;
@@ -1766,6 +1721,12 @@ tr:hover td {
 
     .welcome-banner h2 {
         font-size: 22px;
+    }
+
+    .welcome-banner,
+    .sa-hero-card {
+        padding: 18px;
+        align-items: stretch;
     }
 
     .kpi-grid,
