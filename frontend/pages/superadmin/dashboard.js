@@ -9,8 +9,6 @@
     // State
     let currentSuperadmin = null;
     let allUsers = [];
-    let allProperties = [];
-    let allInquiries = [];
     let pendingRoleChange = null;
 
     // DOM Elements
@@ -32,16 +30,12 @@
 
         // Badges
         usersCountBadge: document.getElementById('saUsersCountBadge'),
-        propsCountBadge: document.getElementById('saPropsCountBadge'),
-        inqCountBadge: document.getElementById('saInqCountBadge'),
 
         // KPIs
         kpiTotalUsers: document.getElementById('kpiTotalUsers'),
         kpiUsersBreakdown: document.getElementById('kpiUsersBreakdown'),
-        kpiTotalProperties: document.getElementById('kpiTotalProperties'),
-        kpiPropertiesBreakdown: document.getElementById('kpiPropertiesBreakdown'),
-        kpiTotalInquiries: document.getElementById('kpiTotalInquiries'),
-        kpiInquiriesBreakdown: document.getElementById('kpiInquiriesBreakdown'),
+        kpiPrivilegedAccounts: document.getElementById('kpiPrivilegedAccounts'),
+        kpiPrivilegedBreakdown: document.getElementById('kpiPrivilegedBreakdown'),
         kpiDbSize: document.getElementById('kpiDbSize'),
         kpiDbSub: document.getElementById('kpiDbSub'),
         diagDbSize: document.getElementById('diagDbSize'),
@@ -55,22 +49,11 @@
         userFilterInput: document.getElementById('userFilterInput'),
         userRoleFilter: document.getElementById('userRoleFilter'),
         
-        propertiesTableBody: document.getElementById('propertiesTableBody'),
-        propFilterInput: document.getElementById('propFilterInput'),
-        propStatusFilter: document.getElementById('propStatusFilter'),
-
-        inquiriesTableBody: document.getElementById('inquiriesTableBody'),
-        inqFilterInput: document.getElementById('inqFilterInput'),
-
-        // Global search
-        globalSearch: document.getElementById('saGlobalSearch'),
-
         // Modals & Forms
         createUserModal: document.getElementById('createUserModal'),
         createUserForm: document.getElementById('createUserForm'),
         btnOpenCreateUserModal: document.getElementById('btnOpenCreateUserModal'),
         btnCreateUserFromTable: document.getElementById('btnCreateUserFromTable'),
-        btnQuickAddUser: document.getElementById('btnQuickAddUser'),
         btnCloseCreateUserModal: document.getElementById('btnCloseCreateUserModal'),
         btnCancelCreateUser: document.getElementById('btnCancelCreateUser'),
 
@@ -83,7 +66,6 @@
         // Actions
         btnRefreshStats: document.getElementById('btnRefreshStats'),
         btnQuickManageRoles: document.getElementById('btnQuickManageRoles'),
-        btnQuickReviewInquiries: document.getElementById('btnQuickReviewInquiries'),
         btnQuickRunIntegrity: document.getElementById('btnQuickRunIntegrity'),
         btnRunIntegrity: document.getElementById('btnRunIntegrity'),
 
@@ -164,13 +146,6 @@
             .replace(/>/g, '&gt;')
             .replace(/"/g, '&quot;')
             .replace(/'/g, '&#39;');
-    }
-
-    function formatCurrency(amount) {
-        return '₱' + Number(amount || 0).toLocaleString('en-PH', {
-            minimumFractionDigits: 0,
-            maximumFractionDigits: 0
-        });
     }
 
     function formatDate(dateStr) {
@@ -278,22 +253,18 @@
 
             if (data && data.metrics) {
                 const m = data.metrics;
-                const adminCount = m.admins ?? 1;
-                const clientCount = m.regular_users ?? 0;
+                const superadminCount = Number(m.superadmins ?? 1);
+                const adminCount = Number(m.admins ?? 1);
+                const clientCount = Number(m.regular_users ?? 0);
+                const privilegedCount = superadminCount + adminCount;
 
                 if (elements.kpiTotalUsers) elements.kpiTotalUsers.textContent = m.total_users ?? '--';
                 if (elements.kpiUsersBreakdown) {
-                    elements.kpiUsersBreakdown.textContent = `${m.superadmins || 1} Superadmin · ${adminCount} ${adminCount === 1 ? 'Admin' : 'Admins'} · ${clientCount} ${clientCount === 1 ? 'Client' : 'Clients'}`;
+                    elements.kpiUsersBreakdown.textContent = `${superadminCount} Superadmin · ${adminCount} ${adminCount === 1 ? 'Admin' : 'Admins'} · ${clientCount} ${clientCount === 1 ? 'Client' : 'Clients'}`;
                 }
-
-                if (elements.kpiTotalProperties) elements.kpiTotalProperties.textContent = m.total_properties ?? '--';
-                if (elements.kpiPropertiesBreakdown) {
-                    elements.kpiPropertiesBreakdown.textContent = `${m.available_properties || 0} Available · ${m.sold_properties || 0} Sold`;
-                }
-
-                if (elements.kpiTotalInquiries) elements.kpiTotalInquiries.textContent = m.total_inquiries ?? '--';
-                if (elements.kpiInquiriesBreakdown) {
-                    elements.kpiInquiriesBreakdown.textContent = `${m.pending_inquiries || 0} Pending · ${m.approved_inquiries || 0} Approved`;
+                if (elements.kpiPrivilegedAccounts) elements.kpiPrivilegedAccounts.textContent = privilegedCount;
+                if (elements.kpiPrivilegedBreakdown) {
+                    elements.kpiPrivilegedBreakdown.textContent = `${superadminCount} Superadmin · ${adminCount} ${adminCount === 1 ? 'Admin' : 'Admins'}`;
                 }
 
                 const isCloudEngine = data.engine === 'supabase';
@@ -318,8 +289,6 @@
                 }
 
                 if (elements.usersCountBadge) elements.usersCountBadge.textContent = m.total_users ?? '--';
-                if (elements.propsCountBadge) elements.propsCountBadge.textContent = m.total_properties ?? '--';
-                if (elements.inqCountBadge) elements.inqCountBadge.textContent = m.total_inquiries ?? '--';
 
                 if (elements.saTriggerOnlineBadge) {
                     elements.saTriggerOnlineBadge.textContent = m.trigger_active ? 'Trigger Online' : 'Trigger Inactive';
@@ -501,134 +470,6 @@
         }).join('');
     }
 
-    // 3. Properties Table
-    async function loadProperties() {
-        try {
-            let props = [];
-            if (typeof apiGetProperties === 'function') {
-                props = await apiGetProperties({ type: 'all' }) || [];
-            } else if (isLocalDevBackend()) {
-                const res = await fetch(`${getApiBase()}/properties`);
-                if (res.ok) props = await res.json();
-            }
-
-            allProperties = Array.isArray(props) ? props : [];
-            if (elements.propsCountBadge) {
-                elements.propsCountBadge.textContent = allProperties.length;
-            }
-            applyPropFilters();
-        } catch (err) {
-            elements.propertiesTableBody.innerHTML = `<tr><td colspan="7" class="text-center py-4" style="color:var(--sa-danger)">Error loading properties.</td></tr>`;
-        }
-    }
-
-    function renderPropertiesTable(props) {
-        if (!elements.propertiesTableBody) return;
-
-        if (props.length === 0) {
-            elements.propertiesTableBody.innerHTML = `<tr><td colspan="7" class="text-center py-4 text-muted">No properties in catalog.</td></tr>`;
-            return;
-        }
-
-        elements.propertiesTableBody.innerHTML = props.map(p => {
-            const statusBadge = (p.status || '').toLowerCase() === 'sold'
-                ? `<span class="sa-badge-gray">Sold</span>`
-                : `<span class="sa-badge-green">Available</span>`;
-
-            return `
-                <tr>
-                    <td><strong>#${p.id}</strong></td>
-                    <td>
-                        <strong>${escapeHtml(p.title || p.propertyName || 'Property Listing')}</strong><br>
-                        <small class="text-muted">${escapeHtml(p.location || 'Cavite / Las Piñas')}</small>
-                    </td>
-                    <td><span class="sa-badge-gray">${escapeHtml(p.property_type || p.type || 'Townhouse')}</span></td>
-                    <td><strong class="text-gold">${formatCurrency(p.price)}</strong></td>
-                    <td>
-                        <small>${p.bedrooms || 3} Beds · ${p.bathrooms || 2} Baths · ${p.lot_area || 100} sqm</small>
-                    </td>
-                    <td>${statusBadge}</td>
-                    <td style="text-align: right;">
-                        <a href="../properties/property-detail.html?id=${p.id}" class="btn-table-action" target="_blank">
-                            View Listing
-                        </a>
-                    </td>
-                </tr>
-            `;
-        }).join('');
-    }
-
-    // 4. Inquiries Table
-    function applyInqFilters() {
-        const q = (elements.inqFilterInput ? elements.inqFilterInput.value : '').toLowerCase().trim();
-        const filtered = allInquiries.filter(i => {
-            return !q ||
-                (i.client_name && i.client_name.toLowerCase().includes(q)) ||
-                (i.client_email && i.client_email.toLowerCase().includes(q)) ||
-                (i.property_title && i.property_title.toLowerCase().includes(q));
-        });
-        renderInquiriesTable(filtered);
-    }
-
-    async function loadInquiries() {
-        try {
-            let inquiries = null;
-            if (typeof apiGetInquiries === 'function') {
-                inquiries = await apiGetInquiries();
-            } else if (isLocalDevBackend()) {
-                const res = await fetch(`${getApiBase()}/inquiries`, {
-                    headers: getAuthHeaders(),
-                    credentials: 'include'
-                });
-                if (res.ok) inquiries = await res.json();
-            }
-
-            if (Array.isArray(inquiries)) {
-                allInquiries = inquiries;
-                if (elements.inqCountBadge) {
-                    elements.inqCountBadge.textContent = allInquiries.length;
-                }
-                applyInqFilters();
-            } else {
-                elements.inquiriesTableBody.innerHTML = `<tr><td colspan="6" class="text-center py-4 text-muted">No inquiries available.</td></tr>`;
-            }
-        } catch (err) {
-            elements.inquiriesTableBody.innerHTML = `<tr><td colspan="6" class="text-center py-4 text-muted">Inquiries feed not initialized.</td></tr>`;
-        }
-    }
-
-    function renderInquiriesTable(inquiries) {
-        if (!elements.inquiriesTableBody) return;
-
-        if (inquiries.length === 0) {
-            elements.inquiriesTableBody.innerHTML = `<tr><td colspan="6" class="text-center py-4 text-muted">No client inquiries found.</td></tr>`;
-            return;
-        }
-
-        elements.inquiriesTableBody.innerHTML = inquiries.map(inq => {
-            const status = inq.status || 'Under Review';
-            let statusBadge = `<span class="sa-badge-gold">${escapeHtml(status)}</span>`;
-            if (status.toLowerCase().includes('approved') || status.toLowerCase().includes('completed')) {
-                statusBadge = `<span class="sa-badge-green">${escapeHtml(status)}</span>`;
-            }
-
-            return `
-                <tr>
-                    <td><strong>#${inq.id}</strong></td>
-                    <td>
-                        <strong>${escapeHtml(inq.client_name)}</strong><br>
-                        <small class="text-muted">${escapeHtml(inq.client_email)} · ${escapeHtml(inq.client_phone || '')}</small>
-                    </td>
-                    <td><strong>${escapeHtml(inq.property_title || 'General Consultation')}</strong></td>
-                    <td><span style="font-size:0.82rem;color:var(--sa-text-muted)" title="${escapeHtml(inq.message || '')}">${escapeHtml((inq.message || '').substring(0, 70))}${(inq.message || '').length > 70 ? '...' : ''}</span></td>
-                    <td>${statusBadge}</td>
-                    <td>${formatDate(inq.created_at)}</td>
-                </tr>
-            `;
-        }).join('');
-    }
-
-    // ==============================================================
     // ACTIONS & MODALS
     // ==============================================================
 
@@ -783,7 +624,6 @@
 
     if (elements.btnOpenCreateUserModal) elements.btnOpenCreateUserModal.addEventListener('click', openCreateUserModal);
     if (elements.btnCreateUserFromTable) elements.btnCreateUserFromTable.addEventListener('click', openCreateUserModal);
-    if (elements.btnQuickAddUser) elements.btnQuickAddUser.addEventListener('click', openCreateUserModal);
     if (elements.btnCloseCreateUserModal) elements.btnCloseCreateUserModal.addEventListener('click', closeCreateUserModal);
     if (elements.btnCancelCreateUser) elements.btnCancelCreateUser.addEventListener('click', closeCreateUserModal);
 
@@ -940,65 +780,6 @@
     if (elements.userFilterInput) elements.userFilterInput.addEventListener('input', applyUserFilters);
     if (elements.userRoleFilter) elements.userRoleFilter.addEventListener('change', applyUserFilters);
 
-    function applyPropFilters() {
-        const query = (elements.propFilterInput ? elements.propFilterInput.value : '').toLowerCase().trim();
-        const status = (elements.propStatusFilter ? elements.propStatusFilter.value : 'all').toLowerCase();
-
-        const filtered = allProperties.filter(p => {
-            const title = (p.title || p.propertyName || '').toLowerCase();
-            const location = (p.location || '').toLowerCase();
-            const pStatus = (p.status || 'available').toLowerCase();
-
-            const matchesQuery = !query || title.includes(query) || location.includes(query);
-            const matchesStatus = (status === 'all') || (pStatus === status);
-
-            return matchesQuery && matchesStatus;
-        });
-
-        renderPropertiesTable(filtered);
-    }
-
-    if (elements.propFilterInput) elements.propFilterInput.addEventListener('input', applyPropFilters);
-    if (elements.propStatusFilter) elements.propStatusFilter.addEventListener('change', applyPropFilters);
-
-    if (elements.inqFilterInput) {
-        elements.inqFilterInput.addEventListener('input', applyInqFilters);
-    }
-
-    // Global Search: searches active tab or intelligently routes to users/properties/inquiries
-    if (elements.globalSearch) {
-        elements.globalSearch.addEventListener('input', (e) => {
-            const q = e.target.value.toLowerCase().trim();
-            const activePane = document.querySelector('.sa-tab-pane.active');
-            const activeTabId = activePane ? activePane.id.replace('pane-', '') : 'overview';
-
-            if (activeTabId === 'users' && elements.userFilterInput) {
-                elements.userFilterInput.value = q;
-                applyUserFilters();
-            } else if (activeTabId === 'properties' && elements.propFilterInput) {
-                elements.propFilterInput.value = q;
-                applyPropFilters();
-            } else if (activeTabId === 'inquiries' && elements.inqFilterInput) {
-                elements.inqFilterInput.value = q;
-                elements.inqFilterInput.dispatchEvent(new Event('input'));
-            } else if (q) {
-                if (q.includes('@')) {
-                    switchTab('users');
-                    if (elements.userFilterInput) {
-                        elements.userFilterInput.value = q;
-                        applyUserFilters();
-                    }
-                } else if (/villa|townhouse|condo|house|cavite|piñas|lot/i.test(q)) {
-                    switchTab('properties');
-                    if (elements.propFilterInput) {
-                        elements.propFilterInput.value = q;
-                        applyPropFilters();
-                    }
-                }
-            }
-        });
-    }
-
     // Tab Switching
     function switchTab(tabId) {
         elements.navItems.forEach(item => {
@@ -1020,26 +801,8 @@
         });
     });
 
-    // Dropdown items that navigate to specific tabs (e.g. Properties Catalog)
-    document.querySelectorAll('[data-goto-tab]').forEach(btn => {
-        btn.addEventListener('click', () => {
-            const tabId = btn.getAttribute('data-goto-tab');
-            if (tabId) {
-                switchTab(tabId);
-                if (elements.profileBtn && elements.profileMenu) {
-                    elements.profileBtn.setAttribute('aria-expanded', 'false');
-                    elements.profileMenu.hidden = true;
-                }
-            }
-        });
-    });
-
     if (elements.btnQuickManageRoles) {
         elements.btnQuickManageRoles.addEventListener('click', () => switchTab('users'));
-    }
-
-    if (elements.btnQuickReviewInquiries) {
-        elements.btnQuickReviewInquiries.addEventListener('click', () => switchTab('inquiries'));
     }
 
     if (elements.btnQuickRunIntegrity) {
@@ -1060,8 +823,6 @@
             showToast('Refreshing live statistics from database...');
             await loadOverview();
             await loadUsers();
-            await loadProperties();
-            await loadInquiries();
             await executeIntegrityCheck(true);
             showToast('Live metrics refreshed.');
         });
@@ -1126,8 +887,6 @@
         await Promise.all([
             loadOverview(),
             loadUsers(),
-            loadProperties(),
-            loadInquiries(),
             executeIntegrityCheck(true)
         ]);
 
@@ -1135,7 +894,7 @@
         try {
             const urlParams = new URLSearchParams(window.location.search);
             const initialTab = urlParams.get('tab') || window.location.hash.replace('#', '');
-            if (initialTab && ['overview', 'users', 'properties', 'inquiries', 'system'].includes(initialTab)) {
+            if (initialTab && ['overview', 'users', 'system'].includes(initialTab)) {
                 switchTab(initialTab);
             }
             if (urlParams.get('modal') === 'create') {
@@ -1145,14 +904,13 @@
             console.warn('Tab deep-link parse note:', e);
         }
 
-        // Periodic live refresh for overview metrics, users, and inquiries without manual reload
+        // Periodic live refresh for account governance and system metrics
         const refreshActiveData = () => {
             if (document.visibilityState === 'visible') {
                 const anyModalOpen = (elements.createUserModal && !elements.createUserModal.hidden) ||
                                      (editModalEl && !editModalEl.hidden) ||
                                      (elements.roleChangeModal && !elements.roleChangeModal.hidden);
                 loadOverview();
-                loadInquiries();
                 if (!anyModalOpen) {
                     loadUsers();
                 }

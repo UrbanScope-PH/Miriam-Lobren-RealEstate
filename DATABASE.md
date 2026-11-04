@@ -326,8 +326,11 @@ python -c "import sqlite3; c=sqlite3.connect('backend/urbanscope.db'); print(c.e
 
 **Run Database Integrity Checks:**
 
+- From `/pages/superadmin/dashboard.html`, open **System Health** and select **Run Check**.
 - Via API: `GET /api/superadmin/integrity` (Requires Superadmin Bearer token)
 - Via Swagger UI: `http://127.0.0.1:8000/docs`
+
+The superadmin console also provides account and role governance. Property listing and inquiry workflows belong to the Agent Admin portal.
 
 ---
 

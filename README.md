@@ -13,7 +13,7 @@ Built for **Miriam Lobren Real Estate Agent** (Las Piñas & Cavite, Philippines)
 - **Client Accounts & Google Sign-In** — registration with PH phone validation and password strength meter, plus one-click **Google Authentication** (OAuth 2.0 via Google Identity Services); unified sign-in that routes users by role.
 - **Consultations & Inquiries** — interactive consultation intent flow allowing clients to book general consultations (free site tripping, loan pre-approval, property advice) or inquire about specific accredited listings, with client inquiry history tracking and cross-device notification synchronization.
 - **Admin Dashboard** — KPI cards, inquiry charts, property CRUD, client inquiry tracking, and user overview.
-- **Superadmin Console** — role management (RBAC) and database health checks.
+- **Superadmin Console** — focused account and role governance, privileged-account overview, and database health checks. Property and inquiry workflows stay in the Agent Admin portal.
 - **Legal & Privacy Hub** — comprehensive Terms of Service (aligned with RESA RA 9646) and Privacy Policy (compliant with Philippine Data Privacy Act RA 10173).
 - **Responsive Design** — optimized for desktop, tablet, and mobile.
 
@@ -84,7 +84,8 @@ To reset the data, delete `backend/urbanscope.db` and restart the server.
 - **Profile Picture Upload & Settings:** Visit `profile.html` to update contact details, change passwords, and upload custom profile photos (< 5MB limit) with automatic canvas optimization, live topbar avatar synchronization, and one-click photo reset. User account directory and role management are reserved for the Superadmin.
 
 ### 3. Superadministrator Guide
-- **Master Overview:** Access `/pages/superadmin/dashboard.html` for elevated system diagnostics, live KPI metrics, and security governance across both local FastAPI/SQLite and cloud deployments.
+- **Master Overview:** Access `/pages/superadmin/dashboard.html` for account totals, privileged-role counts, and database storage status across local FastAPI/SQLite and cloud deployments.
+- **Console Sections:** Use **Accounts & Roles** to manage user accounts and access levels, and **System Health** to run database integrity and role-trigger checks. Property listings and client inquiries are handled through the linked Admin Portal.
 - **RBAC Role & Account Management:** Full user account governance (create client/admin accounts, edit full name, email, contact phone, account role `user`/`admin`/`superadmin`, promote/demote permissions, delete non-protected accounts, and reset passwords) synchronized across local SQLite and Supabase Cloud with protected root superadmin credentials.
 - **System Health:** Run live diagnostics on database storage, foreign-key/schema integrity, role triggers, and API connectivity.
 
