@@ -195,14 +195,47 @@ async function loadPropertyFromDb() {
     }
 }
 
+function checkInquiryAuthNote(user) {
+    let isLoggedIn = Boolean(user);
+    if (!isLoggedIn) {
+        try {
+            const u = localStorage.getItem('urbanscope_user') || localStorage.getItem('urbanscope_demo_user');
+            const token = localStorage.getItem('urbanscope_jwt_token');
+            if (u || token) isLoggedIn = true;
+        } catch (e) {}
+    }
+
+    const isClassAuth = document.documentElement.classList.contains('logged-in') || 
+                        document.documentElement.getAttribute('data-auth-state') === 'logged-in';
+
+    document.querySelectorAll('.inquiry-note').forEach(el => {
+        if (isLoggedIn || isClassAuth) {
+            el.style.display = 'none';
+        } else {
+            el.style.display = '';
+        }
+    });
+}
+
 window.addEventListener('DOMContentLoaded', () => {
     initGallery();
     loadPropertyFromDb();
+    checkInquiryAuthNote();
     const searchToggle = document.getElementById('searchToggle');
     if (searchToggle) {
         searchToggle.addEventListener('click', () => {
             location.href = '../../index.html#properties';
         });
+    }
+});
+
+document.addEventListener('urbanscope:user', (e) => {
+    checkInquiryAuthNote(e.detail);
+});
+
+window.addEventListener('storage', (e) => {
+    if (e.key === 'urbanscope_user' || e.key === 'urbanscope_jwt_token' || e.key === 'urbanscope_demo_user') {
+        checkInquiryAuthNote();
     }
 });
 

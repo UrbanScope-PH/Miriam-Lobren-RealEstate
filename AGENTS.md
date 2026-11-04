@@ -554,6 +554,15 @@ path when rendering from a page.
       - **Supabase `DELETE` RLS Migration & Cross-Device Fallback (`supabase/migrations/20261103231500_allow_delete_users_rls.sql`)**: Added atomic idempotent `"Allow delete users"` RLS policy on `users` (mirrored in `backend/supabase_schema.sql`), plus a cross-device soft-delete `PATCH` fallback (`bio = '__URBANSCOPE_DELETED__'`, `password_hash = '__DELETED_ACCOUNT__'`) in `supabase.js` / `superadmin.py` if physical `DELETE` returns `[]` prior to migration push.
       - **Backend Trigger & Cloud Sync (`backend/routers/superadmin.py` & `backend/routers/auth.py`)**: Re-applies `assigned_role` after `INSERT` in `POST /api/superadmin/users` so `trg_user_role_insert` preserves Superadmin-created `'admin'` accounts, and synchronizes user directory / Superadmin CRUD / sign-ups non-blockingly with Supabase Cloud (controllable via `URBANSCOPE_DISABLE_CLOUD_SYNC=1` for isolated offline tests).
 
+45. **Authenticated Client Inquiry Note Visibility (`.inquiry-note`):**
+    - The guest prompt `"*Please log in or create an account to submit an inquiry."` below `.submit-inquiry-btn` is automatically hidden whenever a user is authenticated.
+    - **CSS Rules (`session.css` & `property-detail.css`)**:
+      - `html.logged-in .inquiry-note`, `body.logged-in .inquiry-note`, `html[data-auth-state="logged-in"] .inquiry-note`, `.logged-in .inquiry-note` set to `display: none !important;`.
+    - **Session Script Coordination (`session.js` & `property-detail.js`)**:
+      - `session.js`: Performs an early synchronous `localStorage` check (`urbanscope_user` / `urbanscope_jwt_token` / `urbanscope_demo_user`) to immediately apply `root.classList.add('logged-in')` and prevent layout/text flash.
+      - `updateInquiryNoteVisibility(isLoggedIn)` dynamically toggles `.inquiry-note` on `init()`, `logout()`, `storage` sync, and `DOMContentLoaded`.
+      - `property-detail.js`: `checkInquiryAuthNote()` validates authentication state and hides `.inquiry-note` upon detail page load and `urbanscope:user` events.
+
 ---
 
 ## Safety Rules

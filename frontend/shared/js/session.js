@@ -46,6 +46,16 @@
     root.classList.add('auth-pending');
     if (requiresAuth) root.classList.add('auth-checking');
 
+    // Early synchronous check from localStorage to immediately hide guest reminders
+    try {
+        var quickUser = localStorage.getItem('urbanscope_user') || localStorage.getItem(DEMO_USER_KEY) || localStorage.getItem('adminUser');
+        var quickToken = localStorage.getItem('urbanscope_jwt_token');
+        if (quickUser || quickToken) {
+            root.classList.add('logged-in');
+            root.setAttribute('data-auth-state', 'logged-in');
+        }
+    } catch (e) { }
+
     // ------------------------------------------------------------------
     // Helpers
     // ------------------------------------------------------------------
@@ -163,11 +173,30 @@
         });
     }
 
+    function updateInquiryNoteVisibility(isLoggedIn) {
+        if (isLoggedIn) {
+            root.classList.add('logged-in');
+            if (document.body) document.body.classList.add('logged-in');
+            root.setAttribute('data-auth-state', 'logged-in');
+            document.querySelectorAll('.inquiry-note').forEach(function (el) {
+                el.style.display = 'none';
+            });
+        } else {
+            root.classList.remove('logged-in');
+            if (document.body) document.body.classList.remove('logged-in');
+            root.setAttribute('data-auth-state', 'logged-out');
+            document.querySelectorAll('.inquiry-note').forEach(function (el) {
+                el.style.display = '';
+            });
+        }
+    }
+
     async function logout() {
         try {
             if (usingSupabase() && typeof apiSignOut === 'function') await apiSignOut();
         } catch (err) { console.error(err); }
         try { localStorage.removeItem(DEMO_USER_KEY); } catch (e) { }
+        updateInquiryNoteVisibility(false);
         location.href = getBasePath() + 'index.html';
     }
 
@@ -635,8 +664,11 @@
         }
 
         if (currentUser) {
+            updateInquiryNoteVisibility(true);
             renderNavProfile(currentUser);
             prefillInquiryForm(currentUser);
+        } else {
+            updateInquiryNoteVisibility(false);
         }
 
         initMobileNav(currentUser);
@@ -811,5 +843,13 @@
         else location.href = loginUrl(rootRelative(href), 'inquiry');
     });
 
-    window.UrbanSession = { getUser: getUser, logout: logout, loginUrl: loginUrl };
+    document.addEventListener('DOMContentLoaded', function () {
+        if (root.classList.contains('logged-in') || root.getAttribute('data-auth-state') === 'logged-in') {
+            document.querySelectorAll('.inquiry-note').forEach(function (el) {
+                el.style.display = 'none';
+            });
+        }
+    });
+
+    window.UrbanSession = { getUser: getUser, logout: logout, loginUrl: loginUrl, updateInquiryNoteVisibility: updateInquiryNoteVisibility };
 })();
