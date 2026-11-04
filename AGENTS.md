@@ -554,6 +554,15 @@ path when rendering from a page.
       - **Supabase `DELETE` RLS Migration & Cross-Device Fallback (`supabase/migrations/20261103231500_allow_delete_users_rls.sql`)**: Added atomic idempotent `"Allow delete users"` RLS policy on `users` (mirrored in `backend/supabase_schema.sql`), plus a cross-device soft-delete `PATCH` fallback (`bio = '__URBANSCOPE_DELETED__'`, `password_hash = '__DELETED_ACCOUNT__'`) in `supabase.js` / `superadmin.py` if physical `DELETE` returns `[]` prior to migration push.
       - **Backend Trigger & Cloud Sync (`backend/routers/superadmin.py` & `backend/routers/auth.py`)**: Re-applies `assigned_role` after `INSERT` in `POST /api/superadmin/users` so `trg_user_role_insert` preserves Superadmin-created `'admin'` accounts, and synchronizes user directory / Superadmin CRUD / sign-ups non-blockingly with Supabase Cloud (controllable via `URBANSCOPE_DISABLE_CLOUD_SYNC=1` for isolated offline tests).
 
+45. **Superadmin Console UI Scope (`frontend/pages/superadmin/dashboard.html`, `dashboard.css`, `dashboard.js`):**
+    - The console is limited to the superadmin overview, account and role governance, and system health diagnostics. Property catalog and client inquiry operations remain in the Agent Admin portal.
+    - The overview reports account totals, privileged account totals, and database storage; the account table has a focused account search and a single `Joined Date` column. The redundant cross-workflow global search and duplicate table heading were removed.
+    - Superadmin data loading and deep links now cover only overview, users, and system health. The responsive KPI layout uses three desktop columns and collapses for narrower screens.
+    - The Superadmin sidebar uses the shared forest-green navigation treatment, standardized 20px line icons, and clear active-state marker. KPI and governance action icons use the shared green palette while role badges keep their role-specific colors.
+
+46. **Admin Navigation & Brand Consistency (`frontend/pages/admin/admin-shell.css` and admin pages):**
+    - Admin sidebars share the Dashboard, Properties, Clients, Inquiries, and Profile & Security labels and a matching SVG icon set across the dashboard, property list, client, profile, add-property, and edit-property screens.
+    - Shared shell styles define the active navigation color and icon stroke treatment. Dashboard KPI/action icons and primary form/action controls use the UrbanScope green tokens rather than separate hard-coded brand greens.
 45. **Authenticated Client Inquiry Note Visibility (`.inquiry-note`):**
     - The guest prompt `"*Please log in or create an account to submit an inquiry."` below `.submit-inquiry-btn` is automatically hidden whenever a user is authenticated.
     - **CSS Rules (`session.css` & `property-detail.css`)**:
