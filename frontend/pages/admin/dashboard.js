@@ -130,6 +130,38 @@ function setCalendarAppointments(appointments) {
     rebuildCalendarSchedule();
 }
 
+/**
+ * Extracts the client's preferred schedule that inquiry.js embeds at the top of
+ * the message ("[Preferred Schedule: YYYY-MM-DD | Time]" or "[Preferred Slot: Time]")
+ * and returns a human-readable label plus the message without the tag.
+ */
+function parseInquirySchedule(rawMessage, explicitSchedule) {
+    const message = String(rawMessage || "");
+    let display = String(explicitSchedule || "").trim();
+    if (display === "N/A") display = "";
+    let cleanMessage = message;
+
+    const fullMatch = message.match(/\[Preferred Schedule:\s*(\d{4}-\d{2}-\d{2})\s*\|\s*([^\]\r\n]*)\]/i);
+    const slotMatch = !fullMatch && message.match(/\[Preferred Slot:\s*([^\]\r\n]*)\]/i);
+
+    if (fullMatch) {
+        const [y, m, d] = fullMatch[1].split("-").map(Number);
+        const dateObj = new Date(y, m - 1, d);
+        const dateLabel = isNaN(dateObj.getTime())
+            ? fullMatch[1]
+            : dateObj.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric", year: "numeric" });
+        const timeLabel = fullMatch[2].trim();
+        if (!display) display = timeLabel ? `${dateLabel} · ${timeLabel}` : dateLabel;
+        cleanMessage = message.replace(fullMatch[0], "");
+    } else if (slotMatch) {
+        if (!display) display = slotMatch[1].trim();
+        cleanMessage = message.replace(slotMatch[0], "");
+    }
+
+    cleanMessage = cleanMessage.replace(/^\s+/, "").trim();
+    return { display, cleanMessage };
+}
+
 function getInquiryCalendarRequest(inquiry) {
     if (!inquiry || typeof inquiry !== "object") return null;
 
@@ -557,8 +589,13 @@ function renderInquiryRows(inquiries) {
 
         const statusClass = getStatusClass(inquiry.status);
 
+        const parsedSchedule = parseInquirySchedule(
+            inquiry.message || inquiry.notes,
+            inquiry.schedule_date || inquiry.preferred_date
+        );
+
         const message = escapeHTML(
-            inquiry.message || inquiry.notes || "No inquiry message provided."
+            parsedSchedule.cleanMessage || "No inquiry message provided."
         );
 
         const phone = escapeHTML(
@@ -570,7 +607,7 @@ function renderInquiryRows(inquiries) {
         );
 
         const scheduleDate = escapeHTML(
-            inquiry.schedule_date || inquiry.preferred_date || ""
+            parsedSchedule.display || ""
         );
 
         return `
@@ -635,8 +672,9 @@ function openInquiryModal(data) {
     const statusClass = data.statusClass || "gray";
     const phone = (data.inquiryPhone && data.inquiryPhone !== "N/A") ? data.inquiryPhone : "";
     const email = (data.inquiryEmail && data.inquiryEmail !== "N/A") ? data.inquiryEmail : "";
-    const message = data.inquiryMessage || "No inquiry message provided.";
-    const scheduleDate = (data.scheduleDate && data.scheduleDate !== "N/A") ? data.scheduleDate : "";
+    const parsedSchedule = parseInquirySchedule(data.inquiryMessage, data.scheduleDate);
+    const message = parsedSchedule.cleanMessage || "No inquiry message provided.";
+    const scheduleDate = parsedSchedule.display;
 
     const initials = clientName
         .split(" ")

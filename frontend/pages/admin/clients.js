@@ -276,8 +276,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         const phone = inq.phone || inq.client_phone || inq.contact_number || 'N/A';
         const propTitle = inq.property_title || propertiesMap[inq.property_id] || (inq.property_id ? `Property #${inq.property_id}` : 'General Inquiry');
         const normStatus = getNormalizedStatus(inq.status);
-        const schedule = inq.schedule_date || inq.preferred_date || 'No schedule requested';
-        const message = inq.message || inq.notes || 'No message content provided.';
+        const parsedSchedule = parseInquirySchedule(inq.message || inq.notes, inq.schedule_date || inq.preferred_date);
+        const schedule = parsedSchedule.display || 'No schedule requested';
+        const message = parsedSchedule.cleanMessage || 'No message content provided.';
         const dateStr = inq.created_at ? new Date(inq.created_at).toLocaleString() : 'N/A';
 
         let actionButtonHtml = '';
@@ -399,6 +400,34 @@ document.addEventListener('DOMContentLoaded', async () => {
             .replace(/>/g, '&gt;')
             .replace(/"/g, '&quot;')
             .replace(/'/g, '&#039;');
+    }
+
+    // Extracts the preferred schedule that inquiry.js embeds in the message
+    // ("[Preferred Schedule: YYYY-MM-DD | Time]" or "[Preferred Slot: Time]").
+    function parseInquirySchedule(rawMessage, explicitSchedule) {
+        const msg = String(rawMessage || '');
+        let display = String(explicitSchedule || '').trim();
+        if (display === 'N/A') display = '';
+        let cleanMessage = msg;
+
+        const fullMatch = msg.match(/\[Preferred Schedule:\s*(\d{4}-\d{2}-\d{2})\s*\|\s*([^\]\r\n]*)\]/i);
+        const slotMatch = !fullMatch && msg.match(/\[Preferred Slot:\s*([^\]\r\n]*)\]/i);
+
+        if (fullMatch) {
+            const [y, m, d] = fullMatch[1].split('-').map(Number);
+            const dateObj = new Date(y, m - 1, d);
+            const dateLabel = isNaN(dateObj.getTime())
+                ? fullMatch[1]
+                : dateObj.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
+            const timeLabel = fullMatch[2].trim();
+            if (!display) display = timeLabel ? `${dateLabel} · ${timeLabel}` : dateLabel;
+            cleanMessage = msg.replace(fullMatch[0], '');
+        } else if (slotMatch) {
+            if (!display) display = slotMatch[1].trim();
+            cleanMessage = msg.replace(slotMatch[0], '');
+        }
+
+        return { display, cleanMessage: cleanMessage.trim() };
     }
 
     // Live sync listeners when client cancels/deletes/modifies an inquiry
