@@ -6,6 +6,15 @@
 let currentSlide = 0;
 let galleryImages = [];
 
+/* Lightbox State Variables */
+let lightboxOpen = false;
+let zoomLevel = 1;
+let panX = 0;
+let panY = 0;
+let isPanning = false;
+let panStartX = 0;
+let panStartY = 0;
+
 function initGallery() {
     const mainImg = document.getElementById('mainGalleryImg');
     const thumbs = document.querySelectorAll('.thumb');
@@ -25,8 +34,21 @@ function initGallery() {
     if (mainImg) {
         mainImg.style.cursor = 'zoom-in';
         mainImg.setAttribute('title', 'Click to zoom image');
-        mainImg.onclick = () => openLightbox(currentSlide);
+        mainImg.onclick = (e) => {
+            e && e.preventDefault && e.preventDefault();
+            openLightbox(currentSlide);
+        };
     }
+
+    // Attach click listeners to thumbs for resilience
+    thumbs.forEach((thumb, idx) => {
+        thumb.style.cursor = 'pointer';
+        thumb.addEventListener('click', (e) => {
+            e.preventDefault();
+            const img = thumb.querySelector('img');
+            selectThumb(idx, img ? img.getAttribute('src') : null);
+        });
+    });
 
     const carousel = document.querySelector('.main-carousel');
     if (carousel && !carousel.querySelector('.carousel-zoom-btn')) {
@@ -98,7 +120,11 @@ async function loadPropertyFromDb() {
     const statusBadge = document.querySelector('.status-badge');
     const mainImgEl = document.getElementById('mainGalleryImg');
 
-    if (titleEl) titleEl.innerText = property.title;
+    let cleanTitle = property.title || '';
+    const tCheck = cleanTitle.toLowerCase();
+    if (tCheck.includes('suerte')) cleanTitle = 'Casasuerte';
+    else if (tCheck.includes('kathleen')) cleanTitle = 'Kathleen';
+    if (titleEl) titleEl.innerText = cleanTitle;
     if (locEl) {
         locEl.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg> ${property.location}`;
     }
@@ -114,6 +140,73 @@ async function loadPropertyFromDb() {
         const fullImg = (property.image_url.startsWith('http') || property.image_url.startsWith('data:')) ? property.image_url : '../../' + property.image_url.replace(/^(\.\.\/)+/, '');
         mainImgEl.src = fullImg;
         galleryImages[0] = fullImg;
+        updateGallery();
+    }
+
+    // Setup dynamic gallery images based on property
+    const tLower = (property.title || '').toLowerCase();
+    const thumbsContainer = document.querySelector('.thumbnails-row');
+    let propImages = [];
+
+    if (tLower.includes('suerte')) {
+        propImages = [
+            '../../assets/images/casasuerte.jpg',
+            '../../assets/images/casasuerte-living.jpg',
+            '../../assets/images/casasuerte-dining.jpg',
+            '../../assets/images/casasuerte-bedroom1.jpg',
+            '../../assets/images/casasuerte-bedroom2.jpg',
+            '../../assets/images/casasuerte-bathroom.jpg',
+            '../../assets/images/casasuerte-service.jpg',
+            '../../assets/images/casasuerte-subdivision-plan.jpg',
+            '../../assets/images/casasuerte-tcp.jpg'
+        ];
+    } else if (tLower.includes('kathleen')) {
+        propImages = [
+            '../../assets/images/kathleen-facade.jpg',
+            '../../assets/images/kathleen-living.jpg',
+            '../../assets/images/kathleen-dining.jpg',
+            '../../assets/images/kathleen-interior.jpg',
+            '../../assets/images/kathleen-gate.jpg',
+            '../../assets/images/kathleen-carport.jpg',
+            '../../assets/images/kathleen-hallway.jpg',
+            '../../assets/images/kathleen-map.jpg',
+            '../../assets/images/kathleen-tcp.jpg'
+        ];
+    } else if (tLower.includes('liora')) {
+        propImages = [
+            '../../assets/images/LioraHomes.jpg',
+            '../../assets/images/liora-aerial.jpg',
+            '../../assets/images/liora-pool.jpg',
+            '../../assets/images/liora-living.jpg',
+            '../../assets/images/liora-dining.jpg',
+            '../../assets/images/liora-interior.jpg',
+            '../../assets/images/liora-bedroom.jpg',
+            '../../assets/images/liora-stairs.jpg',
+            '../../assets/images/liora-solar.jpg',
+            '../../assets/images/liora-rainwater.jpg',
+            '../../assets/images/liora-community.jpg',
+            '../../assets/images/liora-tcp.jpg'
+        ];
+    } else if (tLower.includes('airmen')) {
+        propImages = [
+            '../../assets/images/AirmenTriplex.WEBP',
+            '../../assets/images/airmen-flyer.jpg',
+            '../../assets/images/airmen-tcp.jpg'
+        ];
+    }
+
+    if (propImages.length > 0 && (!window.galleryImages || window.galleryImages.length <= 1)) {
+        galleryImages = propImages;
+        if (thumbsContainer) {
+            thumbsContainer.innerHTML = propImages.map((src, idx) => `
+                <div class="thumb ${idx === 0 ? 'active' : ''}" onclick="selectThumb(${idx}, '${src}')">
+                    <img src="${src}" alt="Photo ${idx + 1}">
+                </div>
+            `).join('');
+        }
+        if (mainImgEl) {
+            mainImgEl.src = galleryImages[0];
+        }
         updateGallery();
     }
 
@@ -193,6 +286,260 @@ async function loadPropertyFromDb() {
     if (inquiryBtn && property && property.id) {
         inquiryBtn.href = `../inquiry/inquiry.html?type=property&id=${property.id}`;
     }
+
+    // Accurate Property Map Resolution
+    const locBoxP = document.querySelector('.location-box .location-header p');
+    const mapIframe = document.querySelector('.map-container iframe');
+    const mapLink = document.querySelector('.view-map-link');
+
+    if (locBoxP && property.location) {
+        locBoxP.textContent = property.location;
+    }
+
+    let mapQuery = encodeURIComponent(property.location || 'Cavite, Philippines');
+    const titleLower = (property.title || '').toLowerCase();
+    const lLower = (property.location || '').toLowerCase();
+
+    if (titleLower.includes('suerte') || lLower.includes('san agustin') || lLower.includes('trece')) {
+        mapQuery = '14.28315,120.86832+(Casasuerte+Trece+Martires)';
+    } else if (titleLower.includes('kathleen') || lLower.includes('molino') || lLower.includes('bacoor')) {
+        mapQuery = '14.416,120.975+(Kathleen+Bacoor)';
+    } else if (titleLower.includes('liora') || lLower.includes('naic')) {
+        mapQuery = '14.31028,120.76329+(Liora+Homes+Naic)';
+    } else if (titleLower.includes('airmen') || lLower.includes('pulang lupa') || lLower.includes('las piñas')) {
+        mapQuery = '14.4661,120.9911+(Airmen\'s+Village+Triplex)';
+    }
+
+    if (mapIframe) {
+        mapIframe.src = `https://maps.google.com/maps?q=${mapQuery}&t=&z=17&ie=UTF8&iwloc=B&output=embed`;
+    }
+    if (mapLink) {
+        mapLink.href = `https://www.google.com/maps/search/?api=1&query=${mapQuery.split('+(')[0]}`;
+        mapLink.setAttribute('target', '_blank');
+        mapLink.setAttribute('rel', 'noopener noreferrer');
+    }
+
+    // Dynamic TCP Section Rendering
+    renderDynamicTcp(property);
+}
+
+function renderDynamicTcp(property) {
+    const container = document.getElementById('tcpContainer');
+    if (!container || !property) return;
+
+    const tLower = (property.title || '').toLowerCase();
+    let tcpHtml = '';
+
+    if (tLower.includes('suerte')) {
+        tcpHtml = `
+        <section class="tcp-section">
+            <div class="tcp-section-header">
+                <div class="tcp-title-group">
+                    <h2>Total Contract Price (TCP) &amp; Sample Computation</h2>
+                    <p>Accredited Pag-IBIG (HDMF) &amp; Bank Financing options with low monthly amortization.</p>
+                </div>
+                <div class="tcp-badge-pill">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                    <span>Pag-IBIG Accredited • LTS #0001645</span>
+                </div>
+            </div>
+            <div class="tcp-grid">
+                <div class="tcp-kpi-card">
+                    <span class="kpi-label">Total Contract Price (TCP)</span>
+                    <span class="kpi-val">₱2,454,378</span>
+                    <span class="kpi-sub">Standard Lot Area 50 sqm • Camila Model</span>
+                </div>
+                <div class="tcp-kpi-card">
+                    <span class="kpi-label">Reservation Fee</span>
+                    <span class="kpi-val">₱20,000</span>
+                    <span class="kpi-sub">Deducted from Total Downpayment</span>
+                </div>
+                <div class="tcp-kpi-card">
+                    <span class="kpi-label">20% Down Payment</span>
+                    <span class="kpi-val">₱39,795 / mo</span>
+                    <span class="kpi-sub">Payable in 18 months without interest</span>
+                </div>
+                <div class="tcp-kpi-card">
+                    <span class="kpi-label">Est. Pag-IBIG Amortization</span>
+                    <span class="kpi-val">₱12,250 / mo</span>
+                    <span class="kpi-sub">30 Years Term @ 6.25% fixed 3 yrs</span>
+                </div>
+            </div>
+            <div class="tcp-table-wrapper">
+                <table class="tcp-table">
+                    <thead>
+                        <tr>
+                            <th>Financing Package</th>
+                            <th>Loan Term</th>
+                            <th>Loanable Amount (80%)</th>
+                            <th>Monthly Amortization</th>
+                            <th>Gross Monthly Income</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Pag-IBIG (HDMF)</strong></td>
+                            <td>30 Years</td>
+                            <td>₱1,963,502.40</td>
+                            <td><strong>₱12,249.70 / mo</strong></td>
+                            <td>~₱35,000 - ₱41,000 / mo</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Pag-IBIG (HDMF)</strong></td>
+                            <td>25 Years</td>
+                            <td>₱1,963,502.40</td>
+                            <td><strong>₱13,105.79 / mo</strong></td>
+                            <td>~₱38,000 - ₱44,000 / mo</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Pag-IBIG (HDMF)</strong></td>
+                            <td>20 Years</td>
+                            <td>₱1,963,502.40</td>
+                            <td><strong>₱14,495.20 / mo</strong></td>
+                            <td>~₱42,000 - ₱49,000 / mo</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="tcp-doc-card" onclick="openLightbox(galleryImages.length - 1)" title="Click to view official developer price computation sheet">
+                <div class="tcp-doc-info">
+                    <div class="tcp-doc-icon">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+                    </div>
+                    <div class="tcp-doc-text">
+                        <h4>Official Pag-IBIG Sample Computation &amp; Pricelist Sheet</h4>
+                        <p>Developer: RubySapphire Land Corp · DHSUD LTS No. 0001645 · Phase 1 &amp; Block 6</p>
+                    </div>
+                </div>
+                <button type="button" class="tcp-doc-btn">
+                    <span>View Pricelist Document</span>
+                </button>
+            </div>
+        </section>`;
+    } else if (tLower.includes('kathleen')) {
+        tcpHtml = `
+        <section class="tcp-section">
+            <div class="tcp-section-header">
+                <div class="tcp-title-group">
+                    <h2>Total Contract Price (TCP) &amp; Sample Computation</h2>
+                    <p>Exclusive Ready-for-Occupancy (RFO) promo bank financing with up to 11% discount.</p>
+                </div>
+                <div class="tcp-badge-pill">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                    <span>Bank Financing • DHSUD LTS #0000523</span>
+                </div>
+            </div>
+            <div class="tcp-grid">
+                <div class="tcp-kpi-card">
+                    <span class="kpi-label">Price Range</span>
+                    <span class="kpi-val">₱6.2M - ₱9M</span>
+                    <span class="kpi-sub">Townhouse Units (112 sqm Lot Area)</span>
+                </div>
+                <div class="tcp-kpi-card">
+                    <span class="kpi-label">Reservation Fee</span>
+                    <span class="kpi-val">₱50,000</span>
+                    <span class="kpi-sub">Deducted from Total Downpayment</span>
+                </div>
+                <div class="tcp-kpi-card">
+                    <span class="kpi-label">Net Promo Downpayment</span>
+                    <span class="kpi-val">4% Net DP</span>
+                    <span class="kpi-sub">11% Promo Discount Applied</span>
+                </div>
+                <div class="tcp-kpi-card">
+                    <span class="kpi-label">Est. Bank Amortization</span>
+                    <span class="kpi-val">₱52,382 / mo</span>
+                    <span class="kpi-sub">25 Years Term (End Unit Option)</span>
+                </div>
+            </div>
+            <div class="tcp-table-wrapper">
+                <table class="tcp-table">
+                    <thead>
+                        <tr>
+                            <th>Unit Type</th>
+                            <th>Total Contract Price (TCP)</th>
+                            <th>Net Down Payment (4%)</th>
+                            <th>Est. Amort (25 Yrs)</th>
+                            <th>Est. Amort (20 Yrs)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>End Unit (RFO)</strong></td>
+                            <td><strong>₱8,814,448.12</strong></td>
+                            <td>₱352,577.92 (less ₱50k res)</td>
+                            <td><strong>₱52,381.72 / mo</strong></td>
+                            <td>₱57,549.13 / mo</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Corner Unit (Block 4)</strong></td>
+                            <td><strong>₱9,394,046.71</strong></td>
+                            <td>₱375,761.87 (less ₱50k res)</td>
+                            <td><strong>₱55,826.11 / mo</strong></td>
+                            <td>₱61,333.31 / mo</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="tcp-doc-card" onclick="openLightbox(galleryImages.length - 1)" title="Click to view official developer price computation sheet">
+                <div class="tcp-doc-info">
+                    <div class="tcp-doc-icon">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+                    </div>
+                    <div class="tcp-doc-text">
+                        <h4>Official Bank Financing Promo Sample Computation</h4>
+                        <p>Developer: JKY Group / Jeika Properties Corp · DHSUD LTS No. 0000523 · Inclusive of Title Transfer</p>
+                    </div>
+                </div>
+                <button type="button" class="tcp-doc-btn">
+                    <span>View Computation Sheet</span>
+                </button>
+            </div>
+        </section>`;
+    } else {
+        const estDp = Number(property.price || 0) * 0.2;
+        const estLoan = Number(property.price || 0) * 0.8;
+        const estAmort30 = (estLoan * 0.0625 / 12) / (1 - Math.pow(1 + 0.0625/12, -360));
+        const estAmort20 = (estLoan * 0.0625 / 12) / (1 - Math.pow(1 + 0.0625/12, -240));
+
+        tcpHtml = `
+        <section class="tcp-section">
+            <div class="tcp-section-header">
+                <div class="tcp-title-group">
+                    <h2>Total Contract Price (TCP) &amp; Sample Computation</h2>
+                    <p>Indicative Pag-IBIG &amp; Bank Financing options with flexible downpayment terms.</p>
+                </div>
+                <div class="tcp-badge-pill">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                    <span>Verified Accredited Listing</span>
+                </div>
+            </div>
+            <div class="tcp-grid">
+                <div class="tcp-kpi-card">
+                    <span class="kpi-label">Total Contract Price (TCP)</span>
+                    <span class="kpi-val">₱${Number(property.price || 0).toLocaleString()}</span>
+                    <span class="kpi-sub">Indicative Listing Price</span>
+                </div>
+                <div class="tcp-kpi-card">
+                    <span class="kpi-label">Estimated Downpayment (20%)</span>
+                    <span class="kpi-val">₱${Number(estDp || 0).toLocaleString()}</span>
+                    <span class="kpi-sub">Payable in flexible monthly terms</span>
+                </div>
+                <div class="tcp-kpi-card">
+                    <span class="kpi-label">Est. Monthly Amortization (30 Yrs)</span>
+                    <span class="kpi-val">₱${Number(Math.round(estAmort30) || 0).toLocaleString()} / mo</span>
+                    <span class="kpi-sub">Pag-IBIG @ 6.25% indicative rate</span>
+                </div>
+                <div class="tcp-kpi-card">
+                    <span class="kpi-label">Est. Monthly Amortization (20 Yrs)</span>
+                    <span class="kpi-val">₱${Number(Math.round(estAmort20) || 0).toLocaleString()} / mo</span>
+                    <span class="kpi-sub">Bank / Pag-IBIG Financing</span>
+                </div>
+            </div>
+            <p class="tcp-disclaimer">*Sample computation figures are indicative and subject to developer promotions, lot classification, and official financing loan approval.</p>
+        </section>`;
+    }
+
+    container.innerHTML = tcpHtml;
 }
 
 window.addEventListener('DOMContentLoaded', () => {
@@ -209,13 +556,6 @@ window.addEventListener('DOMContentLoaded', () => {
 /* ========================================================
    FULLSCREEN IMAGE LIGHTBOX & INTERACTIVE ZOOM CONTROLLER
    ======================================================== */
-let lightboxOpen = false;
-let zoomLevel = 1;
-let panX = 0;
-let panY = 0;
-let isPanning = false;
-let panStartX = 0;
-let panStartY = 0;
 
 function ensureLightboxDom() {
     if (document.getElementById('imageLightbox')) return;
@@ -354,10 +694,10 @@ function ensureLightboxDom() {
 
 function openLightbox(index) {
     if (galleryImages.length === 0) initGallery();
-    if (typeof index === 'number') {
+    if (typeof index === 'number' && index >= 0 && index < galleryImages.length) {
         currentSlide = index;
-        updateGallery();
     }
+    updateGallery();
     ensureLightboxDom();
     syncLightboxImage();
     const lightbox = document.getElementById('imageLightbox');
@@ -468,6 +808,10 @@ window.addEventListener('keydown', (e) => {
 });
 
 // Expose globals for onclick bindings
+window.initGallery = initGallery;
+window.updateGallery = updateGallery;
+window.changeSlide = changeSlide;
+window.selectThumb = selectThumb;
 window.openLightbox = openLightbox;
 window.closeLightbox = closeLightbox;
 window.changeLightboxSlide = changeLightboxSlide;

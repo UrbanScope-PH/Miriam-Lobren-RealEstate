@@ -277,16 +277,14 @@ Seeding happens inside `init_db()` **only when the table is empty**, per table.
 | `urbanscope.cvsu@gmail.com` | `urbanscope2026` | `superadmin` | UrbanScope Superadmin (CvSU) |
 | `admin.realestate@gmail.com` | `realestate2026` | `admin` | Real Estate Admin |
 
-**Properties (6)**
+**Properties (4 accredited featured listings)**
 
-| Title | Location | Type | Price (₱) |
-| :--- | :--- | :--- | ---: |
-| Velemont Residences | Manuyo, Las Piñas City | Subdivision | 6,880,000 |
-| Green Valley Villa | Dasmariñas, Cavite | Villa | 5,200,000 |
-| Horizon Heights | Pamplona, Las Piñas City | Condominium | 3,450,000 |
-| Liora Homes Executive Townhouse | Pasong Buaya II, Imus, Cavite | Townhouse | 2,400,000 |
-| Airmen Triplex Modern Residence | Poblacion, Naic, Cavite | Triplex | 3,100,000 |
-| Sunset Heights Executive Townhouse | Habay, Bacoor, Cavite | Townhouse | 3,800,000 |
+| Title | Location | Type | Price (₱) | Specs |
+| :--- | :--- | :--- | ---: | :--- |
+| Casasuerte | Barangay San Agustin, Trece Martires City, Cavite | Townhouse | 2,500,000 | 2 Beds, 1 Bath, 50.8 sqm |
+| Kathleen | Molino 7, Bacoor, Cavite | Townhouse | 6,200,000 | 3 Beds, 2 Baths, 112.0 sqm |
+| Liora Homes | Brgy. Malainen Bago, Naic, Cavite | Townhouse | 2,462,400 | 2 Beds, 1 Bath, 44.0 sqm |
+| Airmen's Village Triplex | Pulang Lupa Dos, Las Piñas City | Triplex | 8,900,000 | 3 Beds, 3 Baths, 143.78 sqm |
 
 **Inquiries (3)** — Sarah Jenkins (*Under Review*), Mark Anthony Cruz (*Approved*),
 Maria Elena Santos (*Completed*).

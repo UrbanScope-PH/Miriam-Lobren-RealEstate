@@ -769,6 +769,13 @@ async function loadDashboardData() {
             properties = JSON.parse(localStorage.getItem("properties") || localStorage.getItem("cached_live_properties") || "[]");
         }
 
+        // Strictly count only the 4 accredited properties
+        properties = properties.filter(p => {
+            if (!p) return false;
+            const t = (p.title || p.name || p.propertyName || '').toLowerCase().trim();
+            return t.includes('airmen') || t.includes('suerte') || t.includes('kathleen') || t.includes('liora');
+        });
+
         let kpis = null;
         if (kpisRes.status === "fulfilled" && kpisRes.value) {
             kpis = kpisRes.value;
