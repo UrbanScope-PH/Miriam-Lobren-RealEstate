@@ -1,0 +1,533 @@
+/* Shared responsive frame and navigation for client, admin, and superadmin pages. */
+
+.mobile-nav-toggle {
+    display: none;
+    width: 40px;
+    height: 40px;
+    padding: 9px 8px;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-around;
+    border: 0;
+    border-radius: 8px;
+    background: transparent;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.mobile-nav-toggle:hover,
+.mobile-nav-toggle.active {
+    background: var(--light-green, #eef5ef);
+}
+
+.hamburger-line {
+    display: block;
+    width: 22px;
+    height: 2.2px;
+    border-radius: 2px;
+    background: var(--dark-green, #1a3b23);
+    transform-origin: center;
+    transition: transform 0.25s ease, opacity 0.25s ease;
+}
+
+.mobile-nav-toggle.active .hamburger-line:nth-child(1) {
+    transform: translateY(7px) rotate(45deg);
+}
+
+.mobile-nav-toggle.active .hamburger-line:nth-child(2) {
+    opacity: 0;
+    transform: scaleX(0);
+}
+
+.mobile-nav-toggle.active .hamburger-line:nth-child(3) {
+    transform: translateY(-7px) rotate(-45deg);
+}
+
+.mobile-nav-backdrop,
+.mobile-drawer-auth,
+.mobile-drawer-user {
+    display: none;
+}
+
+@media (max-width: 1024px) {
+    html {
+        zoom: 1 !important;
+    }
+}
+
+.app-topbar #mainNav {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: 1 1 auto;
+    min-width: 0;
+    gap: clamp(2px, 0.8vw, 12px);
+}
+
+.app-topbar #mainNav > a {
+    padding: 9px 8px;
+    border-radius: 8px;
+    color: var(--text-dark, #1b2e21);
+    font-size: 13px;
+    font-weight: 700;
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+.app-topbar #mainNav > a:hover,
+.app-topbar #mainNav > a.active {
+    background: var(--light-green, #eef5ef);
+    color: var(--green, #2d5c39);
+}
+
+@media (max-width: 960px) {
+    .hamburger-btn,
+    .sa-hamburger-btn,
+    .close-sidebar-btn,
+    .sa-close-sidebar {
+        width: 44px;
+        min-width: 44px;
+        height: 44px;
+        min-height: 44px;
+        align-items: center;
+        justify-content: center;
+    }
+
+    body.sidebar-open {
+        overflow: hidden;
+    }
+}
+
+@media (max-width: 768px) {
+    html {
+        width: 100%;
+        max-width: 100%;
+        overflow-x: hidden;
+        scroll-padding-top: 72px;
+    }
+
+    body {
+        max-width: 100%;
+        overflow-x: hidden;
+    }
+
+    input,
+    select,
+    textarea {
+        min-width: 0;
+        max-width: 100%;
+        font-size: 16px !important;
+    }
+
+    .navbar,
+    .admin-topbar,
+    .sa-topbar,
+    .app-topbar {
+        position: sticky;
+        top: 0;
+        z-index: 1100;
+        height: 64px;
+        min-height: 64px;
+        padding: 0 12px;
+        gap: 8px;
+        flex-wrap: nowrap;
+    }
+
+    .navbar .Cname,
+    .topbar-left,
+    .sa-topbar-left {
+        min-width: 0;
+        flex: 1 1 auto;
+        gap: 8px;
+    }
+
+    .Cname span,
+    .brand-text,
+    .app-brand > span {
+        min-width: 0;
+    }
+
+    .brand-logo,
+    .logo-icon {
+        width: 34px;
+        height: 34px;
+        flex: 0 0 auto;
+    }
+
+    .Cname strong,
+    .brand-text h1,
+    .app-brand strong {
+        overflow: hidden;
+        font-size: 15px;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .Cname small,
+    .brand-text h2,
+    .app-brand small {
+        overflow: hidden;
+        font-size: 9px;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .nav-acts,
+    .topbar-right,
+    .sa-topbar-right {
+        min-width: 0;
+        flex: 0 0 auto;
+        gap: 6px;
+    }
+
+    .topbar-search,
+    .admin-topbar .topbar-search,
+    .app-topbar .topbar-search,
+    .sa-time-chip {
+        display: none !important;
+    }
+
+    .mobile-nav-toggle,
+    .hamburger-btn,
+    .sa-hamburger-btn,
+    .close-sidebar-btn,
+    .sa-close-sidebar {
+        width: 44px;
+        min-width: 44px;
+        height: 44px;
+        min-height: 44px;
+        align-items: center;
+        justify-content: center;
+        flex: 0 0 44px;
+    }
+
+    .nav-acts .profile-chip,
+    .nav-acts .client-notif-btn {
+        min-width: 44px;
+        min-height: 44px;
+    }
+
+    .nav-acts .client-notif-btn {
+        width: 44px;
+        height: 44px;
+    }
+
+    .admin-profile-badge,
+    .sa-profile-btn {
+        min-height: 44px;
+    }
+
+    .mobile-nav-toggle {
+        display: flex;
+        padding: 9px;
+    }
+
+    .navbar nav {
+        top: 64px;
+        max-height: calc(100vh - 64px);
+        max-height: calc(100dvh - 64px);
+        padding-bottom: calc(20px + env(safe-area-inset-bottom, 0px));
+    }
+
+    .mobile-nav-backdrop {
+        top: 64px;
+        z-index: 98;
+    }
+
+    .app-topbar #mainNav {
+        position: fixed;
+        top: 64px;
+        right: 0;
+        left: 0;
+        z-index: 1090;
+        display: flex;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 4px;
+        max-height: calc(100vh - 64px);
+        max-height: calc(100dvh - 64px);
+        padding: 16px 20px calc(20px + env(safe-area-inset-bottom, 0px));
+        overflow-y: auto;
+        background: #ffffff;
+        box-shadow: 0 16px 36px rgba(26, 59, 35, 0.15);
+        border-bottom: 2px solid var(--light-green, #eef5ef);
+        opacity: 0;
+        visibility: hidden;
+        transform: translateY(-12px);
+        transition: opacity 0.22s ease, transform 0.22s ease, visibility 0.22s ease;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .app-topbar #mainNav.mobile-open {
+        opacity: 1;
+        visibility: visible;
+        transform: translateY(0);
+    }
+
+    .app-topbar #mainNav > a {
+        display: flex;
+        align-items: center;
+        min-height: 48px;
+        padding: 12px 16px;
+        border-left: 3px solid transparent;
+        border-radius: 10px;
+        color: var(--text-dark, #1b2e21);
+        font-size: 16px;
+        font-weight: 600;
+        text-decoration: none;
+    }
+
+    .app-topbar #mainNav > a:hover,
+    .app-topbar #mainNav > a.active {
+        border-left-color: var(--green, #2d5c39);
+        background: var(--light-green, #eef5ef);
+        color: var(--green, #2d5c39);
+    }
+
+    .mobile-drawer-auth,
+    .mobile-drawer-user {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        margin-top: 14px;
+        padding-top: 14px;
+        border-top: 1px solid #e5ede7;
+    }
+
+    .mobile-drawer-auth .m-login-btn,
+    .mobile-drawer-auth .m-signup-btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 44px;
+        padding: 11px;
+        border: 1.5px solid var(--green, #2d5c39);
+        border-radius: 10px;
+        font-size: 15px;
+        font-weight: 600;
+        text-decoration: none;
+    }
+
+    .mobile-drawer-auth .m-login-btn {
+        border-color: #a8baa9;
+        color: var(--dark-green, #1a3b23);
+    }
+
+    .mobile-drawer-auth .m-signup-btn {
+        background: var(--green, #2d5c39);
+        color: #ffffff;
+    }
+
+    .mobile-user-info {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        min-width: 0;
+        padding: 10px 12px;
+        border-radius: 10px;
+        background: var(--light-green, #eef5ef);
+        color: var(--text-dark, #1b2e21);
+        font-size: 14px;
+        font-weight: 600;
+    }
+
+    .mobile-user-info > span:last-child {
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .mobile-drawer-user a.m-inquiry-link,
+    .mobile-drawer-user .m-signout-btn {
+        display: flex;
+        align-items: center;
+        justify-content: flex-start;
+        min-height: 44px;
+        padding: 11px 14px;
+        border: 0;
+        border-radius: 10px;
+        background: #f7faf8;
+        color: var(--dark-green, #1a3b23);
+        font: inherit;
+        font-size: 14.5px;
+        font-weight: 600;
+        text-decoration: none;
+        cursor: pointer;
+    }
+
+    .mobile-drawer-user .m-signout-btn {
+        justify-content: center;
+        border: 1.5px solid #e2b3b0;
+        background: transparent;
+        color: #b3382c;
+    }
+
+    .mobile-nav-backdrop {
+        position: fixed;
+        inset: 64px 0 0;
+        z-index: 1080;
+        display: block;
+        background: rgba(10, 24, 15, 0.42);
+        opacity: 0;
+        visibility: hidden;
+        transition: opacity 0.22s ease, visibility 0.22s ease;
+    }
+
+    .mobile-nav-backdrop.active {
+        opacity: 1;
+        visibility: visible;
+    }
+
+    .app-topbar .topbar-left {
+        overflow: hidden;
+    }
+
+    .admin-sidebar,
+    .sa-sidebar {
+        position: fixed;
+        top: 0 !important;
+        bottom: 0;
+        left: 0;
+        z-index: 1250;
+        width: min(320px, 88vw);
+        max-width: 88vw;
+        height: 100vh;
+        height: 100dvh;
+        padding: max(16px, env(safe-area-inset-top, 0px)) 16px max(16px, env(safe-area-inset-bottom, 0px));
+        overflow-x: hidden;
+        overflow-y: auto;
+        overscroll-behavior: contain;
+        -webkit-overflow-scrolling: touch;
+        transform: translateX(-105%);
+    }
+
+    .admin-sidebar.open,
+    .sa-sidebar.open {
+        transform: translateX(0) !important;
+    }
+
+    .sidebar-backdrop,
+    .sa-backdrop {
+        z-index: 1200;
+    }
+
+    .close-sidebar-btn,
+    .sa-close-sidebar {
+        display: inline-flex;
+        padding: 0;
+    }
+
+    body.sidebar-open,
+    body.nav-locked {
+        overflow: hidden;
+    }
+
+    .profile-dropdown,
+    .notif-dropdown,
+    .sa-dropdown-menu,
+    .client-notif-dropdown {
+        position: fixed !important;
+        top: 72px !important;
+        right: 12px !important;
+        left: auto !important;
+        width: min(320px, calc(100vw - 24px)) !important;
+        min-width: 0 !important;
+        max-width: calc(100vw - 24px) !important;
+        max-height: calc(100dvh - 84px);
+        margin: 0 !important;
+        overflow-y: auto;
+        overscroll-behavior: contain;
+        z-index: 1150 !important;
+    }
+
+    .main-content,
+    .dashboard-content,
+    .sa-content {
+        width: 100%;
+        min-width: 0;
+        margin-left: 0;
+        padding: 20px 14px max(32px, env(safe-area-inset-bottom, 0px));
+    }
+
+    .content,
+    .form-content {
+        min-width: 0;
+        max-width: 100%;
+    }
+
+    .table-container,
+    .table-responsive,
+    .table-wrap {
+        max-width: 100%;
+        overflow-x: auto;
+        overscroll-behavior-x: contain;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .modal-box,
+    .sa-modal,
+    .inquiry-modal-content,
+    .success-modal-content {
+        max-width: calc(100vw - 24px);
+        max-height: calc(100dvh - 24px);
+        overflow-x: hidden;
+        overflow-y: auto;
+        overscroll-behavior: contain;
+        -webkit-overflow-scrolling: touch;
+    }
+}
+
+@media (max-width: 480px) {
+    .Cname small,
+    .brand-text h2,
+    .app-brand small {
+        display: none !important;
+    }
+
+    .app-topbar .go-back-btn span {
+        display: none;
+    }
+
+    .app-topbar .go-back-btn {
+        width: 44px;
+        min-width: 44px;
+        height: 44px;
+        justify-content: center;
+        padding: 0;
+    }
+
+    .app-topbar #mainNav {
+        justify-content: flex-start;
+    }
+
+    .admin-topbar,
+    .sa-topbar,
+    .app-topbar,
+    .navbar {
+        padding-right: 10px;
+        padding-left: 10px;
+    }
+
+    .mobile-nav-toggle,
+    .hamburger-btn,
+    .sa-hamburger-btn {
+        width: 44px;
+        min-width: 44px;
+        height: 44px;
+        flex-basis: 44px;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .mobile-nav-toggle,
+    .hamburger-btn,
+    .sa-hamburger-btn,
+    .navbar nav,
+    .app-topbar #mainNav,
+    .mobile-nav-backdrop,
+    .sidebar-backdrop,
+    .sa-backdrop {
+        transition-duration: 0.01ms !important;
+    }
+}
