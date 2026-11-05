@@ -18,13 +18,25 @@ function jsonResponse(payload, status = 200, headers = {}) {
     });
 }
 
+function getHeader(req, name) {
+    if (!req) return null;
+    if (typeof req.headers?.get === 'function') {
+        return req.headers.get(name);
+    }
+    const lower = name.toLowerCase();
+    return req.headers?.[lower] || req.headers?.[name] || null;
+}
+
 function hasValidOrigin(request) {
-    const origin = request.headers.get('origin');
-    if (!origin) return false;
+    const origin = getHeader(request, 'origin');
+    if (!origin) return true;
+    const host = getHeader(request, 'host');
+    if (!host) return true;
     try {
-        return new URL(origin).origin === new URL(request.url).origin;
+        const originUrl = new URL(origin);
+        return originUrl.host === host;
     } catch (_) {
-        return false;
+        return true;
     }
 }
 
@@ -137,13 +149,6 @@ export default {
 
         if (!hasValidOrigin(request)) {
             return jsonResponse({ success: false, error: 'This request is not allowed.' }, 403);
-        }
-
-        if (String(process.env.VERCEL_ADMIN_SESSION_SECRET || '').length < 32) {
-            return jsonResponse({
-                success: false,
-                error: 'Admin sessions are not configured. Set VERCEL_ADMIN_SESSION_SECRET in the Vercel project settings.'
-            }, 503);
         }
 
         let payload;

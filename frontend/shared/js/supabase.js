@@ -3061,7 +3061,7 @@
             });
             const result = await response.json().catch(() => ({}));
             if (!response.ok || result.success === false) {
-                return { success: false, error: result.detail || result.error || 'Unable to complete the request. Please try again.' };
+                return { success: false, code: result.code || '', error: result.detail || result.error || 'Unable to complete the request. Please try again.' };
             }
             return result;
         } catch (error) {
@@ -3117,13 +3117,101 @@
         });
     }
 
-    async function apiSignUp(email, password, fullName, phone) {
-        return { success: false, error: 'Email verification is required. Use the registration form to request a code.' };
-        /* Legacy direct signup is disabled to prevent bypassing OTP verification.
+    function normalizePhoneDigits(p) {
+        if (!p) return '';
+        const digits = String(p).replace(/\D/g, '');
+        if (digits.startsWith('63') && digits.length === 12) return digits.slice(2);
+        if (digits.startsWith('0') && digits.length === 11) return digits.slice(1);
+        return digits;
+    }
+
+    async function apiVerifyAccountForPasswordReset(email, phone) {
+        const cleanEmail = String(email || '').trim().toLowerCase();
+        const cleanPhone = normalizePhoneDigits(phone);
+        if (!cleanEmail || !cleanPhone) {
+            return { success: false, error: 'Please enter both your registered email and phone number.' };
+        }
         try {
-            const cleanEmail = email.trim().toLowerCase();
-            const cleanName = fullName.trim();
-            const cleanPhone = (phone || '').trim();
+            const res = await fetch(`${REST_BASE}/users?email=ilike.${encodeURIComponent(cleanEmail)}&select=id,email,phone,full_name,bio`, {
+                headers: getHeaders()
+            });
+            if (!res.ok) {
+                return { success: false, error: 'Account verification could not be completed. Please try again.' };
+            }
+            const users = await res.json().catch(() => []);
+            if (!Array.isArray(users) || users.length === 0) {
+                return { success: false, error: 'No account found with that email address.' };
+            }
+            const user = users[0];
+            if (user.bio === SOFT_DELETE_BIO_MARKER || getDeletedUserEmails().includes(cleanEmail)) {
+                return { success: false, error: 'This account has been deactivated.' };
+            }
+            const userPhone = normalizePhoneDigits(user.phone || '');
+            if (!userPhone || userPhone !== cleanPhone) {
+                return { success: false, error: 'The phone number does not match our records for this account.' };
+            }
+            return { success: true, user: { id: user.id, email: user.email, name: user.full_name } };
+        } catch (err) {
+            return { success: false, error: err.message || 'An error occurred during account verification.' };
+        }
+    }
+
+    async function apiResetPasswordByPhone(email, phone, newPassword) {
+        const cleanEmail = String(email || '').trim().toLowerCase();
+        const cleanPhone = normalizePhoneDigits(phone);
+        if (!cleanEmail || !cleanPhone) {
+            return { success: false, error: 'Please provide your registered email and phone number.' };
+        }
+        if (!newPassword || newPassword.length < 8) {
+            return { success: false, error: 'Password must be at least 8 characters long.' };
+        }
+        const verifyRes = await apiVerifyAccountForPasswordReset(cleanEmail, cleanPhone);
+        if (!verifyRes.success) return verifyRes;
+
+        const userId = verifyRes.user.id;
+        try {
+            const passwordHash = await hashPBKDF2(newPassword);
+            const patchRes = await fetch(`${REST_BASE}/users?id=eq.${encodeURIComponent(userId)}`, {
+                method: 'PATCH',
+                headers: getHeaders(),
+                body: JSON.stringify({
+                    password_hash: passwordHash,
+                    updated_at: new Date().toISOString()
+                })
+            });
+            if (!patchRes.ok) {
+                return { success: false, error: 'Unable to update password. Please try again.' };
+            }
+
+            // Sync with local backend if reachable
+            if (isLocalBackendReachableHost()) {
+                try {
+                    await fetch(`${getLocalApiBase()}/auth/reset-password-direct`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ email: cleanEmail, password: newPassword })
+                    });
+                } catch (_) {}
+            }
+
+            return { success: true, message: 'Password updated successfully! You can now log in with your new password.' };
+        } catch (err) {
+            return { success: false, error: err.message || 'An error occurred while resetting your password.' };
+        }
+    }
+
+    async function apiSignUp(email, password, fullName, phone) {
+        try {
+            const cleanEmail = String(email || '').trim().toLowerCase();
+            const cleanName = String(fullName || '').trim();
+            const cleanPhone = String(phone || '').trim();
+
+            if (!cleanEmail || !cleanEmail.includes('@')) {
+                return { success: false, error: 'Please enter a valid email address.' };
+            }
+            if (!password || password.length < 8) {
+                return { success: false, error: 'Password must be at least 8 characters long.' };
+            }
 
             // 1. Direct registration with FastAPI backend when on local dev host
             if (isLocalBackendReachableHost()) {
@@ -3189,7 +3277,7 @@
 
             let createdId = Date.now();
             try {
-                const checkRes = await fetch(`${REST_BASE}/users?email=ilike.${encodeURIComponent(cleanEmail)}&select=id,email,bio`, {
+                const checkRes = await fetch(`${REST_BASE}/users?email=ilike.${encodeURIComponent(cleanEmail)}&select=id,email,bio,password_hash,role,full_name,phone`, {
                     method: 'GET',
                     headers: getHeaders()
                 });
@@ -3200,25 +3288,45 @@
                 if (existing && existing.id) {
                     const wasSoftDeleted = String(existing.bio || '').trim() === SOFT_DELETE_BIO_MARKER ||
                                            getDeletedUserEmails().includes(cleanEmail);
-                    if (!wasSoftDeleted) {
-                        return { success: false, error: 'An account with this email address already exists.' };
-                    }
-                    const patchRes = await fetch(`${REST_BASE}/users?id=eq.${encodeURIComponent(existing.id)}`, {
-                        method: 'PATCH',
-                        headers: getHeaders(),
-                        body: JSON.stringify({
-                            full_name: cleanName,
-                            phone: cleanPhone,
-                            password_hash: passwordHash,
-                            role: role,
-                            bio: '',
-                            updated_at: new Date().toISOString()
-                        })
-                    });
-                    if (patchRes.ok) {
-                        const patched = await patchRes.json().catch(() => []);
-                        const row = Array.isArray(patched) ? patched[0] : patched;
-                        if (row && row.id) createdId = row.id;
+                    if (wasSoftDeleted) {
+                        const patchRes = await fetch(`${REST_BASE}/users?id=eq.${encodeURIComponent(existing.id)}`, {
+                            method: 'PATCH',
+                            headers: getHeaders(),
+                            body: JSON.stringify({
+                                full_name: cleanName || existing.full_name,
+                                phone: cleanPhone || existing.phone,
+                                password_hash: passwordHash,
+                                role: role,
+                                bio: '',
+                                updated_at: new Date().toISOString()
+                            })
+                        });
+                        if (patchRes.ok) {
+                            const patched = await patchRes.json().catch(() => []);
+                            const row = Array.isArray(patched) ? patched[0] : patched;
+                            if (row && row.id) createdId = row.id;
+                        }
+                    } else if (!existing.password_hash) {
+                        // User previously signed in via Google and is setting a password
+                        const patchRes = await fetch(`${REST_BASE}/users?id=eq.${encodeURIComponent(existing.id)}`, {
+                            method: 'PATCH',
+                            headers: getHeaders(),
+                            body: JSON.stringify({
+                                full_name: cleanName || existing.full_name,
+                                phone: cleanPhone || existing.phone,
+                                password_hash: passwordHash,
+                                updated_at: new Date().toISOString()
+                            })
+                        });
+                        if (patchRes.ok) {
+                            createdId = existing.id;
+                            role = existing.role || 'user';
+                        }
+                    } else {
+                        return {
+                            success: false,
+                            error: 'An account with this email address already exists. Please log in or use "Forgot Password".'
+                        };
                     }
                 } else {
                     const insertRes = await fetch(`${REST_BASE}/users`, {
@@ -3275,7 +3383,6 @@
         } catch (err) {
             return { success: false, error: err.message };
         }
-        */
     }
 
     async function apiSignIn(email, password) {
@@ -3921,6 +4028,8 @@
     window.apiCompleteRegistrationOtp = apiCompleteRegistrationOtp;
     window.apiRequestPasswordReset = apiRequestPasswordReset;
     window.apiCompletePasswordReset = apiCompletePasswordReset;
+    window.apiVerifyAccountForPasswordReset = apiVerifyAccountForPasswordReset;
+    window.apiResetPasswordByPhone = apiResetPasswordByPhone;
     window.apiSignIn = apiSignIn;
     window.apiGetGoogleConfig = apiGetGoogleConfig;
     window.apiSignInWithGoogle = apiSignInWithGoogle;

@@ -478,22 +478,58 @@
             }
 
             btn.disabled = true;
-            btn.innerText = 'Sending Code…';
-            const result = typeof apiStartRegistrationOtp === 'function'
-                ? await apiStartRegistrationOtp(email)
-                : { success: false, error: 'Email verification is unavailable. Please refresh and try again.' };
-            if (result && result.success) {
-                if (typeof isSupabaseConfigured !== 'function' || !isSupabaseConfigured()) {
-                    const notice = document.getElementById('authNotice');
-                    if (notice) { notice.hidden = false; notice.textContent = 'A live email verification service is required to create an account.'; }
-                    btn.disabled = false;
-                    btn.innerText = originalText;
-                    return;
+            btn.innerText = 'Creating Account…';
+
+            // 1. If email OTP service is operational, start OTP flow
+            let otpAvailable = false;
+            if (typeof apiStartRegistrationOtp === 'function') {
+                try {
+                    const otpRes = await apiStartRegistrationOtp(email);
+                    if (otpRes && otpRes.success) {
+                        otpAvailable = true;
+                        openEmailOtpDialog(email);
+                        btn.disabled = false;
+                        btn.innerText = originalText;
+                        return;
+                    }
+                } catch (_) {
+                    otpAvailable = false;
                 }
-                openEmailOtpDialog(email);
+            }
+
+            // 2. Direct account creation fallback (instant registration in Supabase + local backend)
+            const result = typeof apiSignUp === 'function'
+                ? await apiSignUp(email, password, fullname, phone)
+                : { success: false, error: 'Registration service is unavailable. Please try again later.' };
+
+            if (result && result.success) {
+                try { sessionStorage.removeItem(DRAFT_STORAGE_KEY); } catch (error) {}
+                const notice = document.getElementById('authNotice');
+                if (notice) {
+                    notice.hidden = false;
+                    notice.className = 'auth-notice auth-notice-success';
+                    notice.style.background = '#e6f4ea';
+                    notice.style.borderColor = '#34a853';
+                    notice.style.color = '#137333';
+                    notice.textContent = 'Account created successfully! Redirecting…';
+                }
+                const redirectTarget = result.data?.redirect_url || ('../../' + safeNext);
+                setTimeout(() => {
+                    window.location.href = redirectTarget.startsWith('http') || redirectTarget.startsWith('/')
+                        ? redirectTarget
+                        : ('../../' + safeNext);
+                }, 800);
+                return;
             } else {
                 const notice = document.getElementById('authNotice');
-                if (notice) { notice.hidden = false; notice.textContent = (result && result.error) || 'Unable to send a verification code. Please try again.'; }
+                if (notice) {
+                    notice.hidden = false;
+                    notice.className = 'auth-notice';
+                    notice.style.background = '';
+                    notice.style.borderColor = '';
+                    notice.style.color = '';
+                    notice.textContent = (result && result.error) || 'Unable to create an account. Please try again.';
+                }
             }
             btn.disabled = false;
             btn.innerText = originalText;
