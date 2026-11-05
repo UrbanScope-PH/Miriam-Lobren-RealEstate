@@ -391,7 +391,7 @@
         }, 1000);
     }
 
-    function openEmailOtpDialog(email) {
+    function openEmailOtpDialog(email, otpRes) {
         if (!emailOtpModal) return;
         pendingOtpEmail = email;
         if (otpTargetEmail) otpTargetEmail.textContent = email;
@@ -432,7 +432,8 @@
                 resendEmailOtpBtn.disabled = false;
                 return;
             }
-            setOtpMessage('If a new code can be issued, it has been sent to your email.', true);
+            if (emailOtpCode) emailOtpCode.value = '';
+            setOtpMessage('A new 6-digit verification code has been sent to your email.', true);
             startOtpResendCountdown();
         });
     }
@@ -456,8 +457,10 @@
             const password = document.getElementById('password').value;
             const confirmPassword = document.getElementById('confirm_password').value;
 
+            const notice = document.getElementById('authNotice');
+            if (notice) { notice.hidden = true; notice.className = 'auth-notice'; }
+
             if (password !== confirmPassword) {
-                const notice = document.getElementById('authNotice');
                 if (notice) { notice.hidden = false; notice.textContent = 'Passwords do not match. Please re-enter.'; }
                 const confirmInput = document.getElementById('confirm_password');
                 if (confirmInput) confirmInput.focus();
@@ -465,7 +468,6 @@
             }
 
             if (password.length < 8) {
-                const notice = document.getElementById('authNotice');
                 if (notice) { notice.hidden = false; notice.textContent = 'Use a password with at least 8 characters.'; }
                 document.getElementById('password')?.focus();
                 return;
@@ -478,59 +480,33 @@
             }
 
             btn.disabled = true;
-            btn.innerText = 'Creating Account…';
+            btn.innerText = 'Sending Verification Code…';
 
-            // 1. If email OTP service is operational, start OTP flow
-            let otpAvailable = false;
-            if (typeof apiStartRegistrationOtp === 'function') {
-                try {
-                    const otpRes = await apiStartRegistrationOtp(email);
-                    if (otpRes && otpRes.success) {
-                        otpAvailable = true;
-                        openEmailOtpDialog(email);
-                        btn.disabled = false;
-                        btn.innerText = originalText;
-                        return;
-                    }
-                } catch (_) {
-                    otpAvailable = false;
+            try {
+                const otpRes = typeof apiStartRegistrationOtp === 'function'
+                    ? await apiStartRegistrationOtp(email)
+                    : { success: false, error: 'Registration service is unavailable. Please try again later.' };
+
+                if (otpRes && otpRes.success) {
+                    openEmailOtpDialog(email, otpRes);
+                    btn.disabled = false;
+                    btn.innerText = originalText;
+                    return;
                 }
-            }
 
-            // 2. Direct account creation fallback (instant registration in Supabase + local backend)
-            const result = typeof apiSignUp === 'function'
-                ? await apiSignUp(email, password, fullname, phone)
-                : { success: false, error: 'Registration service is unavailable. Please try again later.' };
-
-            if (result && result.success) {
-                try { sessionStorage.removeItem(DRAFT_STORAGE_KEY); } catch (error) {}
-                const notice = document.getElementById('authNotice');
-                if (notice) {
-                    notice.hidden = false;
-                    notice.className = 'auth-notice auth-notice-success';
-                    notice.style.background = '#e6f4ea';
-                    notice.style.borderColor = '#34a853';
-                    notice.style.color = '#137333';
-                    notice.textContent = 'Account created successfully! Redirecting…';
-                }
-                const redirectTarget = result.data?.redirect_url || ('../../' + safeNext);
-                setTimeout(() => {
-                    window.location.href = redirectTarget.startsWith('http') || redirectTarget.startsWith('/')
-                        ? redirectTarget
-                        : ('../../' + safeNext);
-                }, 800);
-                return;
-            } else {
-                const notice = document.getElementById('authNotice');
                 if (notice) {
                     notice.hidden = false;
                     notice.className = 'auth-notice';
-                    notice.style.background = '';
-                    notice.style.borderColor = '';
-                    notice.style.color = '';
-                    notice.textContent = (result && result.error) || 'Unable to create an account. Please try again.';
+                    notice.textContent = (otpRes && otpRes.error) || 'Unable to send verification code. Please check your email address and try again.';
+                }
+            } catch (err) {
+                if (notice) {
+                    notice.hidden = false;
+                    notice.className = 'auth-notice';
+                    notice.textContent = err?.message || 'Unable to start registration. Please try again.';
                 }
             }
+
             btn.disabled = false;
             btn.innerText = originalText;
         });
@@ -546,7 +522,7 @@
             const phone = document.getElementById('phone')?.value.trim() || '';
             const password = document.getElementById('password')?.value || '';
             if (!/^[0-9]{6}$/.test(code)) {
-                setOtpMessage('Enter the six-digit code from your email.', false);
+                setOtpMessage('Enter the 6-digit code from your email.', false);
                 return;
             }
 
@@ -556,10 +532,16 @@
                 : { success: false, error: 'Email verification is unavailable. Please try again.' };
             if (result && result.success) {
                 try { sessionStorage.removeItem(DRAFT_STORAGE_KEY); } catch (error) {}
-                window.location.href = '../../' + safeNext;
+                setOtpMessage('Account verified and created successfully! Redirecting…', true);
+                const redirectTarget = result.data?.redirect_url || ('../../' + safeNext);
+                window.setTimeout(() => {
+                    window.location.href = redirectTarget.startsWith('http') || redirectTarget.startsWith('/')
+                        ? redirectTarget
+                        : ('../../' + safeNext);
+                }, 600);
                 return;
             }
-            setOtpMessage((result && result.error) || 'We could not verify that code. Please try again.', false);
+            setOtpMessage((result && result.error) || 'The verification code you entered is incorrect. Please check your email.', false);
             if (button) { button.disabled = false; button.textContent = originalText; }
         });
     }

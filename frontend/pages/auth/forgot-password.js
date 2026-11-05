@@ -81,17 +81,14 @@
                 currentEmail = email;
                 if (requestForm) requestForm.hidden = true;
                 if (verifyForm) verifyForm.hidden = false;
+                if (newPasswordForm) newPasswordForm.hidden = true;
                 if (title) title.textContent = 'Verify your email';
-                if (subtitle) subtitle.textContent = `We sent a 6-digit code to ${email}. Check your email and enter the code below.`;
+                if (subtitle) subtitle.textContent = `We sent a 6-digit verification code to ${email}. Check your email and enter the code below.`;
 
-                const noticeText = result.previewCode
-                    ? `Verification code dispatched! (Preview code: ${result.previewCode})`
-                    : (result.message || 'A six-digit verification code has been sent to your email.');
-
-                showStatus(noticeText, 'success');
+                if (codeInput) codeInput.value = '';
+                showStatus(`A six-digit verification code has been sent to ${email}. Please check your inbox and spam folder.`, 'success');
                 startResendCountdown();
                 if (codeInput) {
-                    codeInput.value = '';
                     codeInput.focus();
                 }
             } else {
@@ -151,12 +148,10 @@
                 : { success: false };
 
             if (result && result.success) {
-                const noticeText = result.previewCode
-                    ? `A new code was dispatched! (Preview code: ${result.previewCode})`
-                    : (result.message || 'A new verification code has been sent to your email.');
-                showStatus(noticeText, 'success');
+                if (codeInput) codeInput.value = '';
+                showStatus(`A new six-digit verification code has been sent to ${currentEmail}. Please check your inbox.`, 'success');
                 startResendCountdown();
-                if (codeInput) { codeInput.value = ''; codeInput.focus(); }
+                if (codeInput) { codeInput.focus(); }
             } else {
                 resendButton.disabled = false;
                 if (resendStatus) resendStatus.textContent = 'Failed to resend. Please try again.';

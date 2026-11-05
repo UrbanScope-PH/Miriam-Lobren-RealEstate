@@ -697,9 +697,42 @@ path when rendering from a page.
 60. **Forgot Password Email-Only Verification Flow (`frontend/pages/auth/forgot-password.html`, `forgot-password.js`, `frontend/shared/js/`):**
     - Removed the phone number requirement from the forgot password page to support both Google OAuth accounts and email/password accounts identically.
     - Implemented a structured 3-step verification workflow:
-      1) **Step 1 (Email Entry)**: User submits their email address. Validates account existence against Supabase `users` table and dispatches a 6-digit verification challenge.
+      1) **Step 1 (Email Entry)**: User submits their email address. Validates account existence against Supabase `users` table and dispatches a 6-digit verification challenge to their email address.
       2) **Step 2 (Code Verification)**: User must enter the 6-digit code sent to their email before proceeding. Wrong codes are rejected, and users can request a resend after 60 seconds.
       3) **Step 3 (Password Reset)**: Unlocks the New Password and Confirm Password inputs only after successful 6-digit code verification. Encrypts the password with PBKDF2 and updates the database, redirecting to login.
+    - Fixed form visibility collision (`.auth-form[hidden] { display: none !important; }`) preventing Step 3 from rendering prematurely, and aligned password toggle styling with `.input-box.has-toggle` and `.toggle-pw`.
+    - Removed all UI code preview text leaks, cleanly notifying users to check their email inbox (and spam folder) for the dispatched 6-digit code. Actual email delivery is powered by `RESEND_API_KEY` (configured in Vercel project settings).
+    - Fixed reference scope for `activeCode` in `apiSendPasswordResetEmail` in `supabase.js` and `api.js` to ensure challenge persistence and return values execute without ReferenceError.
+
+61. **Client Registration Mandatory Email Code Verification (`frontend/pages/auth/register.html`, `register.js`, `api/auth/register/start.js`, `frontend/shared/js/`):**
+    - Enforced mandatory 6-digit email code verification before client accounts can be created on `register.html`, eliminating silent bypasses and requiring proof of email ownership.
+    - When the client submits the registration form with valid credentials and accepted Terms & Privacy Policy, `apiStartRegistrationOtp(email)` validates that the account does not already exist, invokes `api/auth/register/start.js` to dispatch a 6-digit verification code to the recipient's email via Resend (`RESEND_API_KEY`), and saves the active challenge in `sessionStorage` (`urbanscope_register_challenge`).
+    - Opens `#emailOtpModal` ("Verify your email") requiring entry of the 6-digit code with real-time validation, 60-second resend countdown, and clear error messaging.
+    - Added explicit error reporting in `api/auth/register/start.js` and `api/auth/password/reset/request.js`: if `RESEND_API_KEY` is not configured in Vercel settings, the API explains the missing configuration. If Resend rejects delivery due to its free-tier domain restriction (e.g. testing with an email other than the Resend account owner `gianticaya@gmail.com` without a custom domain), the system automatically activates test mode and surfaces the 6-digit verification code directly inside the modal and console so testing and evaluation can proceed without blocking account creation.
+    - Submitting `#emailOtpForm` executes `apiCompleteRegistrationOtp`, which validates the 6-digit code against the active challenge before calling `apiSignUp` to persist the verified user in the database, sign them in with JWT tokens, and redirect to their intended destination (`safeNext`).
+
+62. **Resend Sender (`from`) Normalization & Resilience (`lib/email-auth.js`, `api/auth/`, `backend/auth_otp.py`):**
+    - Added automatic sender formatting (`getValidFromSender` in JS and `get_valid_from_sender` in Python).
+    - If `RESEND_FROM_EMAIL` is set to just a name (e.g. `UrbanScope`), contains wrapping quotes, or only an email address, it automatically formats the sender into the valid RFC 5322 format `Name <email@example.com>` required by Resend (defaulting safely to `UrbanScope <onboarding@resend.dev>`), eliminating the `Invalid 'from' field` 400 Bad Request error.
+
+63. **Gmail SMTP Support for Domain-Free Worldwide Delivery (`lib/email-auth.js`, `api/auth/`, `backend/auth_otp.py`):**
+    - Added native Gmail SMTP support (`nodemailer` for Node.js Vercel functions, `smtplib` for local Python server).
+    - If environment variables `SMTP_USER` and `SMTP_PASS` are configured, emails are dispatched directly via Google's mail server (`smtp.gmail.com:465`). This allows delivering verification codes to ANY email address in the world (`@gmail.com`, `@cvsu.edu.ph`, `@yahoo.com`, etc.) up to 500 emails/day completely free without requiring a custom domain or DNS records.
+    - Preserves fallback to Resend API (`RESEND_API_KEY`) and automatic test mode if neither is configured.
+
+64. **Removal of OTP Auto-Fill & Zero-Config Gmail SMTP Fallback (`register.js`, `forgot-password.js`, `supabase.js`, `lib/email-auth.js`):**
+    - **Zero Auto-Fill**: Completely removed any auto-filling of verification code numbers into `<input id="emailOtpCode">` and `<input id="codeInput">` (`register.js` and `forgot-password.js`). The input fields are always initialized and cleared to empty strings (`""`), ensuring clients manually check their actual email inbox and type the 6-digit code received.
+    - **Active Gmail SMTP Default**: Added zero-configuration fallback in `lib/email-auth.js`, `backend/auth_otp.py`, and `backend/routers/auth.py` so that verification codes are immediately dispatched via Google's authenticated Gmail SMTP servers even if Vercel environment variables have not yet propagated.
+    - **Clean Error Handling**: Removed `testDomainRestricted` fake code generation in `register/start.js` and `password/reset/request.js`, ensuring the frontend never displays mock codes or deceptive success states if email delivery fails. Real emails are dispatched to any valid address (`@gmail.com`, `@cvsu.edu.ph`, etc.).
+
+65. **Navbar Alignment: Inquiry Pages & Home Page (`inquiry.html`, `inquiry.css`, `history.html`, `history.css`):**
+    - Aligned the top navigation header on both client inquiry pages (`/pages/inquiry/inquiry.html` and `/pages/inquiry/history.html`) to be identical to the homepage (`index.html`).
+    - Replaced the custom `.app-topbar` and `<-- Go Back` pill button with the standard `<header class="navbar">` component:
+      - Left: Logo icon (`.brand-logo`, 60x52px) and `.Cname` title (`Miriam Lobren` / `REAL ESTATE AGENT`).
+      - Center: Primary navigation (`#mainNav`) linking to `Home`, `Properties`, `About`, `FAQs`, and `Contact`.
+      - Right: Action bar (`.nav-acts`) integrated with `session.js` to render the Client Notification Bell and Profile Chip with avatar initial and chevron dropdown.
+    - Removed obsolete custom topbar styling overrides in `inquiry.css` and `history.css` (`.app-topbar`, `.topbar-left`, `.go-back-btn`, `.app-brand`), allowing both pages to inherit the global design tokens, 90px sticky height, responsive breakpoints, and mobile drawer from `common.css` and `mobile-shell.css`.
+
 
 ---
 

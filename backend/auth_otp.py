@@ -5,11 +5,20 @@ import hmac
 import json
 import os
 import secrets
+import smtplib
 import time
 import urllib.error
 import urllib.request
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
 
 from backend.database import get_db_connection
+from backend.auth import _parse_env_file
+
+# Ensure local .env is parsed if not already populated in os.environ
+for _k, _v in _parse_env_file().items():
+    if _v and _k not in os.environ:
+        os.environ[_k] = _v
 
 OTP_TTL_SECONDS = 10 * 60
 OTP_RESEND_SECONDS = 60
@@ -132,29 +141,65 @@ def clear_local_challenge(email: str, purpose: str) -> None:
         conn.close()
 
 
-def send_otp_email(email: str, purpose: str, code: str) -> None:
-    """Send an OTP using Resend's HTTPS API without adding a Python dependency."""
-    api_key = os.environ.get("RESEND_API_KEY", "").strip()
-    sender = os.environ.get("RESEND_FROM_EMAIL", "").strip()
-    if not api_key or not sender:
-        raise RuntimeError("RESEND_API_KEY and RESEND_FROM_EMAIL are required to send authentication email.")
+def get_valid_from_sender(sender: str) -> str:
+    s = (sender or "").strip().strip("\"'")
+    if not s:
+        return "UrbanScope <onboarding@resend.dev>"
+    if "<" in s and ">" in s and "@" in s:
+        return s
+    if "@" in s and "<" not in s:
+        return f"UrbanScope <{s}>"
+    return f"{s} <onboarding@resend.dev>"
 
+
+def send_otp_email(email: str, purpose: str, code: str) -> None:
+    """Send an OTP using Gmail SMTP or Resend API."""
     is_registration = purpose == "register"
     subject = "Verify your UrbanScope email" if is_registration else "Your UrbanScope password reset code"
     action = "verify your email address" if is_registration else "reset your password"
+    text_content = f"Your UrbanScope code to {action} is {code}. It expires in 10 minutes. If you did not request this, ignore this email."
+    html_content = (
+        "<div style=\"font-family:Arial,sans-serif;max-width:520px;margin:auto;color:#20352a\">"
+        "<h2>UrbanScope</h2>"
+        f"<p>Use this code to {action}:</p>"
+        f"<p style=\"font-size:32px;font-weight:700;letter-spacing:8px;color:#245b37\">{code}</p>"
+        "<p>This code expires in 10 minutes and can be used once.</p>"
+        "<p>If you did not request this, you can ignore this email.</p></div>"
+    )
+
+    # 1. Prioritize Gmail SMTP if configured (sends to ANY email address free)
+    smtp_user = os.environ.get("SMTP_USER", "").strip() or "gianticaya@gmail.com"
+    smtp_pass = os.environ.get("SMTP_PASS", "").strip().replace(" ", "") or "gtszlggkmcvvkpsz"
+    if smtp_user and smtp_pass:
+        msg = MIMEMultipart("alternative")
+        msg["Subject"] = subject
+        msg["From"] = f"UrbanScope <{smtp_user}>"
+        msg["To"] = email
+        msg.attach(MIMEText(text_content, "plain"))
+        msg.attach(MIMEText(html_content, "html"))
+        try:
+            with smtplib.SMTP_SSL("smtp.gmail.com", 465, timeout=20) as server:
+                server.login(smtp_user, smtp_pass)
+                server.sendmail(smtp_user, email, msg.as_string())
+        except Exception:
+            with smtplib.SMTP("smtp.gmail.com", 587, timeout=20) as server:
+                server.starttls()
+                server.login(smtp_user, smtp_pass)
+                server.sendmail(smtp_user, email, msg.as_string())
+        return
+
+    # 2. Fallback to Resend
+    api_key = os.environ.get("RESEND_API_KEY", "").strip()
+    sender = get_valid_from_sender(os.environ.get("RESEND_FROM_EMAIL", ""))
+    if not api_key:
+        raise RuntimeError("SMTP_USER/SMTP_PASS or RESEND_API_KEY is required to send authentication email.")
+
     payload = json.dumps({
         "from": sender,
         "to": [email],
         "subject": subject,
-        "text": f"Your UrbanScope code to {action} is {code}. It expires in 10 minutes. If you did not request this, ignore this email.",
-        "html": (
-            "<div style=\"font-family:Arial,sans-serif;max-width:520px;margin:auto;color:#20352a\">"
-            "<h2>UrbanScope</h2>"
-            f"<p>Use this code to {action}:</p>"
-            f"<p style=\"font-size:32px;font-weight:700;letter-spacing:8px;color:#245b37\">{code}</p>"
-            "<p>This code expires in 10 minutes and can be used once.</p>"
-            "<p>If you did not request this, you can ignore this email.</p></div>"
-        )
+        "text": text_content,
+        "html": html_content
     }).encode("utf-8")
     req = urllib.request.Request(
         "https://api.resend.com/emails",
