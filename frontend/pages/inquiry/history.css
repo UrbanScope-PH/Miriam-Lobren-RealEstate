@@ -42,99 +42,6 @@ body {
     flex-direction: column;
 }
 
-/* TOPBAR */
-.app-topbar {
-    height: 80px;
-    background-color: #ffffff;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 0 4%;
-    gap: 20px;
-    position: sticky;
-    top: 0;
-    z-index: 100;
-}
-
-.topbar-left {
-    display: flex;
-    align-items: center;
-    gap: 16px;
-}
-
-.go-back-btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 7px;
-    padding: 7px 14px;
-    background-color: #f0f7f2;
-    border: 1px solid #cbe0d1;
-    border-radius: 999px;
-    color: var(--green);
-    font-size: 13px;
-    font-weight: 700;
-    font-family: inherit;
-    cursor: pointer;
-    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-    text-decoration: none;
-    line-height: 1;
-}
-
-.go-back-btn:hover {
-    background-color: #e2ede5;
-    color: var(--dark-green);
-    border-color: #a8ceb2;
-    transform: translateX(-2px);
-    box-shadow: 0 2px 8px rgba(45, 92, 57, 0.12);
-}
-
-.go-back-btn svg {
-    transition: transform 0.2s ease;
-}
-
-.go-back-btn:hover svg {
-    transform: translateX(-2px);
-}
-
-.app-brand {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    text-decoration: none;
-    color: var(--dark-green);
-}
-
-.brand-logo,
-.app-brand img {
-    width: 48px;
-    height: 42px;
-    object-fit: contain;
-}
-
-.app-brand strong {
-    font-size: 18px;
-    font-weight: 700;
-    letter-spacing: 1.2px;
-    display: block;
-    line-height: 1.1;
-    color: var(--dark-green);
-}
-
-.app-brand small {
-    font-size: 10px;
-    font-weight: 700;
-    letter-spacing: 1.8px;
-    color: var(--accent-green);
-    display: block;
-}
-
-.topbar-right {
-    display: flex;
-    align-items: center;
-    gap: 14px;
-}
-
 /* PAGE CONTAINER */
 .history-container {
     max-width: 1080px;
@@ -902,65 +809,6 @@ body {
 }
 
 @media (max-width: 640px) {
-    .app-topbar {
-        height: 64px;
-        padding: 0 12px;
-        gap: 8px;
-    }
-
-    .topbar-left {
-        min-width: 0;
-        flex: 1;
-        gap: 8px;
-    }
-
-    .go-back-btn {
-        padding: 7px 11px;
-        font-size: 12px;
-        gap: 5px;
-        flex-shrink: 0;
-    }
-
-    .app-brand {
-        min-width: 0;
-        gap: 8px;
-        overflow: hidden;
-    }
-
-    .app-brand > span,
-    .app-brand span {
-        min-width: 0;
-        overflow: hidden;
-    }
-
-    .brand-logo,
-    .app-brand img {
-        width: 36px;
-        height: 32px;
-        flex-shrink: 0;
-        object-fit: contain;
-    }
-
-    .app-brand strong {
-        font-size: 14.5px;
-        letter-spacing: 0.5px;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-    }
-
-    .app-brand small {
-        font-size: 8.5px;
-        letter-spacing: 1.2px;
-        white-space: nowrap;
-        color: var(--accent-green);
-    }
-
-    .topbar-right {
-        flex-shrink: 0;
-        gap: 8px;
-    }
-
     .history-stats-bar {
         grid-template-columns: repeat(2, minmax(0, 1fr));
         gap: 10px;
@@ -1046,15 +894,5 @@ body {
         width: 100%;
         justify-content: center;
         text-align: center;
-    }
-}
-
-@media (max-width: 380px) {
-    .go-back-btn span {
-        display: none;
-    }
-
-    .go-back-btn {
-        padding: 8px;
     }
 }
