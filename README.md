@@ -42,9 +42,10 @@ python3 run.py
 
 | Page | URL |
 | :--- | :--- |
-| Website | http://127.0.0.1:8000/ |
+| Website (Local) | http://127.0.0.1:8000/ |
 | Sign-In | http://127.0.0.1:8000/pages/auth/login.html |
 | API Docs | http://127.0.0.1:8000/docs |
+| Live Site (Vercel) | https://miriam-lobren-real-estate.vercel.app/ |
 
 
 **Environment variables (optional — or configure in `.env`, see `.env.example`):**

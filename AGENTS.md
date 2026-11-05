@@ -732,6 +732,9 @@ path when rendering from a page.
       - Center: Primary navigation (`#mainNav`) linking to `Home`, `Properties`, `About`, `FAQs`, and `Contact`.
       - Right: Action bar (`.nav-acts`) integrated with `session.js` to render the Client Notification Bell and Profile Chip with avatar initial and chevron dropdown.
     - Removed obsolete custom topbar styling overrides in `inquiry.css` and `history.css` (`.app-topbar`, `.topbar-left`, `.go-back-btn`, `.app-brand`), allowing both pages to inherit the global design tokens, 90px sticky height, responsive breakpoints, and mobile drawer from `common.css` and `mobile-shell.css`.
+66. **Live Deployment Reference & Pull Request Workflow:**
+    - Documented live Vercel production deployment (`https://miriam-lobren-real-estate.vercel.app/`) in `README.md` under Getting Started.
+    - Verified GitHub Environments (`Production` and `Preview`) and PR integration workflow via Pull Request #3 merge into `main`.
 
 
 ---
