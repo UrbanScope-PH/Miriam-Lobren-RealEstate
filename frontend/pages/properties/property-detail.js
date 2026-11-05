@@ -14,6 +14,7 @@ let panY = 0;
 let isPanning = false;
 let panStartX = 0;
 let panStartY = 0;
+let documentModalPreviousOverflow = null;
 
 function initGallery() {
     const mainImg = document.getElementById('mainGalleryImg');
@@ -407,9 +408,9 @@ function renderDynamicTcp(property) {
                         <p>Developer: RubySapphire Land Corp · DHSUD LTS No. 0001645 · Phase 1 &amp; Block 6</p>
                     </div>
                 </div>
-                <a class="tcp-doc-btn" href="../../assets/images/casasuerte-tcp.jpg" target="_blank" rel="noopener noreferrer">
+                <button type="button" class="tcp-doc-btn" onclick="openDocumentPreview('../../assets/images/casasuerte-tcp.jpg', 'Casasuerte official computation')">
                     <span>View Pricelist Document</span>
-                </a>
+                </button>
             </div>
         </section>`;
     } else if (tLower.includes('kathleen')) {
@@ -486,9 +487,9 @@ function renderDynamicTcp(property) {
                         <p>Developer: JKY Group / Jeika Properties Corp · DHSUD LTS No. 0000523 · Inclusive of Title Transfer</p>
                     </div>
                 </div>
-                <a class="tcp-doc-btn" href="../../assets/images/kathleen-tcp.jpg" target="_blank" rel="noopener noreferrer">
+                <button type="button" class="tcp-doc-btn" onclick="openDocumentPreview('../../assets/images/kathleen-tcp.jpg', 'Kathleen official computation')">
                     <span>View Computation Sheet</span>
-                </a>
+                </button>
             </div>
         </section>`;
     } else {
@@ -721,6 +722,59 @@ function ensureLightboxDom() {
     });
 }
 
+function ensureDocumentPreviewDom() {
+    let dialog = document.getElementById('tcpDocumentModal');
+    if (dialog) return dialog;
+
+    dialog = document.createElement('dialog');
+    dialog.id = 'tcpDocumentModal';
+    dialog.className = 'tcp-document-modal';
+    dialog.setAttribute('aria-labelledby', 'tcpDocumentTitle');
+    dialog.innerHTML = `
+        <div class="tcp-document-modal-content">
+            <header class="tcp-document-modal-header">
+                <h2 id="tcpDocumentTitle">Official Computation Document</h2>
+                <button type="button" class="tcp-document-modal-close" aria-label="Close computation preview">&times;</button>
+            </header>
+            <div class="tcp-document-modal-image-wrap">
+                <img id="tcpDocumentImage" alt="Official property computation document">
+            </div>
+        </div>
+    `;
+
+    document.body.appendChild(dialog);
+    dialog.querySelector('.tcp-document-modal-close').addEventListener('click', closeDocumentPreview);
+    dialog.addEventListener('click', (event) => {
+        if (event.target === dialog) closeDocumentPreview();
+    });
+    dialog.addEventListener('close', () => {
+        const image = dialog.querySelector('#tcpDocumentImage');
+        if (image) image.removeAttribute('src');
+        if (documentModalPreviousOverflow !== null) {
+            document.body.style.overflow = documentModalPreviousOverflow;
+            documentModalPreviousOverflow = null;
+        }
+    });
+    return dialog;
+}
+
+function openDocumentPreview(src, title) {
+    if (!src) return;
+    const dialog = ensureDocumentPreviewDom();
+    const heading = dialog.querySelector('#tcpDocumentTitle');
+    const image = dialog.querySelector('#tcpDocumentImage');
+    if (heading) heading.textContent = title || 'Official Computation Document';
+    if (image) image.src = src;
+    documentModalPreviousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    if (!dialog.open) dialog.showModal();
+}
+
+function closeDocumentPreview() {
+    const dialog = document.getElementById('tcpDocumentModal');
+    if (dialog && dialog.open) dialog.close();
+}
+
 function openLightbox(index) {
     if (galleryImages.length === 0) initGallery();
     if (typeof index === 'number' && index >= 0 && index < galleryImages.length) {
@@ -843,6 +897,7 @@ window.changeSlide = changeSlide;
 window.selectThumb = selectThumb;
 window.openLightbox = openLightbox;
 window.closeLightbox = closeLightbox;
+window.openDocumentPreview = openDocumentPreview;
 window.changeLightboxSlide = changeLightboxSlide;
 window.selectLightboxSlide = selectLightboxSlide;
 window.zoomLightbox = zoomLightbox;

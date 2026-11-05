@@ -621,7 +621,7 @@ path when rendering from a page.
     - Moved all lightbox controller state variables (`lightboxOpen`, `zoomLevel`, `panX`, `panY`, `isPanning`, `panStartX`, `panStartY`) to the top of `property-detail.js` above `initGallery` and `updateGallery`, resolving ES6 Temporal Dead Zone (TDZ) access errors.
     - Exposed all gallery and lightbox handlers (`initGallery`, `updateGallery`, `changeSlide`, `selectThumb`, `openLightbox`, `closeLightbox`, `changeLightboxSlide`, `selectLightboxSlide`, `zoomLightbox`, `resetLightboxZoom`) onto `window` to guarantee inline HTML `onclick` attributes execute reliably across all browsers and Live Server environments.
     - Attached redundant `click` event listeners to all thumbnail elements (`.thumb`) and main gallery image (`#mainGalleryImg`) during `initGallery()` for rock-solid interaction resilience.
-    - TCP computation sheets are displayed separately from the property gallery. Their dedicated links open the document directly without adding it as a gallery slide.
+    - TCP computation sheets are displayed separately from the property gallery. Their dedicated buttons open an in-page document preview without adding a gallery slide.
 
 49. **Property Brand Name Standardization (`Casasuerte` and `Kathleen`):**
     - Standardized listing brand titles across all application layers:
@@ -654,7 +654,7 @@ path when rendering from a page.
 
 53. **Property Gallery Pricelist Separation (`frontend/pages/properties/`):**
     - Removed TCP/pricelist image files from the Casasuerte, Kathleen, Liora Homes, and Airmen's Village gallery thumbnails, slide arrays, and dynamic property-detail gallery data.
-    - Retained price and financing tables. Dedicated computation-document links open the image separately from the property gallery.
+    - Retained price and financing tables. Dedicated computation-document buttons open an in-page image preview.
 
 ---
 
