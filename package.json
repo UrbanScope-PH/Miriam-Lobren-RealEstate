@@ -1,4 +1,7 @@
 {
+  "name": "urbanscope-realestate",
+  "version": "1.0.0",
+  "description": "UrbanScope — Real Estate Platform for Miriam Lobren",
   "private": true,
   "type": "module",
   "engines": {
