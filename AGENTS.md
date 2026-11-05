@@ -707,6 +707,7 @@ path when rendering from a page.
     - Enforced mandatory 6-digit email code verification before client accounts can be created on `register.html`, eliminating silent bypasses and requiring proof of email ownership.
     - When the client submits the registration form with valid credentials and accepted Terms & Privacy Policy, `apiStartRegistrationOtp(email)` validates that the account does not already exist, invokes `api/auth/register/start.js` to dispatch a 6-digit verification code to the recipient's email via Resend (`RESEND_API_KEY`), and saves the active challenge in `sessionStorage` (`urbanscope_register_challenge`).
     - Opens `#emailOtpModal` ("Verify your email") requiring entry of the 6-digit code with real-time validation, 60-second resend countdown, and clear error messaging.
+    - Added explicit error reporting in `api/auth/register/start.js` and `api/auth/password/reset/request.js`: if `RESEND_API_KEY` is not configured in Vercel settings or if Resend rejects delivery (e.g. unverified test recipient domain), the API returns the exact failure reason instead of silently succeeding, and logs the development code to the browser console (`F12`) for local testing.
     - Submitting `#emailOtpForm` executes `apiCompleteRegistrationOtp`, which validates the 6-digit code against the active challenge before calling `apiSignUp` to persist the verified user in the database, sign them in with JWT tokens, and redirect to their intended destination (`safeNext`).
 
 ---

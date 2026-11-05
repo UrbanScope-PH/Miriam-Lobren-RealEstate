@@ -3097,8 +3097,11 @@
         let serverRes = null;
         try {
             serverRes = await postAuthFlow('register/start', { email: cleanEmail });
-            if (serverRes && serverRes.success === false && serverRes.error) {
-                return { success: false, error: serverRes.error };
+            if (serverRes && serverRes.success === false) {
+                if (serverRes.devCode) {
+                    console.info('%c[UrbanScope Verification Code] ' + serverRes.devCode, 'color:#1e5c33;font-weight:bold;font-size:16px;');
+                }
+                return { success: false, error: serverRes.error || 'Unable to send verification email.' };
             }
         } catch (_) {}
 
@@ -3208,6 +3211,12 @@
             let serverRes = null;
             try {
                 serverRes = await apiRequestPasswordReset(cleanEmail);
+                if (serverRes && serverRes.success === false) {
+                    if (serverRes.devCode) {
+                        console.info('%c[UrbanScope Recovery Code] ' + serverRes.devCode, 'color:#1e5c33;font-weight:bold;font-size:16px;');
+                    }
+                    return { success: false, error: serverRes.error || 'Unable to send recovery email.' };
+                }
             } catch (_) {}
 
             // 3. Generate a secure 6-digit challenge code
