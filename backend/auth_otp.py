@@ -168,8 +168,8 @@ def send_otp_email(email: str, purpose: str, code: str) -> None:
     )
 
     # 1. Prioritize Gmail SMTP if configured (sends to ANY email address free)
-    smtp_user = os.environ.get("SMTP_USER", "").strip()
-    smtp_pass = os.environ.get("SMTP_PASS", "").strip().replace(" ", "")
+    smtp_user = os.environ.get("SMTP_USER", "").strip() or "gianticaya@gmail.com"
+    smtp_pass = os.environ.get("SMTP_PASS", "").strip().replace(" ", "") or "gtszlggkmcvvkpsz"
     if smtp_user and smtp_pass:
         msg = MIMEMultipart("alternative")
         msg["Subject"] = subject

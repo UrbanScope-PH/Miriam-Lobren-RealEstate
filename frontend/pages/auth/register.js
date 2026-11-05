@@ -396,12 +396,7 @@
         pendingOtpEmail = email;
         if (otpTargetEmail) otpTargetEmail.textContent = email;
         if (emailOtpCode) emailOtpCode.value = '';
-        if (otpRes && otpRes.testMode && otpRes.testCode) {
-            setOtpMessage(otpRes.testMessage, true);
-            if (emailOtpCode) emailOtpCode.value = otpRes.testCode;
-        } else {
-            setOtpMessage('', false);
-        }
+        setOtpMessage('', false);
         emailOtpModal.classList.add('open');
         emailOtpModal.setAttribute('aria-hidden', 'false');
         document.body.classList.add('otp-modal-open');
@@ -437,12 +432,8 @@
                 resendEmailOtpBtn.disabled = false;
                 return;
             }
-            if (result.testMode && result.testCode) {
-                setOtpMessage(result.testMessage, true);
-                if (emailOtpCode) emailOtpCode.value = result.testCode;
-            } else {
-                setOtpMessage('A new 6-digit verification code has been sent to your email.', true);
-            }
+            if (emailOtpCode) emailOtpCode.value = '';
+            setOtpMessage('A new 6-digit verification code has been sent to your email.', true);
             startOtpResendCountdown();
         });
     }

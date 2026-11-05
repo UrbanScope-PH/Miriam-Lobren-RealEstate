@@ -85,12 +85,8 @@
                 if (title) title.textContent = 'Verify your email';
                 if (subtitle) subtitle.textContent = `We sent a 6-digit verification code to ${email}. Check your email and enter the code below.`;
 
-                if (result.testMode && result.testCode) {
-                    showStatus(result.testMessage, 'success');
-                    if (codeInput) codeInput.value = result.testCode;
-                } else {
-                    showStatus(`A six-digit verification code has been sent to ${email}. Please check your inbox and spam folder.`, 'success');
-                }
+                if (codeInput) codeInput.value = '';
+                showStatus(`A six-digit verification code has been sent to ${email}. Please check your inbox and spam folder.`, 'success');
                 startResendCountdown();
                 if (codeInput) {
                     codeInput.focus();
@@ -152,12 +148,8 @@
                 : { success: false };
 
             if (result && result.success) {
-                if (result.testMode && result.testCode) {
-                    showStatus(result.testMessage, 'success');
-                    if (codeInput) codeInput.value = result.testCode;
-                } else {
-                    showStatus(`A new six-digit verification code has been sent to ${currentEmail}. Please check your inbox.`, 'success');
-                }
+                if (codeInput) codeInput.value = '';
+                showStatus(`A new six-digit verification code has been sent to ${currentEmail}. Please check your inbox.`, 'success');
                 startResendCountdown();
                 if (codeInput) { codeInput.focus(); }
             } else {

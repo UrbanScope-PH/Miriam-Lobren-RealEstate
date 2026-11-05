@@ -3093,21 +3093,19 @@
             }
         } catch (_) {}
 
-        // 2. Dispatch OTP via serverless function (emails code using Resend)
+        // 2. Dispatch OTP via serverless function (emails code using Gmail SMTP)
         let serverRes = null;
         try {
             serverRes = await postAuthFlow('register/start', { email: cleanEmail });
-            if (serverRes && serverRes.success === false) {
-                if (serverRes.devCode) {
-                    console.info('%c[UrbanScope Verification Code] ' + serverRes.devCode, 'color:#1e5c33;font-weight:bold;font-size:16px;');
-                }
-                return { success: false, error: serverRes.error || 'Unable to send verification email.' };
+            if (!serverRes || serverRes.success === false) {
+                return { success: false, error: serverRes?.error || 'Unable to deliver verification email. Please check your email and try again.' };
             }
-        } catch (_) {}
+        } catch (e) {
+            return { success: false, error: e.message || 'Unable to contact email delivery service.' };
+        }
 
         // 3. Store active registration challenge in sessionStorage
-        const randomCode = String(Math.floor(100000 + Math.random() * 900000));
-        const activeCode = serverRes?.codeHash || serverRes?.previewCode || randomCode;
+        const activeCode = serverRes.codeHash;
         const challenge = {
             email: cleanEmail,
             code: activeCode,
@@ -3117,10 +3115,7 @@
 
         return {
             success: true,
-            testMode: Boolean(serverRes?.testMode),
-            testMessage: serverRes?.testMessage || '',
-            testCode: activeCode,
-            message: serverRes?.testMessage || `A six-digit verification code has been sent to ${cleanEmail}. Please check your inbox and spam folder.`
+            message: `A six-digit verification code has been sent to ${cleanEmail}. Please check your inbox and spam folder.`
         };
     }
 
@@ -3214,17 +3209,15 @@
             let serverRes = null;
             try {
                 serverRes = await apiRequestPasswordReset(cleanEmail);
-                if (serverRes && serverRes.success === false) {
-                    if (serverRes.devCode) {
-                        console.info('%c[UrbanScope Recovery Code] ' + serverRes.devCode, 'color:#1e5c33;font-weight:bold;font-size:16px;');
-                    }
-                    return { success: false, error: serverRes.error || 'Unable to send recovery email.' };
+                if (!serverRes || serverRes.success === false) {
+                    return { success: false, error: serverRes?.error || 'Unable to send recovery email.' };
                 }
-            } catch (_) {}
+            } catch (err) {
+                return { success: false, error: err.message || 'Unable to reach the email recovery service.' };
+            }
 
-            // 3. Generate a secure 6-digit challenge code
-            const randomCode = String(Math.floor(100000 + Math.random() * 900000));
-            const activeCode = serverRes?.codeHash || serverRes?.previewCode || randomCode;
+            // 3. Store active reset challenge in sessionStorage
+            const activeCode = serverRes.codeHash;
             const challenge = {
                 email: cleanEmail,
                 code: activeCode,
@@ -3235,10 +3228,7 @@
 
             return {
                 success: true,
-                testMode: Boolean(serverRes?.testMode),
-                testMessage: serverRes?.testMessage || '',
-                testCode: activeCode,
-                message: serverRes?.testMessage || `A six-digit verification code has been sent to ${cleanEmail}. Please check your inbox and spam folder.`
+                message: `A six-digit verification code has been sent to ${cleanEmail}. Please check your inbox and spam folder.`
             };
         } catch (err) {
             return { success: false, error: err.message || 'An error occurred while requesting recovery code.' };

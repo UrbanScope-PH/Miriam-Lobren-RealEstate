@@ -50,23 +50,11 @@ export default async function handler(req, res) {
             }, 200, res);
         }
 
-        if (dispatch.testDomainRestricted) {
-            return jsonResponse({
-                success: true,
-                code: 'OTP_SENT',
-                codeHash: code,
-                testMode: true,
-                testMessage: `Resend Free Tier: Delivery to external domains is restricted without a custom domain. Test recovery code for this email: ${code}`,
-                message: `A six-digit recovery code has been generated.`
-            }, 200, res);
-        }
-
         if (dispatch.notConfigured) {
             return jsonResponse({
                 success: false,
                 code: 'EMAIL_SERVICE_NOT_CONFIGURED',
-                devCode: code,
-                error: 'Email delivery is not configured on the server. Please set SMTP_USER & SMTP_PASS (Gmail) or RESEND_API_KEY in your settings.'
+                error: 'Email delivery is not configured on the server. Please verify SMTP settings.'
             }, 200, res);
         }
     } catch (err) {

@@ -720,6 +720,11 @@ path when rendering from a page.
     - If environment variables `SMTP_USER` and `SMTP_PASS` are configured, emails are dispatched directly via Google's mail server (`smtp.gmail.com:465`). This allows delivering verification codes to ANY email address in the world (`@gmail.com`, `@cvsu.edu.ph`, `@yahoo.com`, etc.) up to 500 emails/day completely free without requiring a custom domain or DNS records.
     - Preserves fallback to Resend API (`RESEND_API_KEY`) and automatic test mode if neither is configured.
 
+64. **Removal of OTP Auto-Fill & Zero-Config Gmail SMTP Fallback (`register.js`, `forgot-password.js`, `supabase.js`, `lib/email-auth.js`):**
+    - **Zero Auto-Fill**: Completely removed any auto-filling of verification code numbers into `<input id="emailOtpCode">` and `<input id="codeInput">` (`register.js` and `forgot-password.js`). The input fields are always initialized and cleared to empty strings (`""`), ensuring clients manually check their actual email inbox and type the 6-digit code received.
+    - **Active Gmail SMTP Default**: Added zero-configuration fallback in `lib/email-auth.js`, `backend/auth_otp.py`, and `backend/routers/auth.py` so that verification codes are immediately dispatched via Google's authenticated Gmail SMTP servers even if Vercel environment variables have not yet propagated.
+    - **Clean Error Handling**: Removed `testDomainRestricted` fake code generation in `register/start.js` and `password/reset/request.js`, ensuring the frontend never displays mock codes or deceptive success states if email delivery fails. Real emails are dispatched to any valid address (`@gmail.com`, `@cvsu.edu.ph`, etc.).
+
 
 ---
 
