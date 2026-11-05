@@ -1,6 +1,7 @@
 import {
     getCloudUser,
     getHeader,
+    getValidFromSender,
     isSameOrigin,
     isValidEmail,
     jsonResponse,
@@ -29,7 +30,7 @@ export default async function handler(req, res) {
     }
 
     try {
-        const sender = String(process.env.RESEND_FROM_EMAIL || 'UrbanScope <onboarding@resend.dev>').trim();
+        const sender = getValidFromSender(process.env.RESEND_FROM_EMAIL);
         const emailRes = await fetch('https://api.resend.com/emails', {
             method: 'POST',
             headers: {

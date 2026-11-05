@@ -132,12 +132,23 @@ def clear_local_challenge(email: str, purpose: str) -> None:
         conn.close()
 
 
+def get_valid_from_sender(sender: str) -> str:
+    s = (sender or "").strip().strip("\"'")
+    if not s:
+        return "UrbanScope <onboarding@resend.dev>"
+    if "<" in s and ">" in s and "@" in s:
+        return s
+    if "@" in s and "<" not in s:
+        return f"UrbanScope <{s}>"
+    return f"{s} <onboarding@resend.dev>"
+
+
 def send_otp_email(email: str, purpose: str, code: str) -> None:
     """Send an OTP using Resend's HTTPS API without adding a Python dependency."""
     api_key = os.environ.get("RESEND_API_KEY", "").strip()
-    sender = os.environ.get("RESEND_FROM_EMAIL", "").strip()
-    if not api_key or not sender:
-        raise RuntimeError("RESEND_API_KEY and RESEND_FROM_EMAIL are required to send authentication email.")
+    sender = get_valid_from_sender(os.environ.get("RESEND_FROM_EMAIL", ""))
+    if not api_key:
+        raise RuntimeError("RESEND_API_KEY is required to send authentication email.")
 
     is_registration = purpose == "register"
     subject = "Verify your UrbanScope email" if is_registration else "Your UrbanScope password reset code"

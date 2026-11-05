@@ -710,6 +710,11 @@ path when rendering from a page.
     - Added explicit error reporting in `api/auth/register/start.js` and `api/auth/password/reset/request.js`: if `RESEND_API_KEY` is not configured in Vercel settings, the API explains the missing configuration. If Resend rejects delivery due to its free-tier domain restriction (e.g. testing with an email other than the Resend account owner `gianticaya@gmail.com` without a custom domain), the system automatically activates test mode and surfaces the 6-digit verification code directly inside the modal and console so testing and evaluation can proceed without blocking account creation.
     - Submitting `#emailOtpForm` executes `apiCompleteRegistrationOtp`, which validates the 6-digit code against the active challenge before calling `apiSignUp` to persist the verified user in the database, sign them in with JWT tokens, and redirect to their intended destination (`safeNext`).
 
+62. **Resend Sender (`from`) Normalization & Resilience (`lib/email-auth.js`, `api/auth/`, `backend/auth_otp.py`):**
+    - Added automatic sender formatting (`getValidFromSender` in JS and `get_valid_from_sender` in Python).
+    - If `RESEND_FROM_EMAIL` is set to just a name (e.g. `UrbanScope`), contains wrapping quotes, or only an email address, it automatically formats the sender into the valid RFC 5322 format `Name <email@example.com>` required by Resend (defaulting safely to `UrbanScope <onboarding@resend.dev>`), eliminating the `Invalid 'from' field` 400 Bad Request error.
+
+
 ---
 
 ## Safety Rules
