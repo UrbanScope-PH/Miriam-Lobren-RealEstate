@@ -725,13 +725,13 @@ path when rendering from a page.
     - **Active Gmail SMTP Default**: Added zero-configuration fallback in `lib/email-auth.js`, `backend/auth_otp.py`, and `backend/routers/auth.py` so that verification codes are immediately dispatched via Google's authenticated Gmail SMTP servers even if Vercel environment variables have not yet propagated.
     - **Clean Error Handling**: Removed `testDomainRestricted` fake code generation in `register/start.js` and `password/reset/request.js`, ensuring the frontend never displays mock codes or deceptive success states if email delivery fails. Real emails are dispatched to any valid address (`@gmail.com`, `@cvsu.edu.ph`, etc.).
 
-65. **Navbar Alignment: Inquiry History Page & Home Page (`history.html`, `history.css`):**
-    - Aligned the top navigation header on `/pages/inquiry/history.html` to be identical to the homepage (`index.html`).
+65. **Navbar Alignment: Inquiry Pages & Home Page (`inquiry.html`, `inquiry.css`, `history.html`, `history.css`):**
+    - Aligned the top navigation header on both client inquiry pages (`/pages/inquiry/inquiry.html` and `/pages/inquiry/history.html`) to be identical to the homepage (`index.html`).
     - Replaced the custom `.app-topbar` and `<-- Go Back` pill button with the standard `<header class="navbar">` component:
       - Left: Logo icon (`.brand-logo`, 60x52px) and `.Cname` title (`Miriam Lobren` / `REAL ESTATE AGENT`).
       - Center: Primary navigation (`#mainNav`) linking to `Home`, `Properties`, `About`, `FAQs`, and `Contact`.
       - Right: Action bar (`.nav-acts`) integrated with `session.js` to render the Client Notification Bell and Profile Chip with avatar initial and chevron dropdown.
-    - Removed obsolete custom topbar styling overrides in `history.css` (`.app-topbar`, `.topbar-left`, `.go-back-btn`, `.app-brand`), allowing `history.html` to inherit the global design tokens, responsive breakpoints, and mobile drawer from `common.css` and `mobile-shell.css`.
+    - Removed obsolete custom topbar styling overrides in `inquiry.css` and `history.css` (`.app-topbar`, `.topbar-left`, `.go-back-btn`, `.app-brand`), allowing both pages to inherit the global design tokens, 90px sticky height, responsive breakpoints, and mobile drawer from `common.css` and `mobile-shell.css`.
 
 
 ---
