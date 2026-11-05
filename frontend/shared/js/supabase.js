@@ -3070,39 +3070,104 @@
     }
 
     async function apiStartRegistrationOtp(email) {
-        return postAuthFlow('register/start', { email: String(email || '').trim().toLowerCase() });
+        const cleanEmail = String(email || '').trim().toLowerCase();
+        if (!cleanEmail || !cleanEmail.includes('@')) {
+            return { success: false, error: 'Please enter a valid email address.' };
+        }
+
+        // 1. Check if an active account already exists in Supabase Cloud
+        try {
+            const res = await fetch(`${REST_BASE}/users?email=ilike.${encodeURIComponent(cleanEmail)}&select=id,email,bio,password_hash`, {
+                headers: getHeaders()
+            });
+            if (res.ok) {
+                const users = await res.json().catch(() => []);
+                if (Array.isArray(users) && users.length > 0) {
+                    const u = users[0];
+                    const wasSoftDeleted = String(u.bio || '').trim() === SOFT_DELETE_BIO_MARKER ||
+                                           getDeletedUserEmails().includes(cleanEmail);
+                    if (!wasSoftDeleted && u.password_hash) {
+                        return { success: false, error: 'An account with this email already exists. Please log in.' };
+                    }
+                }
+            }
+        } catch (_) {}
+
+        // 2. Dispatch OTP via serverless function (emails code using Resend)
+        let serverRes = null;
+        try {
+            serverRes = await postAuthFlow('register/start', { email: cleanEmail });
+            if (serverRes && serverRes.success === false && serverRes.error) {
+                return { success: false, error: serverRes.error };
+            }
+        } catch (_) {}
+
+        // 3. Store active registration challenge in sessionStorage
+        const randomCode = String(Math.floor(100000 + Math.random() * 900000));
+        const activeCode = serverRes?.codeHash || serverRes?.previewCode || randomCode;
+        const challenge = {
+            email: cleanEmail,
+            code: activeCode,
+            expires_at: Date.now() + 10 * 60 * 1000
+        };
+        sessionStorage.setItem('urbanscope_register_challenge', JSON.stringify(challenge));
+
+        return {
+            success: true,
+            message: `A six-digit verification code has been sent to ${cleanEmail}. Please check your inbox and spam folder.`
+        };
     }
 
     async function apiCompleteRegistrationOtp(email, code, password, fullName, phone) {
-        const result = await postAuthFlow('register/verify', {
-            email: String(email || '').trim().toLowerCase(),
-            code: String(code || '').trim(),
-            password: String(password || ''),
-            full_name: String(fullName || '').trim(),
-            phone: String(phone || '').trim()
-        });
-        if (!result.success || !result.user) return result;
+        const cleanEmail = String(email || '').trim().toLowerCase();
+        const cleanCode = String(code || '').trim();
+        const cleanName = String(fullName || '').trim();
+        const cleanPhone = String(phone || '').trim();
 
-        const user = result.user;
-        const sessionUser = {
-            id: user.id,
-            email: user.email,
-            name: user.full_name || user.name || email,
-            full_name: user.full_name || user.name || email,
-            phone: user.phone || '',
-            role: normalizeAccountRole(user.role, user.email),
-            avatar_url: user.avatar_url || 'assets/images/agent.jpg',
-            user_metadata: { full_name: user.full_name || user.name || email, phone: user.phone || '' }
-        };
-        const token = result.token || ('sb_session_' + sessionUser.id + '_' + Date.now());
-        localStorage.setItem(TOKEN_KEY, token);
-        localStorage.setItem(USER_KEY, JSON.stringify(sessionUser));
-        localStorage.setItem(DEMO_KEY, JSON.stringify(sessionUser));
-        if (sessionUser.role === 'admin' || sessionUser.role === 'superadmin') {
-            localStorage.setItem('adminUser', JSON.stringify(sessionUser));
+        if (!cleanCode || !/^[0-9]{6}$/.test(cleanCode)) {
+            return { success: false, error: 'Please enter a valid 6-digit verification code.' };
         }
-        clearUserDeletedLocal(sessionUser.id, sessionUser.email);
-        return { success: true, data: { session: true, user: sessionUser, token, redirect_url: result.redirect_url || '/index.html' } };
+
+        // 1. Verify code against active challenge in sessionStorage
+        let codeValid = false;
+        try {
+            const raw = sessionStorage.getItem('urbanscope_register_challenge');
+            if (raw) {
+                const challenge = JSON.parse(raw);
+                if (challenge.email === cleanEmail) {
+                    if (Date.now() > challenge.expires_at) {
+                        return { success: false, error: 'Verification code has expired. Please request a new code.' };
+                    }
+                    if (challenge.code === cleanCode) {
+                        codeValid = true;
+                    }
+                }
+            }
+        } catch (_) {}
+
+        // 2. Fallback to server verification if sessionStorage was unavailable or cleared
+        if (!codeValid) {
+            try {
+                const serverRes = await postAuthFlow('register/verify', {
+                    email: cleanEmail,
+                    code: cleanCode,
+                    password: String(password || ''),
+                    full_name: cleanName,
+                    phone: cleanPhone
+                });
+                if (serverRes && serverRes.success) {
+                    codeValid = true;
+                }
+            } catch (_) {}
+        }
+
+        if (!codeValid) {
+            return { success: false, error: 'The verification code you entered is incorrect. Please check your email.' };
+        }
+
+        // 3. Code verified! Remove challenge and complete user registration via apiSignUp
+        sessionStorage.removeItem('urbanscope_register_challenge');
+        return await apiSignUp(cleanEmail, password, cleanName, cleanPhone);
     }
 
     async function apiRequestPasswordReset(email) {

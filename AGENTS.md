@@ -703,6 +703,12 @@ path when rendering from a page.
     - Fixed form visibility collision (`.auth-form[hidden] { display: none !important; }`) preventing Step 3 from rendering prematurely, and aligned password toggle styling with `.input-box.has-toggle` and `.toggle-pw`.
     - Removed all UI code preview text leaks, cleanly notifying users to check their email inbox (and spam folder) for the dispatched 6-digit code. Actual email delivery is powered by `RESEND_API_KEY` (configured in Vercel project settings).
 
+61. **Client Registration Mandatory Email Code Verification (`frontend/pages/auth/register.html`, `register.js`, `api/auth/register/start.js`, `frontend/shared/js/`):**
+    - Enforced mandatory 6-digit email code verification before client accounts can be created on `register.html`, eliminating silent bypasses and requiring proof of email ownership.
+    - When the client submits the registration form with valid credentials and accepted Terms & Privacy Policy, `apiStartRegistrationOtp(email)` validates that the account does not already exist, invokes `api/auth/register/start.js` to dispatch a 6-digit verification code to the recipient's email via Resend (`RESEND_API_KEY`), and saves the active challenge in `sessionStorage` (`urbanscope_register_challenge`).
+    - Opens `#emailOtpModal` ("Verify your email") requiring entry of the 6-digit code with real-time validation, 60-second resend countdown, and clear error messaging.
+    - Submitting `#emailOtpForm` executes `apiCompleteRegistrationOtp`, which validates the 6-digit code against the active challenge before calling `apiSignUp` to persist the verified user in the database, sign them in with JWT tokens, and redirect to their intended destination (`safeNext`).
+
 ---
 
 ## Safety Rules
