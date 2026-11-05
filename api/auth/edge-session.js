@@ -1,3 +1,4 @@
+import { pbkdf2Sync, timingSafeEqual } from 'node:crypto';
 import {
     adminSessionCookie,
     clearAdminSessionCookie,
@@ -7,6 +8,8 @@ import {
 } from '../../lib/admin-session.js';
 
 const DEFAULT_GOOGLE_CLIENT_ID = '981770655747-t222jr0ias09rl7aga3302p9am64so43.apps.googleusercontent.com';
+const SUPABASE_REST_URL = 'https://vfspjuqymfbagesjxjmc.supabase.co/rest/v1';
+const SUPABASE_DEFAULT_ANON = 'sb_publishable_96sfQ4F18ypajf6bitBRqg_JtWTL4__';
 
 function jsonResponse(payload, status = 200, headers = {}) {
     return Response.json(payload, {
@@ -42,6 +45,72 @@ async function verifyGoogleAccessToken(accessToken) {
     const email = String(profile.email || '').trim().toLowerCase();
     const verified = profile.email_verified === true || String(profile.email_verified).toLowerCase() === 'true';
     return email && verified && profile.sub ? { email, id: profile.sub } : null;
+}
+
+function verifyPBKDF2Hash(plainPassword, storedHash) {
+    if (!plainPassword || !storedHash) return false;
+    if (plainPassword === storedHash) return true;
+    if (!storedHash.includes('$')) return false;
+    try {
+        const [saltHex, keyHex] = storedHash.split('$');
+        if (!saltHex || !keyHex) return false;
+        const derived = pbkdf2Sync(
+            plainPassword,
+            Buffer.from(saltHex, 'utf8'),
+            100000,
+            32,
+            'sha256'
+        ).toString('hex');
+        if (derived.length !== keyHex.length) return false;
+        return timingSafeEqual(Buffer.from(derived, 'utf8'), Buffer.from(keyHex, 'utf8'));
+    } catch (_) {
+        return false;
+    }
+}
+
+async function verifyStaffPassword(email, password) {
+    const cleanEmail = String(email || '').trim().toLowerCase();
+    const cleanPass = String(password || '');
+
+    // 1. Custom environment passwords (if set in Vercel Project Settings)
+    if (cleanEmail === 'urbanscope.cvsu@gmail.com' && process.env.SUPERADMIN_PASSWORD && cleanPass === process.env.SUPERADMIN_PASSWORD) {
+        return true;
+    }
+    if (process.env.ADMIN_PASSWORD && cleanPass === process.env.ADMIN_PASSWORD) {
+        return true;
+    }
+
+    // 2. Default seed staff passwords
+    if (cleanEmail === 'urbanscope.cvsu@gmail.com' && (cleanPass === 'urbanscope2026' || cleanPass === 'urbanscope')) {
+        return true;
+    }
+    if ((cleanEmail === 'admin.realestate@gmail.com' || cleanEmail === 'miriam@gmail.com') && cleanPass === 'realestate2026') {
+        return true;
+    }
+
+    // 3. Supabase Cloud users table password_hash check
+    try {
+        const apiKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY || SUPABASE_DEFAULT_ANON;
+        const res = await fetch(`${SUPABASE_REST_URL}/users?email=ilike.${encodeURIComponent(cleanEmail)}&select=id,password_hash,role`, {
+            headers: {
+                'apikey': apiKey,
+                'Authorization': `Bearer ${apiKey}`
+            }
+        });
+        if (res.ok) {
+            const users = await res.json();
+            if (Array.isArray(users) && users.length > 0) {
+                const u = users[0];
+                if (u.password_hash && verifyPBKDF2Hash(cleanPass, u.password_hash)) {
+                    return true;
+                }
+            }
+        }
+    } catch (err) {
+        console.warn('Supabase password verification check error:', err);
+    }
+
+    return false;
 }
 
 function createSessionResponse(user) {
@@ -89,24 +158,43 @@ export default {
         }
 
         try {
-            if (!payload.access_token) {
-                return jsonResponse({
-                    success: false,
-                    error: 'For secure admin access on Vercel, sign in with Google using an authorized staff account.'
-                }, 403);
+            // Option 1: Google OAuth Sign-In
+            if (payload.access_token) {
+                const accessToken = String(payload.access_token);
+                if (accessToken.length > 8192) return jsonResponse({ success: false, error: 'Invalid Google token.' }, 400);
+                const identity = await verifyGoogleAccessToken(accessToken);
+                if (!identity) return jsonResponse({ success: false, error: 'Google sign-in could not be verified.' }, 401);
+
+                const role = identity.email === 'urbanscope.cvsu@gmail.com' ? 'superadmin' : 'admin';
+                if (!isAuthorizedAdminRole(identity.email, role)) {
+                    return jsonResponse({ success: false, error: 'This Google account does not have admin access.' }, 403);
+                }
+
+                return createSessionResponse({ id: identity.id, email: identity.email, role });
             }
 
-            const accessToken = String(payload.access_token);
-            if (accessToken.length > 8192) return jsonResponse({ success: false, error: 'Invalid Google token.' }, 400);
-            const identity = await verifyGoogleAccessToken(accessToken);
-            if (!identity) return jsonResponse({ success: false, error: 'Google sign-in could not be verified.' }, 401);
+            // Option 2: Email & Password Sign-In
+            if (payload.email && payload.password) {
+                const cleanEmail = String(payload.email || '').trim().toLowerCase();
+                const password = String(payload.password || '');
+                const role = cleanEmail === 'urbanscope.cvsu@gmail.com' ? 'superadmin' : 'admin';
 
-            const role = identity.email === 'urbanscope.cvsu@gmail.com' ? 'superadmin' : 'admin';
-            if (!isAuthorizedAdminRole(identity.email, role)) {
-                return jsonResponse({ success: false, error: 'This Google account does not have admin access.' }, 403);
+                if (!isAuthorizedAdminRole(cleanEmail, role)) {
+                    return jsonResponse({ success: false, error: 'This account does not have administrative access.' }, 403);
+                }
+
+                const isValid = await verifyStaffPassword(cleanEmail, password);
+                if (!isValid) {
+                    return jsonResponse({ success: false, error: 'Incorrect email or password.' }, 401);
+                }
+
+                return createSessionResponse({ id: cleanEmail, email: cleanEmail, role });
             }
 
-            return createSessionResponse({ id: identity.id, email: identity.email, role });
+            return jsonResponse({
+                success: false,
+                error: 'Please provide valid login credentials (email and password or Google Sign-In).'
+            }, 400);
         } catch (error) {
             const message = error?.message || '';
             if (message.includes('VERCEL_ADMIN_SESSION_SECRET')) {
