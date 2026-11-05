@@ -3556,13 +3556,15 @@
                 google_id: googleSub
             });
 
+            const resolvedRole = normalizeAccountRole(supaRecord?.role || role, cleanEmail);
+
             const sessionUser = {
                 id: (supaRecord && supaRecord.id) ? supaRecord.id : Date.now(),
                 email: cleanEmail,
                 name: fullName,
                 full_name: fullName,
                 phone: '',
-                role: role,
+                role: resolvedRole,
                 avatar_url: avatarUrl,
                 google_id: googleSub,
                 user_metadata: { full_name: fullName, avatar_url: avatarUrl }
@@ -3572,15 +3574,15 @@
             localStorage.setItem(TOKEN_KEY, simulatedToken);
             localStorage.setItem(USER_KEY, JSON.stringify(sessionUser));
             localStorage.setItem(DEMO_KEY, JSON.stringify(sessionUser));
-            if (role === 'admin' || role === 'superadmin') {
+            if (resolvedRole === 'admin' || resolvedRole === 'superadmin') {
                 localStorage.setItem('adminUser', JSON.stringify(sessionUser));
             } else {
                 localStorage.removeItem('adminUser');
             }
 
-            const redirectUrl = (role === 'superadmin')
+            const redirectUrl = (resolvedRole === 'superadmin')
                 ? '/pages/superadmin/dashboard.html'
-                : (role === 'admin' ? '/pages/admin/dashboard.html' : '/index.html');
+                : (resolvedRole === 'admin' ? '/pages/admin/dashboard.html' : '/index.html');
 
             return {
                 success: true,
@@ -3591,12 +3593,63 @@
         }
     }
 
+    async function apiCreateHostedAdminSession(credentials = {}) {
+        if (isLocalDevHost()) return { success: true, local: true };
+        try {
+            const response = await fetch('/api/auth/edge-session', {
+                method: 'POST',
+                credentials: 'same-origin',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(credentials)
+            });
+            const result = await response.json().catch(() => ({}));
+            if (!response.ok || !result.success) {
+                return { success: false, error: result.error || 'Unable to secure the admin session.' };
+            }
+            if (result.user?.role && result.user?.email) {
+                try {
+                    const currentUser = JSON.parse(localStorage.getItem(USER_KEY) || '{}');
+                    if (String(currentUser.email || '').toLowerCase() === String(result.user.email).toLowerCase()) {
+                        currentUser.role = result.user.role;
+                        localStorage.setItem(USER_KEY, JSON.stringify(currentUser));
+                        localStorage.setItem(DEMO_KEY, JSON.stringify(currentUser));
+                        localStorage.setItem('adminUser', JSON.stringify(currentUser));
+                    }
+                } catch (_) {}
+            }
+            return result;
+        } catch (error) {
+            return { success: false, error: error.message || 'Unable to reach the admin session service.' };
+        }
+    }
+
+    async function apiGetHostedAdminSession() {
+        if (isLocalDevHost()) return null;
+        try {
+            const response = await fetch('/api/auth/edge-session', {
+                method: 'GET',
+                credentials: 'same-origin',
+                cache: 'no-store'
+            });
+            if (!response.ok) return null;
+            const result = await response.json().catch(() => ({}));
+            return result.authenticated ? (result.user || null) : null;
+        } catch (_) {
+            return null;
+        }
+    }
+
     async function apiSignOut() {
         if (isLocalDevHost()) {
             try {
                 const localBase = (location.port === '8000') ? '/api' : 'http://127.0.0.1:8000/api';
                 await fetch(`${localBase}/auth/logout`, { method: 'POST' }).catch(() => {});
             } catch (e) {}
+        } else {
+            await fetch('/api/auth/edge-session', {
+                method: 'DELETE',
+                credentials: 'same-origin'
+            }).catch(() => {});
         }
         localStorage.removeItem(TOKEN_KEY);
         localStorage.removeItem(USER_KEY);
@@ -3726,6 +3779,8 @@
     window.apiSignIn = apiSignIn;
     window.apiGetGoogleConfig = apiGetGoogleConfig;
     window.apiSignInWithGoogle = apiSignInWithGoogle;
+    window.apiCreateHostedAdminSession = apiCreateHostedAdminSession;
+    window.apiGetHostedAdminSession = apiGetHostedAdminSession;
     window.apiSignOut = apiSignOut;
     window.apiGetCurrentUser = apiGetCurrentUser;
     window.apiGetDashboardKPIs = apiGetDashboardKPIs;

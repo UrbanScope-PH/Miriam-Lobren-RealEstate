@@ -261,6 +261,7 @@ Defined in [`backend/auth.py`](backend/auth.py).
   audience (`aud`/`azp`) match against `GOOGLE_CLIENT_ID` (from env or `.env`) and `email_verified == true`.
 - **JWT:** HS256, 7-day expiry, payload `{ sub: "<user id>", email, role, exp, iat }`.
   Secret from env var `URBANSCOPE_SECRET_KEY` (a hard-coded fallback exists for dev).
+- **Vercel Admin Page Session:** Since Vercel serves the frontend statically, root Routing Middleware (`proxy.js`) verifies a separate 12-hour signed `HttpOnly`, `Secure`, `SameSite=Lax` cookie before returning Admin/Superadmin HTML. The Vercel Function at `POST /api/auth/edge-session` verifies Google directly and accepts the existing staff accounts plus optional comma-separated `VERCEL_ADMIN_EMAILS`; it does not trust the currently public Supabase user-table role/password policies. Configure the server-only `VERCEL_ADMIN_SESSION_SECRET` (minimum 32 characters) in Vercel Project Settings and redeploy. Admin staff can access Admin; only `urbanscope.cvsu@gmail.com` can access Superadmin. Hosted admin access uses Google Sign-In, while local FastAPI deployments keep password sign-in and the existing `access_token` cookie/middleware.
 - **Client storage:** `localStorage` keys `urbanscope_jwt_token`, `urbanscope_user`,
   `urbanscope_demo_user`, `adminUser`, `adminPassword`, `urbanscope_admin_password_updated`.
 
