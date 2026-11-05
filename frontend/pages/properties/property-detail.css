@@ -940,7 +940,7 @@ html[data-auth-state="logged-in"] .inquiry-note,
     border: 1.5px dashed #a3d2b0;
     border-radius: 12px;
     padding: 18px 22px;
-    cursor: pointer;
+    cursor: default;
     transition: all 0.2s ease;
 }
 
@@ -995,6 +995,7 @@ html[data-auth-state="logged-in"] .inquiry-note,
     border: none;
     cursor: pointer;
     white-space: nowrap;
+    text-decoration: none;
     transition: background 0.2s;
 }
 

@@ -621,7 +621,7 @@ path when rendering from a page.
     - Moved all lightbox controller state variables (`lightboxOpen`, `zoomLevel`, `panX`, `panY`, `isPanning`, `panStartX`, `panStartY`) to the top of `property-detail.js` above `initGallery` and `updateGallery`, resolving ES6 Temporal Dead Zone (TDZ) access errors.
     - Exposed all gallery and lightbox handlers (`initGallery`, `updateGallery`, `changeSlide`, `selectThumb`, `openLightbox`, `closeLightbox`, `changeLightboxSlide`, `selectLightboxSlide`, `zoomLightbox`, `resetLightboxZoom`) onto `window` to guarantee inline HTML `onclick` attributes execute reliably across all browsers and Live Server environments.
     - Attached redundant `click` event listeners to all thumbnail elements (`.thumb`) and main gallery image (`#mainGalleryImg`) during `initGallery()` for rock-solid interaction resilience.
-    - Updated `casasuerte.html`, `kathleen.html`, and `Liora.html` thumbnail rows to include their respective TCP computation sheet thumbnails (`casasuerte-tcp.jpg`, `kathleen-tcp.jpg`, `kathleen-tcp2.jpg`, `liora-tcp.jpg`), allowing users to click and zoom the computation sheets directly from the thumbnail grid.
+    - TCP computation sheets are displayed separately from the property gallery. Their dedicated links open the document directly without adding it as a gallery slide.
 
 49. **Property Brand Name Standardization (`Casasuerte` and `Kathleen`):**
     - Standardized listing brand titles across all application layers:
@@ -651,6 +651,10 @@ path when rendering from a page.
     - **Toggle Animation**: Standardized `.mobile-nav-toggle` to 44px × 44px with `flex-direction: column`, `justify-content: center`, `gap: 5px`, and `padding: 0`. In idle state, three 20px × 2px lines (`.hamburger-line`) are spaced with 5px gaps rather than collapsing into a solid block. When activated (`.active`), line 1 translates down 7px and rotates 45°, line 2 fades out (`opacity: 0, scaleX: 0`), and line 3 translates up 7px and rotates -45°, forming a symmetrical `✕` icon rather than an asymmetric chevron (`<`).
     - **Drawer Contents**: Removed redundant `.mobile-drawer-user` (user profile badge, "Submit an Inquiry", "Inquiry History", and "Sign Out") from the mobile navigation drawer. For logged-in users, account operations remain centralized in the topbar profile chip avatar dropdown (`#profileChip`), keeping the mobile slide-down drawer dedicated exclusively to primary navigation links (Home, Properties, About, FAQs, Contact).
     - **Drawer Slide Animation**: Unified drop-down slide/fade transition across `.navbar nav` and `.app-topbar #mainNav` using `cubic-bezier(0.16, 1, 0.3, 1)` for smooth expansion without stutter.
+
+53. **Property Gallery Pricelist Separation (`frontend/pages/properties/`):**
+    - Removed TCP/pricelist image files from the Casasuerte, Kathleen, Liora Homes, and Airmen's Village gallery thumbnails, slide arrays, and dynamic property-detail gallery data.
+    - Retained price and financing tables. Dedicated computation-document links open the image separately from the property gallery.
 
 ---
 

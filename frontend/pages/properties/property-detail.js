@@ -157,8 +157,7 @@ async function loadPropertyFromDb() {
             '../../assets/images/casasuerte-bedroom2.jpg',
             '../../assets/images/casasuerte-bathroom.jpg',
             '../../assets/images/casasuerte-service.jpg',
-            '../../assets/images/casasuerte-subdivision-plan.jpg',
-            '../../assets/images/casasuerte-tcp.jpg'
+            '../../assets/images/casasuerte-subdivision-plan.jpg'
         ];
     } else if (tLower.includes('kathleen')) {
         propImages = [
@@ -169,8 +168,7 @@ async function loadPropertyFromDb() {
             '../../assets/images/kathleen-gate.jpg',
             '../../assets/images/kathleen-carport.jpg',
             '../../assets/images/kathleen-hallway.jpg',
-            '../../assets/images/kathleen-map.jpg',
-            '../../assets/images/kathleen-tcp.jpg'
+            '../../assets/images/kathleen-map.jpg'
         ];
     } else if (tLower.includes('liora')) {
         propImages = [
@@ -184,14 +182,12 @@ async function loadPropertyFromDb() {
             '../../assets/images/liora-stairs.jpg',
             '../../assets/images/liora-solar.jpg',
             '../../assets/images/liora-rainwater.jpg',
-            '../../assets/images/liora-community.jpg',
-            '../../assets/images/liora-tcp.jpg'
+            '../../assets/images/liora-community.jpg'
         ];
     } else if (tLower.includes('airmen')) {
         propImages = [
             '../../assets/images/AirmenTriplex.WEBP',
-            '../../assets/images/airmen-flyer.jpg',
-            '../../assets/images/airmen-tcp.jpg'
+            '../../assets/images/airmen-flyer.jpg'
         ];
     }
 
@@ -401,7 +397,7 @@ function renderDynamicTcp(property) {
                     </tbody>
                 </table>
             </div>
-            <div class="tcp-doc-card" onclick="openLightbox(galleryImages.length - 1)" title="Click to view official developer price computation sheet">
+            <div class="tcp-doc-card">
                 <div class="tcp-doc-info">
                     <div class="tcp-doc-icon">
                         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
@@ -411,9 +407,9 @@ function renderDynamicTcp(property) {
                         <p>Developer: RubySapphire Land Corp · DHSUD LTS No. 0001645 · Phase 1 &amp; Block 6</p>
                     </div>
                 </div>
-                <button type="button" class="tcp-doc-btn">
+                <a class="tcp-doc-btn" href="../../assets/images/casasuerte-tcp.jpg" target="_blank" rel="noopener noreferrer">
                     <span>View Pricelist Document</span>
-                </button>
+                </a>
             </div>
         </section>`;
     } else if (tLower.includes('kathleen')) {
@@ -480,7 +476,7 @@ function renderDynamicTcp(property) {
                     </tbody>
                 </table>
             </div>
-            <div class="tcp-doc-card" onclick="openLightbox(galleryImages.length - 1)" title="Click to view official developer price computation sheet">
+            <div class="tcp-doc-card">
                 <div class="tcp-doc-info">
                     <div class="tcp-doc-icon">
                         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
@@ -490,9 +486,9 @@ function renderDynamicTcp(property) {
                         <p>Developer: JKY Group / Jeika Properties Corp · DHSUD LTS No. 0000523 · Inclusive of Title Transfer</p>
                     </div>
                 </div>
-                <button type="button" class="tcp-doc-btn">
+                <a class="tcp-doc-btn" href="../../assets/images/kathleen-tcp.jpg" target="_blank" rel="noopener noreferrer">
                     <span>View Computation Sheet</span>
-                </button>
+                </a>
             </div>
         </section>`;
     } else {
