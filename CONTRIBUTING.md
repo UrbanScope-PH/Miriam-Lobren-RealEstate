@@ -30,3 +30,4 @@ Thank you for contributing to **UrbanScope — Miriam Lobren Real Estate**!
 
 4. **Code Quality & Guidelines**:
    - Refer to [`AGENTS.md`](AGENTS.md) and [`DATABASE.md`](DATABASE.md) for architecture, conventions, and database migrations.
+
