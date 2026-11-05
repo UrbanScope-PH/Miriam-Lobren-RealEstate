@@ -6,6 +6,42 @@
 
 const params = new URLSearchParams(window.location.search);
 
+function isLocalLoginHost() {
+    const host = window.location.hostname;
+    return host === 'localhost' || host === '127.0.0.1' || host === '[::1]' ||
+        /^192\.168\./.test(host) || /^10\./.test(host) ||
+        /^172\.(1[6-9]|2[0-9]|3[0-1])\./.test(host) || window.location.port === '8000';
+}
+
+function redirectAdminUser(user) {
+    const role = String(user?.role || '').toLowerCase();
+    const email = String(user?.email || '').toLowerCase().trim();
+    if (role === 'superadmin' && email === 'urbanscope.cvsu@gmail.com') {
+        window.location.replace('../superadmin/dashboard.html');
+        return true;
+    }
+    if (role === 'admin') {
+        window.location.replace('../admin/dashboard.html');
+        return true;
+    }
+    return false;
+}
+
+async function redirectCurrentAdminSession() {
+    if (isLocalLoginHost()) {
+        try {
+            const rawUser = localStorage.getItem('adminUser') || localStorage.getItem('urbanscope_user');
+            if (rawUser) redirectAdminUser(JSON.parse(rawUser));
+        } catch (_) {}
+        return;
+    }
+
+    if (typeof apiGetHostedAdminSession === 'function') {
+        const hostedUser = await apiGetHostedAdminSession();
+        if (hostedUser) redirectAdminUser(hostedUser);
+    }
+}
+
 // Admin / superadmin "Sign Out" links land here with ?logout=1 — clear the session
 // (localStorage + server cookie) and drop the flag from the URL.
 if (params.get('logout') === '1') {
@@ -16,25 +52,13 @@ if (params.get('logout') === '1') {
         localStorage.removeItem('urbanscope_user');
         localStorage.removeItem('adminUser');
     }
-    fetch('/api/auth/logout', { method: 'POST' }).catch(() => {});
     params.delete('logout');
     const rest = params.toString();
     history.replaceState(null, '', window.location.pathname + (rest ? '?' + rest : ''));
 } else {
-    // If an administrator or superadmin is already authenticated, redirect directly to their console
-    try {
-        const rawUser = localStorage.getItem('adminUser') || localStorage.getItem('urbanscope_user');
-        if (rawUser) {
-            const u = JSON.parse(rawUser);
-            const r = (u.role || '').toLowerCase();
-            const em = (u.email || '').toLowerCase().trim();
-            if (r === 'superadmin' || em === 'urbanscope.cvsu@gmail.com') {
-                window.location.replace('../superadmin/dashboard.html');
-            } else if (r === 'admin' || em === 'admin.realestate@gmail.com') {
-                window.location.replace('../admin/dashboard.html');
-            }
-        }
-    } catch (e) {}
+    // On Vercel, redirect only when the signed HttpOnly cookie is valid.
+    // localStorage role values are used only for the local FastAPI development flow.
+    redirectCurrentAdminSession();
 }
 const rawNext = params.get('redirect') || '';
 // Allow valid redirect paths relative to the frontend root (e.g. index.html, pages/properties/properties.html, pages/inquiry/inquiry.html)
@@ -72,19 +96,27 @@ if (loginForm) {
                 const role = user.role || 'user';
                 const isAdminUser = (
                     role === 'admin' ||
-                    role === 'superadmin' ||
-                    cleanEmail === 'admin.realestate@gmail.com' ||
-                    cleanEmail === 'urbanscope.cvsu@gmail.com'
+                    role === 'superadmin'
                 );
 
+                if (isAdminUser && typeof apiCreateHostedAdminSession === 'function') {
+                    const hostedSession = await apiCreateHostedAdminSession({ email: cleanEmail, password });
+                    if (!hostedSession.success) {
+                        throw new Error(hostedSession.error || 'Unable to secure this admin session.');
+                    }
+                } else if (isAdminUser && !isLocalLoginHost()) {
+                    throw new Error('Admin session service is unavailable. Please try again later.');
+                }
+
                 // Relative paths so this works from both the FastAPI server and Live Server
-                if (role === 'superadmin' || cleanEmail === 'urbanscope.cvsu@gmail.com') {
+                if (role === 'superadmin' && cleanEmail === 'urbanscope.cvsu@gmail.com') {
                     window.location.href = '../superadmin/dashboard.html';
-                } else if (role === 'admin' || isAdminUser) {
+                } else if (role === 'admin') {
                     window.location.href = '../admin/dashboard.html';
                 } else {
                     // Normal user dashboard / destination
-                    if (safeNext && safeNext !== 'index.html') {
+                    const isAdminDestination = /^pages\/(admin|superadmin)\//i.test(safeNext);
+                    if (safeNext && safeNext !== 'index.html' && !isAdminDestination) {
                         window.location.href = '../../' + safeNext;
                     } else {
                         window.location.href = res.data?.redirect_url || '../../index.html';

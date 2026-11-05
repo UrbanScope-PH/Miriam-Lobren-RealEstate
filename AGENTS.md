@@ -14,10 +14,10 @@ and an admin/superadmin dashboard.
 
 | Layer | Tech |
 | :--- | :--- |
-| Frontend | Static **HTML + vanilla CSS + vanilla JS (ES6)** — no framework, no bundler, no npm |
+| Frontend | Static **HTML + vanilla CSS + vanilla JS (ES6)** — no framework or bundler; Vercel uses a small Node package for route protection |
 | Backend | **Python 3 + FastAPI + Uvicorn** (`backend/`) |
 | Database | **SQLite** file `backend/urbanscope.db` (auto-created and seeded) |
-| Auth | PBKDF2 password hashes + **Google Identity Services (OAuth 2.0)** + **PyJWT** bearer tokens in `localStorage` |
+| Auth | PBKDF2 password hashes + **Google Identity Services (OAuth 2.0)** + local FastAPI JWTs and signed Vercel admin session cookies |
 | Fonts | Plus Jakarta Sans, Dancing Script (Google Fonts) |
 
 ---
@@ -31,7 +31,7 @@ python run.py            # serves site + API on http://127.0.0.1:8000
 
 - Site: `http://127.0.0.1:8000/` · API docs: `http://127.0.0.1:8000/docs`
 - `run.py` uses `uvicorn --reload`, so Python edits hot-reload.
-- Env vars (or `.env` in root — see `.env.example`): `HOST`, `PORT`, `URBANSCOPE_SECRET_KEY`, `GOOGLE_CLIENT_ID`.
+- Env vars (or `.env` in root — see `.env.example`): `HOST`, `PORT`, `URBANSCOPE_SECRET_KEY`, `GOOGLE_CLIENT_ID`; Vercel deployments also require `VERCEL_ADMIN_SESSION_SECRET` and may set `VERCEL_ADMIN_EMAILS` in Vercel project settings.
 - Frontend also works from VS Code Live Server (`:5500/frontend/`); it calls the API at `http://127.0.0.1:8000/api`.
 - **Reset data:** delete `backend/urbanscope.db` and restart (or run `python backend/seed_rbac.py`).
 
@@ -48,6 +48,10 @@ and exercising the page / `/docs` endpoint you touched.
 
 ```text
 run.py                 Starts FastAPI + static site (uvicorn backend.app:app)
+proxy.js               Vercel Routing Middleware protecting admin/superadmin HTML routes
+api/auth/              Vercel Node Function for signed hosted admin sessions
+lib/admin-session.js   Shared signed-session cookie and token helpers
+package.json           ESM mode and Vercel Routing Middleware helper dependency
 backend/               app.py (FastAPI assembler), middleware.py (RBAC guard), routers/ (system, auth, properties, inquiries, superadmin, web), database.py, models.py, auth.py, seed_rbac.py, migration_rbac.sql
 frontend/              Everything the browser loads (served at /)
   index.html/.css/.js  Home page
@@ -83,7 +87,8 @@ to `/pages/…`.
   to do with Supabase; it's a REST client for FastAPI that exposes globals:
   `apiGetProperties`, `apiGetPropertyById`, `apiAddProperty`, `apiUpdateProperty`,
   `apiDeleteProperty`, `apiSubmitInquiry`, `apiGetInquiries`, `apiSignUp`, `apiSignIn`,
-  `apiGetGoogleConfig`, `apiSignInWithGoogle`, `apiSignOut`, `apiGetCurrentUser`,
+  `apiGetGoogleConfig`, `apiSignInWithGoogle`, `apiCreateHostedAdminSession`,
+  `apiGetHostedAdminSession`, `apiSignOut`, `apiGetCurrentUser`,
   `isBackendConfigured` / `isSupabaseConfigured`.
 - `shared/js/api.js` is a near-duplicate that no page currently loads. If you change one
   gateway, change both (or consolidate — ask first).
@@ -121,12 +126,13 @@ path when rendering from a page.
   accessing client inquiries (`GET /api/inquiries`), and reading metrics (`GET /api/stats`) are
   protected by the `require_admin` dependency. Superadmin endpoints (`/api/superadmin/*`) are
   protected by `require_superadmin`.
+- **Vercel Static-Page Protection:** Since Vercel serves HTML statically and does not run FastAPI middleware, root `proxy.js` checks a signed `HttpOnly` admin cookie before serving Admin/Superadmin HTML at public and underlying `/frontend/pages/...` paths. `api/auth/edge-session.js` verifies Google tokens directly and issues a 12-hour cookie only for the staff allowlist (`admin.realestate@gmail.com`, `miriam@gmail.com`, `urbanscope.cvsu@gmail.com`) and optional `VERCEL_ADMIN_EMAILS` entries. Approved Admin staff can access the Admin portal; only the root Superadmin can access Superadmin. Hosted password login is not used to mint admin sessions because the existing public Supabase user policies cannot be trusted for role/password verification. Configure a private `VERCEL_ADMIN_SESSION_SECRET` (at least 32 characters) in Vercel Project Settings before deployment. Hosted route authorization never trusts localStorage role values.
 
 ---
 
 ## Conventions
 
-- **No new dependencies or frameworks** (no React, Tailwind, jQuery, npm) unless the user asks.
+- **No new browser dependencies or frameworks** (no React, Tailwind, jQuery) unless the user asks. Deployment-only packages are allowed when required by the hosting platform; keep the browser frontend dependency-free.
 - **CSS:** reuse tokens and components from `frontend/shared/css/common.css`; feature styles go in the
   feature's own `.css` file. Keep the existing premium look and responsive layouts.
 - **JS:** vanilla ES6, IIFE or plain scripts, no modules/bundling. Escape user-provided text before
@@ -663,6 +669,11 @@ path when rendering from a page.
 55. **Sold Property Inquiry Availability (`frontend/pages/properties/`, `frontend/pages/inquiry/`, `frontend/shared/js/`, `backend/routers/inquiries.py`):**
     - Sold / Sold Out listings remain visible in the public catalog, but property pages disable their inquiry action and the inquiry form omits them from selectable listings.
     - Property pages refresh status on focus and admin cache updates. The inquiry form refreshes the selected listing and rechecks it before submission; both API gateways reject sold-property inquiries, and the local FastAPI inquiry endpoint returns HTTP 409 for a sold listing.
+
+56. **Vercel Admin & Superadmin Page Access Guard (`proxy.js`, `api/auth/`, auth gateway):**
+    - Vercel Routing Middleware intercepts `/pages/admin/*`, `/pages/superadmin/*`, legacy aliases, and direct `/frontend/pages/...` paths before static files are served. Admin and Superadmin HTML requires a signed `HttpOnly`, `Secure`, `SameSite=Lax` cookie; approved Admin staff can use the Admin portal, and only root `urbanscope.cvsu@gmail.com` with `superadmin` role can use the Superadmin portal. Public login redirects and static support assets remain available.
+    - `POST /api/auth/edge-session` verifies a Google OAuth access token server-side and allows the existing staff emails plus optional comma-separated `VERCEL_ADMIN_EMAILS`. This avoids trusting the currently public Supabase user-table role/password policies. On hosted Vercel, administrative users must use Google Sign-In; password sign-in remains available in the local FastAPI flow. Sessions expire after 12 hours. Login redirects only after server session creation, and sign-out clears the cookie.
+    - Vercel deployment requires private `VERCEL_ADMIN_SESSION_SECRET` (minimum 32 characters). It is intentionally unset in `.env.example`; configure it in Vercel Project Settings and redeploy. Local FastAPI sessions continue using the existing `access_token` cookie and RBAC middleware.
 
 ---
 

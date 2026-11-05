@@ -420,12 +420,14 @@ document.addEventListener("DOMContentLoaded", () => {
         const user = (authResult && authResult.data && authResult.data.user) || {};
         const cleanEmail = (user.email || "").toLowerCase().trim();
         const role = (user.role || "user").toLowerCase();
-        const isAdminUser = (
-            (cleanEmail === "admin.realestate@gmail.com" || cleanEmail === "urbanscope.cvsu@gmail.com") &&
-            (role === "admin" || role === "superadmin")
-        );
+        const isAuthorizedStaffEmail = [
+            "admin.realestate@gmail.com",
+            "miriam@gmail.com",
+            "urbanscope.cvsu@gmail.com"
+        ].includes(cleanEmail);
+        const isAdminUser = role === "admin" || role === "superadmin" || isAuthorizedStaffEmail;
 
-        if (role === "superadmin" && cleanEmail === "urbanscope.cvsu@gmail.com") {
+        if (cleanEmail === "urbanscope.cvsu@gmail.com") {
             window.location.href = "../superadmin/dashboard.html";
         } else if (isAdminUser) {
             window.location.href = "../admin/dashboard.html";
@@ -476,6 +478,27 @@ document.addEventListener("DOMContentLoaded", () => {
                     setLoadingState(true, "Verifying Google Account...");
                     const res = await apiSignInWithGoogle({ access_token: tokenResponse.access_token });
                     if (res && res.success) {
+                        const user = res.data?.user || {};
+                        const role = String(user.role || '').toLowerCase();
+                        const email = String(user.email || '').toLowerCase().trim();
+                        const isAuthorizedStaffEmail = [
+                            'admin.realestate@gmail.com',
+                            'miriam@gmail.com',
+                            'urbanscope.cvsu@gmail.com'
+                        ].includes(email);
+                        if (role === 'admin' || role === 'superadmin' || isAuthorizedStaffEmail) {
+                            if (typeof apiCreateHostedAdminSession !== 'function') {
+                                setLoadingState(false);
+                                renderGoogleBanner(btn, 'Admin session service is unavailable. Please try again later.', 'error');
+                                return;
+                            }
+                            const hostedSession = await apiCreateHostedAdminSession({ access_token: tokenResponse.access_token });
+                            if (!hostedSession.success) {
+                                setLoadingState(false);
+                                renderGoogleBanner(btn, hostedSession.error || 'Unable to secure this admin session.', 'error');
+                                return;
+                            }
+                        }
                         setLoadingState(true, "Signed in! Redirecting...");
                         redirectAuthenticatedGoogleUser(res);
                     } else {

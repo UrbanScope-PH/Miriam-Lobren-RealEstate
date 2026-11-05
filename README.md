@@ -14,6 +14,7 @@ Built for **Miriam Lobren Real Estate Agent** (Las Piñas & Cavite, Philippines)
 - **Consultations & Inquiries** — interactive consultation intent flow allowing clients to book general consultations (free site tripping, loan pre-approval, property advice) or inquire about specific accredited listings, with client inquiry history tracking, cross-device notification synchronization, and a one-minute per-client cooldown after successful submissions.
 - **Admin Dashboard** — KPI cards, inquiry charts, property CRUD, client inquiry tracking, and user overview.
 - **Superadmin Console** — focused account and role governance, privileged-account overview, and database health checks. Property and inquiry workflows stay in the Agent Admin portal.
+- **Administrative Access Control** — Vercel checks a signed, HttpOnly session before serving Admin and Superadmin pages. Hosted admin sign-in requires Google verification for an approved staff account; normal client sign-ins and editable browser storage cannot grant administrative access.
 - **Legal & Privacy Hub** — comprehensive Terms of Service (aligned with RESA RA 9646) and Privacy Policy (compliant with Philippine Data Privacy Act RA 10173).
 - **Responsive Design** — optimized for desktop, tablet, and mobile, with a shared mobile navigation shell across public, client, Admin, and Superadmin pages. Public and client pages use the same primary links; Admin and Superadmin retain role-specific menus with consistent mobile drawers and touch targets.
 
@@ -54,12 +55,15 @@ python3 run.py
 | `PORT` | `8000` | Server port |
 | `URBANSCOPE_SECRET_KEY` | dev fallback | JWT signing secret. **Set this in production.** |
 | `GOOGLE_CLIENT_ID` | *(empty)* | Google OAuth 2.0 Web Client ID (`*.apps.googleusercontent.com`) for Google Sign-In |
+| `VERCEL_ADMIN_SESSION_SECRET` | *(required on Vercel)* | Private random signing secret for 12-hour Admin/Superadmin page sessions. Configure in Vercel Project Settings; at least 32 characters. Hosted admin sign-in uses Google for the existing staff accounts. |
+| `VERCEL_ADMIN_EMAILS` | *(optional)* | Comma-separated additional Google email addresses permitted to use the Vercel Admin portal. |
 
 To reset the data, delete `backend/urbanscope.db` and restart the server.
 
 > [!NOTE]
 > Seeded admin accounts are for local development only. Change them and set
-> `URBANSCOPE_SECRET_KEY` before deploying publicly.
+> `URBANSCOPE_SECRET_KEY` before deploying publicly. For Vercel, also set
+> `VERCEL_ADMIN_SESSION_SECRET` in the project's Environment Variables and redeploy.
 
 ---
 
@@ -98,6 +102,9 @@ To reset the data, delete `backend/urbanscope.db` and restart the server.
 
 ```text
 ├── run.py              # Starts the server (site + API)
+├── proxy.js            # Vercel Admin/Superadmin route guard
+├── api/auth/           # Vercel signed admin-session function
+├── lib/                # Shared server-side session helpers
 ├── backend/            # FastAPI app, RBAC middleware, modular routers/, database, models, auth
 │   └── routers/        # Feature API & web routers (system, auth, properties, inquiries, superadmin, web)
 ├── frontend/

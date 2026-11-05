@@ -7,6 +7,23 @@
     { "source": "/auth/:path*", "destination": "/pages/auth/:path*", "permanent": true },
     { "source": "/admin/:path*", "destination": "/pages/admin/:path*", "permanent": true }
   ],
+  "proxy": {
+    "entrypoint": "proxy.js",
+    "matcher": [
+      "/pages/admin",
+      "/pages/admin/:path*",
+      "/pages/superadmin",
+      "/pages/superadmin/:path*",
+      "/frontend/pages/admin",
+      "/frontend/pages/admin/:path*",
+      "/frontend/pages/superadmin",
+      "/frontend/pages/superadmin/:path*",
+      "/admin",
+      "/admin/:path*",
+      "/superadmin",
+      "/superadmin/:path*"
+    ]
+  },
   "rewrites": [
     { "source": "/", "destination": "/frontend/index.html" },
     { "source": "/index.html", "destination": "/frontend/index.html" },
