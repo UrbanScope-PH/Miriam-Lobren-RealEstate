@@ -1,11 +1,11 @@
 import {
     getCloudUser,
-    getValidFromSender,
     isSameOrigin,
     isValidEmail,
     jsonResponse,
     normalizeEmail,
-    parseJsonBody
+    parseJsonBody,
+    sendEmailWithFallback
 } from '../../../lib/email-auth.js';
 
 export default async function handler(req, res) {
@@ -30,78 +30,60 @@ export default async function handler(req, res) {
     }
 
     const code = String(Math.floor(100000 + Math.random() * 900000));
-    const apiKey = String(process.env.RESEND_API_KEY || '').trim();
 
-    if (!apiKey) {
-        return jsonResponse({
-            success: false,
-            code: 'EMAIL_SERVICE_NOT_CONFIGURED',
-            devCode: code,
-            error: 'Email delivery is not configured on the server. Please set RESEND_API_KEY in your Vercel Project Settings (or .env) to send verification codes to your email.'
-        }, 200, res);
-    }
+    const htmlContent = `
+        <div style="font-family:'Plus Jakarta Sans',Arial,sans-serif;max-width:520px;margin:20px auto;padding:32px;background:#ffffff;border:1px solid #e1e7e2;border-radius:12px;color:#20352a">
+            <h2 style="margin:0 0 16px;color:#1e5c33;font-size:22px;">UrbanScope Real Estate</h2>
+            <p style="font-size:15px;line-height:1.6;color:#172b1d;">Hello,</p>
+            <p style="font-size:15px;line-height:1.6;color:#172b1d;">Welcome to UrbanScope! Use the following 6-digit verification code to complete your account registration:</p>
+            <div style="margin:24px 0;padding:16px;background:#f6faf6;border:1px dashed #2d5c39;border-radius:8px;text-align:center;">
+                <span style="font-size:36px;font-weight:700;letter-spacing:8px;color:#1e5c33;font-family:monospace;">${code}</span>
+            </div>
+            <p style="font-size:13px;color:#7d8e81;line-height:1.5;">This code expires in 10 minutes. If you did not create an account on UrbanScope, you can safely ignore this email.</p>
+            <div style="margin-top:28px;padding-top:16px;border-top:1px solid #eef2ef;font-size:12px;color:#9ba79e;text-align:center;">
+                &copy; 2026 UrbanScope Realty &bull; All Rights Reserved.
+            </div>
+        </div>
+    `;
 
     try {
-        const sender = getValidFromSender(process.env.RESEND_FROM_EMAIL);
-        const emailRes = await fetch('https://api.resend.com/emails', {
-            method: 'POST',
-            headers: {
-                Authorization: `Bearer ${apiKey}`,
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                from: sender,
-                to: [email],
-                subject: 'Verify your UrbanScope email',
-                text: `Your UrbanScope email verification code is ${code}. It expires in 10 minutes.`,
-                html: `
-                    <div style="font-family:'Plus Jakarta Sans',Arial,sans-serif;max-width:520px;margin:20px auto;padding:32px;background:#ffffff;border:1px solid #e1e7e2;border-radius:12px;color:#20352a">
-                        <h2 style="margin:0 0 16px;color:#1e5c33;font-size:22px;">UrbanScope Real Estate</h2>
-                        <p style="font-size:15px;line-height:1.6;color:#172b1d;">Hello,</p>
-                        <p style="font-size:15px;line-height:1.6;color:#172b1d;">Welcome to UrbanScope! Use the following 6-digit verification code to complete your account registration:</p>
-                        <div style="margin:24px 0;padding:16px;background:#f6faf6;border:1px dashed #2d5c39;border-radius:8px;text-align:center;">
-                            <span style="font-size:36px;font-weight:700;letter-spacing:8px;color:#1e5c33;font-family:monospace;">${code}</span>
-                        </div>
-                        <p style="font-size:13px;color:#7d8e81;line-height:1.5;">This code expires in 10 minutes. If you did not create an account on UrbanScope, you can safely ignore this email.</p>
-                        <div style="margin-top:28px;padding-top:16px;border-top:1px solid #eef2ef;font-size:12px;color:#9ba79e;text-align:center;">
-                            &copy; 2026 UrbanScope Realty &bull; All Rights Reserved.
-                        </div>
-                    </div>
-                `
-            })
+        const dispatch = await sendEmailWithFallback({
+            to: email,
+            subject: 'Verify your UrbanScope email',
+            text: `Your UrbanScope email verification code is ${code}. It expires in 10 minutes.`,
+            html: htmlContent
         });
 
-        const resData = await emailRes.json().catch(() => ({}));
-
-        if (!emailRes.ok) {
-            console.error('Resend delivery error:', resData);
-            const msg = String(resData.message || resData.error || '');
-            if (msg.includes('only send testing emails to your own email address')) {
-                // Resend free tier test-domain restriction: provide test code so development/evaluation never blocks
-                return jsonResponse({
-                    success: true,
-                    code: 'OTP_SENT',
-                    codeHash: code,
-                    testMode: true,
-                    testMessage: `Resend Free Tier: Delivery to external domains is restricted without a verified custom domain. Test code for this email: ${code}`,
-                    message: `A six-digit verification code has been generated.`
-                }, 200, res);
-            }
+        if (dispatch.success) {
             return jsonResponse({
-                success: false,
-                devCode: code,
-                error: msg || 'Email service could not send the verification code. Please check your email address or try again.'
+                success: true,
+                code: 'OTP_SENT',
+                codeHash: code,
+                message: `A six-digit verification code has been sent to ${email}.`
             }, 200, res);
         }
 
-        return jsonResponse({
-            success: true,
-            code: 'OTP_SENT',
-            codeHash: code,
-            message: `A six-digit verification code has been sent to ${email}.`
-        }, 200, res);
+        if (dispatch.testDomainRestricted) {
+            return jsonResponse({
+                success: true,
+                code: 'OTP_SENT',
+                codeHash: code,
+                testMode: true,
+                testMessage: `Resend Free Tier: Delivery to external domains is restricted without a custom domain. Test code for this email: ${code}`,
+                message: `A six-digit verification code has been generated.`
+            }, 200, res);
+        }
+
+        if (dispatch.notConfigured) {
+            return jsonResponse({
+                success: false,
+                code: 'EMAIL_SERVICE_NOT_CONFIGURED',
+                devCode: code,
+                error: 'Email delivery is not configured on the server. Please set SMTP_USER & SMTP_PASS (Gmail) or RESEND_API_KEY in your settings.'
+            }, 200, res);
+        }
     } catch (err) {
-        console.error('Registration email delivery notice:', err?.message || err);
+        console.error('Registration email dispatch error:', err);
         return jsonResponse({
             success: false,
             devCode: code,

@@ -715,6 +715,11 @@ path when rendering from a page.
     - Added automatic sender formatting (`getValidFromSender` in JS and `get_valid_from_sender` in Python).
     - If `RESEND_FROM_EMAIL` is set to just a name (e.g. `UrbanScope`), contains wrapping quotes, or only an email address, it automatically formats the sender into the valid RFC 5322 format `Name <email@example.com>` required by Resend (defaulting safely to `UrbanScope <onboarding@resend.dev>`), eliminating the `Invalid 'from' field` 400 Bad Request error.
 
+63. **Gmail SMTP Support for Domain-Free Worldwide Delivery (`lib/email-auth.js`, `api/auth/`, `backend/auth_otp.py`):**
+    - Added native Gmail SMTP support (`nodemailer` for Node.js Vercel functions, `smtplib` for local Python server).
+    - If environment variables `SMTP_USER` and `SMTP_PASS` are configured, emails are dispatched directly via Google's mail server (`smtp.gmail.com:465`). This allows delivering verification codes to ANY email address in the world (`@gmail.com`, `@cvsu.edu.ph`, `@yahoo.com`, etc.) up to 500 emails/day completely free without requiring a custom domain or DNS records.
+    - Preserves fallback to Resend API (`RESEND_API_KEY`) and automatic test mode if neither is configured.
+
 
 ---
 
