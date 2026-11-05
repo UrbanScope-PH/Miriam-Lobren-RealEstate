@@ -3223,9 +3223,10 @@
 
             // 3. Generate a secure 6-digit challenge code
             const randomCode = String(Math.floor(100000 + Math.random() * 900000));
+            const activeCode = serverRes?.codeHash || serverRes?.previewCode || randomCode;
             const challenge = {
                 email: cleanEmail,
-                code: serverRes?.codeHash || serverRes?.previewCode || randomCode,
+                code: activeCode,
                 expires_at: Date.now() + 10 * 60 * 1000,
                 userId: user.id
             };

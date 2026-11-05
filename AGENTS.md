@@ -702,6 +702,7 @@ path when rendering from a page.
       3) **Step 3 (Password Reset)**: Unlocks the New Password and Confirm Password inputs only after successful 6-digit code verification. Encrypts the password with PBKDF2 and updates the database, redirecting to login.
     - Fixed form visibility collision (`.auth-form[hidden] { display: none !important; }`) preventing Step 3 from rendering prematurely, and aligned password toggle styling with `.input-box.has-toggle` and `.toggle-pw`.
     - Removed all UI code preview text leaks, cleanly notifying users to check their email inbox (and spam folder) for the dispatched 6-digit code. Actual email delivery is powered by `RESEND_API_KEY` (configured in Vercel project settings).
+    - Fixed reference scope for `activeCode` in `apiSendPasswordResetEmail` in `supabase.js` and `api.js` to ensure challenge persistence and return values execute without ReferenceError.
 
 61. **Client Registration Mandatory Email Code Verification (`frontend/pages/auth/register.html`, `register.js`, `api/auth/register/start.js`, `frontend/shared/js/`):**
     - Enforced mandatory 6-digit email code verification before client accounts can be created on `register.html`, eliminating silent bypasses and requiring proof of email ownership.
