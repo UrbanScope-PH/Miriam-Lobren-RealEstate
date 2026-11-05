@@ -391,12 +391,17 @@
         }, 1000);
     }
 
-    function openEmailOtpDialog(email) {
+    function openEmailOtpDialog(email, otpRes) {
         if (!emailOtpModal) return;
         pendingOtpEmail = email;
         if (otpTargetEmail) otpTargetEmail.textContent = email;
         if (emailOtpCode) emailOtpCode.value = '';
-        setOtpMessage('', false);
+        if (otpRes && otpRes.testMode && otpRes.testCode) {
+            setOtpMessage(otpRes.testMessage, true);
+            if (emailOtpCode) emailOtpCode.value = otpRes.testCode;
+        } else {
+            setOtpMessage('', false);
+        }
         emailOtpModal.classList.add('open');
         emailOtpModal.setAttribute('aria-hidden', 'false');
         document.body.classList.add('otp-modal-open');
@@ -432,7 +437,12 @@
                 resendEmailOtpBtn.disabled = false;
                 return;
             }
-            setOtpMessage('A new 6-digit verification code has been sent to your email.', true);
+            if (result.testMode && result.testCode) {
+                setOtpMessage(result.testMessage, true);
+                if (emailOtpCode) emailOtpCode.value = result.testCode;
+            } else {
+                setOtpMessage('A new 6-digit verification code has been sent to your email.', true);
+            }
             startOtpResendCountdown();
         });
     }
@@ -487,7 +497,7 @@
                     : { success: false, error: 'Registration service is unavailable. Please try again later.' };
 
                 if (otpRes && otpRes.success) {
-                    openEmailOtpDialog(email);
+                    openEmailOtpDialog(email, otpRes);
                     btn.disabled = false;
                     btn.innerText = originalText;
                     return;

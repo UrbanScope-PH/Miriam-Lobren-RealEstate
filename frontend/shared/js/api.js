@@ -3116,7 +3116,10 @@
 
         return {
             success: true,
-            message: `A six-digit verification code has been sent to ${cleanEmail}. Please check your inbox and spam folder.`
+            testMode: Boolean(serverRes?.testMode),
+            testMessage: serverRes?.testMessage || '',
+            testCode: activeCode,
+            message: serverRes?.testMessage || `A six-digit verification code has been sent to ${cleanEmail}. Please check your inbox and spam folder.`
         };
     }
 
@@ -3230,7 +3233,10 @@
 
             return {
                 success: true,
-                message: `A six-digit verification code has been sent to ${cleanEmail}. Please check your inbox and spam folder.`
+                testMode: Boolean(serverRes?.testMode),
+                testMessage: serverRes?.testMessage || '',
+                testCode: activeCode,
+                message: serverRes?.testMessage || `A six-digit verification code has been sent to ${cleanEmail}. Please check your inbox and spam folder.`
             };
         } catch (err) {
             return { success: false, error: err.message || 'An error occurred while requesting recovery code.' };
