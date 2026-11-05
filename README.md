@@ -1,5 +1,10 @@
 # UrbanScope — Miriam Lobren Real Estate Agent
 
+[![Deployment](https://img.shields.io/badge/Vercel-Production%20Live-brightgreen?logo=vercel)](https://miriam-lobren-real-estate.vercel.app/)
+[![Python](https://img.shields.io/badge/Python-3.9+-3776AB?logo=python&logoColor=white)](https://www.python.org/)
+[![FastAPI](https://img.shields.io/badge/FastAPI-Framework-009688?logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
+[![License](https://img.shields.io/badge/License-Proprietary-blue.svg)](https://miriam-lobren-real-estate.vercel.app/)
+
 > **Better Homes, Brighter Futures**
 > A responsive real estate website for property discovery, client inquiries, and admin management.
 
