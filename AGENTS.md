@@ -689,6 +689,11 @@ path when rendering from a page.
     - **Seamless Direct Account Creation Fallback**: Restored and improved `apiSignUp` in `frontend/shared/js/supabase.js` and `frontend/shared/js/api.js`. When third-party email delivery (Resend) is unconfigured, `frontend/pages/auth/register.js` automatically falls back to direct account creation in Supabase Cloud (with PBKDF2 hashing) and local SQLite, seamlessly logging the user in and redirecting without blocking errors. If an account was previously created via Google OAuth without a password, `apiSignUp` attaches the password hash so the client can log in with both methods.
     - **Phone-Verified Password Recovery**: In `frontend/pages/auth/forgot-password.html` and `forgot-password.js`, added account phone verification recovery (`apiVerifyAccountForPasswordReset` and `apiResetPasswordByPhone`). If email OTP is unconfigured, users enter their registered email and registered mobile number (normalized across all Philippine formats like `+639...` and `09...`). Once verified against Supabase, the user immediately sets their new password with PBKDF2 hashing.
 
+59. **Forgot Password Showcase Carousel Alignment (`frontend/pages/auth/forgot-password.html`, `forgot-password.css`, `auth.js`):**
+    - Aligned the left showcase panel on `forgot-password.html` with `login.html` and `register.html`.
+    - Replaced the static single image with the interactive sliding track (`#slidesTrack`), 3 cycling property slides, tap & touch swipe detection, 5-second automatic sliding rotation, and animated pagination pill indicators (`#dotsContainer` with `.dot` triggers).
+    - Added `auth.js` with `defer` to `forgot-password.html` and removed obsolete `.forgot-showcase` pointer overrides from `forgot-password.css`.
+
 ---
 
 ## Safety Rules
