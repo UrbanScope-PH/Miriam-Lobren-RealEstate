@@ -6,6 +6,7 @@ Provides schema initialization, seed data, and connection management.
 import os
 import sqlite3
 from pathlib import Path
+from datetime import datetime, timezone
 from typing import Generator
 
 import unicodedata
@@ -66,6 +67,7 @@ def init_db():
             title TEXT DEFAULT 'Real Estate Agent',
             brokerage TEXT DEFAULT 'UrbanScope',
             bio TEXT DEFAULT '',
+            email_verified_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );
     """)
@@ -136,6 +138,9 @@ def init_db():
 
     cursor.execute("PRAGMA table_info(users)")
     existing_user_cols = {col[1] for col in cursor.fetchall()}
+    if "email_verified_at" not in existing_user_cols:
+        cursor.execute("ALTER TABLE users ADD COLUMN email_verified_at TIMESTAMP")
+        cursor.execute("UPDATE users SET email_verified_at = COALESCE(created_at, CURRENT_TIMESTAMP)")
     if "avatar_url" not in existing_user_cols:
         cursor.execute("ALTER TABLE users ADD COLUMN avatar_url TEXT DEFAULT 'assets/images/agent.jpg'")
     if "google_id" not in existing_user_cols:
@@ -151,6 +156,35 @@ def init_db():
     if "bio" not in existing_user_cols:
         cursor.execute("ALTER TABLE users ADD COLUMN bio TEXT DEFAULT ''")
     cursor.execute("CREATE UNIQUE INDEX IF NOT EXISTS idx_users_google_id ON users(google_id) WHERE google_id IS NOT NULL")
+    cursor.execute("""
+        CREATE TRIGGER IF NOT EXISTS trg_users_email_verified_default
+        AFTER INSERT ON users
+        WHEN NEW.email_verified_at IS NULL
+        BEGIN
+            UPDATE users SET email_verified_at = CURRENT_TIMESTAMP WHERE id = NEW.id;
+        END;
+    """)
+
+    # Email OTP state is separate from account records; only HMAC digests are stored.
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS auth_email_challenges (
+            email TEXT NOT NULL,
+            purpose TEXT NOT NULL CHECK (purpose IN ('register', 'password_reset')),
+            code_hash TEXT NOT NULL,
+            expires_at INTEGER NOT NULL,
+            attempts INTEGER NOT NULL DEFAULT 0,
+            created_at INTEGER NOT NULL,
+            PRIMARY KEY (email, purpose)
+        )
+    """)
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS auth_email_challenge_requests (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            ip_hash TEXT NOT NULL,
+            created_at INTEGER NOT NULL
+        )
+    """)
+    cursor.execute("CREATE INDEX IF NOT EXISTS idx_auth_challenge_requests_ip_time ON auth_email_challenge_requests(ip_hash, created_at)")
 
     # 3. Inquiries Table
     cursor.execute("""
@@ -222,8 +256,8 @@ def init_db():
                 cursor.execute("UPDATE users SET role = ? WHERE id = ?", (role, existing[0]))
         else:
             cursor.execute(
-                "INSERT INTO users (email, password_hash, full_name, phone, role) VALUES (?, ?, ?, ?, ?)",
-                (email, pwd_hash, full_name, phone, role)
+                "INSERT INTO users (email, password_hash, full_name, phone, role, email_verified_at) VALUES (?, ?, ?, ?, ?, ?)",
+                (email, pwd_hash, full_name, phone, role, datetime.now(timezone.utc).isoformat())
             )
 
     # Demote any unauthorized user emails that may have been previously given admin role

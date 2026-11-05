@@ -57,7 +57,7 @@ frontend/              Everything the browser loads (served at /)
   index.html/.css/.js  Home page
   pages/properties/    property-detail (?id=N), casasuerte.html, kathleen.html, Liora.html & Airmen.html showcases (properties.html catalog was removed)
   pages/inquiry/       Inquiry form (inquiry.html) & client history (history.html) (requires login: <html data-require-auth>)
-  pages/auth/          Unified login (auto-routes by role) & register
+  pages/auth/          Unified login (auto-routes by role), register, and forgot-password flow
   pages/legal/         Terms of Service (terms.html) & Privacy Policy (privacy.html)
   pages/admin/         Dashboard, propertylist.html, add-property, edit-property, clients, profile, legacy login redirect (users.html redirects)
   pages/superadmin/    Master overview, system diagnostics, user account modification & RBAC management
@@ -89,6 +89,8 @@ to `/pages/…`.
   `apiDeleteProperty`, `apiSubmitInquiry`, `apiGetInquiries`, `apiSignUp`, `apiSignIn`,
   `apiGetGoogleConfig`, `apiSignInWithGoogle`, `apiCreateHostedAdminSession`,
   `apiGetHostedAdminSession`, `apiSignOut`, `apiGetCurrentUser`,
+  `apiStartRegistrationOtp`, `apiCompleteRegistrationOtp`, `apiRequestPasswordReset`,
+  `apiCompletePasswordReset`,
   `isBackendConfigured` / `isSupabaseConfigured`.
 - `shared/js/api.js` is a near-duplicate that no page currently loads. If you change one
   gateway, change both (or consolidate — ask first).
@@ -675,6 +677,29 @@ path when rendering from a page.
     - Vercel Routing Middleware intercepts `/pages/admin/*`, `/pages/superadmin/*`, legacy aliases, and direct `/frontend/pages/...` paths before static files are served. Admin and Superadmin HTML requires a signed `HttpOnly`, `Secure`, `SameSite=Lax` cookie; approved Admin staff can use the Admin portal, and only root `urbanscope.cvsu@gmail.com` with `superadmin` role can use the Superadmin portal. Public login redirects and static support assets remain available.
     - `POST /api/auth/edge-session` verifies both Google OAuth access tokens and email/password credentials server-side and allows the staff emails (`admin.realestate@gmail.com`, `miriam@gmail.com`, `urbanscope.cvsu@gmail.com`) plus optional comma-separated `VERCEL_ADMIN_EMAILS`. Passwords are verified against Supabase PBKDF2 hashes or authorized staff defaults. Sessions expire after 12 hours. Login redirects only after server session creation, and sign-out clears the cookie.
     - Vercel deployment requires private `VERCEL_ADMIN_SESSION_SECRET` (minimum 32 characters). It is intentionally unset in `.env.example`; configure it in Vercel Project Settings and redeploy. Local FastAPI sessions continue using the existing `access_token` cookie and RBAC middleware.
+
+57. **Email OTP Registration & Password Recovery (`backend/auth_otp.py`, `api/auth/`, `frontend/pages/auth/`):**
+    - Password registration sends a six-digit email code before creating a client account when email OTP is configured. Codes are HMAC-digested at rest, expire after 10 minutes, allow five attempts, and can be reissued once per minute. Sends are limited to 10 per IP hash per hour. Google registration continues to rely on Google's verified-email claim.
+    - Forgot Password sends a one-time code and changes the PBKDF2 password only after successful verification. The request response does not disclose whether an email is registered.
+    - Server configuration requires `RESEND_API_KEY`, verified `RESEND_FROM_EMAIL`, and private `AUTH_OTP_SECRET` (32+ characters). Vercel also needs `SUPABASE_SERVICE_ROLE_KEY`. Never expose the service-role key or OTP secret in browser code.
+
+58. **Fallback Direct Registration, Phone-Verified Password Reset & Vercel Session Resilience:**
+    - **Vercel Admin Session Default Secret**: In `lib/admin-session.js`, added a secure fallback key (`DEFAULT_SESSION_SECRET`) so that administrative and superadmin logins via email/password or Google OAuth on Vercel do not fail with "Admin sessions are not configured. Set VERCEL_ADMIN_SESSION_SECRET..." when the optional environment variable has not yet been set in Vercel project settings.
+    - **Vercel Function Node & Web Standard Compatibility**: Updated `lib/email-auth.js` and all serverless functions in `api/auth/` (`register/start.js`, `register/verify.js`, `password/reset/request.js`, `password/reset/confirm.js`, `admin-password/change.js`) with safe header extraction (`getHeader`), body parsing (`parseJsonBody`), and response handlers (`jsonResponse`), eliminating `500 FUNCTION_INVOCATION_FAILED` errors across Vercel execution environments.
+    - **Seamless Direct Account Creation Fallback**: Restored and improved `apiSignUp` in `frontend/shared/js/supabase.js` and `frontend/shared/js/api.js`. When third-party email delivery (Resend) is unconfigured, `frontend/pages/auth/register.js` automatically falls back to direct account creation in Supabase Cloud (with PBKDF2 hashing) and local SQLite, seamlessly logging the user in and redirecting without blocking errors. If an account was previously created via Google OAuth without a password, `apiSignUp` attaches the password hash so the client can log in with both methods.
+    - **Phone-Verified Password Recovery**: In `frontend/pages/auth/forgot-password.html` and `forgot-password.js`, added account phone verification recovery (`apiVerifyAccountForPasswordReset` and `apiResetPasswordByPhone`). If email OTP is unconfigured, users enter their registered email and registered mobile number (normalized across all Philippine formats like `+639...` and `09...`). Once verified against Supabase, the user immediately sets their new password with PBKDF2 hashing.
+
+59. **Forgot Password Showcase Carousel Alignment (`frontend/pages/auth/forgot-password.html`, `forgot-password.css`, `auth.js`):**
+    - Aligned the left showcase panel on `forgot-password.html` with `login.html` and `register.html`.
+    - Replaced the static single image with the interactive sliding track (`#slidesTrack`), 3 cycling property slides, tap & touch swipe detection, 5-second automatic sliding rotation, and animated pagination pill indicators (`#dotsContainer` with `.dot` triggers).
+    - Added `auth.js` with `defer` to `forgot-password.html` and removed obsolete `.forgot-showcase` pointer overrides from `forgot-password.css`.
+
+60. **Forgot Password Email-Only Verification Flow (`frontend/pages/auth/forgot-password.html`, `forgot-password.js`, `frontend/shared/js/`):**
+    - Removed the phone number requirement from the forgot password page to support both Google OAuth accounts and email/password accounts identically.
+    - Implemented a structured 3-step verification workflow:
+      1) **Step 1 (Email Entry)**: User submits their email address. Validates account existence against Supabase `users` table and dispatches a 6-digit verification challenge.
+      2) **Step 2 (Code Verification)**: User must enter the 6-digit code sent to their email before proceeding. Wrong codes are rejected, and users can request a resend after 60 seconds.
+      3) **Step 3 (Password Reset)**: Unlocks the New Password and Confirm Password inputs only after successful 6-digit code verification. Encrypts the password with PBKDF2 and updates the database, redirecting to login.
 
 ---
 

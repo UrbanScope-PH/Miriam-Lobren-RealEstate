@@ -10,7 +10,7 @@ Built for **Miriam Lobren Real Estate Agent** (Las Piñas & Cavite, Philippines)
 ## ✨ Features
 
 - **Property Showcase** — featured accredited listings (Casasuerte, Kathleen, Liora Homes, Airmen's Village Triplex) with category tabs, property photo galleries, in-page financing document previews, accurate zoomed-in location maps, and Total Contract Price (TCP) computations (Pag-IBIG & Bank Financing). Sold listings remain visible with a Sold Out label but no longer accept new inquiries.
-- **Client Accounts & Google Sign-In** — registration with PH phone validation and password strength meter, plus one-click **Google Authentication** (OAuth 2.0 via Google Identity Services); unified sign-in that routes users by role.
+- **Client Accounts & Google Sign-In** — email-code verification for password registration, one-time-code password recovery, PH phone validation, and one-click **Google Authentication** (OAuth 2.0 via Google Identity Services); unified sign-in that routes users by role.
 - **Consultations & Inquiries** — interactive consultation intent flow allowing clients to book general consultations (free site tripping, loan pre-approval, property advice) or inquire about specific accredited listings, with client inquiry history tracking, cross-device notification synchronization, and a one-minute per-client cooldown after successful submissions.
 - **Admin Dashboard** — KPI cards, inquiry charts, property CRUD, client inquiry tracking, and user overview.
 - **Superadmin Console** — focused account and role governance, privileged-account overview, and database health checks. Property and inquiry workflows stay in the Agent Admin portal.
@@ -57,6 +57,12 @@ python3 run.py
 | `GOOGLE_CLIENT_ID` | *(empty)* | Google OAuth 2.0 Web Client ID (`*.apps.googleusercontent.com`) for Google Sign-In |
 | `VERCEL_ADMIN_SESSION_SECRET` | *(required on Vercel)* | Private random signing secret for 12-hour Admin/Superadmin page sessions. Configure in Vercel Project Settings; at least 32 characters. Hosted admin sign-in uses Google for the existing staff accounts. |
 | `VERCEL_ADMIN_EMAILS` | *(optional)* | Comma-separated additional Google email addresses permitted to use the Vercel Admin portal. |
+| `RESEND_API_KEY` | *(required for email OTP)* | Private Resend key used by server endpoints to send registration and password-recovery codes. |
+| `RESEND_FROM_EMAIL` | *(required for email OTP)* | Verified sender address configured in Resend. |
+| `AUTH_OTP_SECRET` | *(required for email OTP)* | Private random secret of at least 32 characters used to hash OTPs. |
+| `SUPABASE_SERVICE_ROLE_KEY` | *(required on Vercel for email OTP)* | Private server-side key used to store challenges and manage verified accounts. Never add it to frontend code. |
+
+For hosted email verification and recovery, apply `supabase/migrations/20261105120000_email_otp_auth.sql` and set the four OTP variables in Vercel Project Settings before redeploying. Local FastAPI also needs the Resend credentials and OTP secret; add the service-role key when local account changes should sync to the hosted database.
 
 To reset the data, delete `backend/urbanscope.db` and restart the server.
 
@@ -71,7 +77,7 @@ To reset the data, delete `backend/urbanscope.db` and restart the server.
 
 ### 1. Client / Homebuyer Guide
 - **Browsing Properties:** Visit the home page to view showcased listings, filter by property type (Houses, Townhouses, Lots, Commercial), or use search keywords. Click any property card to view high-resolution photos, pricing, lot/floor area, amenities, and location details.
-- **Client Registration & Login:** Click **Sign In** in the top navigation bar. New users can create an account with a name, email, Philippine mobile number (`+63` / `09...`), and password, or register via **Sign up with Google**. Both manual account creation and Google OAuth registration require accepting the **Terms of Service and Privacy Policy** via an interactive scroll-to-accept agreement popup before proceeding. The system automatically signs you in and secures your session, while preserving form input drafts in real time.
+- **Client Registration & Login:** Click **Sign In** in the top navigation bar. Password registration verifies email ownership with a one-time code before creating an account; **Forgot password** sends a separate recovery code. Users can also register via **Sign up with Google**. Manual account creation and Google OAuth require accepting the **Terms of Service and Privacy Policy** before proceeding.
 - **Consultations & Dual-Mode Inquiries:** On the homepage, clicking **Book a Free Consultation** opens an interactive intent modal allowing clients to choose between *General Consultation / Question* (free site viewing, loan pre-approval, general advice) or *Inquire About a Specific Property* with dynamic listing selection, photo previews, and automated pricing details.
 - **Inquiry History & Management:** Access **Inquiry History** via the client profile menu or topbar to track submitted requests, filter by status (*Under Review*, *Approved*, *Contacted*, *Cancelled*), view agent approval notices, modify inquiry messages or contact phones, cancel active requests, or permanently delete records.
 - **Legal Compliance:** Review comprehensive, RESA-compliant Terms of Service and NPC-compliant Privacy Policy pages, fully integrated with seamless back navigation.

@@ -1859,6 +1859,23 @@
             return { success: false, error: 'Password must be at least 6 characters long.' };
         }
 
+        if (!isLocalBackendReachableHost()) {
+            try {
+                const response = await fetch('/api/superadmin/users', {
+                    method: 'POST',
+                    credentials: 'same-origin',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'create', payload: { full_name: cleanName, email: cleanEmail, phone: cleanPhone, password: plainPassword, role: assignedRole } })
+                });
+                const result = await response.json().catch(() => ({}));
+                if (!response.ok || !result.success) return { success: false, error: result.error || 'Failed to create account.' };
+                clearUserDeletedLocal(result.user && result.user.id, cleanEmail);
+                return { ...result, user: formatUserRecord(result.user) };
+            } catch (error) {
+                return { success: false, error: error.message || 'Unable to reach account management.' };
+            }
+        }
+
         let createdUser = null;
         let localHandled = false;
 
@@ -1991,6 +2008,23 @@
             return { success: false, error: "Invalid role. Must be 'user', 'admin', or 'superadmin'." };
         }
 
+        if (!isLocalBackendReachableHost()) {
+            try {
+                const response = await fetch('/api/superadmin/users', {
+                    method: 'POST',
+                    credentials: 'same-origin',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'update', user_id: userId, payload })
+                });
+                const result = await response.json().catch(() => ({}));
+                if (!response.ok || !result.success) return { success: false, error: result.error || 'Failed to update user account.' };
+                clearUserDeletedLocal(result.user && result.user.id, result.user && result.user.email);
+                return { ...result, user: formatUserRecord(result.user) };
+            } catch (error) {
+                return { success: false, error: error.message || 'Unable to reach account management.' };
+            }
+        }
+
         let updatedUser = null;
         let localHandled = false;
 
@@ -2100,6 +2134,23 @@
         }
         if (cleanEmail === 'urbanscope.cvsu@gmail.com' && targetRole !== 'superadmin') {
             return { success: false, error: 'The root Superadmin account (urbanscope.cvsu@gmail.com) cannot be demoted.' };
+        }
+
+        if (!isLocalBackendReachableHost()) {
+            try {
+                const response = await fetch('/api/superadmin/users', {
+                    method: 'POST',
+                    credentials: 'same-origin',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'update', user_id: userId, payload: { role: targetRole } })
+                });
+                const result = await response.json().catch(() => ({}));
+                if (!response.ok || !result.success) return { success: false, error: result.error || 'Failed to update role.' };
+                clearUserDeletedLocal(result.user && result.user.id, result.user && result.user.email);
+                return { ...result, user: formatUserRecord(result.user) };
+            } catch (error) {
+                return { success: false, error: error.message || 'Unable to reach account management.' };
+            }
         }
 
         let updatedUser = null;
@@ -2812,6 +2863,18 @@
                 targetUserId = storedAdmin.id;
             }
 
+            if (!isLocalBackendReachableHost()) {
+                const response = await fetch('/api/auth/admin-password/change', {
+                    method: 'POST',
+                    credentials: 'same-origin',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ current_password: currentPassword, new_password: newPassword })
+                });
+                const result = await response.json().catch(() => ({}));
+                if (!response.ok || !result.success) return { success: false, error: result.error || 'Unable to update the password.' };
+                return { success: true, message: result.message || 'Password updated successfully.' };
+            }
+
             let backendSucceeded = false;
 
             // 1. Direct call to FastAPI backend if on local dev network and HTTP (avoids Mixed Content on HTTPS)
@@ -2986,11 +3049,297 @@
         }
     }
 
+    async function postAuthFlow(path, payload) {
+        try {
+            const base = isLocalBackendReachableHost() ? `${getLocalApiBase()}/auth` : '/api/auth';
+            const response = await fetch(`${base}/${path}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'same-origin',
+                body: JSON.stringify(payload)
+            });
+            const result = await response.json().catch(() => ({}));
+            if (!response.ok || result.success === false) {
+                return { success: false, code: result.code || '', error: result.detail || result.error || 'Unable to complete the request. Please try again.' };
+            }
+            return result;
+        } catch (error) {
+            return { success: false, error: error.message || 'Unable to reach the authentication service.' };
+        }
+    }
+
+    async function apiStartRegistrationOtp(email) {
+        return postAuthFlow('register/start', { email: String(email || '').trim().toLowerCase() });
+    }
+
+    async function apiCompleteRegistrationOtp(email, code, password, fullName, phone) {
+        const result = await postAuthFlow('register/verify', {
+            email: String(email || '').trim().toLowerCase(),
+            code: String(code || '').trim(),
+            password: String(password || ''),
+            full_name: String(fullName || '').trim(),
+            phone: String(phone || '').trim()
+        });
+        if (!result.success || !result.user) return result;
+
+        const user = result.user;
+        const sessionUser = {
+            id: user.id,
+            email: user.email,
+            name: user.full_name || user.name || email,
+            full_name: user.full_name || user.name || email,
+            phone: user.phone || '',
+            role: normalizeAccountRole(user.role, user.email),
+            avatar_url: user.avatar_url || 'assets/images/agent.jpg',
+            user_metadata: { full_name: user.full_name || user.name || email, phone: user.phone || '' }
+        };
+        const token = result.token || ('sb_session_' + sessionUser.id + '_' + Date.now());
+        localStorage.setItem(TOKEN_KEY, token);
+        localStorage.setItem(USER_KEY, JSON.stringify(sessionUser));
+        localStorage.setItem(DEMO_KEY, JSON.stringify(sessionUser));
+        if (sessionUser.role === 'admin' || sessionUser.role === 'superadmin') {
+            localStorage.setItem('adminUser', JSON.stringify(sessionUser));
+        }
+        clearUserDeletedLocal(sessionUser.id, sessionUser.email);
+        return { success: true, data: { session: true, user: sessionUser, token, redirect_url: result.redirect_url || '/index.html' } };
+    }
+
+    async function apiRequestPasswordReset(email) {
+        return postAuthFlow('password/reset/request', { email: String(email || '').trim().toLowerCase() });
+    }
+
+    async function apiCompletePasswordReset(email, code, password) {
+        return postAuthFlow('password/reset/confirm', {
+            email: String(email || '').trim().toLowerCase(),
+            code: String(code || '').trim(),
+            password: String(password || '')
+        });
+    }
+
+    async function apiSendPasswordResetEmail(email) {
+        const cleanEmail = String(email || '').trim().toLowerCase();
+        if (!cleanEmail || !cleanEmail.includes('@')) {
+            return { success: false, error: 'Please enter a valid email address.' };
+        }
+        try {
+            // 1. Verify user exists in Supabase Cloud
+            const res = await fetch(`${REST_BASE}/users?email=ilike.${encodeURIComponent(cleanEmail)}&select=id,email,full_name,bio`, {
+                headers: getHeaders()
+            });
+            if (!res.ok) {
+                return { success: false, error: 'Unable to check account. Please try again.' };
+            }
+            const users = await res.json().catch(() => []);
+            if (!Array.isArray(users) || users.length === 0) {
+                return { success: false, error: 'No account found with that email address.' };
+            }
+            const user = users[0];
+            if (user.bio === SOFT_DELETE_BIO_MARKER || getDeletedUserEmails().includes(cleanEmail)) {
+                return { success: false, error: 'This account has been deactivated.' };
+            }
+
+            // 2. Try server-side OTP dispatch
+            let serverRes = null;
+            try {
+                serverRes = await apiRequestPasswordReset(cleanEmail);
+            } catch (_) {}
+
+            // 3. Generate a secure 6-digit challenge code
+            const randomCode = String(Math.floor(100000 + Math.random() * 900000));
+            const challenge = {
+                email: cleanEmail,
+                code: serverRes?.previewCode || randomCode,
+                expires_at: Date.now() + 10 * 60 * 1000,
+                userId: user.id
+            };
+            sessionStorage.setItem('urbanscope_reset_challenge', JSON.stringify(challenge));
+
+            const hasServerEmail = serverRes && serverRes.success && !serverRes.previewCode;
+            return {
+                success: true,
+                hasServerEmail: hasServerEmail,
+                previewCode: hasServerEmail ? null : challenge.code,
+                message: hasServerEmail
+                    ? 'A verification code has been sent to your email address.'
+                    : `A verification code has been dispatched to ${cleanEmail}.`
+            };
+        } catch (err) {
+            return { success: false, error: err.message || 'An error occurred while requesting recovery code.' };
+        }
+    }
+
+    async function apiVerifyPasswordResetCode(email, code) {
+        const cleanEmail = String(email || '').trim().toLowerCase();
+        const cleanCode = String(code || '').trim();
+        if (!cleanCode || !/^[0-9]{6}$/.test(cleanCode)) {
+            return { success: false, error: 'Please enter the 6-digit verification code.' };
+        }
+        try {
+            const raw = sessionStorage.getItem('urbanscope_reset_challenge');
+            if (!raw) {
+                return { success: false, error: 'Verification session expired. Please request a new code.' };
+            }
+            const challenge = JSON.parse(raw);
+            if (challenge.email !== cleanEmail) {
+                return { success: false, error: 'Verification email mismatch. Please request a new code.' };
+            }
+            if (Date.now() > challenge.expires_at) {
+                return { success: false, error: 'Verification code has expired. Please request a new one.' };
+            }
+            if (challenge.code !== cleanCode) {
+                return { success: false, error: 'The verification code you entered is incorrect. Please check your email.' };
+            }
+            challenge.verified = true;
+            sessionStorage.setItem('urbanscope_reset_challenge', JSON.stringify(challenge));
+            return { success: true, message: 'Code verified successfully.' };
+        } catch (err) {
+            return { success: false, error: 'Unable to verify code. Please try again.' };
+        }
+    }
+
+    async function apiResetPasswordWithVerifiedCode(email, newPassword) {
+        const cleanEmail = String(email || '').trim().toLowerCase();
+        if (!newPassword || newPassword.length < 8) {
+            return { success: false, error: 'Password must be at least 8 characters long.' };
+        }
+        try {
+            const raw = sessionStorage.getItem('urbanscope_reset_challenge');
+            if (!raw) {
+                return { success: false, error: 'Session expired. Please request a new verification code.' };
+            }
+            const challenge = JSON.parse(raw);
+            if (challenge.email !== cleanEmail || !challenge.verified) {
+                return { success: false, error: 'Please verify the email code first before setting a new password.' };
+            }
+
+            const passwordHash = await hashPBKDF2(newPassword);
+
+            // Update Supabase Cloud
+            const patchRes = await fetch(`${REST_BASE}/users?id=eq.${encodeURIComponent(challenge.userId)}`, {
+                method: 'PATCH',
+                headers: getHeaders(),
+                body: JSON.stringify({
+                    password_hash: passwordHash,
+                    updated_at: new Date().toISOString()
+                })
+            });
+            if (!patchRes.ok) {
+                return { success: false, error: 'Failed to update password in database. Please try again.' };
+            }
+
+            // Sync with local backend if running
+            if (isLocalBackendReachableHost()) {
+                try {
+                    await fetch(`${getLocalApiBase()}/auth/reset-password-direct`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ email: cleanEmail, password: newPassword })
+                    });
+                } catch (_) {}
+            }
+
+            sessionStorage.removeItem('urbanscope_reset_challenge');
+            return { success: true, message: 'Password updated successfully! You can now log in.' };
+        } catch (err) {
+            return { success: false, error: err.message || 'An error occurred while updating your password.' };
+        }
+    }
+
+    function normalizePhoneDigits(p) {
+        if (!p) return '';
+        const digits = String(p).replace(/\D/g, '');
+        if (digits.startsWith('63') && digits.length === 12) return digits.slice(2);
+        if (digits.startsWith('0') && digits.length === 11) return digits.slice(1);
+        return digits;
+    }
+
+    async function apiVerifyAccountForPasswordReset(email, phone) {
+        const cleanEmail = String(email || '').trim().toLowerCase();
+        const cleanPhone = normalizePhoneDigits(phone);
+        if (!cleanEmail || !cleanPhone) {
+            return { success: false, error: 'Please enter both your registered email and phone number.' };
+        }
+        try {
+            const res = await fetch(`${REST_BASE}/users?email=ilike.${encodeURIComponent(cleanEmail)}&select=id,email,phone,full_name,bio`, {
+                headers: getHeaders()
+            });
+            if (!res.ok) {
+                return { success: false, error: 'Account verification could not be completed. Please try again.' };
+            }
+            const users = await res.json().catch(() => []);
+            if (!Array.isArray(users) || users.length === 0) {
+                return { success: false, error: 'No account found with that email address.' };
+            }
+            const user = users[0];
+            if (user.bio === SOFT_DELETE_BIO_MARKER || getDeletedUserEmails().includes(cleanEmail)) {
+                return { success: false, error: 'This account has been deactivated.' };
+            }
+            const userPhone = normalizePhoneDigits(user.phone || '');
+            if (!userPhone || userPhone !== cleanPhone) {
+                return { success: false, error: 'The phone number does not match our records for this account.' };
+            }
+            return { success: true, user: { id: user.id, email: user.email, name: user.full_name } };
+        } catch (err) {
+            return { success: false, error: err.message || 'An error occurred during account verification.' };
+        }
+    }
+
+    async function apiResetPasswordByPhone(email, phone, newPassword) {
+        const cleanEmail = String(email || '').trim().toLowerCase();
+        const cleanPhone = normalizePhoneDigits(phone);
+        if (!cleanEmail || !cleanPhone) {
+            return { success: false, error: 'Please provide your registered email and phone number.' };
+        }
+        if (!newPassword || newPassword.length < 8) {
+            return { success: false, error: 'Password must be at least 8 characters long.' };
+        }
+        const verifyRes = await apiVerifyAccountForPasswordReset(cleanEmail, cleanPhone);
+        if (!verifyRes.success) return verifyRes;
+
+        const userId = verifyRes.user.id;
+        try {
+            const passwordHash = await hashPBKDF2(newPassword);
+            const patchRes = await fetch(`${REST_BASE}/users?id=eq.${encodeURIComponent(userId)}`, {
+                method: 'PATCH',
+                headers: getHeaders(),
+                body: JSON.stringify({
+                    password_hash: passwordHash,
+                    updated_at: new Date().toISOString()
+                })
+            });
+            if (!patchRes.ok) {
+                return { success: false, error: 'Unable to update password. Please try again.' };
+            }
+
+            // Sync with local backend if reachable
+            if (isLocalBackendReachableHost()) {
+                try {
+                    await fetch(`${getLocalApiBase()}/auth/reset-password-direct`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ email: cleanEmail, password: newPassword })
+                    });
+                } catch (_) {}
+            }
+
+            return { success: true, message: 'Password updated successfully! You can now log in with your new password.' };
+        } catch (err) {
+            return { success: false, error: err.message || 'An error occurred while resetting your password.' };
+        }
+    }
+
     async function apiSignUp(email, password, fullName, phone) {
         try {
-            const cleanEmail = email.trim().toLowerCase();
-            const cleanName = fullName.trim();
-            const cleanPhone = (phone || '').trim();
+            const cleanEmail = String(email || '').trim().toLowerCase();
+            const cleanName = String(fullName || '').trim();
+            const cleanPhone = String(phone || '').trim();
+
+            if (!cleanEmail || !cleanEmail.includes('@')) {
+                return { success: false, error: 'Please enter a valid email address.' };
+            }
+            if (!password || password.length < 8) {
+                return { success: false, error: 'Password must be at least 8 characters long.' };
+            }
 
             // 1. Direct registration with FastAPI backend when on local dev host
             if (isLocalBackendReachableHost()) {
@@ -3056,7 +3405,7 @@
 
             let createdId = Date.now();
             try {
-                const checkRes = await fetch(`${REST_BASE}/users?email=ilike.${encodeURIComponent(cleanEmail)}&select=id,email,bio`, {
+                const checkRes = await fetch(`${REST_BASE}/users?email=ilike.${encodeURIComponent(cleanEmail)}&select=id,email,bio,password_hash,role,full_name,phone`, {
                     method: 'GET',
                     headers: getHeaders()
                 });
@@ -3067,25 +3416,45 @@
                 if (existing && existing.id) {
                     const wasSoftDeleted = String(existing.bio || '').trim() === SOFT_DELETE_BIO_MARKER ||
                                            getDeletedUserEmails().includes(cleanEmail);
-                    if (!wasSoftDeleted) {
-                        return { success: false, error: 'An account with this email address already exists.' };
-                    }
-                    const patchRes = await fetch(`${REST_BASE}/users?id=eq.${encodeURIComponent(existing.id)}`, {
-                        method: 'PATCH',
-                        headers: getHeaders(),
-                        body: JSON.stringify({
-                            full_name: cleanName,
-                            phone: cleanPhone,
-                            password_hash: passwordHash,
-                            role: role,
-                            bio: '',
-                            updated_at: new Date().toISOString()
-                        })
-                    });
-                    if (patchRes.ok) {
-                        const patched = await patchRes.json().catch(() => []);
-                        const row = Array.isArray(patched) ? patched[0] : patched;
-                        if (row && row.id) createdId = row.id;
+                    if (wasSoftDeleted) {
+                        const patchRes = await fetch(`${REST_BASE}/users?id=eq.${encodeURIComponent(existing.id)}`, {
+                            method: 'PATCH',
+                            headers: getHeaders(),
+                            body: JSON.stringify({
+                                full_name: cleanName || existing.full_name,
+                                phone: cleanPhone || existing.phone,
+                                password_hash: passwordHash,
+                                role: role,
+                                bio: '',
+                                updated_at: new Date().toISOString()
+                            })
+                        });
+                        if (patchRes.ok) {
+                            const patched = await patchRes.json().catch(() => []);
+                            const row = Array.isArray(patched) ? patched[0] : patched;
+                            if (row && row.id) createdId = row.id;
+                        }
+                    } else if (!existing.password_hash) {
+                        // User previously signed in via Google and is setting a password
+                        const patchRes = await fetch(`${REST_BASE}/users?id=eq.${encodeURIComponent(existing.id)}`, {
+                            method: 'PATCH',
+                            headers: getHeaders(),
+                            body: JSON.stringify({
+                                full_name: cleanName || existing.full_name,
+                                phone: cleanPhone || existing.phone,
+                                password_hash: passwordHash,
+                                updated_at: new Date().toISOString()
+                            })
+                        });
+                        if (patchRes.ok) {
+                            createdId = existing.id;
+                            role = existing.role || 'user';
+                        }
+                    } else {
+                        return {
+                            success: false,
+                            error: 'An account with this email address already exists. Please log in or use "Forgot Password".'
+                        };
                     }
                 } else {
                     const insertRes = await fetch(`${REST_BASE}/users`, {
@@ -3231,6 +3600,9 @@
                     if (String(remoteUser.bio || '').trim() === SOFT_DELETE_BIO_MARKER || storedHash === SOFT_DELETE_HASH_MARKER) {
                         return { success: false, error: 'This account has been removed.' };
                     }
+                    if (Object.prototype.hasOwnProperty.call(remoteUser, 'email_verified_at') && !remoteUser.email_verified_at) {
+                        return { success: false, error: 'Verify your email address first, or use Forgot password to prove account ownership.' };
+                    }
                     let passValid = false;
                     if (storedHash && storedHash.includes('$')) {
                         passValid = await verifyPBKDF2(password, storedHash);
@@ -3279,8 +3651,10 @@
                     localStorage.setItem(DEMO_KEY, JSON.stringify(sessionUser));
                     if (sessionUser.role === 'admin' || sessionUser.role === 'superadmin') {
                         localStorage.setItem('adminUser', JSON.stringify(sessionUser));
-                        localStorage.setItem('adminPassword', password);
-                        localStorage.setItem('urbanscope_admin_password_updated', password);
+                        if (isLocalBackendReachableHost()) {
+                            localStorage.setItem('adminPassword', password);
+                            localStorage.setItem('urbanscope_admin_password_updated', password);
+                        }
                     }
 
                     const redirectUrl = (role === 'superadmin') 
@@ -3317,6 +3691,8 @@
                     : (password === 'realestate2026');
                 if (!isValid) return { success: false, error: 'Incorrect admin password.' };
                 role = 'admin';
+            } else {
+                return { success: false, error: 'Invalid email or password.' };
             }
 
             const name = cleanEmail.split('@')[0].replace(/[._-]+/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
@@ -3776,6 +4152,15 @@
     window.apiGetLeadAgentProfile = apiGetLeadAgentProfile;
     window.apiUpdateAdminPassword = apiUpdateAdminPassword;
     window.apiSignUp = apiSignUp;
+    window.apiStartRegistrationOtp = apiStartRegistrationOtp;
+    window.apiCompleteRegistrationOtp = apiCompleteRegistrationOtp;
+    window.apiRequestPasswordReset = apiRequestPasswordReset;
+    window.apiCompletePasswordReset = apiCompletePasswordReset;
+    window.apiSendPasswordResetEmail = apiSendPasswordResetEmail;
+    window.apiVerifyPasswordResetCode = apiVerifyPasswordResetCode;
+    window.apiResetPasswordWithVerifiedCode = apiResetPasswordWithVerifiedCode;
+    window.apiVerifyAccountForPasswordReset = apiVerifyAccountForPasswordReset;
+    window.apiResetPasswordByPhone = apiResetPasswordByPhone;
     window.apiSignIn = apiSignIn;
     window.apiGetGoogleConfig = apiGetGoogleConfig;
     window.apiSignInWithGoogle = apiSignInWithGoogle;

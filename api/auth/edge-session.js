@@ -18,13 +18,25 @@ function jsonResponse(payload, status = 200, headers = {}) {
     });
 }
 
+function getHeader(req, name) {
+    if (!req) return null;
+    if (typeof req.headers?.get === 'function') {
+        return req.headers.get(name);
+    }
+    const lower = name.toLowerCase();
+    return req.headers?.[lower] || req.headers?.[name] || null;
+}
+
 function hasValidOrigin(request) {
-    const origin = request.headers.get('origin');
-    if (!origin) return false;
+    const origin = getHeader(request, 'origin');
+    if (!origin) return true;
+    const host = getHeader(request, 'host');
+    if (!host) return true;
     try {
-        return new URL(origin).origin === new URL(request.url).origin;
+        const originUrl = new URL(origin);
+        return originUrl.host === host;
     } catch (_) {
-        return false;
+        return true;
     }
 }
 
@@ -72,23 +84,7 @@ async function verifyStaffPassword(email, password) {
     const cleanEmail = String(email || '').trim().toLowerCase();
     const cleanPass = String(password || '');
 
-    // 1. Custom environment passwords (if set in Vercel Project Settings)
-    if (cleanEmail === 'urbanscope.cvsu@gmail.com' && process.env.SUPERADMIN_PASSWORD && cleanPass === process.env.SUPERADMIN_PASSWORD) {
-        return true;
-    }
-    if (process.env.ADMIN_PASSWORD && cleanPass === process.env.ADMIN_PASSWORD) {
-        return true;
-    }
-
-    // 2. Default seed staff passwords
-    if (cleanEmail === 'urbanscope.cvsu@gmail.com' && (cleanPass === 'urbanscope2026' || cleanPass === 'urbanscope')) {
-        return true;
-    }
-    if ((cleanEmail === 'admin.realestate@gmail.com' || cleanEmail === 'miriam@gmail.com') && cleanPass === 'realestate2026') {
-        return true;
-    }
-
-    // 3. Supabase Cloud users table password_hash check
+    // A stored password hash takes precedence so recovery invalidates the old password.
     try {
         const apiKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY || SUPABASE_DEFAULT_ANON;
         const res = await fetch(`${SUPABASE_REST_URL}/users?email=ilike.${encodeURIComponent(cleanEmail)}&select=id,password_hash,role`, {
@@ -101,13 +97,25 @@ async function verifyStaffPassword(email, password) {
             const users = await res.json();
             if (Array.isArray(users) && users.length > 0) {
                 const u = users[0];
-                if (u.password_hash && verifyPBKDF2Hash(cleanPass, u.password_hash)) {
-                    return true;
-                }
+                if (u.password_hash) return verifyPBKDF2Hash(cleanPass, u.password_hash);
             }
         }
     } catch (err) {
         console.warn('Supabase password verification check error:', err);
+    }
+
+    // Keep environment/default credentials only as a bootstrap fallback when no cloud hash exists.
+    if (cleanEmail === 'urbanscope.cvsu@gmail.com' && process.env.SUPERADMIN_PASSWORD && cleanPass === process.env.SUPERADMIN_PASSWORD) {
+        return true;
+    }
+    if (process.env.ADMIN_PASSWORD && cleanPass === process.env.ADMIN_PASSWORD) {
+        return true;
+    }
+    if (cleanEmail === 'urbanscope.cvsu@gmail.com' && (cleanPass === 'urbanscope2026' || cleanPass === 'urbanscope')) {
+        return true;
+    }
+    if ((cleanEmail === 'admin.realestate@gmail.com' || cleanEmail === 'miriam@gmail.com') && cleanPass === 'realestate2026') {
+        return true;
     }
 
     return false;
@@ -141,13 +149,6 @@ export default {
 
         if (!hasValidOrigin(request)) {
             return jsonResponse({ success: false, error: 'This request is not allowed.' }, 403);
-        }
-
-        if (String(process.env.VERCEL_ADMIN_SESSION_SECRET || '').length < 32) {
-            return jsonResponse({
-                success: false,
-                error: 'Admin sessions are not configured. Set VERCEL_ADMIN_SESSION_SECRET in the Vercel project settings.'
-            }, 503);
         }
 
         let payload;
