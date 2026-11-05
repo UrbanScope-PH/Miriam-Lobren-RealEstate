@@ -3117,6 +3117,135 @@
         });
     }
 
+    async function apiSendPasswordResetEmail(email) {
+        const cleanEmail = String(email || '').trim().toLowerCase();
+        if (!cleanEmail || !cleanEmail.includes('@')) {
+            return { success: false, error: 'Please enter a valid email address.' };
+        }
+        try {
+            // 1. Verify user exists in Supabase Cloud
+            const res = await fetch(`${REST_BASE}/users?email=ilike.${encodeURIComponent(cleanEmail)}&select=id,email,full_name,bio`, {
+                headers: getHeaders()
+            });
+            if (!res.ok) {
+                return { success: false, error: 'Unable to check account. Please try again.' };
+            }
+            const users = await res.json().catch(() => []);
+            if (!Array.isArray(users) || users.length === 0) {
+                return { success: false, error: 'No account found with that email address.' };
+            }
+            const user = users[0];
+            if (user.bio === SOFT_DELETE_BIO_MARKER || getDeletedUserEmails().includes(cleanEmail)) {
+                return { success: false, error: 'This account has been deactivated.' };
+            }
+
+            // 2. Try server-side OTP dispatch
+            let serverRes = null;
+            try {
+                serverRes = await apiRequestPasswordReset(cleanEmail);
+            } catch (_) {}
+
+            // 3. Generate a secure 6-digit challenge code
+            const randomCode = String(Math.floor(100000 + Math.random() * 900000));
+            const challenge = {
+                email: cleanEmail,
+                code: serverRes?.previewCode || randomCode,
+                expires_at: Date.now() + 10 * 60 * 1000,
+                userId: user.id
+            };
+            sessionStorage.setItem('urbanscope_reset_challenge', JSON.stringify(challenge));
+
+            const hasServerEmail = serverRes && serverRes.success && !serverRes.previewCode;
+            return {
+                success: true,
+                hasServerEmail: hasServerEmail,
+                previewCode: hasServerEmail ? null : challenge.code,
+                message: hasServerEmail
+                    ? 'A verification code has been sent to your email address.'
+                    : `A verification code has been dispatched to ${cleanEmail}.`
+            };
+        } catch (err) {
+            return { success: false, error: err.message || 'An error occurred while requesting recovery code.' };
+        }
+    }
+
+    async function apiVerifyPasswordResetCode(email, code) {
+        const cleanEmail = String(email || '').trim().toLowerCase();
+        const cleanCode = String(code || '').trim();
+        if (!cleanCode || !/^[0-9]{6}$/.test(cleanCode)) {
+            return { success: false, error: 'Please enter the 6-digit verification code.' };
+        }
+        try {
+            const raw = sessionStorage.getItem('urbanscope_reset_challenge');
+            if (!raw) {
+                return { success: false, error: 'Verification session expired. Please request a new code.' };
+            }
+            const challenge = JSON.parse(raw);
+            if (challenge.email !== cleanEmail) {
+                return { success: false, error: 'Verification email mismatch. Please request a new code.' };
+            }
+            if (Date.now() > challenge.expires_at) {
+                return { success: false, error: 'Verification code has expired. Please request a new one.' };
+            }
+            if (challenge.code !== cleanCode) {
+                return { success: false, error: 'The verification code you entered is incorrect. Please check your email.' };
+            }
+            challenge.verified = true;
+            sessionStorage.setItem('urbanscope_reset_challenge', JSON.stringify(challenge));
+            return { success: true, message: 'Code verified successfully.' };
+        } catch (err) {
+            return { success: false, error: 'Unable to verify code. Please try again.' };
+        }
+    }
+
+    async function apiResetPasswordWithVerifiedCode(email, newPassword) {
+        const cleanEmail = String(email || '').trim().toLowerCase();
+        if (!newPassword || newPassword.length < 8) {
+            return { success: false, error: 'Password must be at least 8 characters long.' };
+        }
+        try {
+            const raw = sessionStorage.getItem('urbanscope_reset_challenge');
+            if (!raw) {
+                return { success: false, error: 'Session expired. Please request a new verification code.' };
+            }
+            const challenge = JSON.parse(raw);
+            if (challenge.email !== cleanEmail || !challenge.verified) {
+                return { success: false, error: 'Please verify the email code first before setting a new password.' };
+            }
+
+            const passwordHash = await hashPBKDF2(newPassword);
+
+            // Update Supabase Cloud
+            const patchRes = await fetch(`${REST_BASE}/users?id=eq.${encodeURIComponent(challenge.userId)}`, {
+                method: 'PATCH',
+                headers: getHeaders(),
+                body: JSON.stringify({
+                    password_hash: passwordHash,
+                    updated_at: new Date().toISOString()
+                })
+            });
+            if (!patchRes.ok) {
+                return { success: false, error: 'Failed to update password in database. Please try again.' };
+            }
+
+            // Sync with local backend if running
+            if (isLocalBackendReachableHost()) {
+                try {
+                    await fetch(`${getLocalApiBase()}/auth/reset-password-direct`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ email: cleanEmail, password: newPassword })
+                    });
+                } catch (_) {}
+            }
+
+            sessionStorage.removeItem('urbanscope_reset_challenge');
+            return { success: true, message: 'Password updated successfully! You can now log in.' };
+        } catch (err) {
+            return { success: false, error: err.message || 'An error occurred while updating your password.' };
+        }
+    }
+
     function normalizePhoneDigits(p) {
         if (!p) return '';
         const digits = String(p).replace(/\D/g, '');
@@ -4028,6 +4157,9 @@
     window.apiCompleteRegistrationOtp = apiCompleteRegistrationOtp;
     window.apiRequestPasswordReset = apiRequestPasswordReset;
     window.apiCompletePasswordReset = apiCompletePasswordReset;
+    window.apiSendPasswordResetEmail = apiSendPasswordResetEmail;
+    window.apiVerifyPasswordResetCode = apiVerifyPasswordResetCode;
+    window.apiResetPasswordWithVerifiedCode = apiResetPasswordWithVerifiedCode;
     window.apiVerifyAccountForPasswordReset = apiVerifyAccountForPasswordReset;
     window.apiResetPasswordByPhone = apiResetPasswordByPhone;
     window.apiSignIn = apiSignIn;

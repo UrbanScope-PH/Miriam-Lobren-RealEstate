@@ -1,18 +1,19 @@
 (function () {
     const requestForm = document.getElementById('resetRequestForm');
-    const confirmForm = document.getElementById('resetConfirmForm');
+    const verifyForm = document.getElementById('resetVerifyForm');
+    const newPasswordForm = document.getElementById('resetNewPasswordForm');
     const statusBox = document.getElementById('resetStatus');
     const emailInput = document.getElementById('resetEmail');
-    const phoneInput = document.getElementById('resetPhone');
     const codeInput = document.getElementById('resetCode');
-    const codeGroup = document.getElementById('resetCodeGroup');
-    const resendRow = document.getElementById('resetResendRow');
+    const newPasswordInput = document.getElementById('newPassword');
+    const confirmPasswordInput = document.getElementById('confirmNewPassword');
     const resendButton = document.getElementById('resendResetCodeBtn');
     const resendStatus = document.getElementById('resetResendStatus');
+    const title = document.getElementById('resetTitle');
     const subtitle = document.getElementById('resetSubtitle');
 
+    let currentEmail = '';
     let resendTimer = null;
-    let verifiedViaPhone = false;
 
     function showStatus(message, type) {
         if (!statusBox) return;
@@ -40,169 +41,166 @@
         if (resendTimer) window.clearInterval(resendTimer);
         let remaining = 60;
         if (resendButton) resendButton.disabled = true;
-        if (resendStatus) resendStatus.textContent = `You can request another code in ${remaining} seconds.`;
+        if (resendStatus) resendStatus.textContent = `You can request another code in ${remaining}s.`;
         resendTimer = window.setInterval(function () {
             remaining -= 1;
             if (remaining <= 0) {
                 window.clearInterval(resendTimer);
                 resendTimer = null;
                 if (resendButton) resendButton.disabled = false;
-                if (resendStatus) resendStatus.textContent = "Didn't receive the code?";
+                if (resendStatus) resendStatus.textContent = "Didn't receive the email?";
                 return;
             }
-            if (resendStatus) resendStatus.textContent = `You can request another code in ${remaining} seconds.`;
+            if (resendStatus) resendStatus.textContent = `You can request another code in ${remaining}s.`;
         }, 1000);
     }
 
+    // ==========================================
+    // STEP 1: Request Verification Code (Email Only)
+    // ==========================================
     if (requestForm) {
         requestForm.addEventListener('submit', async function (event) {
             event.preventDefault();
             const email = String(emailInput?.value || '').trim().toLowerCase();
-            const phone = String(phoneInput?.value || '').trim();
             const button = document.getElementById('requestResetCodeBtn');
             const originalLabel = button?.textContent || '';
 
             if (!email || !email.includes('@')) {
-                showStatus('Enter a valid email address.', 'error');
+                showStatus('Please enter a valid email address.', 'error');
                 emailInput?.focus();
                 return;
             }
 
-            if (button) { button.disabled = true; button.textContent = 'Verifying…'; }
+            if (button) { button.disabled = true; button.textContent = 'Sending Code…'; }
 
-            // Priority 1: Phone verification against Supabase / backend user account
-            if (phone && typeof apiVerifyAccountForPasswordReset === 'function') {
-                const verifyResult = await apiVerifyAccountForPasswordReset(email, phone);
-                if (verifyResult && verifyResult.success) {
-                    verifiedViaPhone = true;
-                    if (requestForm) requestForm.hidden = true;
-                    if (confirmForm) confirmForm.hidden = false;
-                    if (codeGroup) codeGroup.hidden = true;
-                    if (codeInput) codeInput.required = false;
-                    if (resendRow) resendRow.hidden = true;
-                    if (subtitle) subtitle.textContent = 'Account verified! Enter your new password below.';
-                    showStatus('Account verified. Please set your new password.', 'success');
-                    document.getElementById('newPassword')?.focus();
-                    if (button) { button.disabled = false; button.textContent = originalLabel; }
-                    return;
-                } else if (verifyResult && !verifyResult.success) {
-                    showStatus(verifyResult.error || 'The account details provided do not match our records.', 'error');
-                    if (button) { button.disabled = false; button.textContent = originalLabel; }
-                    return;
+            const result = typeof apiSendPasswordResetEmail === 'function'
+                ? await apiSendPasswordResetEmail(email)
+                : { success: false, error: 'Password recovery is currently unavailable. Please try again.' };
+
+            if (result && result.success) {
+                currentEmail = email;
+                if (requestForm) requestForm.hidden = true;
+                if (verifyForm) verifyForm.hidden = false;
+                if (title) title.textContent = 'Verify your email';
+                if (subtitle) subtitle.textContent = `We sent a 6-digit code to ${email}. Check your email and enter the code below.`;
+
+                const noticeText = result.previewCode
+                    ? `Verification code dispatched! (Preview code: ${result.previewCode})`
+                    : (result.message || 'A six-digit verification code has been sent to your email.');
+
+                showStatus(noticeText, 'success');
+                startResendCountdown();
+                if (codeInput) {
+                    codeInput.value = '';
+                    codeInput.focus();
                 }
+            } else {
+                showStatus((result && result.error) || 'Unable to find an account with that email. Please check and try again.', 'error');
             }
 
-            // Priority 2: Email OTP code request (if available)
-            if (typeof apiRequestPasswordReset === 'function') {
-                const result = await apiRequestPasswordReset(email);
-                if (result && result.success) {
-                    verifiedViaPhone = false;
-                    if (requestForm) requestForm.hidden = true;
-                    if (confirmForm) confirmForm.hidden = false;
-                    if (codeGroup) codeGroup.hidden = false;
-                    if (codeInput) { codeInput.required = true; codeInput.focus(); }
-                    if (resendRow) resendRow.hidden = false;
-                    showStatus(result.message || 'If an account can be recovered with that email, a code has been sent.', 'success');
-                    startResendCountdown();
-                    if (button) { button.disabled = false; button.textContent = originalLabel; }
-                    return;
-                } else if (result && result.code === 'OTP_NOT_CONFIGURED') {
-                    showStatus('Please enter your registered phone number to verify your account and reset your password.', 'error');
-                    phoneInput?.focus();
-                    if (button) { button.disabled = false; button.textContent = originalLabel; }
-                    return;
-                } else {
-                    showStatus((result && result.error) || 'Unable to request a recovery code. Please check your details and try again.', 'error');
-                    if (button) { button.disabled = false; button.textContent = originalLabel; }
-                    return;
-                }
-            }
-
-            showStatus('Password recovery service is currently unavailable. Please try again later.', 'error');
             if (button) { button.disabled = false; button.textContent = originalLabel; }
         });
     }
 
-    if (resendButton) {
-        resendButton.addEventListener('click', async function () {
-            const email = String(emailInput?.value || '').trim().toLowerCase();
-            resendButton.disabled = true;
-            if (resendStatus) resendStatus.textContent = 'Requesting a new code…';
-            if (typeof apiRequestPasswordReset === 'function') {
-                const result = await apiRequestPasswordReset(email);
-                if (result && result.success) {
-                    showStatus(result.message || 'A new verification code has been sent.', 'success');
-                    startResendCountdown();
-                    return;
-                }
+    // ==========================================
+    // STEP 2: Verify 6-Digit Email Code
+    // ==========================================
+    if (verifyForm) {
+        verifyForm.addEventListener('submit', async function (event) {
+            event.preventDefault();
+            const code = String(codeInput?.value || '').trim();
+            const button = document.getElementById('verifyResetCodeBtn');
+            const originalLabel = button?.textContent || '';
+
+            if (!/^[0-9]{6}$/.test(code)) {
+                showStatus('Enter the complete six-digit verification code.', 'error');
+                codeInput?.focus();
+                return;
             }
-            resendButton.disabled = false;
-            if (resendStatus) resendStatus.textContent = 'You can try requesting another code.';
+
+            if (button) { button.disabled = true; button.textContent = 'Verifying Code…'; }
+
+            const verifyResult = typeof apiVerifyPasswordResetCode === 'function'
+                ? await apiVerifyPasswordResetCode(currentEmail, code)
+                : { success: false, error: 'Verification service unavailable. Please refresh and try again.' };
+
+            if (verifyResult && verifyResult.success) {
+                if (verifyForm) verifyForm.hidden = true;
+                if (newPasswordForm) newPasswordForm.hidden = false;
+                if (title) title.textContent = 'Create new password';
+                if (subtitle) subtitle.textContent = 'Your new password must be at least 8 characters long.';
+                showStatus('Email verified successfully! Please enter your new password below.', 'success');
+                if (newPasswordInput) newPasswordInput.focus();
+            } else {
+                showStatus((verifyResult && verifyResult.error) || 'The verification code is incorrect or expired. Please check your email.', 'error');
+                if (codeInput) codeInput.focus();
+            }
+
+            if (button) { button.disabled = false; button.textContent = originalLabel; }
         });
     }
 
-    if (confirmForm) {
-        confirmForm.addEventListener('submit', async function (event) {
+    // Resend Code Trigger
+    if (resendButton) {
+        resendButton.addEventListener('click', async function () {
+            if (!currentEmail) return;
+            resendButton.disabled = true;
+            if (resendStatus) resendStatus.textContent = 'Sending new code…';
+            const result = typeof apiSendPasswordResetEmail === 'function'
+                ? await apiSendPasswordResetEmail(currentEmail)
+                : { success: false };
+
+            if (result && result.success) {
+                const noticeText = result.previewCode
+                    ? `A new code was dispatched! (Preview code: ${result.previewCode})`
+                    : (result.message || 'A new verification code has been sent to your email.');
+                showStatus(noticeText, 'success');
+                startResendCountdown();
+                if (codeInput) { codeInput.value = ''; codeInput.focus(); }
+            } else {
+                resendButton.disabled = false;
+                if (resendStatus) resendStatus.textContent = 'Failed to resend. Please try again.';
+            }
+        });
+    }
+
+    // ==========================================
+    // STEP 3: Submit New Password
+    // ==========================================
+    if (newPasswordForm) {
+        newPasswordForm.addEventListener('submit', async function (event) {
             event.preventDefault();
-            const email = String(emailInput?.value || '').trim().toLowerCase();
-            const phone = String(phoneInput?.value || '').trim();
-            const password = document.getElementById('newPassword')?.value || '';
-            const confirmation = document.getElementById('confirmNewPassword')?.value || '';
-            const code = String(codeInput?.value || '').trim();
+            const password = String(newPasswordInput?.value || '');
+            const confirmation = String(confirmPasswordInput?.value || '');
+            const button = document.getElementById('confirmResetBtn');
+            const originalLabel = button?.textContent || '';
 
             if (password.length < 8) {
-                showStatus('Use a password with at least 8 characters.', 'error');
-                document.getElementById('newPassword')?.focus();
+                showStatus('Password must be at least 8 characters long.', 'error');
+                newPasswordInput?.focus();
                 return;
             }
             if (password !== confirmation) {
-                showStatus('The passwords do not match.', 'error');
-                document.getElementById('confirmNewPassword')?.focus();
+                showStatus('The passwords do not match. Please re-enter.', 'error');
+                confirmPasswordInput?.focus();
                 return;
             }
 
-            const button = document.getElementById('confirmResetBtn');
-            const originalLabel = button?.textContent || '';
-            if (button) { button.disabled = true; button.textContent = 'Updating…'; }
+            if (button) { button.disabled = true; button.textContent = 'Updating Password…'; }
 
-            // Mode A: Phone-verified direct password reset
-            if (verifiedViaPhone && typeof apiResetPasswordByPhone === 'function') {
-                const resetResult = await apiResetPasswordByPhone(email, phone, password);
-                if (resetResult && resetResult.success) {
-                    showStatus('Password updated successfully! Redirecting to login…', 'success');
-                    setTimeout(function () {
-                        window.location.href = 'login.html?reset=success&email=' + encodeURIComponent(email);
-                    }, 1200);
-                    return;
-                } else {
-                    showStatus((resetResult && resetResult.error) || 'Failed to update password. Please try again.', 'error');
-                    if (button) { button.disabled = false; button.textContent = originalLabel; }
-                    return;
-                }
-            }
+            const updateResult = typeof apiResetPasswordWithVerifiedCode === 'function'
+                ? await apiResetPasswordWithVerifiedCode(currentEmail, password)
+                : { success: false, error: 'Password update service is unavailable.' };
 
-            // Mode B: Email OTP verification
-            if (!/^[0-9]{6}$/.test(code)) {
-                showStatus('Enter the six-digit code from your email.', 'error');
-                codeInput?.focus();
-                if (button) { button.disabled = false; button.textContent = originalLabel; }
-                return;
-            }
-
-            const result = typeof apiCompletePasswordReset === 'function'
-                ? await apiCompletePasswordReset(email, code, password)
-                : { success: false, error: 'Password recovery is unavailable. Please try again.' };
-
-            if (result && result.success) {
+            if (updateResult && updateResult.success) {
                 showStatus('Password updated successfully! Redirecting to login…', 'success');
                 setTimeout(function () {
-                    window.location.href = 'login.html?reset=success&email=' + encodeURIComponent(email);
+                    window.location.href = 'login.html?reset=success&email=' + encodeURIComponent(currentEmail);
                 }, 1200);
-                return;
+            } else {
+                showStatus((updateResult && updateResult.error) || 'Unable to update password. Please try again.', 'error');
+                if (button) { button.disabled = false; button.textContent = originalLabel; }
             }
-
-            showStatus((result && result.error) || 'Unable to update the password. Please try again.', 'error');
-            if (button) { button.disabled = false; button.textContent = originalLabel; }
         });
     }
 })();

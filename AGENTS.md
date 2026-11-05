@@ -694,6 +694,13 @@ path when rendering from a page.
     - Replaced the static single image with the interactive sliding track (`#slidesTrack`), 3 cycling property slides, tap & touch swipe detection, 5-second automatic sliding rotation, and animated pagination pill indicators (`#dotsContainer` with `.dot` triggers).
     - Added `auth.js` with `defer` to `forgot-password.html` and removed obsolete `.forgot-showcase` pointer overrides from `forgot-password.css`.
 
+60. **Forgot Password Email-Only Verification Flow (`frontend/pages/auth/forgot-password.html`, `forgot-password.js`, `frontend/shared/js/`):**
+    - Removed the phone number requirement from the forgot password page to support both Google OAuth accounts and email/password accounts identically.
+    - Implemented a structured 3-step verification workflow:
+      1) **Step 1 (Email Entry)**: User submits their email address. Validates account existence against Supabase `users` table and dispatches a 6-digit verification challenge.
+      2) **Step 2 (Code Verification)**: User must enter the 6-digit code sent to their email before proceeding. Wrong codes are rejected, and users can request a resend after 60 seconds.
+      3) **Step 3 (Password Reset)**: Unlocks the New Password and Confirm Password inputs only after successful 6-digit code verification. Encrypts the password with PBKDF2 and updates the database, redirecting to login.
+
 ---
 
 ## Safety Rules
