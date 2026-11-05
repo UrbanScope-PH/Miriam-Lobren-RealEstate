@@ -8,6 +8,120 @@
 let currentInquiryMode = 'general';
 let loadedProperties = [];
 let selectedProperty = null;
+const INQUIRY_COOLDOWN_MS = 60 * 1000;
+const INQUIRY_COOLDOWN_STORAGE_PREFIX = 'urbanscope_inquiry_cooldown_until:';
+let inquirySessionEmail = '';
+let inquirySubmitOriginalHtml = '';
+let inquirySubmitInProgress = false;
+let inquiryCooldownTicker = null;
+let inMemoryInquiryCooldown = { ownerEmail: '', until: 0 };
+
+function getInquiryCooldownOwnerEmail(fallbackEmail) {
+    if (inquirySessionEmail) return inquirySessionEmail;
+
+    try {
+        const storedUser = localStorage.getItem('urbanscope_user') || localStorage.getItem('urbanscope_demo_user');
+        if (storedUser) {
+            const user = JSON.parse(storedUser);
+            if (user && user.email) return String(user.email).trim().toLowerCase();
+        }
+    } catch (_) {}
+
+    return String(fallbackEmail || '').trim().toLowerCase() || 'anonymous';
+}
+
+function getInquiryCooldownStorageKey(ownerEmail) {
+    return INQUIRY_COOLDOWN_STORAGE_PREFIX + encodeURIComponent(ownerEmail || 'anonymous');
+}
+
+function getInquiryCooldownUntil(ownerEmail) {
+    let until = inMemoryInquiryCooldown.ownerEmail === ownerEmail ? inMemoryInquiryCooldown.until : 0;
+    const key = getInquiryCooldownStorageKey(ownerEmail);
+
+    try {
+        until = Math.max(until, Number(localStorage.getItem(key) || 0) || 0);
+        if (until <= Date.now()) localStorage.removeItem(key);
+    } catch (_) {}
+
+    if (until <= Date.now()) {
+        if (inMemoryInquiryCooldown.ownerEmail === ownerEmail) {
+            inMemoryInquiryCooldown = { ownerEmail: '', until: 0 };
+        }
+        return 0;
+    }
+    return until;
+}
+
+function formatInquiryCooldown(remainingMs) {
+    const totalSeconds = Math.max(0, Math.ceil(remainingMs / 1000));
+    const minutes = Math.floor(totalSeconds / 60);
+    const seconds = String(totalSeconds % 60).padStart(2, '0');
+    return `${minutes}:${seconds}`;
+}
+
+function refreshInquiryCooldownUi() {
+    if (inquirySubmitInProgress) return;
+
+    const submitBtn = document.querySelector('.submit-btn');
+    const submitAnotherBtn = document.getElementById('submitAnotherBtn');
+    const notice = document.getElementById('inquiryCooldownNotice');
+    if (!submitBtn) return;
+
+    if (!inquirySubmitOriginalHtml) inquirySubmitOriginalHtml = submitBtn.innerHTML;
+    submitBtn.innerHTML = inquirySubmitOriginalHtml;
+
+    const ownerEmail = getInquiryCooldownOwnerEmail(document.getElementById('clientEmail')?.value);
+    const until = getInquiryCooldownUntil(ownerEmail);
+    const remainingMs = until - Date.now();
+    const label = submitBtn.querySelector('span');
+
+    if (remainingMs > 0) {
+        const timeLabel = formatInquiryCooldown(remainingMs);
+        submitBtn.disabled = true;
+        submitBtn.style.opacity = '0.72';
+        submitBtn.setAttribute('aria-describedby', 'inquiryCooldownNotice');
+        if (label) label.textContent = `Try again in ${timeLabel}`;
+        if (notice) {
+            notice.hidden = false;
+            notice.textContent = `Please wait ${timeLabel} before submitting another inquiry.`;
+        }
+        if (submitAnotherBtn) {
+            submitAnotherBtn.disabled = true;
+            submitAnotherBtn.textContent = `Submit Another (${timeLabel})`;
+        }
+        if (!inquiryCooldownTicker) {
+            inquiryCooldownTicker = window.setInterval(refreshInquiryCooldownUi, 1000);
+        }
+        return;
+    }
+
+    submitBtn.disabled = false;
+    submitBtn.style.opacity = '1';
+    submitBtn.removeAttribute('aria-describedby');
+    if (label) label.textContent = 'Submit Inquiry';
+    if (notice) notice.hidden = true;
+    if (submitAnotherBtn) {
+        submitAnotherBtn.disabled = false;
+        submitAnotherBtn.textContent = 'Submit Another';
+    }
+    if (inquiryCooldownTicker) {
+        window.clearInterval(inquiryCooldownTicker);
+        inquiryCooldownTicker = null;
+    }
+}
+
+function startInquiryCooldown(ownerEmail) {
+    const normalizedEmail = String(ownerEmail || '').trim().toLowerCase() || 'anonymous';
+    const until = Date.now() + INQUIRY_COOLDOWN_MS;
+    const key = getInquiryCooldownStorageKey(normalizedEmail);
+    inMemoryInquiryCooldown = { ownerEmail: normalizedEmail, until };
+
+    try {
+        localStorage.setItem(key, String(until));
+    } catch (_) {}
+
+    refreshInquiryCooldownUi();
+}
 
 function resolvePropImage(url) {
     if (!url) return '../../assets/images/property1.jpg';
@@ -300,8 +414,17 @@ function showToastNotice(message, isError = false) {
 }
 
 async function submitInquiry() {
+    if (inquirySubmitInProgress) return;
+
     const submitBtn = document.querySelector('.submit-btn');
-    const origBtnHtml = submitBtn ? submitBtn.innerHTML : '';
+    const ownerEmail = getInquiryCooldownOwnerEmail(document.getElementById('clientEmail')?.value);
+    const cooldownUntil = getInquiryCooldownUntil(ownerEmail);
+    if (cooldownUntil > Date.now()) {
+        refreshInquiryCooldownUi();
+        return;
+    }
+
+    inquirySubmitInProgress = true;
 
     if (submitBtn) {
         submitBtn.disabled = true;
@@ -358,21 +481,38 @@ async function submitInquiry() {
         result = { success: false, error: err.message };
     }
 
-    if (submitBtn) {
-        submitBtn.disabled = false;
-        submitBtn.innerHTML = origBtnHtml;
-        submitBtn.style.opacity = '1';
-    }
+    inquirySubmitInProgress = false;
 
     if (result && result.success) {
+        startInquiryCooldown(ownerEmail);
         showSuccessModal(inquiryData, scheduleDetails);
     } else {
+        refreshInquiryCooldownUi();
         const errMsg = result ? (result.error || 'Unable to submit inquiry. Please try again.') : 'Unable to submit inquiry. Please try again.';
         showToastNotice(errMsg, true);
     }
 }
 
 window.addEventListener('DOMContentLoaded', () => {
+    const submitBtn = document.querySelector('.submit-btn');
+    if (submitBtn) inquirySubmitOriginalHtml = submitBtn.innerHTML;
+
+    document.addEventListener('urbanscope:user', (event) => {
+        inquirySessionEmail = String(event.detail?.email || '').trim().toLowerCase();
+        refreshInquiryCooldownUi();
+    });
+
+    window.addEventListener('storage', (event) => {
+        if (event.key && (event.key.startsWith(INQUIRY_COOLDOWN_STORAGE_PREFIX) || event.key === 'urbanscope_user' || event.key === 'urbanscope_demo_user')) {
+            refreshInquiryCooldownUi();
+        }
+    });
+
+    const clientEmailInput = document.getElementById('clientEmail');
+    if (clientEmailInput) clientEmailInput.addEventListener('input', refreshInquiryCooldownUi);
+
+    refreshInquiryCooldownUi();
+
     // Set min date on datepicker to today
     const dateInput = document.getElementById('preferredDate');
     if (dateInput) {

@@ -656,6 +656,10 @@ path when rendering from a page.
     - Removed TCP/pricelist image files from the Casasuerte, Kathleen, Liora Homes, and Airmen's Village gallery thumbnails, slide arrays, and dynamic property-detail gallery data.
     - Retained price and financing tables. Dedicated computation-document buttons open an in-page image preview.
 
+54. **Inquiry Submission Cooldown (`frontend/pages/inquiry/`):**
+    - After a successful inquiry, the client must wait one minute before submitting another. Failed submissions do not start the cooldown.
+    - The deadline is stored in browser `localStorage` per signed-in client, survives refreshes, and synchronizes across tabs. The inquiry form and success modal show a live countdown and disable their submit actions until the cooldown ends.
+
 ---
 
 ## Safety Rules
