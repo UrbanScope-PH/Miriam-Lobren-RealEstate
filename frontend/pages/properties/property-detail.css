@@ -390,6 +390,14 @@
     background-color: var(--dark-green);
 }
 
+.submit-inquiry-btn.inquiry-closed,
+.submit-inquiry-btn.inquiry-closed:hover {
+    background-color: #e5e7eb;
+    color: #64748b;
+    cursor: not-allowed;
+    box-shadow: none;
+}
+
 .inquiry-note {
     font-size: 12px;
     color: var(--text-muted);

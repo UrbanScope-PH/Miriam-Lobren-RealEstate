@@ -107,10 +107,97 @@ function selectThumb(index, src) {
     updateGallery();
 }
 
+function isSoldOutProperty(property) {
+    const status = String(property?.status || '').trim().toLowerCase().replace(/[\s_-]+/g, ' ');
+    return status === 'sold' || status === 'sold out';
+}
+
+function updatePropertyInquiryButton(property) {
+    const inquiryBtn = document.querySelector('.submit-inquiry-btn');
+    if (!inquiryBtn || !property) return;
+    const soldOut = isSoldOutProperty(property);
+    const statusBadge = document.querySelector('.status-badge');
+    if (statusBadge) {
+        statusBadge.textContent = soldOut ? 'Sold Out' : (property.status || 'Available');
+        statusBadge.className = `status-badge ${String(property.status || 'Available').trim().toLowerCase() === 'available' ? 'available' : 'sold'}`;
+    }
+
+    if (!inquiryBtn.dataset.soldOutGuard) {
+        inquiryBtn.addEventListener('click', (event) => {
+            if (inquiryBtn.getAttribute('aria-disabled') === 'true') event.preventDefault();
+        });
+        inquiryBtn.dataset.soldOutGuard = 'true';
+    }
+
+    const label = inquiryBtn.querySelector('span');
+    const inquiryDescription = document.querySelector('.inquiry-card-header p');
+    if (inquiryDescription && !inquiryDescription.dataset.availableText) {
+        inquiryDescription.dataset.availableText = inquiryDescription.textContent;
+    }
+
+    if (soldOut) {
+        inquiryBtn.href = '#';
+        inquiryBtn.setAttribute('aria-disabled', 'true');
+        inquiryBtn.setAttribute('tabindex', '-1');
+        inquiryBtn.classList.add('inquiry-closed');
+        if (label) label.textContent = 'Sold Out — Inquiries Closed';
+        if (inquiryDescription) inquiryDescription.textContent = 'This property is sold out and is no longer accepting inquiries.';
+        return;
+    }
+
+    inquiryBtn.href = property.id
+        ? `../inquiry/inquiry.html?type=property&id=${encodeURIComponent(property.id)}`
+        : `../inquiry/inquiry.html?type=property&title=${encodeURIComponent(property.title || '')}`;
+    inquiryBtn.removeAttribute('aria-disabled');
+    inquiryBtn.removeAttribute('tabindex');
+    inquiryBtn.classList.remove('inquiry-closed');
+    if (label) label.textContent = 'Submit Inquiry';
+    if (inquiryDescription && inquiryDescription.dataset.availableText) {
+        inquiryDescription.textContent = inquiryDescription.dataset.availableText;
+    }
+}
+
+async function loadStaticPropertyAvailability() {
+    if (typeof apiGetProperties !== 'function') return;
+
+    try {
+        const properties = await apiGetProperties();
+        const pageTitle = document.querySelector('.property-title')?.textContent || '';
+        const normalizeTitle = value => String(value || '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
+        const normalizedPageTitle = normalizeTitle(pageTitle);
+        const property = Array.isArray(properties) && properties.find(item => {
+            const normalizedTitle = normalizeTitle(item.title || item.propertyName || item.name);
+            return normalizedTitle && (normalizedTitle === normalizedPageTitle || normalizedTitle.includes(normalizedPageTitle) || normalizedPageTitle.includes(normalizedTitle));
+        });
+
+        if (property) updatePropertyInquiryButton(property);
+    } catch (err) {
+        console.warn('Unable to check property availability:', err);
+    }
+}
+
+async function refreshPropertyInquiryAvailability() {
+    const propertyId = new URLSearchParams(window.location.search).get('id');
+    if (propertyId && typeof apiGetPropertyById === 'function') {
+        try {
+            const property = await apiGetPropertyById(propertyId);
+            if (property) updatePropertyInquiryButton(property);
+        } catch (err) {
+            console.warn('Unable to refresh property availability:', err);
+        }
+        return;
+    }
+
+    await loadStaticPropertyAvailability();
+}
+
 async function loadPropertyFromDb() {
     const urlParams = new URLSearchParams(window.location.search);
     const propId = urlParams.get('id');
     if (!propId || typeof apiGetPropertyById !== 'function') return;
+
+    const inquiryBtn = document.querySelector('.submit-inquiry-btn');
+    if (inquiryBtn) inquiryBtn.href = `../inquiry/inquiry.html?type=property&id=${encodeURIComponent(propId)}`;
 
     const property = await apiGetPropertyById(propId);
     if (!property) return;
@@ -132,7 +219,8 @@ async function loadPropertyFromDb() {
     if (priceEl) priceEl.innerText = `₱${Number(property.price).toLocaleString()}`;
     
     if (statusBadge && property.status) {
-        statusBadge.innerText = property.status;
+        const soldOut = isSoldOutProperty(property);
+        statusBadge.innerText = soldOut ? 'Sold Out' : property.status;
         const isAvail = String(property.status).trim().toLowerCase() === 'available';
         statusBadge.className = 'status-badge ' + (isAvail ? 'available' : 'sold');
     }
@@ -278,11 +366,7 @@ async function loadPropertyFromDb() {
         }
     }
 
-    // Update submit inquiry button to target this specific property
-    const inquiryBtn = document.querySelector('.submit-inquiry-btn');
-    if (inquiryBtn && property && property.id) {
-        inquiryBtn.href = `../inquiry/inquiry.html?type=property&id=${property.id}`;
-    }
+    updatePropertyInquiryButton(property);
 
     // Accurate Property Map Resolution
     const locBoxP = document.querySelector('.location-box .location-header p');
@@ -563,7 +647,11 @@ function checkInquiryAuthNote(user) {
 
 window.addEventListener('DOMContentLoaded', () => {
     initGallery();
-    loadPropertyFromDb();
+    if (new URLSearchParams(window.location.search).get('id')) {
+        loadPropertyFromDb();
+    } else {
+        loadStaticPropertyAvailability();
+    }
     checkInquiryAuthNote();
     const searchToggle = document.getElementById('searchToggle');
     if (searchToggle) {
@@ -581,7 +669,12 @@ window.addEventListener('storage', (e) => {
     if (e.key === 'urbanscope_user' || e.key === 'urbanscope_jwt_token' || e.key === 'urbanscope_demo_user') {
         checkInquiryAuthNote();
     }
+    if (e.key === 'cached_live_properties') {
+        refreshPropertyInquiryAvailability();
+    }
 });
+
+window.addEventListener('focus', refreshPropertyInquiryAvailability);
 
 /* ========================================================
    FULLSCREEN IMAGE LIGHTBOX & INTERACTIVE ZOOM CONTROLLER

@@ -7,6 +7,7 @@
 
 let currentInquiryMode = 'general';
 let loadedProperties = [];
+let allLoadedProperties = [];
 let selectedProperty = null;
 const INQUIRY_COOLDOWN_MS = 60 * 1000;
 const INQUIRY_COOLDOWN_STORAGE_PREFIX = 'urbanscope_inquiry_cooldown_until:';
@@ -131,6 +132,11 @@ function resolvePropImage(url) {
     return '../../' + url.replace(/^(\.\.\/)+/, '');
 }
 
+function isSoldOutProperty(property) {
+    const status = String(property?.status || '').trim().toLowerCase().replace(/[\s_-]+/g, ' ');
+    return status === 'sold' || status === 'sold out';
+}
+
 function switchInquiryMode(mode) {
     currentInquiryMode = mode;
     const tabGeneral = document.getElementById('tabGeneral');
@@ -211,15 +217,56 @@ function renderSelectedProperty(prop) {
     if (priceVal) priceVal.textContent = '₱' + Number(prop.price || 0).toLocaleString();
 }
 
+function setPropertySelection(prop, noticeText = '') {
+    selectedProperty = prop || null;
+    const select = document.getElementById('propertySelect');
+    const summary = document.getElementById('propertySummaryBox');
+    const notice = document.getElementById('soldPropertyNotice');
+
+    if (select) select.value = prop ? String(prop.id) : '';
+    if (summary) summary.style.display = prop ? 'flex' : 'none';
+    if (notice) {
+        notice.hidden = !noticeText;
+        notice.textContent = noticeText;
+    }
+    if (prop) renderSelectedProperty(prop);
+}
+
+function renderAvailablePropertyOptions(selectedId = '') {
+    const select = document.getElementById('propertySelect');
+    if (!select) return;
+
+    const placeholder = loadedProperties.length
+        ? '<option value="">Choose an available listing</option>'
+        : '<option value="">No available properties to inquire about</option>';
+    const options = loadedProperties.map(property => {
+        const title = property.title || property.propertyName || 'Property';
+        const location = property.location ? ` - ${property.location}` : '';
+        const price = property.price ? ` (₱${Number(property.price).toLocaleString()})` : '';
+        return `<option value="${property.id}">${title}${location}${price}</option>`;
+    }).join('');
+
+    select.innerHTML = placeholder + options;
+    select.value = selectedId && loadedProperties.some(property => String(property.id) === String(selectedId))
+        ? String(selectedId)
+        : '';
+}
+
 function onPropertySelectionChange() {
     const select = document.getElementById('propertySelect');
-    if (!select || !select.value) return;
+    if (!select) return;
+    if (!select.value) {
+        const notice = document.getElementById('soldPropertyNotice');
+        setPropertySelection(null, notice && !notice.hidden ? notice.textContent : '');
+        return;
+    }
 
     const propId = String(select.value);
     const found = loadedProperties.find(p => String(p.id) === propId);
     if (found) {
-        selectedProperty = found;
-        renderSelectedProperty(found);
+        setPropertySelection(found);
+    } else {
+        setPropertySelection(null);
     }
 }
 
@@ -228,7 +275,7 @@ async function loadPropertiesCatalog() {
         if (typeof apiGetProperties === 'function') {
             const list = await apiGetProperties();
             if (Array.isArray(list) && list.length > 0) {
-                loadedProperties = list;
+                allLoadedProperties = list;
             }
         }
     } catch (err) {
@@ -236,17 +283,17 @@ async function loadPropertiesCatalog() {
     }
 
     // Fallback if needed
-    if (loadedProperties.length === 0) {
+    if (allLoadedProperties.length === 0) {
         try {
             const cached = JSON.parse(localStorage.getItem('cached_live_properties') || localStorage.getItem('urbanScopeProperties') || '[]');
             if (Array.isArray(cached) && cached.length > 0) {
-                loadedProperties = cached;
+                allLoadedProperties = cached;
             }
         } catch (e) {}
     }
 
-    if (loadedProperties.length === 0) {
-        loadedProperties = [
+    if (allLoadedProperties.length === 0) {
+        allLoadedProperties = [
             {
                 id: 1,
                 title: "Casasuerte",
@@ -284,25 +331,18 @@ async function loadPropertiesCatalog() {
                 image_url: "assets/images/AirmenTriplex.WEBP"
             }
         ];
-    } else {
-        loadedProperties.forEach(p => {
-            if (!p || !p.title) return;
-            const t = p.title.toLowerCase();
-            if (t.includes('suerte')) p.title = 'Casasuerte';
-            else if (t.includes('kathleen')) p.title = 'Kathleen';
-        });
     }
 
+    allLoadedProperties.forEach(property => {
+        if (!property || !property.title) return;
+        const title = property.title.toLowerCase();
+        if (title.includes('suerte')) property.title = 'Casasuerte';
+        else if (title.includes('kathleen')) property.title = 'Kathleen';
+    });
+    loadedProperties = allLoadedProperties.filter(property => !isSoldOutProperty(property));
+
     // Populate propertySelect dropdown
-    const select = document.getElementById('propertySelect');
-    if (select) {
-        select.innerHTML = loadedProperties.map(p => {
-            const title = p.title || p.propertyName || 'Property';
-            const loc = p.location ? ` - ${p.location}` : '';
-            const price = p.price ? ` (₱${Number(p.price).toLocaleString()})` : '';
-            return `<option value="${p.id}">${title}${loc}${price}</option>`;
-        }).join('');
-    }
+    renderAvailablePropertyOptions();
 
     // Read URL params to determine initial mode & property
     const urlParams = new URLSearchParams(window.location.search);
@@ -312,28 +352,73 @@ async function loadPropertiesCatalog() {
 
     let matched = null;
     if (paramId) {
-        matched = loadedProperties.find(p => String(p.id) === String(paramId));
+        matched = allLoadedProperties.find(p => String(p.id) === String(paramId));
     }
     if (!matched && paramTitle) {
-        matched = loadedProperties.find(p => (p.title || p.propertyName || '').toLowerCase().includes(paramTitle));
+        matched = allLoadedProperties.find(p => {
+            const propertyTitle = (p.title || p.propertyName || '').toLowerCase();
+            return propertyTitle.includes(paramTitle) || paramTitle.includes(propertyTitle);
+        });
     }
 
     if (matched) {
-        selectedProperty = matched;
-        if (select) select.value = String(matched.id);
-        renderSelectedProperty(matched);
+        if (isSoldOutProperty(matched)) {
+            renderAvailablePropertyOptions();
+            setPropertySelection(null, `${matched.title || 'This property'} is sold out and is no longer accepting inquiries. Choose an available listing or switch to a general consultation.`);
+        } else {
+            setPropertySelection(matched);
+        }
         switchInquiryMode('property');
     } else if (paramType === 'property') {
-        selectedProperty = loadedProperties[0] || null;
-        if (select && selectedProperty) select.value = String(selectedProperty.id);
-        if (selectedProperty) renderSelectedProperty(selectedProperty);
+        const hasSpecificTarget = Boolean(paramId || paramTitle);
+        const firstAvailable = hasSpecificTarget ? null : (loadedProperties[0] || null);
+        const noticeText = firstAvailable
+            ? ''
+            : hasSpecificTarget
+                ? 'This listing could not be verified as available. Choose an available listing or switch to a general consultation.'
+                : 'There are no available properties accepting inquiries right now. You can still submit a general consultation.';
+        setPropertySelection(firstAvailable, noticeText);
         switchInquiryMode('property');
     } else {
         // Default to General Consultation (eliminates forced/unwanted property selection)
-        selectedProperty = loadedProperties[0] || null;
-        if (selectedProperty) renderSelectedProperty(selectedProperty);
+        setPropertySelection(loadedProperties[0] || null);
         switchInquiryMode('general');
     }
+}
+
+function updatePropertyAvailability(property) {
+    if (!property) return;
+
+    const index = allLoadedProperties.findIndex(item => String(item.id) === String(property.id));
+    if (index >= 0) allLoadedProperties[index] = { ...allLoadedProperties[index], ...property };
+    else allLoadedProperties.push(property);
+
+    loadedProperties = allLoadedProperties.filter(item => !isSoldOutProperty(item));
+    renderAvailablePropertyOptions(selectedProperty && !isSoldOutProperty(selectedProperty) ? selectedProperty.id : '');
+}
+
+function handleSoldOutSelection(property) {
+    updatePropertyAvailability(property);
+    const title = property?.title || selectedProperty?.title || 'This property';
+    setPropertySelection(null, `${title} is sold out and is no longer accepting inquiries. Choose an available listing or switch to a general consultation.`);
+}
+
+async function refreshSelectedPropertyAvailability() {
+    if (inquirySubmitInProgress || !selectedProperty?.id || typeof apiGetPropertyById !== 'function') return;
+
+    try {
+        const property = await apiGetPropertyById(selectedProperty.id);
+        if (!property) return;
+        if (isSoldOutProperty(property)) {
+            handleSoldOutSelection(property);
+            showToastNotice('This property is sold out and can no longer receive inquiries.', true);
+            return;
+        }
+
+        selectedProperty = property;
+        updatePropertyAvailability(property);
+        setPropertySelection(property);
+    } catch (_) {}
 }
 
 function showSuccessModal(inquiryData, scheduleDetails) {
@@ -432,6 +517,34 @@ async function submitInquiry() {
         submitBtn.style.opacity = '0.85';
     }
 
+    if (currentInquiryMode === 'property') {
+        if (!selectedProperty) {
+            inquirySubmitInProgress = false;
+            refreshInquiryCooldownUi();
+            showToastNotice('Choose an available property before submitting this inquiry.', true);
+            return;
+        }
+
+        let currentProperty = selectedProperty;
+        if (selectedProperty.id && typeof apiGetPropertyById === 'function') {
+            try {
+                currentProperty = await apiGetPropertyById(selectedProperty.id) || selectedProperty;
+            } catch (_) {}
+        }
+
+        if (isSoldOutProperty(currentProperty)) {
+            handleSoldOutSelection(currentProperty);
+            inquirySubmitInProgress = false;
+            refreshInquiryCooldownUi();
+            showToastNotice('This property is sold out and can no longer receive inquiries.', true);
+            return;
+        }
+
+        selectedProperty = currentProperty;
+        updatePropertyAvailability(currentProperty);
+        setPropertySelection(currentProperty);
+    }
+
     const clientName = document.getElementById('clientName').value.trim();
     const clientEmail = document.getElementById('clientEmail').value.trim();
     const clientPhone = document.getElementById('clientPhone').value.trim();
@@ -506,6 +619,14 @@ window.addEventListener('DOMContentLoaded', () => {
         if (event.key && (event.key.startsWith(INQUIRY_COOLDOWN_STORAGE_PREFIX) || event.key === 'urbanscope_user' || event.key === 'urbanscope_demo_user')) {
             refreshInquiryCooldownUi();
         }
+        if (event.key === 'cached_live_properties') {
+            refreshSelectedPropertyAvailability();
+        }
+    });
+
+    window.addEventListener('focus', refreshSelectedPropertyAvailability);
+    document.addEventListener('visibilitychange', () => {
+        if (!document.hidden) refreshSelectedPropertyAvailability();
     });
 
     const clientEmailInput = document.getElementById('clientEmail');

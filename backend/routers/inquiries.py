@@ -29,11 +29,32 @@ def submit_inquiry(payload: InquiryCreate):
     conn = get_db_connection()
     cursor = conn.cursor()
 
+    property_title = (payload.property_title or "General Inquiry").strip()
+    cursor.execute(
+        "SELECT status FROM properties WHERE LOWER(TRIM(title)) = LOWER(TRIM(?)) LIMIT 1",
+        (property_title,)
+    )
+    matching_property = cursor.fetchone()
+    if matching_property:
+        property_status = " ".join(
+            str(matching_property["status"] or "")
+            .lower()
+            .replace("_", " ")
+            .replace("-", " ")
+            .split()
+        )
+        if property_status in {"sold", "sold out"}:
+            conn.close()
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="This property is sold out and is no longer accepting inquiries."
+            )
+
     cursor.execute("""
         INSERT INTO inquiries (property_title, client_name, client_email, client_phone, message, status)
         VALUES (?, ?, ?, ?, ?, ?)
     """, (
-        payload.property_title or "General Inquiry",
+        property_title,
         payload.client_name.strip(),
         payload.client_email.strip(),
         payload.client_phone.strip() if payload.client_phone else "",
@@ -54,7 +75,7 @@ def submit_inquiry(payload: InquiryCreate):
         "admin.realestate@gmail.com",
         "new_inquiry",
         inq_id,
-        payload.property_title or "General Inquiry",
+        property_title,
         payload.client_name.strip(),
         f"New inquiry submitted by {payload.client_name.strip()}",
         f"{payload.client_name.strip()} submitted inquiry {code}."
