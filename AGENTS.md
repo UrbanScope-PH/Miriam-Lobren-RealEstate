@@ -660,6 +660,10 @@ path when rendering from a page.
     - After a successful inquiry, the client must wait one minute before submitting another. Failed submissions do not start the cooldown.
     - The deadline is stored in browser `localStorage` per signed-in client, survives refreshes, and synchronizes across tabs. The inquiry form and success modal show a live countdown and disable their submit actions until the cooldown ends.
 
+55. **Sold Property Inquiry Availability (`frontend/pages/properties/`, `frontend/pages/inquiry/`, `frontend/shared/js/`, `backend/routers/inquiries.py`):**
+    - Sold / Sold Out listings remain visible in the public catalog, but property pages disable their inquiry action and the inquiry form omits them from selectable listings.
+    - Property pages refresh status on focus and admin cache updates. The inquiry form refreshes the selected listing and rechecks it before submission; both API gateways reject sold-property inquiries, and the local FastAPI inquiry endpoint returns HTTP 409 for a sold listing.
+
 ---
 
 ## Safety Rules

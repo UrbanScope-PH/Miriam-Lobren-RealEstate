@@ -1036,6 +1036,23 @@
             status: inquiry.status || 'Under Review'
         };
 
+        const inquiryTitleKey = String(payload.property_title || '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
+        if (inquiryTitleKey && !inquiryTitleKey.startsWith('general consultation') && !inquiryTitleKey.startsWith('general inquiry')) {
+            try {
+                const properties = await apiGetProperties();
+                const matchedProperty = Array.isArray(properties) && properties.find(property => {
+                    const titleKey = String(property.title || property.propertyName || property.name || '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
+                    return titleKey && (titleKey === inquiryTitleKey || titleKey.includes(inquiryTitleKey) || inquiryTitleKey.includes(titleKey));
+                });
+                const statusKey = String(matchedProperty?.status || '').toLowerCase().replace(/[\s_-]+/g, ' ').trim();
+                if (matchedProperty && (statusKey === 'sold' || statusKey === 'sold out')) {
+                    return { success: false, error: 'This property is sold out and is no longer accepting inquiries.' };
+                }
+            } catch (err) {
+                console.warn('Unable to verify property availability before inquiry:', err.message);
+            }
+        }
+
         let result = null;
 
         // 1. Try Supabase Cloud

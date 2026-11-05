@@ -340,6 +340,21 @@ body {
     align-items: center;
 }
 
+.sold-property-notice {
+    margin: 14px 0;
+    padding: 12px 14px;
+    border: 1px solid #fecaca;
+    border-radius: 10px;
+    background: #fef2f2;
+    color: #991b1b;
+    font-size: 0.9rem;
+    line-height: 1.5;
+}
+
+.sold-property-notice[hidden] {
+    display: none;
+}
+
 .summary-thumb {
     width: 130px;
     height: 90px;

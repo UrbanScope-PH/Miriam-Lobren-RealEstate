@@ -123,7 +123,7 @@ Listing catalog shown on the home page, property detail pages, and admin pages.
 | `floor_area` | REAL | `80` | m² — *added by migration* |
 | `carports` | INTEGER | `1` | *added by migration* |
 | `storeys` | INTEGER | `2` | *added by migration* |
-| `status` | TEXT | `'Available'` | Free text |
+| `status` | TEXT | `'Available'` | Free text; `Sold` / `Sold Out` listings remain visible to clients but are excluded from property inquiry choices and rejected by inquiry submission checks. |
 | `image_url` | TEXT | — | **Root-relative** path, e.g. `assets/images/property1.jpg` (relative to `frontend/`) |
 | `description` | TEXT | — | |
 | `amenities` | TEXT | `''` | **Comma-separated** list — *added by migration* |
