@@ -150,6 +150,7 @@ path when rendering from a page.
 - **Always update documentation (.md) when chatting/completing tasks:** Every change, new route, UI adjustment,
   schema update, or architectural decision MUST immediately be recorded in `AGENTS.md`, `README.md`, and
   `DATABASE.md` as appropriate. Never finish a turn without ensuring markdown documentation reflects the current state.
+- **Git Branch & Commit Suggestion Habit:** At the end of every response where code or files are changed, always provide a suggested branch name and conventional git commit message (e.g. `fix(ui): improve ...`, `feat(auth): ...`).
 
 ---
 
