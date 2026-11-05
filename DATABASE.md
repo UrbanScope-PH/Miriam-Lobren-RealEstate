@@ -454,3 +454,11 @@ supabase migration new add_some_column   # create the next migration file
 3. Verify that all 12 tables and views report row counts in the results panel.
 4. Obtain the **Project URL** and **API anon key** from **Project Settings -> API**.
 5. Supply the credentials to Antigravity to configure the frontend gateway.
+
+### 10.3 Cloud vs Local Database Synchronization Verification
+
+| Environment | Database Engine | Primary Access Gateway |
+| :--- | :--- | :--- |
+| **Local Development** | SQLite 3 (`backend/urbanscope.db`) | FastAPI REST Endpoints (`/api/*`) |
+| **Cloud Production** | Supabase Postgres (Remote Cloud) | Supabase REST / Edge Functions |
+| **Failover Strategy** | Local Cache & Fallback Tables | Client LocalStorage Resiliency |
