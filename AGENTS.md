@@ -734,7 +734,8 @@ path when rendering from a page.
     - Removed obsolete custom topbar styling overrides in `inquiry.css` and `history.css` (`.app-topbar`, `.topbar-left`, `.go-back-btn`, `.app-brand`), allowing both pages to inherit the global design tokens, 90px sticky height, responsive breakpoints, and mobile drawer from `common.css` and `mobile-shell.css`.
 66. **Live Deployment Reference & Pull Request Workflow:**
     - Documented live Vercel production deployment (`https://miriam-lobren-real-estate.vercel.app/`) in `README.md` under Getting Started.
-    - Verified GitHub Environments (`Production` and `Preview`) and PR integration workflow via Pull Request #3 merge into `main`.
+    - Verified GitHub Environments (`Production` and `Preview`) and PR integration workflow via Pull Requests #3 through #10 merged into `main`.
+    - Added `CONTRIBUTING.md` defining branching conventions and pull request standards.
 
 
 ---
