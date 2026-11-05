@@ -37,6 +37,8 @@ This document records all features, enhancements, bug fixes, user requests, arch
 | **Nov 2026** | **Registration Terms Modal** | Added mandatory scroll-to-accept Terms of Service & Privacy Policy popup modal on registration page before allowing account creation | `register.html`, `register.js`, `auth.css`, `auth.js` |
 | **Nov 2026** | **Superadmin RBAC Cloud Sync** | Fixed `Error loading users: Failed to fetch` on Vercel Superadmin Console, added dual-tier Supabase Cloud + FastAPI Superadmin gateway methods, `'client'`/`'user'` role normalization, `users` DELETE RLS migration, and SQLite trigger preservation for admin creation | `pages/superadmin/dashboard.js`, `dashboard.html`, `supabase.js`, `api.js`, `backend/routers/superadmin.py`, `backend/routers/auth.py`, `supabase/migrations/20261103231500_allow_delete_users_rls.sql` |
 | **Nov 2026** | **Google Sign-Up Terms Gate** | Enforced mandatory scroll-to-accept Terms of Service & Privacy Policy approval before launching Google OAuth on registration (`#googleSignup`), seamlessly continuing into Google sign-up upon clicking **I Agree** | `frontend/pages/auth/register.js`, `frontend/pages/auth/auth.js` |
+| **Nov 2026** | **Navbar Alignment** | Aligned client inquiry and history page navigation with the homepage standard navbar, logos, and session profile chip | `inquiry.html`, `inquiry.css`, `history.html`, `history.css` |
+| **Nov 2026** | **Deployment Environments** | Configured GitHub production and preview environments integrated with Vercel Bot automated builds | `README.md`, `AGENTS.md`, GitHub Settings |
 
 ---
 
