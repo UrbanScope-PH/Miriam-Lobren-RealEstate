@@ -5,6 +5,7 @@ Handles registration, sign-in, Google OAuth 2.0, profile updates, and password c
 
 import json
 import os
+import re
 import secrets
 import urllib.error
 import urllib.parse
@@ -12,7 +13,7 @@ import urllib.request
 from datetime import datetime, timezone
 from typing import Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Response, status
+from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
 from fastapi.responses import RedirectResponse
 
 from backend.auth import (
@@ -26,12 +27,26 @@ from backend.auth import (
     verify_google_token,
     verify_password,
 )
+from backend.auth_otp import (
+    clear_local_challenge,
+    consume_local_challenge,
+    create_otp,
+    get_otp_secret,
+    ip_digest,
+    issue_local_challenge,
+    otp_digest,
+    send_otp_email,
+)
 from backend.database import determine_user_role, get_db_connection, row_to_dict
 from backend.models import (
     AdminProfileUpdate,
     AuthResponse,
+    EmailOtpRegistrationComplete,
+    EmailOtpStartRequest,
     GoogleAuthRequest,
     PasswordChangeRequest,
+    PasswordResetComplete,
+    PasswordResetRequest,
     UserLogin,
     UserRegister,
     UserResponse,
@@ -41,6 +56,98 @@ router = APIRouter()
 
 SUPABASE_URL = "https://vfspjuqymfbagesjxjmc.supabase.co"
 SUPABASE_ANON_KEY = "sb_publishable_96sfQ4F18ypajf6bitBRqg_JtWTL4__"
+OTP_GENERIC_REGISTER_MESSAGE = "If registration can proceed, a verification code has been sent to that email address."
+OTP_GENERIC_RESET_MESSAGE = "If an account can be recovered with that email, a verification code has been sent."
+
+
+def _supabase_api_key() -> str:
+    return os.environ.get("SUPABASE_SERVICE_ROLE_KEY", "").strip() or SUPABASE_ANON_KEY
+
+
+def _email_is_valid(email: str) -> bool:
+    return len(email) <= 254 and bool(re.fullmatch(r"[^\s@]+@[^\s@]+\.[^\s@]+", email))
+
+
+def _require_otp_configuration() -> None:
+    try:
+        get_otp_secret()
+    except RuntimeError as exc:
+        raise HTTPException(status_code=503, detail=str(exc)) from exc
+    if not os.environ.get("RESEND_API_KEY", "").strip() or not os.environ.get("RESEND_FROM_EMAIL", "").strip():
+        raise HTTPException(status_code=503, detail="Email verification is not configured on the server.")
+
+
+def _request_origin_allowed(request: Request) -> bool:
+    origin = request.headers.get("origin")
+    if not origin:
+        return True
+    try:
+        origin_host = urllib.parse.urlparse(origin).hostname
+        request_host = request.url.hostname
+        if origin_host == request_host:
+            return True
+        local_hosts = {"localhost", "127.0.0.1", "::1"}
+        return origin_host in local_hosts and request_host in local_hosts
+    except Exception:
+        return False
+
+
+def _cloud_user_by_email(email: str) -> Optional[dict]:
+    """Look up the cloud account with server credentials when available."""
+    if _is_cloud_sync_disabled():
+        return None
+    try:
+        encoded = urllib.parse.quote(email, safe="")
+        url = f"{SUPABASE_URL}/rest/v1/users?email=eq.{encoded}&select=id,email,password_hash,role,full_name,phone,bio"
+        key = _supabase_api_key()
+        req = urllib.request.Request(url, headers={"apikey": key, "Authorization": f"Bearer {key}"})
+        with urllib.request.urlopen(req, timeout=2.5) as resp:
+            rows = json.loads(resp.read().decode("utf-8"))
+        return rows[0] if isinstance(rows, list) and rows else None
+    except Exception:
+        return None
+
+
+def _verified_cloud_password_update(email: str, password_hash: str) -> bool:
+    """Update a cloud password after OTP proof; service credentials can set verification state."""
+    if _is_cloud_sync_disabled():
+        return False
+    key = os.environ.get("SUPABASE_SERVICE_ROLE_KEY", "").strip()
+    if not key:
+        return False
+    try:
+        encoded = urllib.parse.quote(email, safe="")
+        url = f"{SUPABASE_URL}/rest/v1/users?email=eq.{encoded}"
+        body = json.dumps({
+            "password_hash": password_hash,
+            "email_verified_at": datetime.now(timezone.utc).isoformat(),
+            "updated_at": datetime.now(timezone.utc).isoformat()
+        }).encode("utf-8")
+        req = urllib.request.Request(url, data=body, headers={
+            "apikey": key,
+            "Authorization": f"Bearer {key}",
+            "Content-Type": "application/json",
+            "Prefer": "return=representation"
+        }, method="PATCH")
+        with urllib.request.urlopen(req, timeout=4) as resp:
+            rows = json.loads(resp.read().decode("utf-8"))
+        return bool(rows)
+    except Exception:
+        return False
+
+
+def _issue_otp_for_local_request(email: str, purpose: str, request: Request) -> bool:
+    code = create_otp()
+    digest = otp_digest(email, purpose, code)
+    ip_address = request.client.host if request.client else "unknown"
+    if not issue_local_challenge(email, purpose, digest, ip_digest(ip_address)):
+        return False
+    try:
+        send_otp_email(email, purpose, code)
+        return True
+    except Exception:
+        clear_local_challenge(email, purpose)
+        return False
 
 
 def _is_cloud_sync_disabled() -> bool:
@@ -62,7 +169,8 @@ def normalize_db_role(role: Optional[str], email: str = "") -> str:
 
 def sync_password_to_supabase(email: str, password_hash: str) -> bool:
     """Synchronizes updated PBKDF2 password hash to Supabase Cloud so all devices & phones stay in sync."""
-    if _is_cloud_sync_disabled():
+    key = os.environ.get("SUPABASE_SERVICE_ROLE_KEY", "").strip()
+    if _is_cloud_sync_disabled() or not key:
         return False
     try:
         clean_email = email.strip().lower()
@@ -76,8 +184,8 @@ def sync_password_to_supabase(email: str, password_hash: str) -> bool:
             url,
             data=body,
             headers={
-                "apikey": SUPABASE_ANON_KEY,
-                "Authorization": f"Bearer {SUPABASE_ANON_KEY}",
+                "apikey": key,
+                "Authorization": f"Bearer {key}",
                 "Content-Type": "application/json",
                 "Prefer": "return=representation"
             },
@@ -95,14 +203,15 @@ def sync_password_to_supabase(email: str, password_hash: str) -> bool:
             "password_hash": password_hash,
             "full_name": "Miriam Lobren",
             "role": "admin" if clean_email != "urbanscope.cvsu@gmail.com" else "superadmin",
-            "avatar_url": "assets/images/agent.jpg"
+            "avatar_url": "assets/images/agent.jpg",
+            "email_verified_at": datetime.now(timezone.utc).isoformat()
         }).encode("utf-8")
         req_post = urllib.request.Request(
             create_url,
             data=create_body,
             headers={
-                "apikey": SUPABASE_ANON_KEY,
-                "Authorization": f"Bearer {SUPABASE_ANON_KEY}",
+                "apikey": key,
+                "Authorization": f"Bearer {key}",
                 "Content-Type": "application/json"
             },
             method="POST"
@@ -115,7 +224,8 @@ def sync_password_to_supabase(email: str, password_hash: str) -> bool:
 
 def sync_new_user_to_supabase(user_dict: dict, password_hash: str) -> bool:
     """Synchronizes a newly registered or Google-authenticated user to Supabase Cloud."""
-    if _is_cloud_sync_disabled():
+    key = os.environ.get("SUPABASE_SERVICE_ROLE_KEY", "").strip()
+    if _is_cloud_sync_disabled() or not key:
         return False
     try:
         clean_email = (user_dict.get("email") or "").strip().lower()
@@ -124,8 +234,8 @@ def sync_new_user_to_supabase(user_dict: dict, password_hash: str) -> bool:
         encoded_email = urllib.parse.quote(clean_email)
         check_url = f"{SUPABASE_URL}/rest/v1/users?email=ilike.{encoded_email}&select=id,bio"
         req_check = urllib.request.Request(check_url, headers={
-            "apikey": SUPABASE_ANON_KEY,
-            "Authorization": f"Bearer {SUPABASE_ANON_KEY}"
+            "apikey": key,
+            "Authorization": f"Bearer {key}"
         })
         with urllib.request.urlopen(req_check, timeout=2.5) as resp:
             existing = json.loads(resp.read().decode("utf-8"))
@@ -141,14 +251,15 @@ def sync_new_user_to_supabase(user_dict: dict, password_hash: str) -> bool:
                     "phone": user_dict.get("phone") or "",
                     "role": role_val,
                     "bio": "",
+                    "email_verified_at": datetime.now(timezone.utc).isoformat(),
                     "updated_at": datetime.now(timezone.utc).isoformat()
                 }).encode("utf-8")
                 req_patch = urllib.request.Request(
                     patch_url,
                     data=patch_body,
                     headers={
-                        "apikey": SUPABASE_ANON_KEY,
-                        "Authorization": f"Bearer {SUPABASE_ANON_KEY}",
+                        "apikey": key,
+                        "Authorization": f"Bearer {key}",
                         "Content-Type": "application/json"
                     },
                     method="PATCH"
@@ -165,14 +276,15 @@ def sync_new_user_to_supabase(user_dict: dict, password_hash: str) -> bool:
             "phone": user_dict.get("phone") or "",
             "role": role_val,
             "avatar_url": user_dict.get("avatar_url") or "",
-            "google_id": user_dict.get("google_id") or None
+            "google_id": user_dict.get("google_id") or None,
+            "email_verified_at": datetime.now(timezone.utc).isoformat()
         }).encode("utf-8")
         req_post = urllib.request.Request(
             post_url,
             data=post_body,
             headers={
-                "apikey": SUPABASE_ANON_KEY,
-                "Authorization": f"Bearer {SUPABASE_ANON_KEY}",
+                "apikey": key,
+                "Authorization": f"Bearer {key}",
                 "Content-Type": "application/json"
             },
             method="POST"
@@ -192,7 +304,7 @@ def sync_password_from_supabase_if_valid(clean_email: str, plain_password: str) 
         url = (
             f"{SUPABASE_URL}/rest/v1/users"
             f"?email=ilike.{encoded_email}"
-            f"&select=id,email,password_hash,full_name,phone,role,avatar_url,google_id,bio"
+            f"&select=id,email,password_hash,full_name,phone,role,avatar_url,google_id,bio,email_verified_at"
         )
         req = urllib.request.Request(url, headers={
             "apikey": SUPABASE_ANON_KEY,
@@ -204,6 +316,8 @@ def sync_password_from_supabase_if_valid(clean_email: str, plain_password: str) 
                 row = data[0]
                 if row.get("bio") == "__URBANSCOPE_DELETED__" or row.get("password_hash") == "__DELETED_ACCOUNT__":
                     return None
+                if not row.get("email_verified_at"):
+                    return None
                 remote_hash = row.get("password_hash")
                 if remote_hash and verify_password(plain_password, remote_hash):
                     norm_role = normalize_db_role(row.get("role"), clean_email)
@@ -213,14 +327,14 @@ def sync_password_from_supabase_if_valid(clean_email: str, plain_password: str) 
                     local_row = c.fetchone()
                     if local_row:
                         c.execute(
-                            "UPDATE users SET password_hash = ?, role = ? WHERE id = ?",
-                            (remote_hash, norm_role, local_row["id"])
+                            "UPDATE users SET password_hash = ?, role = ?, email_verified_at = ? WHERE id = ?",
+                            (remote_hash, norm_role, row.get("email_verified_at"), local_row["id"])
                         )
                     else:
                         c.execute(
                             """
-                            INSERT INTO users (email, password_hash, full_name, phone, role, avatar_url, google_id)
-                            VALUES (?, ?, ?, ?, ?, ?, ?)
+                            INSERT INTO users (email, password_hash, full_name, phone, role, avatar_url, google_id, email_verified_at)
+                            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
                             """,
                             (
                                 clean_email,
@@ -229,7 +343,8 @@ def sync_password_from_supabase_if_valid(clean_email: str, plain_password: str) 
                                 (row.get("phone") or "").strip(),
                                 norm_role,
                                 row.get("avatar_url") or "assets/images/agent.jpg",
-                                row.get("google_id") or None
+                                row.get("google_id") or None,
+                                row.get("email_verified_at")
                             )
                         )
                         new_local_id = c.lastrowid
@@ -275,85 +390,168 @@ def sync_latest_password_from_supabase(clean_email: str) -> Optional[str]:
 # AUTHENTICATION ENDPOINTS (WITH RBAC)
 # ==========================================================
 
-@router.post("/api/auth/register", response_model=AuthResponse, tags=["Auth"])
-def register_user(payload: UserRegister, response: Response):
-    """
-    Registers a new user account with automatic database role detection:
-    - admin.realestate@gmail.com -> 'admin'
-    - urbanscope.cvsu@gmail.com -> 'superadmin'
-    - all other emails -> 'user'
-    """
+@router.post("/api/auth/register/start", tags=["Auth"])
+def start_email_registration(payload: EmailOtpStartRequest, request: Request):
+    """Send a short-lived email code without revealing whether an account exists."""
+    if not _request_origin_allowed(request):
+        raise HTTPException(status_code=403, detail="This request is not allowed.")
+    _require_otp_configuration()
+    clean_email = payload.email.strip().lower()
+    if not _email_is_valid(clean_email):
+        raise HTTPException(status_code=400, detail="Enter a valid email address.")
+    if clean_email in AUTHORIZED_ADMIN_EMAILS or clean_email in AUTHORIZED_SUPERADMIN_EMAILS:
+        return {"success": True, "message": OTP_GENERIC_REGISTER_MESSAGE}
+
+    conn = get_db_connection()
+    try:
+        local_user = conn.execute("SELECT id FROM users WHERE LOWER(email) = ?", (clean_email,)).fetchone()
+    finally:
+        conn.close()
+    if not local_user and not _cloud_user_by_email(clean_email):
+        _issue_otp_for_local_request(clean_email, "register", request)
+    return {"success": True, "message": OTP_GENERIC_REGISTER_MESSAGE}
+
+
+@router.post("/api/auth/register/verify", response_model=AuthResponse, tags=["Auth"])
+def complete_email_registration(payload: EmailOtpRegistrationComplete, request: Request, response: Response):
+    """Consume a verified email code, create the client account, and start a session."""
+    if not _request_origin_allowed(request):
+        raise HTTPException(status_code=403, detail="This request is not allowed.")
+    _require_otp_configuration()
+    clean_email = payload.email.strip().lower()
+    code = payload.code.strip()
+    if not _email_is_valid(clean_email) or not re.fullmatch(r"[0-9]{6}", code):
+        raise HTTPException(status_code=400, detail="Check the verification code and email address.")
+    if clean_email in AUTHORIZED_ADMIN_EMAILS or clean_email in AUTHORIZED_SUPERADMIN_EMAILS:
+        raise HTTPException(status_code=400, detail="This email cannot be registered through the client sign-up form.")
+
+    if _cloud_user_by_email(clean_email):
+        raise HTTPException(status_code=400, detail="That code is invalid or expired. Request a new code and try again.")
+
+    supplied_hash = otp_digest(clean_email, "register", code)
+    if not consume_local_challenge(clean_email, "register", supplied_hash):
+        raise HTTPException(status_code=400, detail="That code is invalid or expired. Request a new code and try again.")
+
+    password_hash = hash_password(payload.password)
     conn = get_db_connection()
     cursor = conn.cursor()
-
-    clean_email = payload.email.strip().lower()
-
-    # Check for existing email
-    cursor.execute("SELECT id FROM users WHERE LOWER(email) = ?", (clean_email,))
-    if cursor.fetchone():
-        conn.close()
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="An account with this email address already exists."
-        )
-
-    # Automatic role assignment (also strictly enforced by SQLite trigger)
-    role = determine_user_role(clean_email)
-    pwd_hash = hash_password(payload.password)
-
-    cursor.execute("""
-        INSERT INTO users (email, password_hash, full_name, phone, role)
-        VALUES (?, ?, ?, ?, ?)
-    """, (clean_email, pwd_hash, payload.full_name.strip(), payload.phone.strip() if payload.phone else "", role))
-    conn.commit()
-
-    user_id = cursor.lastrowid
-    cursor.execute(
-        "SELECT id, email, full_name, phone, role, avatar_url, google_id, created_at FROM users WHERE id = ?",
-        (user_id,)
-    )
-    user_dict = row_to_dict(cursor.fetchone())
-    conn.close()
-
-    # Best-effort sync to Supabase Cloud so cloud & mobile deployments recognize the new account
     try:
-        sync_new_user_to_supabase(user_dict, pwd_hash)
+        cursor.execute("SELECT id FROM users WHERE LOWER(email) = ?", (clean_email,))
+        if cursor.fetchone():
+            raise HTTPException(status_code=400, detail="That code is invalid or expired. Request a new code and try again.")
+        cursor.execute(
+            """INSERT INTO users (email, password_hash, full_name, phone, role, email_verified_at)
+               VALUES (?, ?, ?, ?, 'user', ?)""",
+            (clean_email, password_hash, payload.full_name.strip(), (payload.phone or "").strip(), datetime.now(timezone.utc).isoformat())
+        )
+        user_id = cursor.lastrowid
+        conn.commit()
+        cursor.execute(
+            "SELECT id, email, full_name, phone, role, avatar_url, google_id, created_at FROM users WHERE id = ?",
+            (user_id,)
+        )
+        user_dict = row_to_dict(cursor.fetchone())
+    finally:
+        conn.close()
+
+    try:
+        sync_new_user_to_supabase(user_dict, password_hash)
     except Exception:
         pass
 
-    # Issue JWT containing user id, email, and role
     token = create_access_token({
         "sub": str(user_dict["id"]),
         "id": user_dict["id"],
         "email": user_dict["email"],
         "role": user_dict["role"]
     })
-
-    # Set secure cookie for browser route protection
-    response.set_cookie(
-        key="access_token",
-        value=token,
-        httponly=True,
-        samesite="lax",
-        max_age=7 * 24 * 3600,
-        path="/"
-    )
-
-    # Automatic login redirection based on identity and role
-    if user_dict["role"] == "superadmin" and clean_email in AUTHORIZED_SUPERADMIN_EMAILS:
-        redirect_url = "/pages/superadmin/dashboard.html"
-    elif user_dict["role"] in AUTHORIZED_ADMIN_ROLES or clean_email in AUTHORIZED_ADMIN_EMAILS:
-        redirect_url = "/pages/admin/dashboard.html"
-    else:
-        redirect_url = "/index.html"
-
+    response.set_cookie(key="access_token", value=token, httponly=True, samesite="lax", max_age=7 * 24 * 3600, path="/")
     return AuthResponse(
         success=True,
         token=token,
         user=UserResponse(**user_dict),
-        redirect_url=redirect_url,
-        message="Registration successful"
+        redirect_url="/index.html",
+        message="Email verified and registration complete."
     )
+
+
+@router.post("/api/auth/password/reset/request", tags=["Auth"])
+def request_password_reset(payload: PasswordResetRequest, request: Request):
+    """Send a password-recovery code using the same response for known and unknown emails."""
+    if not _request_origin_allowed(request):
+        raise HTTPException(status_code=403, detail="This request is not allowed.")
+    _require_otp_configuration()
+    clean_email = payload.email.strip().lower()
+    if not _email_is_valid(clean_email):
+        raise HTTPException(status_code=400, detail="Enter a valid email address.")
+
+    conn = get_db_connection()
+    try:
+        local_user = conn.execute(
+            "SELECT password_hash FROM users WHERE LOWER(email) = ?", (clean_email,)
+        ).fetchone()
+    finally:
+        conn.close()
+    cloud_user = _cloud_user_by_email(clean_email)
+    has_password = bool((local_user and local_user["password_hash"]) or (cloud_user and cloud_user.get("password_hash")))
+    deleted = bool((cloud_user and (cloud_user.get("bio") == "__URBANSCOPE_DELETED__" or cloud_user.get("password_hash") == "__DELETED_ACCOUNT__")))
+    cloud_only_reset_needs_service_key = bool(cloud_user and not local_user and not _supabase_service_role_key())
+    if has_password and not deleted and not cloud_only_reset_needs_service_key:
+        _issue_otp_for_local_request(clean_email, "password_reset", request)
+    return {"success": True, "message": OTP_GENERIC_RESET_MESSAGE}
+
+
+@router.post("/api/auth/password/reset/confirm", tags=["Auth"])
+def complete_password_reset(payload: PasswordResetComplete, request: Request):
+    """Reset a password after consuming a single-use email code."""
+    if not _request_origin_allowed(request):
+        raise HTTPException(status_code=403, detail="This request is not allowed.")
+    _require_otp_configuration()
+    clean_email = payload.email.strip().lower()
+    code = payload.code.strip()
+    if not _email_is_valid(clean_email) or not re.fullmatch(r"[0-9]{6}", code):
+        raise HTTPException(status_code=400, detail="Enter a valid email address and six-digit code.")
+
+    local_user = _cloud_user_by_email(clean_email)
+    conn = get_db_connection()
+    try:
+        local_row = conn.execute(
+            "SELECT id FROM users WHERE LOWER(email) = ?", (clean_email,)
+        ).fetchone()
+    finally:
+        conn.close()
+    if not local_row and not local_user:
+        raise HTTPException(status_code=400, detail="That code is invalid or expired. Request a new code and try again.")
+    if local_user and not local_row and not _supabase_service_role_key():
+        raise HTTPException(status_code=503, detail="Cloud password recovery is not configured on this server.")
+
+    supplied_hash = otp_digest(clean_email, "password_reset", code)
+    if not consume_local_challenge(clean_email, "password_reset", supplied_hash):
+        raise HTTPException(status_code=400, detail="That code is invalid or expired. Request a new code and try again.")
+
+    new_hash = hash_password(payload.password)
+    if local_row:
+        conn = get_db_connection()
+        try:
+            conn.execute(
+                "UPDATE users SET password_hash = ?, email_verified_at = ? WHERE id = ?",
+                (new_hash, datetime.now(timezone.utc).isoformat(), local_row["id"])
+            )
+            conn.commit()
+        finally:
+            conn.close()
+    if local_user:
+        cloud_updated = _verified_cloud_password_update(clean_email, new_hash)
+        if not cloud_updated and not local_row:
+            raise HTTPException(status_code=503, detail="Cloud password recovery is not configured. Set SUPABASE_SERVICE_ROLE_KEY and try again.")
+
+    return {"success": True, "message": "Password updated. You can now log in with your new password."}
+
+
+@router.post("/api/auth/register", response_model=AuthResponse, tags=["Auth"])
+def register_user(payload: UserRegister, response: Response):
+    """Legacy signup route is closed so callers cannot bypass email verification."""
+    raise HTTPException(status_code=410, detail="Email verification is required. Use the registration verification flow.")
 
 
 @router.post("/api/auth/login", response_model=AuthResponse, tags=["Auth"])
@@ -391,6 +589,12 @@ def login_user(payload: UserLogin, response: Response):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid email or password."
+        )
+
+    if not user_row["email_verified_at"]:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Verify your email address before logging in."
         )
 
     user_dict = row_to_dict(user_row)
@@ -474,8 +678,8 @@ def google_authenticate(payload: GoogleAuthRequest, response: Response):
     if existing_row:
         existing = row_to_dict(existing_row)
         user_id = existing["id"]
-        updates = []
-        params = []
+        updates = ["email_verified_at = ?"]
+        params = [datetime.now(timezone.utc).isoformat()]
 
         if not existing.get("google_id"):
             updates.append("google_id = ?")
@@ -502,9 +706,9 @@ def google_authenticate(payload: GoogleAuthRequest, response: Response):
         avatar_to_save = google_avatar if google_avatar else "assets/images/agent.jpg"
 
         cursor.execute("""
-            INSERT INTO users (email, password_hash, full_name, phone, role, avatar_url, google_id)
-            VALUES (?, ?, ?, ?, ?, ?, ?)
-        """, (clean_email, pwd_hash, google_name, "", role, avatar_to_save, google_sub))
+            INSERT INTO users (email, password_hash, full_name, phone, role, avatar_url, google_id, email_verified_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        """, (clean_email, pwd_hash, google_name, "", role, avatar_to_save, google_sub, datetime.now(timezone.utc).isoformat()))
         conn.commit()
         user_id = cursor.lastrowid
 

@@ -17,13 +17,17 @@ from backend.auth import AUTHORIZED_ADMIN_EMAILS, hash_password, require_admin, 
 from backend.database import DB_PATH, get_db_connection, row_to_dict
 from backend.models import SuperadminCreateUser, SuperadminUpdateUser, UserRoleUpdate
 from backend.routers.auth import (
-    SUPABASE_ANON_KEY,
+    SUPABASE_ANON_KEY as _SUPABASE_ANON_KEY,
     SUPABASE_URL,
     normalize_db_role,
     sync_password_to_supabase,
 )
 
 router = APIRouter()
+
+# Reads may use the public key; cloud account mutations require the private server key.
+SUPABASE_ANON_KEY = _SUPABASE_ANON_KEY
+SUPABASE_SERVICE_ROLE_KEY = os.environ.get("SUPABASE_SERVICE_ROLE_KEY", "").strip()
 
 _LAST_CLOUD_USER_SYNC_TS: float = 0.0
 _CLOUD_SYNC_MIN_INTERVAL_SEC: float = 10.0
@@ -49,7 +53,7 @@ def _pull_supabase_users_to_sqlite(force: bool = False) -> None:
     try:
         url = (
             f"{SUPABASE_URL}/rest/v1/users"
-            "?select=email,password_hash,full_name,phone,role,avatar_url,google_id,bio,created_at"
+            "?select=email,password_hash,full_name,phone,role,avatar_url,google_id,bio,created_at,email_verified_at"
             "&order=id.asc"
         )
         req = urllib.request.Request(url, headers={
@@ -74,6 +78,8 @@ def _pull_supabase_users_to_sqlite(force: bool = False) -> None:
                 continue
             if ru.get("bio") == "__URBANSCOPE_DELETED__" or ru.get("password_hash") == "__DELETED_ACCOUNT__":
                 continue
+            if not ru.get("email_verified_at"):
+                continue
 
             norm_role = normalize_db_role(ru.get("role"), clean_email)
             pwd_hash = ru.get("password_hash") or hash_password(f"cloud-sync-{clean_email}")
@@ -84,10 +90,10 @@ def _pull_supabase_users_to_sqlite(force: bool = False) -> None:
 
             cursor.execute(
                 """
-                INSERT INTO users (email, password_hash, full_name, phone, role, avatar_url, google_id)
-                VALUES (?, ?, ?, ?, ?, ?, ?)
+                INSERT INTO users (email, password_hash, full_name, phone, role, avatar_url, google_id, email_verified_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
                 """,
-                (clean_email, pwd_hash, full_name, phone, norm_role, avatar_url, google_id)
+                (clean_email, pwd_hash, full_name, phone, norm_role, avatar_url, google_id, ru["email_verified_at"])
             )
             new_id = cursor.lastrowid
             # Re-apply role after trg_user_role_insert in case remote account was promoted to admin
@@ -112,7 +118,7 @@ def _sync_create_user_to_supabase(
     assigned_role: str
 ) -> None:
     """Syncs a Superadmin-created account to Supabase Cloud (inserting or reactivating if soft-deleted)."""
-    if not _cloud_sync_enabled():
+    if not _cloud_sync_enabled() or not SUPABASE_SERVICE_ROLE_KEY:
         return
     try:
         encoded_email = urllib.parse.quote(clean_email)
@@ -133,14 +139,15 @@ def _sync_create_user_to_supabase(
                 "phone": phone,
                 "role": assigned_role,
                 "bio": "",
+                "email_verified_at": datetime.now(timezone.utc).isoformat(),
                 "updated_at": datetime.now(timezone.utc).isoformat()
             }).encode("utf-8")
             req_patch = urllib.request.Request(
                 patch_url,
                 data=patch_body,
                 headers={
-                    "apikey": SUPABASE_ANON_KEY,
-                    "Authorization": f"Bearer {SUPABASE_ANON_KEY}",
+                    "apikey": SUPABASE_SERVICE_ROLE_KEY,
+                    "Authorization": f"Bearer {SUPABASE_SERVICE_ROLE_KEY}",
                     "Content-Type": "application/json"
                 },
                 method="PATCH"
@@ -154,14 +161,15 @@ def _sync_create_user_to_supabase(
             "password_hash": password_hash,
             "full_name": full_name,
             "phone": phone,
-            "role": assigned_role
+            "role": assigned_role,
+            "email_verified_at": datetime.now(timezone.utc).isoformat()
         }).encode("utf-8")
         req_post = urllib.request.Request(
             post_url,
             data=post_body,
             headers={
-                "apikey": SUPABASE_ANON_KEY,
-                "Authorization": f"Bearer {SUPABASE_ANON_KEY}",
+                "apikey": SUPABASE_SERVICE_ROLE_KEY,
+                "Authorization": f"Bearer {SUPABASE_SERVICE_ROLE_KEY}",
                 "Content-Type": "application/json"
             },
             method="POST"
@@ -174,7 +182,7 @@ def _sync_create_user_to_supabase(
 
 def _sync_update_user_to_supabase(match_email: str, patch_fields: dict) -> None:
     """Syncs Superadmin profile/role/password edits to Supabase Cloud by matching email."""
-    if not _cloud_sync_enabled() or not match_email or not patch_fields:
+    if not _cloud_sync_enabled() or not SUPABASE_SERVICE_ROLE_KEY or not match_email or not patch_fields:
         return
     try:
         encoded_email = urllib.parse.quote(match_email.strip().lower())
@@ -185,8 +193,8 @@ def _sync_update_user_to_supabase(match_email: str, patch_fields: dict) -> None:
             url,
             data=json.dumps(payload).encode("utf-8"),
             headers={
-                "apikey": SUPABASE_ANON_KEY,
-                "Authorization": f"Bearer {SUPABASE_ANON_KEY}",
+                "apikey": SUPABASE_SERVICE_ROLE_KEY,
+                "Authorization": f"Bearer {SUPABASE_SERVICE_ROLE_KEY}",
                 "Content-Type": "application/json",
                 "Prefer": "return=representation"
             },
@@ -200,7 +208,7 @@ def _sync_update_user_to_supabase(match_email: str, patch_fields: dict) -> None:
 
 def _sync_delete_user_to_supabase(target_email: str) -> None:
     """Deletes an account from Supabase Cloud, falling back to soft-delete if DELETE RLS is not yet pushed."""
-    if not _cloud_sync_enabled() or not target_email:
+    if not _cloud_sync_enabled() or not SUPABASE_SERVICE_ROLE_KEY or not target_email:
         return
     try:
         encoded_email = urllib.parse.quote(target_email.strip().lower())
@@ -208,8 +216,8 @@ def _sync_delete_user_to_supabase(target_email: str) -> None:
         req_del = urllib.request.Request(
             del_url,
             headers={
-                "apikey": SUPABASE_ANON_KEY,
-                "Authorization": f"Bearer {SUPABASE_ANON_KEY}",
+                "apikey": SUPABASE_SERVICE_ROLE_KEY,
+                "Authorization": f"Bearer {SUPABASE_SERVICE_ROLE_KEY}",
                 "Prefer": "return=representation"
             },
             method="DELETE"
@@ -230,8 +238,8 @@ def _sync_delete_user_to_supabase(target_email: str) -> None:
             del_url,
             data=soft_body,
             headers={
-                "apikey": SUPABASE_ANON_KEY,
-                "Authorization": f"Bearer {SUPABASE_ANON_KEY}",
+                "apikey": SUPABASE_SERVICE_ROLE_KEY,
+                "Authorization": f"Bearer {SUPABASE_SERVICE_ROLE_KEY}",
                 "Content-Type": "application/json"
             },
             method="PATCH"
@@ -446,6 +454,7 @@ def superadmin_update_user(user_id: int, payload: SuperadminUpdateUser, current_
         updates.append("password_hash = ?")
         params.append(new_pwd_hash)
         cloud_patch["password_hash"] = new_pwd_hash
+        cloud_patch["email_verified_at"] = datetime.now(timezone.utc).isoformat()
 
     if updates:
         params.append(user_id)
@@ -495,8 +504,8 @@ def superadmin_create_user(payload: SuperadminCreateUser, current_superadmin: di
     clean_phone = (payload.phone or "").strip()
 
     cursor.execute(
-        "INSERT INTO users (email, password_hash, full_name, phone, role) VALUES (?, ?, ?, ?, ?)",
-        (clean_email, password_hash, clean_name, clean_phone, assigned_role)
+        "INSERT INTO users (email, password_hash, full_name, phone, role, email_verified_at) VALUES (?, ?, ?, ?, ?, ?)",
+        (clean_email, password_hash, clean_name, clean_phone, assigned_role, datetime.now(timezone.utc).isoformat())
     )
     new_id = cursor.lastrowid
     # Re-apply Superadmin's explicit role after trg_user_role_insert runs

@@ -87,6 +87,16 @@
     const closeTermsModalBtn = document.getElementById('closeTermsModalBtn');
     const registerForm = document.getElementById('registerForm');
     const googleSignupBtn = document.getElementById('googleSignup');
+    const emailOtpModal = document.getElementById('emailOtpModal');
+    const emailOtpForm = document.getElementById('emailOtpForm');
+    const emailOtpCode = document.getElementById('emailOtpCode');
+    const emailOtpMessage = document.getElementById('emailOtpMessage');
+    const otpTargetEmail = document.getElementById('otpTargetEmail');
+    const otpResendStatus = document.getElementById('otpResendStatus');
+    const resendEmailOtpBtn = document.getElementById('resendEmailOtpBtn');
+    const closeEmailOtpModal = document.getElementById('closeEmailOtpModal');
+    let pendingOtpEmail = '';
+    let resendTimer = null;
 
     let hasScrolledToBottom = false;
     let hasAcceptedTerms = false;
@@ -357,6 +367,76 @@
     // ==========================================
     // 3. REGISTRATION SUBMISSION
     // ==========================================
+    function setOtpMessage(message, success) {
+        if (!emailOtpMessage) return;
+        emailOtpMessage.textContent = message || '';
+        emailOtpMessage.classList.toggle('is-success', Boolean(success));
+    }
+
+    function startOtpResendCountdown() {
+        if (resendTimer) window.clearInterval(resendTimer);
+        let remaining = 60;
+        if (resendEmailOtpBtn) resendEmailOtpBtn.disabled = true;
+        if (otpResendStatus) otpResendStatus.textContent = 'You can request another code in ' + remaining + ' seconds.';
+        resendTimer = window.setInterval(function () {
+            remaining -= 1;
+            if (remaining <= 0) {
+                window.clearInterval(resendTimer);
+                resendTimer = null;
+                if (resendEmailOtpBtn) resendEmailOtpBtn.disabled = false;
+                if (otpResendStatus) otpResendStatus.textContent = 'Didn\'t receive the code?';
+                return;
+            }
+            if (otpResendStatus) otpResendStatus.textContent = 'You can request another code in ' + remaining + ' seconds.';
+        }, 1000);
+    }
+
+    function openEmailOtpDialog(email) {
+        if (!emailOtpModal) return;
+        pendingOtpEmail = email;
+        if (otpTargetEmail) otpTargetEmail.textContent = email;
+        if (emailOtpCode) emailOtpCode.value = '';
+        setOtpMessage('', false);
+        emailOtpModal.classList.add('open');
+        emailOtpModal.setAttribute('aria-hidden', 'false');
+        document.body.classList.add('otp-modal-open');
+        startOtpResendCountdown();
+        window.setTimeout(function () { if (emailOtpCode) emailOtpCode.focus(); }, 80);
+    }
+
+    function closeEmailOtpDialog() {
+        if (!emailOtpModal) return;
+        emailOtpModal.classList.remove('open');
+        emailOtpModal.setAttribute('aria-hidden', 'true');
+        document.body.classList.remove('otp-modal-open');
+    }
+
+    if (closeEmailOtpModal) closeEmailOtpModal.addEventListener('click', closeEmailOtpDialog);
+    if (emailOtpModal) {
+        emailOtpModal.addEventListener('click', function (event) {
+            if (event.target === emailOtpModal) closeEmailOtpDialog();
+        });
+    }
+    document.addEventListener('keydown', function (event) {
+        if (event.key === 'Escape' && emailOtpModal && emailOtpModal.classList.contains('open')) closeEmailOtpDialog();
+    });
+
+    if (resendEmailOtpBtn) {
+        resendEmailOtpBtn.addEventListener('click', async function () {
+            if (!pendingOtpEmail || typeof apiStartRegistrationOtp !== 'function') return;
+            resendEmailOtpBtn.disabled = true;
+            if (otpResendStatus) otpResendStatus.textContent = 'Requesting a new code…';
+            const result = await apiStartRegistrationOtp(pendingOtpEmail);
+            if (!result || !result.success) {
+                if (otpResendStatus) otpResendStatus.textContent = (result && result.error) || 'Could not request a new code.';
+                resendEmailOtpBtn.disabled = false;
+                return;
+            }
+            setOtpMessage('If a new code can be issued, it has been sent to your email.', true);
+            startOtpResendCountdown();
+        });
+    }
+
     if (registerForm) {
         registerForm.addEventListener('input', saveRegisterDraft);
         registerForm.addEventListener('change', saveRegisterDraft);
@@ -377,9 +457,17 @@
             const confirmPassword = document.getElementById('confirm_password').value;
 
             if (password !== confirmPassword) {
-                alert('Passwords do not match. Please re-enter.');
+                const notice = document.getElementById('authNotice');
+                if (notice) { notice.hidden = false; notice.textContent = 'Passwords do not match. Please re-enter.'; }
                 const confirmInput = document.getElementById('confirm_password');
                 if (confirmInput) confirmInput.focus();
+                return;
+            }
+
+            if (password.length < 8) {
+                const notice = document.getElementById('authNotice');
+                if (notice) { notice.hidden = false; notice.textContent = 'Use a password with at least 8 characters.'; }
+                document.getElementById('password')?.focus();
                 return;
             }
 
@@ -390,29 +478,53 @@
             }
 
             btn.disabled = true;
-            btn.innerText = 'Creating Account...';
-
-            if (typeof isSupabaseConfigured === 'function' && isSupabaseConfigured()) {
-                const res = await apiSignUp(email, password, fullname, phone);
-                if (res && res.success) {
-                    try { sessionStorage.removeItem(DRAFT_STORAGE_KEY); } catch (err) {}
-                    if (res.data && res.data.session) {
-                        window.location.href = '../../' + safeNext;
-                    } else {
-                        alert('\u2713 Account created! Please check your email to confirm your registration, then log in.');
-                        window.location.href = 'login.html' + window.location.search;
-                    }
-                } else {
-                    alert('Registration failed: ' + ((res && res.error) || 'Please try again.'));
+            btn.innerText = 'Sending Code…';
+            const result = typeof apiStartRegistrationOtp === 'function'
+                ? await apiStartRegistrationOtp(email)
+                : { success: false, error: 'Email verification is unavailable. Please refresh and try again.' };
+            if (result && result.success) {
+                if (typeof isSupabaseConfigured !== 'function' || !isSupabaseConfigured()) {
+                    const notice = document.getElementById('authNotice');
+                    if (notice) { notice.hidden = false; notice.textContent = 'A live email verification service is required to create an account.'; }
                     btn.disabled = false;
                     btn.innerText = originalText;
+                    return;
                 }
+                openEmailOtpDialog(email);
             } else {
-                // Demo session when Supabase is not configured
-                try { sessionStorage.removeItem(DRAFT_STORAGE_KEY); } catch (err) {}
-                localStorage.setItem('urbanscope_demo_user', JSON.stringify({ name: fullname, email: email, phone: phone }));
-                window.location.href = '../../' + safeNext;
+                const notice = document.getElementById('authNotice');
+                if (notice) { notice.hidden = false; notice.textContent = (result && result.error) || 'Unable to send a verification code. Please try again.'; }
             }
+            btn.disabled = false;
+            btn.innerText = originalText;
+        });
+    }
+
+    if (emailOtpForm) {
+        emailOtpForm.addEventListener('submit', async function (event) {
+            event.preventDefault();
+            const button = document.getElementById('verifyEmailOtpBtn');
+            const originalText = button ? button.textContent : '';
+            const code = (emailOtpCode?.value || '').trim();
+            const fullname = document.getElementById('fullname')?.value.trim() || '';
+            const phone = document.getElementById('phone')?.value.trim() || '';
+            const password = document.getElementById('password')?.value || '';
+            if (!/^[0-9]{6}$/.test(code)) {
+                setOtpMessage('Enter the six-digit code from your email.', false);
+                return;
+            }
+
+            if (button) { button.disabled = true; button.textContent = 'Verifying…'; }
+            const result = typeof apiCompleteRegistrationOtp === 'function'
+                ? await apiCompleteRegistrationOtp(pendingOtpEmail, code, password, fullname, phone)
+                : { success: false, error: 'Email verification is unavailable. Please try again.' };
+            if (result && result.success) {
+                try { sessionStorage.removeItem(DRAFT_STORAGE_KEY); } catch (error) {}
+                window.location.href = '../../' + safeNext;
+                return;
+            }
+            setOtpMessage((result && result.error) || 'We could not verify that code. Please try again.', false);
+            if (button) { button.disabled = false; button.textContent = originalText; }
         });
     }
 })();

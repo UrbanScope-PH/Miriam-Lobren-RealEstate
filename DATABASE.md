@@ -104,7 +104,12 @@ Client and admin accounts.
 | `title` | TEXT | `DEFAULT 'Real Estate Agent'` | Professional title or organizational role |
 | `brokerage` | TEXT | `DEFAULT 'UrbanScope'` | Accredited brokerage or realty firm |
 | `bio` | TEXT | `DEFAULT ''` | Professional biography and summary |
+| `email_verified_at` | TIMESTAMPTZ / TIMESTAMP | SQLite defaults to current time; Supabase is nullable | Set after email-code verification; existing Supabase accounts are backfilled as verified by migration `20261105120000_email_otp_auth.sql`. |
 | `created_at` | TIMESTAMP | `CURRENT_TIMESTAMP` | UTC, `YYYY-MM-DD HH:MM:SS` |
+
+### 3.1.1 Authentication challenge storage
+
+SQLite `auth_email_challenges` stores one active challenge per normalized email and purpose (`register` or `password_reset`), with its HMAC digest, expiry, attempt count, and issue time. `auth_email_challenge_requests` stores keyed IP hashes and issue times to enforce the send limit. Neither table stores the plain code or raw requester IP. `trg_users_email_verified_default` marks trusted local account inserts as verified when no timestamp was supplied; pending registrations are held only in the challenge tables and are not inserted as users.
 
 ### 3.2 `properties`
 
@@ -217,7 +222,7 @@ so a user typing *"las pinas"* matches *"Las Piñas City"*.
 
 There is no migration framework. `init_db()` is **idempotent** and non-destructive:
 
-1. `CREATE TABLE IF NOT EXISTS` for all three tables.
+1. `CREATE TABLE IF NOT EXISTS` for the runtime tables.
 2. For `properties`, reads `PRAGMA table_info(properties)` and runs
    `ALTER TABLE … ADD COLUMN` for any missing column
    (`floor_area`, `carports`, `storeys`, `amenities`).
@@ -235,6 +240,8 @@ There is no migration framework. `init_db()` is **idempotent** and non-destructi
    [`supabase/seed.sql`](supabase/seed.sql) if seed rows need the column, and keep
    [`backend/supabase_schema.sql`](backend/supabase_schema.sql) in sync.
 6. Update this document.
+
+Migration `20261105120000_email_otp_auth.sql` adds the cloud email-verification timestamp, server-only challenge tables, and atomic issue/consume RPCs. Apply it before deploying the Vercel password registration and recovery endpoints.
 
 > [!WARNING]
 > SQLite cannot drop or rename columns safely with `ALTER TABLE` in older versions,
@@ -259,6 +266,8 @@ Defined in [`backend/auth.py`](backend/auth.py).
 - **Google OAuth 2.0:** Verifies Google Identity Services `access_token` or `credential` (ID token)
   against `oauth2.googleapis.com/tokeninfo` and `www.googleapis.com/oauth2/v3/userinfo`, enforcing
   audience (`aud`/`azp`) match against `GOOGLE_CLIENT_ID` (from env or `.env`) and `email_verified == true`.
+- **Email OTP:** Password registration and forgotten-password recovery use six-digit, single-use email codes. Challenges are stored as HMAC digests, expire after 10 minutes, allow five attempts, and have 60-second resend and 10-per-hour IP-hash limits. FastAPI stores challenge state in SQLite; Vercel uses the service-role-only Supabase issue/consume RPCs added by `20261105120000_email_otp_auth.sql`. Existing cloud users are marked verified by the migration. Password recovery also marks verified after successful email ownership proof. A database trigger prevents anonymous clients from assigning privileged roles, marking accounts verified, changing roles, or changing password hashes. Hosted Superadmin role/account edits and admin password changes use signed-session server functions; local cloud writes require the server-side service-role key.
+- **Mail delivery configuration:** Set `RESEND_API_KEY`, a verified `RESEND_FROM_EMAIL`, and private `AUTH_OTP_SECRET` (at least 32 characters). Vercel also needs server-only `SUPABASE_SERVICE_ROLE_KEY`. Apply the migration before deploying Vercel OTP functions; never expose server secrets in frontend code.
 - **JWT:** HS256, 7-day expiry, payload `{ sub: "<user id>", email, role, exp, iat }`.
   Secret from env var `URBANSCOPE_SECRET_KEY` (a hard-coded fallback exists for dev).
 - **Vercel Admin Page Session:** Since Vercel serves the frontend statically, root Routing Middleware (`proxy.js`) verifies a separate 12-hour signed `HttpOnly`, `Secure`, `SameSite=Lax` cookie before returning Admin/Superadmin HTML. The Vercel Function at `POST /api/auth/edge-session` verifies Google directly and accepts the existing staff accounts plus optional comma-separated `VERCEL_ADMIN_EMAILS`; it does not trust the currently public Supabase user-table role/password policies. Configure the server-only `VERCEL_ADMIN_SESSION_SECRET` (minimum 32 characters) in Vercel Project Settings and redeploy. Admin staff can access Admin; only `urbanscope.cvsu@gmail.com` can access Superadmin. Hosted admin access uses Google Sign-In, while local FastAPI deployments keep password sign-in and the existing `access_token` cookie/middleware.

@@ -64,6 +64,18 @@ const rawNext = params.get('redirect') || '';
 // Allow valid redirect paths relative to the frontend root (e.g. index.html, pages/properties/properties.html, pages/inquiry/inquiry.html)
 const safeNext = /^[A-Za-z0-9_\-\/]+\.html([?#][A-Za-z0-9_\-=&%.]*)?$/.test(rawNext) ? rawNext : 'index.html';
 
+if (params.get('email')) {
+    const emailInput = document.getElementById('email');
+    if (emailInput) emailInput.value = params.get('email');
+}
+if (params.get('reset') === 'success') {
+    const notice = document.getElementById('authNotice');
+    if (notice) {
+        notice.hidden = false;
+        notice.textContent = 'Your password was updated. Log in with your new password.';
+    }
+}
+
 if (params.get('reason') === 'inquiry') {
     const notice = document.getElementById('authNotice');
     if (notice) notice.hidden = false;

@@ -57,7 +57,7 @@ frontend/              Everything the browser loads (served at /)
   index.html/.css/.js  Home page
   pages/properties/    property-detail (?id=N), casasuerte.html, kathleen.html, Liora.html & Airmen.html showcases (properties.html catalog was removed)
   pages/inquiry/       Inquiry form (inquiry.html) & client history (history.html) (requires login: <html data-require-auth>)
-  pages/auth/          Unified login (auto-routes by role) & register
+  pages/auth/          Unified login (auto-routes by role), register, and forgot-password flow
   pages/legal/         Terms of Service (terms.html) & Privacy Policy (privacy.html)
   pages/admin/         Dashboard, propertylist.html, add-property, edit-property, clients, profile, legacy login redirect (users.html redirects)
   pages/superadmin/    Master overview, system diagnostics, user account modification & RBAC management
@@ -89,6 +89,8 @@ to `/pages/…`.
   `apiDeleteProperty`, `apiSubmitInquiry`, `apiGetInquiries`, `apiSignUp`, `apiSignIn`,
   `apiGetGoogleConfig`, `apiSignInWithGoogle`, `apiCreateHostedAdminSession`,
   `apiGetHostedAdminSession`, `apiSignOut`, `apiGetCurrentUser`,
+  `apiStartRegistrationOtp`, `apiCompleteRegistrationOtp`, `apiRequestPasswordReset`,
+  `apiCompletePasswordReset`,
   `isBackendConfigured` / `isSupabaseConfigured`.
 - `shared/js/api.js` is a near-duplicate that no page currently loads. If you change one
   gateway, change both (or consolidate — ask first).
@@ -675,6 +677,12 @@ path when rendering from a page.
     - Vercel Routing Middleware intercepts `/pages/admin/*`, `/pages/superadmin/*`, legacy aliases, and direct `/frontend/pages/...` paths before static files are served. Admin and Superadmin HTML requires a signed `HttpOnly`, `Secure`, `SameSite=Lax` cookie; approved Admin staff can use the Admin portal, and only root `urbanscope.cvsu@gmail.com` with `superadmin` role can use the Superadmin portal. Public login redirects and static support assets remain available.
     - `POST /api/auth/edge-session` verifies both Google OAuth access tokens and email/password credentials server-side and allows the staff emails (`admin.realestate@gmail.com`, `miriam@gmail.com`, `urbanscope.cvsu@gmail.com`) plus optional comma-separated `VERCEL_ADMIN_EMAILS`. Passwords are verified against Supabase PBKDF2 hashes or authorized staff defaults. Sessions expire after 12 hours. Login redirects only after server session creation, and sign-out clears the cookie.
     - Vercel deployment requires private `VERCEL_ADMIN_SESSION_SECRET` (minimum 32 characters). It is intentionally unset in `.env.example`; configure it in Vercel Project Settings and redeploy. Local FastAPI sessions continue using the existing `access_token` cookie and RBAC middleware.
+
+57. **Email OTP Registration & Password Recovery (`backend/auth_otp.py`, `api/auth/`, `frontend/pages/auth/`):**
+    - Password registration sends a six-digit email code before creating a client account. Codes are HMAC-digested at rest, expire after 10 minutes, allow five attempts, and can be reissued once per minute. Sends are limited to 10 per IP hash per hour. Google registration continues to rely on Google's verified-email claim.
+    - Forgot Password sends a one-time code and changes the PBKDF2 password only after successful verification. The request response does not disclose whether an email is registered. Legacy `POST /api/auth/register` is closed and `apiSignUp` no longer performs direct signup. Cloud password sign-in rejects rows with a null `email_verified_at`.
+    - Local FastAPI stores challenge state in SQLite. Vercel functions use service-role-only Supabase RPCs in `supabase/migrations/20261105120000_email_otp_auth.sql`. Existing accounts are backfilled as verified; an unverified legacy cloud account can establish email ownership through password recovery. The cloud trigger prevents anonymous inserts from setting privileged roles or verified status and rejects anonymous role/password-hash changes. Vercel admin password changes and Superadmin account/role edits use signed sessions and server-side service-role writes.
+    - Server configuration requires `RESEND_API_KEY`, verified `RESEND_FROM_EMAIL`, and private `AUTH_OTP_SECRET` (32+ characters). Vercel also needs `SUPABASE_SERVICE_ROLE_KEY`. Apply the migration before deploying Vercel OTP functions. Never expose the service-role key or OTP secret in browser code.
 
 ---
 

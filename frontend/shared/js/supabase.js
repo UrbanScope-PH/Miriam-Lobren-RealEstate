@@ -1860,6 +1860,23 @@
             return { success: false, error: 'Password must be at least 6 characters long.' };
         }
 
+        if (!isLocalBackendReachableHost()) {
+            try {
+                const response = await fetch('/api/superadmin/users', {
+                    method: 'POST',
+                    credentials: 'same-origin',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'create', payload: { full_name: cleanName, email: cleanEmail, phone: cleanPhone, password: plainPassword, role: assignedRole } })
+                });
+                const result = await response.json().catch(() => ({}));
+                if (!response.ok || !result.success) return { success: false, error: result.error || 'Failed to create account.' };
+                clearUserDeletedLocal(result.user && result.user.id, cleanEmail);
+                return { ...result, user: formatUserRecord(result.user) };
+            } catch (error) {
+                return { success: false, error: error.message || 'Unable to reach account management.' };
+            }
+        }
+
         let createdUser = null;
         let localHandled = false;
 
@@ -1992,6 +2009,23 @@
             return { success: false, error: "Invalid role. Must be 'user', 'admin', or 'superadmin'." };
         }
 
+        if (!isLocalBackendReachableHost()) {
+            try {
+                const response = await fetch('/api/superadmin/users', {
+                    method: 'POST',
+                    credentials: 'same-origin',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'update', user_id: userId, payload })
+                });
+                const result = await response.json().catch(() => ({}));
+                if (!response.ok || !result.success) return { success: false, error: result.error || 'Failed to update user account.' };
+                clearUserDeletedLocal(result.user && result.user.id, result.user && result.user.email);
+                return { ...result, user: formatUserRecord(result.user) };
+            } catch (error) {
+                return { success: false, error: error.message || 'Unable to reach account management.' };
+            }
+        }
+
         let updatedUser = null;
         let localHandled = false;
 
@@ -2101,6 +2135,23 @@
         }
         if (cleanEmail === 'urbanscope.cvsu@gmail.com' && targetRole !== 'superadmin') {
             return { success: false, error: 'The root Superadmin account (urbanscope.cvsu@gmail.com) cannot be demoted.' };
+        }
+
+        if (!isLocalBackendReachableHost()) {
+            try {
+                const response = await fetch('/api/superadmin/users', {
+                    method: 'POST',
+                    credentials: 'same-origin',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'update', user_id: userId, payload: { role: targetRole } })
+                });
+                const result = await response.json().catch(() => ({}));
+                if (!response.ok || !result.success) return { success: false, error: result.error || 'Failed to update role.' };
+                clearUserDeletedLocal(result.user && result.user.id, result.user && result.user.email);
+                return { ...result, user: formatUserRecord(result.user) };
+            } catch (error) {
+                return { success: false, error: error.message || 'Unable to reach account management.' };
+            }
         }
 
         let updatedUser = null;
@@ -2813,6 +2864,18 @@
                 targetUserId = storedAdmin.id;
             }
 
+            if (!isLocalBackendReachableHost()) {
+                const response = await fetch('/api/auth/admin-password/change', {
+                    method: 'POST',
+                    credentials: 'same-origin',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ current_password: currentPassword, new_password: newPassword })
+                });
+                const result = await response.json().catch(() => ({}));
+                if (!response.ok || !result.success) return { success: false, error: result.error || 'Unable to update the password.' };
+                return { success: true, message: result.message || 'Password updated successfully.' };
+            }
+
             let backendSucceeded = false;
 
             // 1. Direct call to FastAPI backend if on local dev network and HTTP (avoids Mixed Content on HTTPS)
@@ -2987,7 +3050,76 @@
         }
     }
 
+    async function postAuthFlow(path, payload) {
+        try {
+            const base = isLocalBackendReachableHost() ? `${getLocalApiBase()}/auth` : '/api/auth';
+            const response = await fetch(`${base}/${path}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'same-origin',
+                body: JSON.stringify(payload)
+            });
+            const result = await response.json().catch(() => ({}));
+            if (!response.ok || result.success === false) {
+                return { success: false, error: result.detail || result.error || 'Unable to complete the request. Please try again.' };
+            }
+            return result;
+        } catch (error) {
+            return { success: false, error: error.message || 'Unable to reach the authentication service.' };
+        }
+    }
+
+    async function apiStartRegistrationOtp(email) {
+        return postAuthFlow('register/start', { email: String(email || '').trim().toLowerCase() });
+    }
+
+    async function apiCompleteRegistrationOtp(email, code, password, fullName, phone) {
+        const result = await postAuthFlow('register/verify', {
+            email: String(email || '').trim().toLowerCase(),
+            code: String(code || '').trim(),
+            password: String(password || ''),
+            full_name: String(fullName || '').trim(),
+            phone: String(phone || '').trim()
+        });
+        if (!result.success || !result.user) return result;
+
+        const user = result.user;
+        const sessionUser = {
+            id: user.id,
+            email: user.email,
+            name: user.full_name || user.name || email,
+            full_name: user.full_name || user.name || email,
+            phone: user.phone || '',
+            role: normalizeAccountRole(user.role, user.email),
+            avatar_url: user.avatar_url || 'assets/images/agent.jpg',
+            user_metadata: { full_name: user.full_name || user.name || email, phone: user.phone || '' }
+        };
+        const token = result.token || ('sb_session_' + sessionUser.id + '_' + Date.now());
+        localStorage.setItem(TOKEN_KEY, token);
+        localStorage.setItem(USER_KEY, JSON.stringify(sessionUser));
+        localStorage.setItem(DEMO_KEY, JSON.stringify(sessionUser));
+        if (sessionUser.role === 'admin' || sessionUser.role === 'superadmin') {
+            localStorage.setItem('adminUser', JSON.stringify(sessionUser));
+        }
+        clearUserDeletedLocal(sessionUser.id, sessionUser.email);
+        return { success: true, data: { session: true, user: sessionUser, token, redirect_url: result.redirect_url || '/index.html' } };
+    }
+
+    async function apiRequestPasswordReset(email) {
+        return postAuthFlow('password/reset/request', { email: String(email || '').trim().toLowerCase() });
+    }
+
+    async function apiCompletePasswordReset(email, code, password) {
+        return postAuthFlow('password/reset/confirm', {
+            email: String(email || '').trim().toLowerCase(),
+            code: String(code || '').trim(),
+            password: String(password || '')
+        });
+    }
+
     async function apiSignUp(email, password, fullName, phone) {
+        return { success: false, error: 'Email verification is required. Use the registration form to request a code.' };
+        /* Legacy direct signup is disabled to prevent bypassing OTP verification.
         try {
             const cleanEmail = email.trim().toLowerCase();
             const cleanName = fullName.trim();
@@ -3143,6 +3275,7 @@
         } catch (err) {
             return { success: false, error: err.message };
         }
+        */
     }
 
     async function apiSignIn(email, password) {
@@ -3232,6 +3365,9 @@
                     if (String(remoteUser.bio || '').trim() === SOFT_DELETE_BIO_MARKER || storedHash === SOFT_DELETE_HASH_MARKER) {
                         return { success: false, error: 'This account has been removed.' };
                     }
+                    if (Object.prototype.hasOwnProperty.call(remoteUser, 'email_verified_at') && !remoteUser.email_verified_at) {
+                        return { success: false, error: 'Verify your email address first, or use Forgot password to prove account ownership.' };
+                    }
                     let passValid = false;
                     if (storedHash && storedHash.includes('$')) {
                         passValid = await verifyPBKDF2(password, storedHash);
@@ -3280,8 +3416,10 @@
                     localStorage.setItem(DEMO_KEY, JSON.stringify(sessionUser));
                     if (sessionUser.role === 'admin' || sessionUser.role === 'superadmin') {
                         localStorage.setItem('adminUser', JSON.stringify(sessionUser));
-                        localStorage.setItem('adminPassword', password);
-                        localStorage.setItem('urbanscope_admin_password_updated', password);
+                        if (isLocalBackendReachableHost()) {
+                            localStorage.setItem('adminPassword', password);
+                            localStorage.setItem('urbanscope_admin_password_updated', password);
+                        }
                     }
 
                     const redirectUrl = (role === 'superadmin') 
@@ -3318,6 +3456,8 @@
                     : (password === 'realestate2026');
                 if (!isValid) return { success: false, error: 'Incorrect admin password.' };
                 role = 'admin';
+            } else {
+                return { success: false, error: 'Invalid email or password.' };
             }
 
             const name = cleanEmail.split('@')[0].replace(/[._-]+/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
@@ -3777,6 +3917,10 @@
     window.apiGetLeadAgentProfile = apiGetLeadAgentProfile;
     window.apiUpdateAdminPassword = apiUpdateAdminPassword;
     window.apiSignUp = apiSignUp;
+    window.apiStartRegistrationOtp = apiStartRegistrationOtp;
+    window.apiCompleteRegistrationOtp = apiCompleteRegistrationOtp;
+    window.apiRequestPasswordReset = apiRequestPasswordReset;
+    window.apiCompletePasswordReset = apiCompletePasswordReset;
     window.apiSignIn = apiSignIn;
     window.apiGetGoogleConfig = apiGetGoogleConfig;
     window.apiSignInWithGoogle = apiSignInWithGoogle;

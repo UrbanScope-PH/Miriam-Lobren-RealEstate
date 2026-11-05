@@ -19,6 +19,28 @@ class UserRegister(BaseModel):
     phone: Optional[str] = Field(default="", description="Contact phone number")
 
 
+class EmailOtpStartRequest(BaseModel):
+    email: str = Field(..., min_length=3, max_length=254, description="Email address to verify")
+
+
+class EmailOtpRegistrationComplete(BaseModel):
+    email: str = Field(..., min_length=3, max_length=254)
+    code: str = Field(..., min_length=6, max_length=6)
+    password: str = Field(..., min_length=8, max_length=128)
+    full_name: str = Field(..., min_length=2, max_length=120)
+    phone: Optional[str] = Field(default="", max_length=40)
+
+
+class PasswordResetRequest(BaseModel):
+    email: str = Field(..., min_length=3, max_length=254)
+
+
+class PasswordResetComplete(BaseModel):
+    email: str = Field(..., min_length=3, max_length=254)
+    code: str = Field(..., min_length=6, max_length=6)
+    password: str = Field(..., min_length=8, max_length=128)
+
+
 class UserLogin(BaseModel):
     email: str = Field(..., description="Registered email address")
     password: str = Field(..., description="Account password")
