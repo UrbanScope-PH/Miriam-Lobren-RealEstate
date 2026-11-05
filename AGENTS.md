@@ -697,9 +697,11 @@ path when rendering from a page.
 60. **Forgot Password Email-Only Verification Flow (`frontend/pages/auth/forgot-password.html`, `forgot-password.js`, `frontend/shared/js/`):**
     - Removed the phone number requirement from the forgot password page to support both Google OAuth accounts and email/password accounts identically.
     - Implemented a structured 3-step verification workflow:
-      1) **Step 1 (Email Entry)**: User submits their email address. Validates account existence against Supabase `users` table and dispatches a 6-digit verification challenge.
+      1) **Step 1 (Email Entry)**: User submits their email address. Validates account existence against Supabase `users` table and dispatches a 6-digit verification challenge to their email address.
       2) **Step 2 (Code Verification)**: User must enter the 6-digit code sent to their email before proceeding. Wrong codes are rejected, and users can request a resend after 60 seconds.
       3) **Step 3 (Password Reset)**: Unlocks the New Password and Confirm Password inputs only after successful 6-digit code verification. Encrypts the password with PBKDF2 and updates the database, redirecting to login.
+    - Fixed form visibility collision (`.auth-form[hidden] { display: none !important; }`) preventing Step 3 from rendering prematurely, and aligned password toggle styling with `.input-box.has-toggle` and `.toggle-pw`.
+    - Removed all UI code preview text leaks, cleanly notifying users to check their email inbox (and spam folder) for the dispatched 6-digit code. Actual email delivery is powered by `RESEND_API_KEY` (configured in Vercel project settings).
 
 ---
 

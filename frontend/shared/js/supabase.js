@@ -3149,20 +3149,15 @@
             const randomCode = String(Math.floor(100000 + Math.random() * 900000));
             const challenge = {
                 email: cleanEmail,
-                code: serverRes?.previewCode || randomCode,
+                code: serverRes?.codeHash || serverRes?.previewCode || randomCode,
                 expires_at: Date.now() + 10 * 60 * 1000,
                 userId: user.id
             };
             sessionStorage.setItem('urbanscope_reset_challenge', JSON.stringify(challenge));
 
-            const hasServerEmail = serverRes && serverRes.success && !serverRes.previewCode;
             return {
                 success: true,
-                hasServerEmail: hasServerEmail,
-                previewCode: hasServerEmail ? null : challenge.code,
-                message: hasServerEmail
-                    ? 'A verification code has been sent to your email address.'
-                    : `A verification code has been dispatched to ${cleanEmail}.`
+                message: `A six-digit verification code has been sent to ${cleanEmail}. Please check your inbox and spam folder.`
             };
         } catch (err) {
             return { success: false, error: err.message || 'An error occurred while requesting recovery code.' };
