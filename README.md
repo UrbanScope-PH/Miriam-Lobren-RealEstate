@@ -127,6 +127,7 @@ To reset the data, delete `backend/urbanscope.db` and restart the server.
 ├── supabase/           # Supabase CLI migrations, seed data, and SQL scripts
 ├── DATABASE.md         # Database schema & seed data
 ├── CHANGELOG.md        # Session changelog & feature log
+├── CONTRIBUTING.md     # Development & contributing guidelines
 └── AGENTS.md           # Developer & agent guidelines
 ```
 
