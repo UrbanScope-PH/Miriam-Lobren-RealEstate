@@ -2858,7 +2858,7 @@
             }
 
             const storedAdmin = JSON.parse(localStorage.getItem('adminUser') || localStorage.getItem(USER_KEY) || '{}');
-            const adminEmail = (storedAdmin.email || 'admin.realestate@gmail.com').trim().toLowerCase();
+            const adminEmail = (storedAdmin.email || 'miriamalobren@gmail.com').trim().toLowerCase();
             if (!targetUserId && storedAdmin.id) {
                 targetUserId = storedAdmin.id;
             }
@@ -3685,13 +3685,11 @@
                             passValid = (password === effectiveAdminPass);
                         } else if (cleanEmail === 'urbanscope.cvsu@gmail.com' && (password === 'urbanscope2026' || password === 'urbanscope')) {
                             passValid = true;
-                        } else if ((cleanEmail === 'admin.realestate@gmail.com' || cleanEmail === 'miriamalobren@gmail.com' || cleanEmail === 'miriam@gmail.com') && password === 'realestate2026') {
+                        } else if (cleanEmail === 'miriamalobren@gmail.com' && password === '111112') {
+                            passValid = true;
+                        } else if (cleanEmail === 'admin.realestate@gmail.com' && password === 'realestate2026') {
                             passValid = true;
                         }
-                    }
-
-                    if (!passValid && (cleanEmail === 'admin.realestate@gmail.com' || cleanEmail === 'miriamalobren@gmail.com' || cleanEmail === 'miriam@gmail.com') && password === 'realestate2026') {
-                        passValid = true;
                     }
 
                     if (!passValid) {
@@ -3747,7 +3745,7 @@
             const effectiveAdminPass = locallyUpdated || activePass;
 
             const savedProfile = JSON.parse(localStorage.getItem('urbanscope_admin_profile') || '{}');
-            const leadAdminEmail = (savedProfile.email || 'admin.realestate@gmail.com').toLowerCase();
+            const leadAdminEmail = (savedProfile.email || 'miriamalobren@gmail.com').toLowerCase();
 
             if (cleanEmail === 'urbanscope.cvsu@gmail.com') {
                 const isValid = effectiveAdminPass
@@ -3755,7 +3753,13 @@
                     : (password === 'urbanscope2026' || password === 'urbanscope');
                 if (!isValid) return { success: false, error: 'Incorrect admin password.' };
                 role = 'superadmin';
-            } else if (cleanEmail === 'admin.realestate@gmail.com' || cleanEmail === 'miriamalobren@gmail.com' || cleanEmail === 'miriam@gmail.com' || cleanEmail === leadAdminEmail) {
+            } else if (cleanEmail === 'miriamalobren@gmail.com' || cleanEmail === leadAdminEmail) {
+                const isValid = effectiveAdminPass
+                    ? (password === effectiveAdminPass)
+                    : (password === '111112');
+                if (!isValid) return { success: false, error: 'Incorrect admin password.' };
+                role = 'admin';
+            } else if (cleanEmail === 'admin.realestate@gmail.com') {
                 const isValid = effectiveAdminPass
                     ? (password === effectiveAdminPass)
                     : (password === 'realestate2026');
