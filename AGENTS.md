@@ -37,7 +37,7 @@ python run.py            # serves site + API on http://127.0.0.1:8000
 
 Demo logins:
 - Superadmin: `urbanscope.cvsu@gmail.com` / `urbanscope2026`
-- Admin: `miriamalobren@gmail.com` (or `admin.realestate@gmail.com`) / `realestate2026`
+- Admin: `miriamalobren@gmail.com` (pass: `111112` or updated via Admin Profile; legacy demo: `admin.realestate@gmail.com` / `realestate2026`)
 
 There is **no test suite, linter, or build step**. Verify changes by running the server
 and exercising the page / `/docs` endpoint you touched.
@@ -745,9 +745,9 @@ path when rendering from a page.
       4. *Supabase Cloud Role & Password Hash Alignment*: Row `id: 17` (`miriamalobren@gmail.com`) in Supabase had an outdated password hash preventing verification against `realestate2026`.
     - **Solution Implemented**:
       - **Staff Whitelists**: Added `miriamalobren@gmail.com` to `ADMIN_EMAILS` in `lib/admin-session.js`, `AUTHORIZED_ADMIN_EMAILS` in `backend/auth.py`, staff arrays in `auth.js`, `edge-session.js`, `register/start.js`, and `register/verify.js`.
-      - **Database Seed & Triggers**: Updated `backend/database.py` (`trg_user_role_insert` and `trg_user_role_update`) and `backend/seed_rbac.py` to automatically assign `'admin'` to `miriamalobren@gmail.com` with password `realestate2026`.
-      - **Supabase Cloud Sync & Migration (`supabase/migrations/20261107035100_set_lead_admin_email_miriamalobren.sql`)**: Updated `miriamalobren@gmail.com` in Supabase with verified PBKDF2 hash for `realestate2026`, linked all properties (`agent_id: 17`), and ensured full credentials persist.
-      - **Gateway & UI Fallbacks**: Updated `frontend/shared/js/supabase.js`, `api.js`, `session.js`, `index.js`, and `profile.js` to normalize roles, recognize `miriamalobren@gmail.com` as lead admin, and update contact mailto links across all legal and property pages.
+      - **Database Seed & Triggers**: Updated `backend/database.py` (`trg_user_role_insert` and `trg_user_role_update`) and `backend/seed_rbac.py` to automatically assign `'admin'` to `miriamalobren@gmail.com`. The password is not fixed (allowing dynamic changes via Admin Profile settings), preserving existing hashes and initializing `111112` for first-time setup.
+      - **Supabase Cloud Sync & Dynamic Password Verification**: Synchronized `miriamalobren@gmail.com` in Supabase with verified PBKDF2 hash for password `111112`. Removed hardcoded password bypasses in gateways so that changed passwords in Supabase Cloud and SQLite take immediate dynamic effect across Edge Session, FastAPI, and client gateways.
+      - **Gateway & UI Fallbacks**: Updated `frontend/shared/js/supabase.js`, `api.js`, `session.js`, `index.js`, and `profile.js` to normalize roles, recognize `miriamalobren@gmail.com` as lead admin, support password changes via `apiUpdateAdminPassword`, and update contact mailto links across all legal and property pages.
 
 
 ---

@@ -26,7 +26,7 @@ BEGIN
             license_number, avatar_url, title, brokerage, bio, created_at, updated_at
         ) VALUES (
             'miriamalobren@gmail.com',
-            '6a1e9b40844a5673cfbeb570e70c8cfe$336879fc4ed46699c3f2b4a2e5a87745b1393f74e53eed6d7b43c42cf08a4cc3',
+            '44642fa6779150106462e64ac546bbd4$8702f1df11fd794ec0394fb4d7339b0f5e86a37652e80dabf6aa21c40351b20c',
             'Miriam Lobren',
             '+63 918 964 5434',
             'admin',

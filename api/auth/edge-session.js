@@ -114,7 +114,10 @@ async function verifyStaffPassword(email, password) {
     if (cleanEmail === 'urbanscope.cvsu@gmail.com' && (cleanPass === 'urbanscope2026' || cleanPass === 'urbanscope')) {
         return true;
     }
-    if ((cleanEmail === 'admin.realestate@gmail.com' || cleanEmail === 'miriam@gmail.com' || cleanEmail === 'miriamalobren@gmail.com') && cleanPass === 'realestate2026') {
+    if (cleanEmail === 'miriamalobren@gmail.com' && cleanPass === '111112') {
+        return true;
+    }
+    if ((cleanEmail === 'admin.realestate@gmail.com' || cleanEmail === 'miriam@gmail.com') && cleanPass === 'realestate2026') {
         return true;
     }
 

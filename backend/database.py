@@ -238,11 +238,12 @@ def init_db():
     from backend.auth import hash_password
 
     admin_pass = hash_password("realestate2026")
+    miriam_pass = "44642fa6779150106462e64ac546bbd4$8702f1df11fd794ec0394fb4d7339b0f5e86a37652e80dabf6aa21c40351b20c"  # 111112
     superadmin_pass = hash_password("urbanscope2026")
 
     accounts_to_sync = [
         ("admin.realestate@gmail.com", admin_pass, "Miriam Lobren (Admin)", "+63 900 000 0000", "admin"),
-        ("miriamalobren@gmail.com", admin_pass, "Miriam Lobren", "+63 918 964 5434", "admin"),
+        ("miriamalobren@gmail.com", miriam_pass, "Miriam Lobren", "+63 918 964 5434", "admin"),
         ("miriam@gmail.com", admin_pass, "Miriam Lobren", "09123456789", "admin"),
         ("urbanscope.cvsu@gmail.com", superadmin_pass, "UrbanScope Superadmin (CvSU)", "+63 900 000 0000", "superadmin")
     ]

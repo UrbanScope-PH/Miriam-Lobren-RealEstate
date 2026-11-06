@@ -285,7 +285,7 @@ Seeding happens inside `init_db()` **only when the table is empty**, per table.
 | Email | Password | Role | Name |
 | :--- | :--- | :--- | :--- |
 | `urbanscope.cvsu@gmail.com` | `urbanscope2026` | `superadmin` | UrbanScope Superadmin (CvSU) |
-| `miriamalobren@gmail.com` | `realestate2026` | `admin` | Miriam Lobren (Lead Admin) |
+| `miriamalobren@gmail.com` | `111112` (or updated via Admin Profile) | `admin` | Miriam Lobren (Lead Admin) |
 | `admin.realestate@gmail.com` | `realestate2026` | `admin` | Real Estate Admin |
 
 **Properties (4 accredited featured listings)**
