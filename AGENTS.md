@@ -760,6 +760,17 @@ path when rendering from a page.
       - Removed `email_verified_at` from Supabase REST select queries and sanitized update patches across `lib/email-auth.js`, `backend/routers/auth.py`, and `backend/routers/superadmin.py`.
       - Enhanced `apiUpdateAdminPassword` in `frontend/shared/js/supabase.js` and `frontend/shared/js/api.js` to send `Authorization: Bearer` alongside cookies, and automatically re-authenticate if session cookie expired, seamlessly retrying the password change.
       - Updated hint text in `frontend/pages/admin/profile.html` to `"Minimum 6 characters."` to match actual backend validation.
+69. **Landing Page Access Guarantee & Elimination of Admin Home Redirect Loop (`session.js`, `middleware.py`, `web.py`):**
+    - **Problem**: On devices that previously signed into administrative or superadmin accounts (e.g. `urbanscope.cvsu@gmail.com`), clicking `https://miriam-lobren-real-estate.vercel.app/` or `index.html` immediately redirected the browser to `https://miriam-lobren-real-estate.vercel.app/pages/auth/login.html?redirect=pages%2Fsuperadmin%2Fdashboard.html`, locking users out of the landing page.
+    - **Root Causes**:
+      1. *Legacy Aggressive Route Guard in `session.js`*: An obsolete check on page load and inside `init()` inspected `localStorage` (`adminUser` / `urbanscope_user`), detected `role === 'superadmin'` or `role === 'admin'`, and called `location.replace('pages/superadmin/dashboard.html')` to ban admins from viewing public catalog pages.
+      2. *Expired Edge Admin Cookie on Vercel*: When the 12-hour signed admin cookie had expired on that device, Vercel routing middleware (`proxy.js`) intercepted the forced redirect to `/pages/superadmin/dashboard.html` and redirected to `pages/auth/login.html?redirect=pages%2Fsuperadmin%2Fdashboard.html`.
+      3. *Inescapable Loop*: Re-navigating to `index.html` re-triggered the `session.js` redirect, trapping the browser in an endless bounce loop.
+      4. *Backend Parity Checks*: Parallel checks in `backend/middleware.py` and `backend/routers/web.py` similarly hijacked requests to `/` and `/index.html`.
+    - **Solution**:
+      - Removed the forced administrative redirects from `frontend/shared/js/session.js` (both initial script execution and `init()`).
+      - Removed `/` and `/index.html` hijacking from `backend/middleware.py` and `backend/routers/web.py`.
+      - Updated `dropdownHtml(user)` in `session.js` so logged-in admins and superadmins retain one-click access to their Admin Dashboard or Superadmin Console directly from the navbar profile menu while retaining full freedom to browse `index.html` and public property catalogs.
 
 
 ---

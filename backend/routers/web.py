@@ -9,13 +9,7 @@ from fastapi import APIRouter, FastAPI, Request, status
 from fastapi.responses import FileResponse, JSONResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 
-from backend.auth import (
-    AUTHORIZED_ADMIN_EMAILS,
-    AUTHORIZED_ADMIN_ROLES,
-    AUTHORIZED_SUPERADMIN_EMAILS,
-    get_current_user_from_request,
-)
-from backend.middleware import extract_token_from_request, get_authenticated_user_role
+from backend.auth import get_current_user_from_request
 
 ROOT_DIR = Path(__file__).resolve().parent.parent.parent
 FRONTEND_DIR = ROOT_DIR / "frontend"
@@ -102,35 +96,15 @@ for _section in ["properties", "inquiry", "auth", "admin"]:
     )
 
 
-def _resolve_admin_portal_redirect(request: Request):
-    """Returns a dashboard RedirectResponse if the visitor holds an active admin/superadmin session."""
-    token = extract_token_from_request(request)
-    if token:
-        user_info = get_authenticated_user_role(token)
-        if user_info:
-            user_email, user_role = user_info
-            if user_role == "superadmin" and user_email in AUTHORIZED_SUPERADMIN_EMAILS:
-                return RedirectResponse(url="/pages/superadmin/dashboard.html", status_code=status.HTTP_302_FOUND)
-            if user_role in AUTHORIZED_ADMIN_ROLES or user_email in AUTHORIZED_ADMIN_EMAILS:
-                return RedirectResponse(url="/pages/admin/dashboard.html", status_code=status.HTTP_302_FOUND)
-    return None
-
-
 @public_web_router.get("/", include_in_schema=False)
-def serve_home(request: Request):
-    """Serves root landing page index.html, redirecting administrators to admin portal."""
-    portal_redirect = _resolve_admin_portal_redirect(request)
-    if portal_redirect:
-        return portal_redirect
+def serve_home():
+    """Serves root landing page index.html."""
     return FileResponse(str(FRONTEND_DIR / "index.html"))
 
 
 @public_web_router.get("/index.html", include_in_schema=False)
-def serve_index(request: Request):
-    """Serves index.html, redirecting administrators to admin portal."""
-    portal_redirect = _resolve_admin_portal_redirect(request)
-    if portal_redirect:
-        return portal_redirect
+def serve_index():
+    """Serves index.html."""
     return FileResponse(str(FRONTEND_DIR / "index.html"))
 
 
