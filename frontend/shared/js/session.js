@@ -11,31 +11,6 @@
  * back to a local demo session if Supabase is not configured.
  */
 (function () {
-    // Restrict administrators and superadmin:
-    // They are restricted strictly to the admin portal and must not access the public home page or catalog.
-    try {
-        var rawUser = localStorage.getItem('adminUser') || localStorage.getItem('urbanscope_user');
-        if (rawUser) {
-            var parsed = JSON.parse(rawUser);
-            var role = (parsed.role || '').toLowerCase();
-            var email = (parsed.email || '').toLowerCase().trim();
-            var isSuperadmin = (role === 'superadmin' || email === 'urbanscope.cvsu@gmail.com');
-            var isAdmin = (role === 'admin' || email === 'admin.realestate@gmail.com');
-
-            var path = location.pathname.toLowerCase().replace(/\\/g, '/');
-            var inAdmin = path.includes('/pages/admin/') || path.includes('/pages/superadmin/');
-            var inAuth = path.includes('/pages/auth/');
-
-            if (!inAdmin && !inAuth && (isSuperadmin || isAdmin)) {
-                var p = location.pathname.replace(/\\/g, '/');
-                var basePath = p.indexOf('/pages/') !== -1 ? '../../' : './';
-                var target = isSuperadmin ? (basePath + 'pages/superadmin/dashboard.html') : (basePath + 'pages/admin/dashboard.html');
-                location.replace(target);
-                return;
-            }
-        }
-    } catch (e) { }
-
     var DEMO_USER_KEY = 'urbanscope_demo_user';
     var root = document.documentElement;
     var requiresAuth = root.hasAttribute('data-require-auth');
@@ -433,12 +408,22 @@
     // ------------------------------------------------------------------
     function dropdownHtml(user) {
         var base = getBasePath();
+        var role = (user && user.role ? String(user.role) : '').toLowerCase();
+        var email = (user && user.email ? String(user.email) : '').toLowerCase().trim();
+        var portalItem = '';
+        if (role === 'superadmin' || email === 'urbanscope.cvsu@gmail.com') {
+            portalItem = '<a href="' + base + 'pages/superadmin/dashboard.html" role="menuitem">Superadmin Console</a>';
+        } else if (role === 'admin' || email === 'miriamalobren@gmail.com' || email === 'admin.realestate@gmail.com' || email === 'miriam@gmail.com') {
+            portalItem = '<a href="' + base + 'pages/admin/dashboard.html" role="menuitem">Admin Dashboard</a>';
+        }
+
         return '' +
             '<div class="profile-dropdown" role="menu">' +
             '<div class="profile-dropdown-head">' +
             '<span class="profile-avatar">' + avatarInnerHtml(user) + '</span>' +
             '<div><strong>' + esc(user.name) + '</strong><small>' + esc(user.email) + '</small></div>' +
             '</div>' +
+            portalItem +
             '<a href="' + base + 'index.html" role="menuitem">Home</a>' +
             '<a href="' + base + 'pages/inquiry/inquiry.html" role="menuitem">Submit an Inquiry</a>' +
             '<a href="' + base + 'pages/inquiry/history.html" role="menuitem">Inquiry History</a>' +
@@ -648,22 +633,6 @@
     async function init() {
         currentUser = await getUser();
         resolved = true;
-
-        if (currentUser) {
-            var role = (currentUser.role || '').toLowerCase();
-            var email = (currentUser.email || '').toLowerCase().trim();
-            var isSuperadmin = (role === 'superadmin' || email === 'urbanscope.cvsu@gmail.com');
-            var isAdmin = (role === 'admin' || email === 'admin.realestate@gmail.com');
-            var path = location.pathname.toLowerCase().replace(/\\/g, '/');
-            var inAdmin = path.includes('/pages/admin/') || path.includes('/pages/superadmin/');
-            var inAuth = path.includes('/pages/auth/');
-
-            if (!inAdmin && !inAuth && (isSuperadmin || isAdmin)) {
-                var target = isSuperadmin ? (getBasePath() + 'pages/superadmin/dashboard.html') : (getBasePath() + 'pages/admin/dashboard.html');
-                location.replace(target);
-                return;
-            }
-        }
 
         if (requiresAuth && !currentUser) {
             location.replace(loginUrl(currentPage(), 'inquiry'));

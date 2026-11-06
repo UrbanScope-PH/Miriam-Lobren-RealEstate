@@ -322,29 +322,5 @@ async def rbac_admin_guard_middleware(request: Request, call_next):
                 if not is_authorized_admin:
                     return HTMLResponse(content=FORBIDDEN_HTML, status_code=status.HTTP_403_FORBIDDEN)
 
-    else:
-        # Check if request targets public/client HTML pages (home page, catalog, inquiry)
-        # Administrators and superadmin are restricted strictly to the admin portal and cannot access the home page.
-        is_home_path = (path == "/" or path == "/index.html")
-        is_public_catalog = (
-            path.startswith("/pages/properties/") or
-            path.startswith("/pages/inquiry/") or
-            path.startswith("/properties/") or
-            path.startswith("/inquiry/")
-        )
-        file_name = path.split("/")[-1].lower()
-        is_html_request = is_home_path or file_name.endswith(".html") or ("." not in file_name and not path.startswith("/api/"))
-
-        if (is_home_path or is_public_catalog) and is_html_request:
-            token = extract_token_from_request(request)
-            if token:
-                user_info = get_authenticated_user_role(token)
-                if user_info:
-                    user_email, user_role = user_info
-                    if user_role == "superadmin" and user_email in AUTHORIZED_SUPERADMIN_EMAILS:
-                        return RedirectResponse(url="/pages/superadmin/dashboard.html", status_code=status.HTTP_302_FOUND)
-                    elif user_role in AUTHORIZED_ADMIN_ROLES or user_email in AUTHORIZED_ADMIN_EMAILS:
-                        return RedirectResponse(url="/pages/admin/dashboard.html", status_code=status.HTTP_302_FOUND)
-
     response = await call_next(request)
     return response
