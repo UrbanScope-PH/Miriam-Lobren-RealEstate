@@ -771,6 +771,10 @@ path when rendering from a page.
       - Removed the forced administrative redirects from `frontend/shared/js/session.js` (both initial script execution and `init()`).
       - Removed `/` and `/index.html` hijacking from `backend/middleware.py` and `backend/routers/web.py`.
       - Updated `dropdownHtml(user)` in `session.js` so logged-in admins and superadmins retain one-click access to their Admin Dashboard or Superadmin Console directly from the navbar profile menu while retaining full freedom to browse `index.html` and public property catalogs.
+70. **Admin Profile Form Cleanup: Removal of Professional Bio Field (`profile.html`, `profile.js`):**
+    - Removed the redundant "Professional Bio & About" textarea input from the Profile Information form on `/pages/admin/profile.html`.
+    - Leaves a clean, balanced 2-column grid of 6 core administrative fields: Full Legal Name, Professional Title, Email Address, Contact Phone Number, PRC License Number, and Brokerage / Company.
+    - Updated `profile.js` to guard the null `bioInput` element reference, gracefully preserving any existing bio values in background storage without runtime `TypeError` issues.
 
 
 ---
