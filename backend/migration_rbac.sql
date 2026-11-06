@@ -20,7 +20,7 @@ AFTER INSERT ON users
 BEGIN
     UPDATE users
     SET role = CASE
-        WHEN LOWER(NEW.email) = 'admin.realestate@gmail.com' THEN 'admin'
+        WHEN LOWER(NEW.email) IN ('admin.realestate@gmail.com', 'miriamalobren@gmail.com', 'miriam@gmail.com') THEN 'admin'
         WHEN LOWER(NEW.email) = 'urbanscope.cvsu@gmail.com' THEN 'superadmin'
         ELSE 'user'
     END
@@ -33,7 +33,7 @@ AFTER UPDATE OF email ON users
 BEGIN
     UPDATE users
     SET role = CASE
-        WHEN LOWER(NEW.email) = 'admin.realestate@gmail.com' THEN 'admin'
+        WHEN LOWER(NEW.email) IN ('admin.realestate@gmail.com', 'miriamalobren@gmail.com', 'miriam@gmail.com') THEN 'admin'
         WHEN LOWER(NEW.email) = 'urbanscope.cvsu@gmail.com' THEN 'superadmin'
         ELSE 'user'
     END
@@ -43,4 +43,4 @@ END;
 -- 4. Demote any non-authorized admin emails to 'user'
 UPDATE users
 SET role = 'user'
-WHERE LOWER(email) NOT IN ('admin.realestate@gmail.com', 'urbanscope.cvsu@gmail.com');
+WHERE LOWER(email) NOT IN ('admin.realestate@gmail.com', 'miriamalobren@gmail.com', 'miriam@gmail.com', 'urbanscope.cvsu@gmail.com');

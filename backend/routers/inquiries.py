@@ -72,7 +72,7 @@ def submit_inquiry(payload: InquiryCreate):
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0, 0)
     """, (
         "admin",
-        "admin.realestate@gmail.com",
+        "miriamalobren@gmail.com",
         "new_inquiry",
         inq_id,
         property_title,
@@ -244,7 +244,7 @@ def modify_inquiry(
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0, 0)
         """, (
             "admin",
-            "admin.realestate@gmail.com",
+            "miriamalobren@gmail.com",
             "cancelled",
             inquiry_id,
             prop_title,
@@ -333,7 +333,7 @@ def delete_inquiry(
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0, 0)
         """, (
             "admin",
-            "admin.realestate@gmail.com",
+            "miriamalobren@gmail.com",
             "cancelled",
             inquiry_id,
             prop_title,

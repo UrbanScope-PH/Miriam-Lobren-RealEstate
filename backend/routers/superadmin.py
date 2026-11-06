@@ -542,7 +542,7 @@ def delete_user_account(user_id: int, current_superadmin: dict = Depends(require
         conn.close()
         raise HTTPException(status_code=400, detail="Cannot delete root Superadmin account.")
 
-    if target_email == "admin.realestate@gmail.com":
+    if target_email in ("admin.realestate@gmail.com", "miriamalobren@gmail.com"):
         conn.close()
         raise HTTPException(status_code=400, detail="Cannot delete primary Realty Admin account.")
 

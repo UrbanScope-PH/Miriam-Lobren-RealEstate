@@ -25,7 +25,7 @@ export default async function handler(req, res) {
     if (!isValidEmail(email) || fullName.length < 2 || fullName.length > 120 || phone.length > 40 || password.length < 8 || password.length > 128 || !/^\d{6}$/.test(code)) {
         return jsonResponse({ success: false, error: 'Check the information and verification code, then try again.' }, 400, res);
     }
-    if (['admin.realestate@gmail.com', 'miriam@gmail.com', 'urbanscope.cvsu@gmail.com'].includes(email)) {
+    if (['admin.realestate@gmail.com', 'miriam@gmail.com', 'miriamalobren@gmail.com', 'urbanscope.cvsu@gmail.com'].includes(email)) {
         return jsonResponse({ success: false, error: 'This email cannot be registered through the client sign-up form.' }, 400, res);
     }
 

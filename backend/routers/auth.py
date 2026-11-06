@@ -981,7 +981,7 @@ def get_public_agent_profile():
     cursor.execute("""
         SELECT id, email, full_name, phone, license_number, title, brokerage, bio, avatar_url, role
         FROM users
-        WHERE role IN ('admin', 'superadmin') OR LOWER(email) IN ('admin.realestate@gmail.com', 'miriam@gmail.com')
+        WHERE role IN ('admin', 'superadmin') OR LOWER(email) IN ('admin.realestate@gmail.com', 'miriam@gmail.com', 'miriamalobren@gmail.com')
         ORDER BY 
             CASE 
                 WHEN LOWER(email) NOT IN ('admin.realestate@gmail.com', 'urbanscope.cvsu@gmail.com') AND email NOT LIKE '%@example.com' THEN 0 
@@ -997,12 +997,12 @@ def get_public_agent_profile():
         return {
             "name": "Miriam Lobren",
             "full_name": "Miriam Lobren",
-            "email": "miriam@gmail.com",
-            "phone": "09123456789",
-            "license": "PRC REB #0031892",
-            "license_number": "PRC REB #0031892",
-            "title": "Real Estate Agent",
-            "brokerage": "UrbanScope",
+            "email": "miriamalobren@gmail.com",
+            "phone": "+63 918 964 5434",
+            "license": "PRC REB #402",
+            "license_number": "PRC REB #402",
+            "title": "Real Estate Sales Person",
+            "brokerage": "CDMiranda Realty",
             "bio": "Serving Las Piñas, Cavite, and surrounding prime locations with high-integrity real estate solutions.",
             "avatar_url": "assets/images/agent.jpg"
         }

@@ -104,12 +104,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     // 4. Populate current admin profile
     const defaultProfile = {
         name: 'Miriam Lobren',
-        title: 'Real Estate Agent',
-        email: 'miriam@gmail.com',
-        phone: '09123456789',
-        license: 'PRC REB #0031892',
-        brokerage: 'UrbanScope',
-        bio: 'Serving Las Piñas, Cavite, and surrounding prime locations with high-integrity real estate solutions.'
+        title: 'Real Estate Sales Person',
+        email: 'miriamalobren@gmail.com',
+        phone: '+63 918 964 5434',
+        license: 'PRC REB #402',
+        brokerage: 'CDMiranda Realty',
+        bio: "Hello! I'm Miriam Lobren, a real estate sales person with CDMiranda Realty, with over 10 years of expertise in the industry."
     };
 
     const savedProfile = JSON.parse(localStorage.getItem('urbanscope_admin_profile') || '{}');

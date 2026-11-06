@@ -423,6 +423,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const isAuthorizedStaffEmail = [
             "admin.realestate@gmail.com",
             "miriam@gmail.com",
+            "miriamalobren@gmail.com",
             "urbanscope.cvsu@gmail.com"
         ].includes(cleanEmail);
         const isAdminUser = role === "admin" || role === "superadmin" || isAuthorizedStaffEmail;
@@ -484,6 +485,7 @@ document.addEventListener("DOMContentLoaded", () => {
                         const isAuthorizedStaffEmail = [
                             'admin.realestate@gmail.com',
                             'miriam@gmail.com',
+                            'miriamalobren@gmail.com',
                             'urbanscope.cvsu@gmail.com'
                         ].includes(email);
                         if (role === 'admin' || role === 'superadmin' || isAuthorizedStaffEmail) {

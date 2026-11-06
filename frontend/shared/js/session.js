@@ -691,7 +691,7 @@
             p = JSON.parse(localStorage.getItem('urbanscope_admin_profile') || 'null');
             if (!p) {
                 var adminUser = JSON.parse(localStorage.getItem('adminUser') || 'null');
-                if (adminUser && (adminUser.role === 'admin' || adminUser.email === 'admin.realestate@gmail.com' || adminUser.email === 'miriam@gmail.com' || adminUser.email === 'miriamlobren@gmail.com')) {
+                if (adminUser && (adminUser.role === 'admin' || adminUser.email === 'admin.realestate@gmail.com' || adminUser.email === 'miriamalobren@gmail.com' || adminUser.email === 'miriam@gmail.com' || adminUser.email === 'miriamlobren@gmail.com')) {
                     p = adminUser;
                 }
             }
@@ -699,8 +699,8 @@
 
         function applyContact(phone, email) {
             if (!phone && !email) return;
-            var cleanPhone = phone || '09123456789';
-            var cleanEmail = email || 'miriam@gmail.com';
+            var cleanPhone = phone || '+63 918 964 5434';
+            var cleanEmail = email || 'miriamalobren@gmail.com';
             var cleanDigits = cleanPhone.replace(/[^\d+]/g, '');
 
             document.querySelectorAll('.footer-contact a[href^="tel:"], footer a[href^="tel:"], #footerAgentPhone').forEach(function (el) {

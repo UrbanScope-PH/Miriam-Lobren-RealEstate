@@ -16,7 +16,7 @@ export default async function handler(req, res) {
     const email = normalizeEmail(body.email);
     if (!isValidEmail(email)) return jsonResponse({ success: false, error: 'Enter a valid email address.' }, 400, res);
 
-    if (['admin.realestate@gmail.com', 'miriam@gmail.com', 'urbanscope.cvsu@gmail.com'].includes(email)) {
+    if (['admin.realestate@gmail.com', 'miriam@gmail.com', 'miriamalobren@gmail.com', 'urbanscope.cvsu@gmail.com'].includes(email)) {
         return jsonResponse({ success: false, error: 'This email cannot be registered through the client sign-up form.' }, 400, res);
     }
 

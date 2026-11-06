@@ -47,7 +47,7 @@ def run_rbac_migration():
     for u in users:
         u_id, email, full_name, role, pwd_hash = u
         test_pass = None
-        if email == "admin.realestate@gmail.com":
+        if email in ("admin.realestate@gmail.com", "miriamalobren@gmail.com", "miriam@gmail.com"):
             test_pass = "realestate2026"
         elif email == "urbanscope.cvsu@gmail.com":
             test_pass = "urbanscope2026"

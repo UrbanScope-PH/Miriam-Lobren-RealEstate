@@ -37,7 +37,7 @@ python run.py            # serves site + API on http://127.0.0.1:8000
 
 Demo logins:
 - Superadmin: `urbanscope.cvsu@gmail.com` / `urbanscope2026`
-- Admin: `admin.realestate@gmail.com` / `realestate2026`
+- Admin: `miriamalobren@gmail.com` (or `admin.realestate@gmail.com`) / `realestate2026`
 
 There is **no test suite, linter, or build step**. Verify changes by running the server
 and exercising the page / `/docs` endpoint you touched.
@@ -128,7 +128,7 @@ path when rendering from a page.
   accessing client inquiries (`GET /api/inquiries`), and reading metrics (`GET /api/stats`) are
   protected by the `require_admin` dependency. Superadmin endpoints (`/api/superadmin/*`) are
   protected by `require_superadmin`.
-- **Vercel Static-Page Protection:** Since Vercel serves HTML statically and does not run FastAPI middleware, root `proxy.js` checks a signed `HttpOnly` admin cookie before serving Admin/Superadmin HTML at public and underlying `/frontend/pages/...` paths. `api/auth/edge-session.js` verifies Google tokens or email/password credentials server-side and issues a 12-hour cookie only for the staff allowlist (`admin.realestate@gmail.com`, `miriam@gmail.com`, `urbanscope.cvsu@gmail.com`) and optional `VERCEL_ADMIN_EMAILS` entries. Approved Admin staff can access the Admin portal; only the root Superadmin can access Superadmin. Configure a private `VERCEL_ADMIN_SESSION_SECRET` (at least 32 characters) in Vercel Project Settings before deployment. Hosted route authorization never trusts localStorage role values.
+- **Vercel Static-Page Protection:** Since Vercel serves HTML statically and does not run FastAPI middleware, root `proxy.js` checks a signed `HttpOnly` admin cookie before serving Admin/Superadmin HTML at public and underlying `/frontend/pages/...` paths. `api/auth/edge-session.js` verifies Google tokens or email/password credentials server-side and issues a 12-hour cookie only for the staff allowlist (`admin.realestate@gmail.com`, `miriamalobren@gmail.com`, `miriam@gmail.com`, `urbanscope.cvsu@gmail.com`) and optional `VERCEL_ADMIN_EMAILS` entries. Approved Admin staff can access the Admin portal; only the root Superadmin can access Superadmin. Configure a private `VERCEL_ADMIN_SESSION_SECRET` (at least 32 characters) in Vercel Project Settings before deployment. Hosted route authorization never trusts localStorage role values.
 
 ---
 
@@ -736,6 +736,18 @@ path when rendering from a page.
     - Documented live Vercel production deployment (`https://miriam-lobren-real-estate.vercel.app/`) in `README.md` under Getting Started.
     - Verified GitHub Environments (`Production` and `Preview`) and PR integration workflow via Pull Requests #3 through #10 merged into `main`.
     - Added `CONTRIBUTING.md` defining branching conventions and pull request standards.
+67. **Admin Account Normalization & Login Fix (`miriamalobren@gmail.com`):**
+    - **Problem Identified**: The administrator could no longer sign in after updating the profile email to `miriamalobren@gmail.com` (Miriam Lobren's official email). Edge session verification (`/api/auth/edge-session`) returned HTTP 403 Forbidden ("This account does not have administrative access"), FastAPI rejected logins with 401 Unauthorized, and Vercel routing middleware (`proxy.js`) prevented access to `/pages/admin/*` because `miriamalobren@gmail.com` was missing from the staff whitelist.
+    - **Root Causes**:
+      1. *Admin Session Whitelist Restriction*: `ADMIN_EMAILS` in `lib/admin-session.js` only included `admin.realestate@gmail.com` and `miriam@gmail.com`, causing `isAuthorizedAdminRole()` to reject `miriamalobren@gmail.com`.
+      2. *Edge Session Password Fallback*: `verifyStaffPassword` in `api/auth/edge-session.js` only accepted the default admin password `realestate2026` for legacy addresses.
+      3. *FastAPI Authorization & RBAC Triggers*: `AUTHORIZED_ADMIN_EMAILS` in `backend/auth.py` and SQLite triggers in `backend/database.py` only assigned the `'admin'` role to `admin.realestate@gmail.com`.
+      4. *Supabase Cloud Role & Password Hash Alignment*: Row `id: 17` (`miriamalobren@gmail.com`) in Supabase had an outdated password hash preventing verification against `realestate2026`.
+    - **Solution Implemented**:
+      - **Staff Whitelists**: Added `miriamalobren@gmail.com` to `ADMIN_EMAILS` in `lib/admin-session.js`, `AUTHORIZED_ADMIN_EMAILS` in `backend/auth.py`, staff arrays in `auth.js`, `edge-session.js`, `register/start.js`, and `register/verify.js`.
+      - **Database Seed & Triggers**: Updated `backend/database.py` (`trg_user_role_insert` and `trg_user_role_update`) and `backend/seed_rbac.py` to automatically assign `'admin'` to `miriamalobren@gmail.com` with password `realestate2026`.
+      - **Supabase Cloud Sync & Migration (`supabase/migrations/20261107035100_set_lead_admin_email_miriamalobren.sql`)**: Updated `miriamalobren@gmail.com` in Supabase with verified PBKDF2 hash for `realestate2026`, linked all properties (`agent_id: 17`), and ensured full credentials persist.
+      - **Gateway & UI Fallbacks**: Updated `frontend/shared/js/supabase.js`, `api.js`, `session.js`, `index.js`, and `profile.js` to normalize roles, recognize `miriamalobren@gmail.com` as lead admin, and update contact mailto links across all legal and property pages.
 
 
 ---

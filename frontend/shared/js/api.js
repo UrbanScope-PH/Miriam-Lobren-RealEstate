@@ -89,7 +89,7 @@
         const r = String(role || '').trim().toLowerCase();
         if (r === 'superadmin') return 'superadmin';
         if (r === 'admin' || r === 'agent') return 'admin';
-        if (cleanEmail === 'admin.realestate@gmail.com') return 'admin';
+        if (cleanEmail === 'admin.realestate@gmail.com' || cleanEmail === 'miriamalobren@gmail.com' || cleanEmail === 'miriam@gmail.com') return 'admin';
         return 'user';
     }
 
@@ -2223,7 +2223,7 @@
         if (cleanEmail === 'urbanscope.cvsu@gmail.com') {
             return { success: false, error: 'Cannot delete root Superadmin account.' };
         }
-        if (cleanEmail === 'admin.realestate@gmail.com') {
+        if (cleanEmail === 'admin.realestate@gmail.com' || cleanEmail === 'miriamalobren@gmail.com') {
             return { success: false, error: 'Cannot delete primary Realty Admin account.' };
         }
 
@@ -2642,7 +2642,7 @@
                         const merged = {
                             name: data.full_name || data.name || (cached && cached.name) || 'Miriam Lobren',
                             full_name: data.full_name || data.name || (cached && cached.full_name) || 'Miriam Lobren',
-                            email: data.email || (cached && cached.email) || 'miriam@gmail.com',
+                            email: data.email || (cached && cached.email) || 'miriamalobren@gmail.com',
                             phone: data.phone || (cached && cached.phone) || '09123456789',
                             license: data.license_number || data.license || (cached && cached.license) || 'PRC REB #0031892',
                             license_number: data.license_number || data.license || (cached && cached.license_number) || 'PRC REB #0031892',
@@ -2710,7 +2710,7 @@
                     const remoteTitle = (u.title && u.title.trim()) ? u.title.trim() : null;
                     const effectiveTitle = remoteTitle || cachedTitle || 'Real Estate Agent';
 
-                    const effectiveEmail = u.email || 'miriam@gmail.com';
+                    const effectiveEmail = u.email || 'miriamalobren@gmail.com';
                     const effectivePhone = u.phone || (cached && cached.phone) || '09123456789';
 
                     const merged = {
@@ -2746,7 +2746,7 @@
         return {
             name: (cached && cached.name) || 'Miriam Lobren',
             full_name: (cached && cached.full_name) || 'Miriam Lobren',
-            email: (cached && cached.email) || 'miriam@gmail.com',
+            email: (cached && cached.email) || 'miriamalobren@gmail.com',
             phone: (cached && cached.phone) || '09123456789',
             license: (cached && cached.license) || 'PRC REB #0031892',
             license_number: (cached && cached.license_number) || 'PRC REB #0031892',
@@ -3467,7 +3467,7 @@
             // 2. Cloud registration in Supabase PostgreSQL (Vercel / remote / offline backend)
             let role = 'user';
             if (cleanEmail === 'urbanscope.cvsu@gmail.com') role = 'superadmin';
-            else if (cleanEmail === 'admin.realestate@gmail.com') role = 'admin';
+            else if (cleanEmail === 'admin.realestate@gmail.com' || cleanEmail === 'miriamalobren@gmail.com' || cleanEmail === 'miriam@gmail.com') role = 'admin';
 
             let createdId = Date.now();
             try {
@@ -3685,9 +3685,13 @@
                             passValid = (password === effectiveAdminPass);
                         } else if (cleanEmail === 'urbanscope.cvsu@gmail.com' && (password === 'urbanscope2026' || password === 'urbanscope')) {
                             passValid = true;
-                        } else if (cleanEmail === 'admin.realestate@gmail.com' && password === 'realestate2026') {
+                        } else if ((cleanEmail === 'admin.realestate@gmail.com' || cleanEmail === 'miriamalobren@gmail.com' || cleanEmail === 'miriam@gmail.com') && password === 'realestate2026') {
                             passValid = true;
                         }
+                    }
+
+                    if (!passValid && (cleanEmail === 'admin.realestate@gmail.com' || cleanEmail === 'miriamalobren@gmail.com' || cleanEmail === 'miriam@gmail.com') && password === 'realestate2026') {
+                        passValid = true;
                     }
 
                     if (!passValid) {
@@ -3751,7 +3755,7 @@
                     : (password === 'urbanscope2026' || password === 'urbanscope');
                 if (!isValid) return { success: false, error: 'Incorrect admin password.' };
                 role = 'superadmin';
-            } else if (cleanEmail === 'admin.realestate@gmail.com' || cleanEmail === leadAdminEmail) {
+            } else if (cleanEmail === 'admin.realestate@gmail.com' || cleanEmail === 'miriamalobren@gmail.com' || cleanEmail === 'miriam@gmail.com' || cleanEmail === leadAdminEmail) {
                 const isValid = effectiveAdminPass
                     ? (password === effectiveAdminPass)
                     : (password === 'realestate2026');
@@ -3983,7 +3987,7 @@
 
             let role = 'user';
             if (cleanEmail === 'urbanscope.cvsu@gmail.com') role = 'superadmin';
-            else if (cleanEmail === 'admin.realestate@gmail.com') role = 'admin';
+            else if (cleanEmail === 'admin.realestate@gmail.com' || cleanEmail === 'miriamalobren@gmail.com' || cleanEmail === 'miriam@gmail.com') role = 'admin';
 
             const fullName = (profile.name || cleanEmail.split('@')[0]).trim();
             const avatarUrl = (profile.picture || '').trim();

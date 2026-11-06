@@ -95,7 +95,7 @@ FORBIDDEN_HTML = """<!DOCTYPE html>
     <div class="error-box">
         <span class="badge">403 FORBIDDEN</span>
         <h1>Access Restricted</h1>
-        <p>Your account does not have administrator privileges to view this portal. Access is strictly limited to authorized administrators (<code>admin.realestate@gmail.com</code> and <code>urbanscope.cvsu@gmail.com</code>).</p>
+        <p>Your account does not have administrator privileges to view this portal. Access is strictly limited to authorized administrators (<code>miriamalobren@gmail.com</code>, <code>admin.realestate@gmail.com</code>, and <code>urbanscope.cvsu@gmail.com</code>).</p>
         <a href="/" class="btn-home">Return to Home Page</a>
     </div>
 </body>

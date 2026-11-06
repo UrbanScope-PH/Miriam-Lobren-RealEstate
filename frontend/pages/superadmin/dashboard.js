@@ -117,7 +117,7 @@
         const r = String(role || '').trim().toLowerCase();
         if (r === 'superadmin') return 'superadmin';
         if (r === 'admin' || r === 'agent') return 'admin';
-        if (cleanEmail === 'admin.realestate@gmail.com') return 'admin';
+        if (cleanEmail === 'admin.realestate@gmail.com' || cleanEmail === 'miriamalobren@gmail.com' || cleanEmail === 'miriam@gmail.com') return 'admin';
         return 'user';
     }
 
@@ -401,7 +401,7 @@
             const cleanEmail = (u.email || '').toLowerCase().trim();
             const role = normalizeRole(u.role, cleanEmail);
             const isRootSuperadmin = cleanEmail === 'urbanscope.cvsu@gmail.com';
-            const isPrimaryAdmin = cleanEmail === 'admin.realestate@gmail.com';
+            const isPrimaryAdmin = cleanEmail === 'admin.realestate@gmail.com' || cleanEmail === 'miriamalobren@gmail.com';
             const safeIdAttr = escapeHtml(String(u.id));
 
             let roleBadge = '';

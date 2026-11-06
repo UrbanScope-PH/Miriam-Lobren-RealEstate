@@ -285,6 +285,7 @@ Seeding happens inside `init_db()` **only when the table is empty**, per table.
 | Email | Password | Role | Name |
 | :--- | :--- | :--- | :--- |
 | `urbanscope.cvsu@gmail.com` | `urbanscope2026` | `superadmin` | UrbanScope Superadmin (CvSU) |
+| `miriamalobren@gmail.com` | `realestate2026` | `admin` | Miriam Lobren (Lead Admin) |
 | `admin.realestate@gmail.com` | `realestate2026` | `admin` | Real Estate Admin |
 
 **Properties (4 accredited featured listings)**
@@ -420,6 +421,10 @@ supabase/
                                              Adds is_seen column to notifications table for persistent cross-device seen and toast suppression sync
   migrations/20261103231500_allow_delete_users_rls.sql
                                              Adds "Allow delete users" RLS policy on users for Superadmin account deletion and purges soft-deleted rows
+  migrations/20261105120000_email_otp_auth.sql
+                                             Adds email OTP challenges and protection triggers for email verification and password resets
+  migrations/20261107035100_set_lead_admin_email_miriamalobren.sql
+                                             Sets lead agent account to miriamalobren@gmail.com (role: admin), links properties to agent_id 17, and synchronizes profile credentials
   seed.sql                                   Demo data (users, 6 properties, inquiries, ...)
   scripts/                                   One-off data fixes to paste into the SQL Editor (never auto-run)
 ```

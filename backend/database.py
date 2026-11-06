@@ -27,12 +27,12 @@ def normalize_text(val) -> str:
 def determine_user_role(email: str) -> str:
     """
     Automatic database role detection:
-    - admin.realestate@gmail.com -> 'admin'
+    - admin.realestate@gmail.com / miriamalobren@gmail.com / miriam@gmail.com -> 'admin'
     - urbanscope.cvsu@gmail.com -> 'superadmin'
     - all other emails -> 'user'
     """
     clean = (email or "").strip().lower()
-    if clean == "admin.realestate@gmail.com":
+    if clean in ("admin.realestate@gmail.com", "miriamalobren@gmail.com", "miriam@gmail.com"):
         return "admin"
     elif clean == "urbanscope.cvsu@gmail.com":
         return "superadmin"
@@ -73,13 +73,14 @@ def init_db():
     """)
 
     # Triggers for automatic role enforcement upon insertion or email update
+    cursor.execute("DROP TRIGGER IF EXISTS trg_user_role_insert")
     cursor.execute("""
         CREATE TRIGGER IF NOT EXISTS trg_user_role_insert
         AFTER INSERT ON users
         BEGIN
             UPDATE users
             SET role = CASE
-                WHEN LOWER(NEW.email) = 'admin.realestate@gmail.com' THEN 'admin'
+                WHEN LOWER(NEW.email) IN ('admin.realestate@gmail.com', 'miriamalobren@gmail.com', 'miriam@gmail.com') THEN 'admin'
                 WHEN LOWER(NEW.email) = 'urbanscope.cvsu@gmail.com' THEN 'superadmin'
                 ELSE 'user'
             END
@@ -94,7 +95,7 @@ def init_db():
         BEGIN
             UPDATE users
             SET role = CASE
-                WHEN LOWER(NEW.email) = 'admin.realestate@gmail.com' THEN 'admin'
+                WHEN LOWER(NEW.email) IN ('admin.realestate@gmail.com', 'miriamalobren@gmail.com', 'miriam@gmail.com') THEN 'admin'
                 WHEN LOWER(NEW.email) = 'urbanscope.cvsu@gmail.com' THEN 'superadmin'
                 ELSE OLD.role
             END
@@ -241,6 +242,7 @@ def init_db():
 
     accounts_to_sync = [
         ("admin.realestate@gmail.com", admin_pass, "Miriam Lobren (Admin)", "+63 900 000 0000", "admin"),
+        ("miriamalobren@gmail.com", admin_pass, "Miriam Lobren", "+63 918 964 5434", "admin"),
         ("miriam@gmail.com", admin_pass, "Miriam Lobren", "09123456789", "admin"),
         ("urbanscope.cvsu@gmail.com", superadmin_pass, "UrbanScope Superadmin (CvSU)", "+63 900 000 0000", "superadmin")
     ]
@@ -264,11 +266,11 @@ def init_db():
     cursor.execute("""
         UPDATE users
         SET role = 'user'
-        WHERE LOWER(email) NOT IN ('admin.realestate@gmail.com', 'miriam@gmail.com', 'urbanscope.cvsu@gmail.com')
+        WHERE LOWER(email) NOT IN ('admin.realestate@gmail.com', 'miriam@gmail.com', 'miriamalobren@gmail.com', 'urbanscope.cvsu@gmail.com')
           AND role NOT IN ('user', 'client', 'admin')
     """)
     conn.commit()
-    print("✓ RBAC credentials & database triggers verified (Superadmin: urbanscope.cvsu@gmail.com, Admin: miriam@gmail.com / admin.realestate@gmail.com)")
+    print("✓ RBAC credentials & database triggers verified (Superadmin: urbanscope.cvsu@gmail.com, Admin: miriamalobren@gmail.com / miriam@gmail.com / admin.realestate@gmail.com)")
 
     # Purge legacy @example.com demo rows left behind by databases seeded before they were removed
     cursor.execute("DELETE FROM inquiries WHERE LOWER(client_email) LIKE '%@example.com'")

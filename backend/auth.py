@@ -191,6 +191,7 @@ def verify_google_token(
 AUTHORIZED_ADMIN_EMAILS: Set[str] = {
     "admin.realestate@gmail.com",
     "miriam@gmail.com",
+    "miriamalobren@gmail.com",
     "urbanscope.cvsu@gmail.com"
 }
 
