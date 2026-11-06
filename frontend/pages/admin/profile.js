@@ -393,7 +393,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             const newPhone = phoneInput.value.trim();
             const newLicense = licenseInput.value.trim();
             const newBrokerage = brokerageInput.value.trim();
-            const newBio = bioInput.value.trim();
+            const newBio = bioInput ? bioInput.value.trim() : (storedAdmin.bio || savedProfile.bio || currentProfile.bio || '');
 
             const customAvatarNow = localStorage.getItem('urbanscope_profile_avatar');
             const avatarToPersist = customAvatarNow || (isCustomAvatar(storedAdmin.avatar_url) ? storedAdmin.avatar_url : 'assets/images/agent.jpg');
