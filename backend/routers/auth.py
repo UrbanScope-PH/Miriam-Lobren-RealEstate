@@ -171,7 +171,7 @@ def normalize_db_role(role: Optional[str], email: str = "") -> str:
 
 def sync_password_to_supabase(email: str, password_hash: str) -> bool:
     """Synchronizes updated PBKDF2 password hash to Supabase Cloud so all devices & phones stay in sync."""
-    key = os.environ.get("SUPABASE_SERVICE_ROLE_KEY", "").strip()
+    key = os.environ.get("SUPABASE_SERVICE_ROLE_KEY", "").strip() or SUPABASE_ANON_KEY
     if _is_cloud_sync_disabled() or not key:
         return False
     try:
@@ -306,7 +306,7 @@ def sync_password_from_supabase_if_valid(clean_email: str, plain_password: str) 
         url = (
             f"{SUPABASE_URL}/rest/v1/users"
             f"?email=ilike.{encoded_email}"
-            f"&select=id,email,password_hash,full_name,phone,role,avatar_url,google_id,bio,email_verified_at"
+            f"&select=id,email,password_hash,full_name,phone,role,avatar_url,google_id,bio"
         )
         req = urllib.request.Request(url, headers={
             "apikey": SUPABASE_ANON_KEY,
@@ -318,7 +318,7 @@ def sync_password_from_supabase_if_valid(clean_email: str, plain_password: str) 
                 row = data[0]
                 if row.get("bio") == "__URBANSCOPE_DELETED__" or row.get("password_hash") == "__DELETED_ACCOUNT__":
                     return None
-                if not row.get("email_verified_at"):
+                if row.get("email_verified_at") is False:
                     return None
                 remote_hash = row.get("password_hash")
                 if remote_hash and verify_password(plain_password, remote_hash):
@@ -920,9 +920,13 @@ def update_user_password(
     if not user_id:
         cursor.execute("""
             SELECT * FROM users 
-            WHERE role IN ('admin', 'superadmin') OR LOWER(email) = 'admin.realestate@gmail.com' 
+            WHERE role IN ('admin', 'superadmin') OR LOWER(email) IN ('miriamalobren@gmail.com', 'admin.realestate@gmail.com') 
             ORDER BY 
-                CASE WHEN LOWER(email) = 'admin.realestate@gmail.com' THEN 0 ELSE 1 END,
+                CASE 
+                    WHEN LOWER(email) = 'miriamalobren@gmail.com' THEN 0 
+                    WHEN LOWER(email) = 'admin.realestate@gmail.com' THEN 1 
+                    ELSE 2 
+                END,
                 id ASC 
             LIMIT 1
         """)
@@ -981,11 +985,12 @@ def get_public_agent_profile():
     cursor.execute("""
         SELECT id, email, full_name, phone, license_number, title, brokerage, bio, avatar_url, role
         FROM users
-        WHERE role IN ('admin', 'superadmin') OR LOWER(email) IN ('admin.realestate@gmail.com', 'miriam@gmail.com', 'miriamalobren@gmail.com')
+        WHERE role IN ('admin', 'superadmin') OR LOWER(email) IN ('miriamalobren@gmail.com', 'admin.realestate@gmail.com', 'miriam@gmail.com')
         ORDER BY 
             CASE 
-                WHEN LOWER(email) NOT IN ('admin.realestate@gmail.com', 'urbanscope.cvsu@gmail.com') AND email NOT LIKE '%@example.com' THEN 0 
-                ELSE 1 
+                WHEN LOWER(email) = 'miriamalobren@gmail.com' THEN 0
+                WHEN LOWER(email) NOT IN ('admin.realestate@gmail.com', 'urbanscope.cvsu@gmail.com') AND email NOT LIKE '%@example.com' THEN 1 
+                ELSE 2 
             END,
             CASE WHEN role = 'admin' THEN 0 ELSE 1 END,
             id DESC
