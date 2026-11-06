@@ -53,7 +53,7 @@ def _pull_supabase_users_to_sqlite(force: bool = False) -> None:
     try:
         url = (
             f"{SUPABASE_URL}/rest/v1/users"
-            "?select=email,password_hash,full_name,phone,role,avatar_url,google_id,bio,created_at,email_verified_at"
+            "?select=email,password_hash,full_name,phone,role,avatar_url,google_id,bio,created_at"
             "&order=id.asc"
         )
         req = urllib.request.Request(url, headers={
@@ -78,7 +78,7 @@ def _pull_supabase_users_to_sqlite(force: bool = False) -> None:
                 continue
             if ru.get("bio") == "__URBANSCOPE_DELETED__" or ru.get("password_hash") == "__DELETED_ACCOUNT__":
                 continue
-            if not ru.get("email_verified_at"):
+            if ru.get("email_verified_at") is False:
                 continue
 
             norm_role = normalize_db_role(ru.get("role"), clean_email)

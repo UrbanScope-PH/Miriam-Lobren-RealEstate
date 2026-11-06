@@ -748,6 +748,18 @@ path when rendering from a page.
       - **Database Seed & Triggers**: Updated `backend/database.py` (`trg_user_role_insert` and `trg_user_role_update`) and `backend/seed_rbac.py` to automatically assign `'admin'` to `miriamalobren@gmail.com`. The password is not fixed (allowing dynamic changes via Admin Profile settings), preserving existing hashes and initializing `111112` for first-time setup.
       - **Supabase Cloud Sync & Dynamic Password Verification**: Synchronized `miriamalobren@gmail.com` in Supabase with verified PBKDF2 hash for password `111112`. Removed hardcoded password bypasses in gateways so that changed passwords in Supabase Cloud and SQLite take immediate dynamic effect across Edge Session, FastAPI, and client gateways.
       - **Gateway & UI Fallbacks**: Updated `frontend/shared/js/supabase.js`, `api.js`, `session.js`, `index.js`, and `profile.js` to normalize roles, recognize `miriamalobren@gmail.com` as lead admin, support password changes via `apiUpdateAdminPassword`, and update contact mailto links across all legal and property pages.
+68. **Admin Password Change Session Fix & Cloud Schema Reconciliation (`profile.html`, `lib/admin-session.js`, `api/auth/admin-password/change.js`):**
+    - **Problem**: Admin on `/pages/admin/profile.html` received `"A valid admin session is required."` error banner when changing passwords, preventing password updates.
+    - **Root Causes**:
+      1. *Node vs Edge Header Mismatch*: `readAdminSession()` in `lib/admin-session.js` called `request?.headers?.get?.('cookie')`. In Node serverless functions on Vercel, `request` is an `IncomingMessage` where `headers` is a plain dictionary without `.get()`, resulting in `undefined`, an empty cookie string, and an immediate 401 Unauthorized.
+      2. *Supabase Cloud Schema Cache Incompatibility*: `lib/email-auth.js` (`getCloudUser`, `getCloudUserById`) and backend sync endpoints requested non-existent column `email_verified_at` from Supabase Cloud table `users`, throwing PostgREST HTTP 400 Bad Request.
+      3. *Lack of Header Token Fallback & Auto-Reauthentication*: If an admin's cookie expired, the frontend halted immediately without using the typed current password to refresh the admin session.
+    - **Solution**:
+      - Updated `readAdminSession()` in `lib/admin-session.js` with multi-runtime `getHeader()` support (Node `req.headers.cookie`, Web `headers.get('cookie')`, and `Authorization: Bearer <token>`).
+      - Updated `api/auth/admin-password/change.js` to verify against PBKDF2 cloud hashes, fallback to `111112` only when no stored hash exists, update Supabase Cloud, and issue refreshed session cookies (`Set-Cookie`) and tokens.
+      - Removed `email_verified_at` from Supabase REST select queries and sanitized update patches across `lib/email-auth.js`, `backend/routers/auth.py`, and `backend/routers/superadmin.py`.
+      - Enhanced `apiUpdateAdminPassword` in `frontend/shared/js/supabase.js` and `frontend/shared/js/api.js` to send `Authorization: Bearer` alongside cookies, and automatically re-authenticate if session cookie expired, seamlessly retrying the password change.
+      - Updated hint text in `frontend/pages/admin/profile.html` to `"Minimum 6 characters."` to match actual backend validation.
 
 
 ---

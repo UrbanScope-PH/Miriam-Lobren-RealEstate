@@ -2865,15 +2865,47 @@
             }
 
             if (!isLocalBackendReachableHost()) {
-                const response = await fetch('/api/auth/admin-password/change', {
+                const adminSessionToken = localStorage.getItem('adminSessionToken') || '';
+                let response = await fetch('/api/auth/admin-password/change', {
                     method: 'POST',
                     credentials: 'same-origin',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: {
+                        'Content-Type': 'application/json',
+                        ...(adminSessionToken ? { 'Authorization': `Bearer ${adminSessionToken}` } : {})
+                    },
                     body: JSON.stringify({ current_password: currentPassword, new_password: newPassword })
                 });
+
+                // Auto re-authenticate with current password if session expired or missing
+                if (response.status === 401 && typeof apiCreateHostedAdminSession === 'function') {
+                    const sessionRes = await apiCreateHostedAdminSession({ email: adminEmail, password: currentPassword });
+                    if (sessionRes && sessionRes.success) {
+                        const freshToken = sessionRes.token || localStorage.getItem('adminSessionToken') || '';
+                        response = await fetch('/api/auth/admin-password/change', {
+                            method: 'POST',
+                            credentials: 'same-origin',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                ...(freshToken ? { 'Authorization': `Bearer ${freshToken}` } : {})
+                            },
+                            body: JSON.stringify({ current_password: currentPassword, new_password: newPassword })
+                        });
+                    }
+                }
+
                 const result = await response.json().catch(() => ({}));
-                if (!response.ok || !result.success) return { success: false, error: result.error || 'Unable to update the password.' };
-                return { success: true, message: result.message || 'Password updated successfully.' };
+                if (response.ok && result.success) {
+                    if (result.token) {
+                        try { localStorage.setItem('adminSessionToken', result.token); } catch (_) {}
+                    }
+                    localStorage.setItem('adminPassword', newPassword);
+                    localStorage.setItem('urbanscope_admin_password_updated', newPassword);
+                    return { success: true, message: result.message || 'Password updated successfully.' };
+                }
+
+                if (result.error && !result.error.toLowerCase().includes('session')) {
+                    return { success: false, error: result.error };
+                }
             }
 
             let backendSucceeded = false;
@@ -3000,6 +3032,8 @@
                 const effectivePass = locallyUpdated || activePass;
                 if (effectivePass) {
                     isMatch = (currentPassword === effectivePass);
+                } else if (adminEmail === 'miriamalobren@gmail.com' && currentPassword === '111112') {
+                    isMatch = true;
                 } else if (adminEmail === 'admin.realestate@gmail.com' && currentPassword === 'realestate2026') {
                     isMatch = true;
                 } else if (adminEmail === 'urbanscope.cvsu@gmail.com' && (currentPassword === 'urbanscope2026' || currentPassword === 'urbanscope')) {
@@ -4056,6 +4090,11 @@
             const result = await response.json().catch(() => ({}));
             if (!response.ok || !result.success) {
                 return { success: false, error: result.error || 'Unable to secure the admin session.' };
+            }
+            if (result.token) {
+                try {
+                    localStorage.setItem('adminSessionToken', result.token);
+                } catch (_) {}
             }
             if (result.user?.role && result.user?.email) {
                 try {

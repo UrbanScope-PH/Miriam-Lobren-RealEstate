@@ -127,7 +127,7 @@ async function verifyStaffPassword(email, password) {
 function createSessionResponse(user) {
     const token = createAdminSessionToken(user);
     return jsonResponse(
-        { success: true, user: { id: user.id, email: user.email, role: user.role } },
+        { success: true, token, user: { id: user.id, email: user.email, role: user.role } },
         200,
         { 'Set-Cookie': adminSessionCookie(token) }
     );
