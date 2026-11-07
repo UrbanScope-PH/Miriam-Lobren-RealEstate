@@ -24,10 +24,15 @@
     // Early synchronous check from localStorage to immediately hide guest reminders
     try {
         var quickUser = localStorage.getItem('urbanscope_user') || localStorage.getItem(DEMO_USER_KEY) || localStorage.getItem('adminUser');
-        var quickToken = localStorage.getItem('urbanscope_jwt_token');
-        if (quickUser || quickToken) {
-            root.classList.add('logged-in');
-            root.setAttribute('data-auth-state', 'logged-in');
+        if (quickUser) {
+            var qParsed = JSON.parse(quickUser);
+            var qRole = String(qParsed.role || '').toLowerCase();
+            var qEmail = String(qParsed.email || '').toLowerCase().trim();
+            var qIsStaff = (qRole === 'admin' || qRole === 'superadmin' || qEmail === 'urbanscope.cvsu@gmail.com' || qEmail === 'miriamalobren@gmail.com' || qEmail === 'admin.realestate@gmail.com' || qEmail === 'miriam@gmail.com');
+            if (!qIsStaff) {
+                root.classList.add('logged-in');
+                root.setAttribute('data-auth-state', 'logged-in');
+            }
         }
     } catch (e) { }
 
@@ -106,6 +111,35 @@
             if (usingSupabase() && typeof apiGetCurrentUser === 'function') {
                 var u = await apiGetCurrentUser();
                 if (!u) return null;
+                var role = String(u.role || '').toLowerCase();
+                var email = String(u.email || '').toLowerCase().trim();
+                var isStaff = (role === 'admin' || role === 'superadmin' || email === 'urbanscope.cvsu@gmail.com' || email === 'miriamalobren@gmail.com' || email === 'admin.realestate@gmail.com');
+
+                // Administrators and superadmin must NEVER be signed in as clients on the public website!
+                if (isStaff) {
+                    var inAdmin = location.pathname.includes('/pages/admin/') || location.pathname.includes('/pages/superadmin/');
+                    if (!inAdmin) {
+                        var activeAdminSession = null;
+                        if (typeof apiGetHostedAdminSession === 'function') {
+                            activeAdminSession = await apiGetHostedAdminSession();
+                        }
+                        if (activeAdminSession || (typeof isLocalDevHost === 'function' && isLocalDevHost())) {
+                            var isSuper = (role === 'superadmin' || email === 'urbanscope.cvsu@gmail.com');
+                            var target = isSuper ? (getBasePath() + 'pages/superadmin/dashboard.html') : (getBasePath() + 'pages/admin/dashboard.html');
+                            location.replace(target);
+                            return null;
+                        } else {
+                            // Cookie is expired or missing: purge stale admin cache so device acts as clean guest
+                            localStorage.removeItem('adminUser');
+                            localStorage.removeItem('urbanscope_user');
+                            localStorage.removeItem('adminSessionToken');
+                            localStorage.removeItem('urbanscope_admin_profile');
+                            return null;
+                        }
+                    }
+                    return null;
+                }
+
                 var meta = u.user_metadata || {};
                 return {
                     name: meta.full_name || u.full_name || u.name || (u.email || 'User').split('@')[0],
@@ -119,7 +153,9 @@
             console.error('Session lookup failed:', err);
         }
         try {
-            return JSON.parse(localStorage.getItem(DEMO_USER_KEY));
+            var demo = JSON.parse(localStorage.getItem(DEMO_USER_KEY));
+            if (demo && (demo.role === 'admin' || demo.role === 'superadmin')) return null;
+            return demo;
         } catch (e) {
             return null;
         }
@@ -408,22 +444,12 @@
     // ------------------------------------------------------------------
     function dropdownHtml(user) {
         var base = getBasePath();
-        var role = (user && user.role ? String(user.role) : '').toLowerCase();
-        var email = (user && user.email ? String(user.email) : '').toLowerCase().trim();
-        var portalItem = '';
-        if (role === 'superadmin' || email === 'urbanscope.cvsu@gmail.com') {
-            portalItem = '<a href="' + base + 'pages/superadmin/dashboard.html" role="menuitem">Superadmin Console</a>';
-        } else if (role === 'admin' || email === 'miriamalobren@gmail.com' || email === 'admin.realestate@gmail.com' || email === 'miriam@gmail.com') {
-            portalItem = '<a href="' + base + 'pages/admin/dashboard.html" role="menuitem">Admin Dashboard</a>';
-        }
-
         return '' +
             '<div class="profile-dropdown" role="menu">' +
             '<div class="profile-dropdown-head">' +
             '<span class="profile-avatar">' + avatarInnerHtml(user) + '</span>' +
             '<div><strong>' + esc(user.name) + '</strong><small>' + esc(user.email) + '</small></div>' +
             '</div>' +
-            portalItem +
             '<a href="' + base + 'index.html" role="menuitem">Home</a>' +
             '<a href="' + base + 'pages/inquiry/inquiry.html" role="menuitem">Submit an Inquiry</a>' +
             '<a href="' + base + 'pages/inquiry/history.html" role="menuitem">Inquiry History</a>' +
@@ -434,7 +460,10 @@
     function renderNavProfile(user) {
         var path = location.pathname.toLowerCase().replace(/\\/g, '/');
         var inAdmin = path.includes('/pages/admin/') || path.includes('/pages/superadmin/');
-        if (inAdmin) return;
+        var role = (user && user.role ? String(user.role) : '').toLowerCase();
+        var email = (user && user.email ? String(user.email) : '').toLowerCase().trim();
+        var isStaff = (role === 'admin' || role === 'superadmin' || email === 'urbanscope.cvsu@gmail.com' || email === 'miriamalobren@gmail.com' || email === 'admin.realestate@gmail.com' || email === 'miriam@gmail.com');
+        if (inAdmin || isStaff) return;
 
         var acts = document.querySelector('.navbar .nav-acts, .inquiry-topbar .nav-acts, .history-topbar .nav-acts, .nav-acts');
         if (acts) {

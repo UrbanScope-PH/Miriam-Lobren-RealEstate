@@ -10,6 +10,8 @@
   "proxy": {
     "entrypoint": "proxy.js",
     "matcher": [
+      "/",
+      "/index.html",
       "/pages/admin",
       "/pages/admin/:path*",
       "/pages/superadmin",
