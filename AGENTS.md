@@ -820,6 +820,18 @@ path when rendering from a page.
     - **Grid Layout**: Adjusted `.search-bar` grid template columns in `frontend/index.css` to 4 columns (`1.2fr 1.2fr 1.8fr auto`). On tablet screens (<= 1024px), configured `label.keyword` and `.search-submit` to span full width (`grid-column: 1 / -1;`) beneath the side-by-side Type and Location selectors.
     - **Real-Time Reactive Filtering**: Added dynamic `change` event listeners to `locationFilter` and `typeFilter` in `frontend/index.js`, updating the featured property list immediately on dropdown selection in addition to search form submission.
     - **Alphabetical Location Sorting**: Added a `Location (A-Z)` option (`value="location"`) to `#homeSortSelect` and implemented alphabetical location sorting in `sortPropertyList()`, allowing users to sort property cards directly by geographical location.
+78. **Homepage FAQs Overhaul & Buyer Eligibility Categorization (`index.html`, `index.css`):**
+    - **Removed Obsolete Entries**:
+      - Removed `"How do I schedule an on-site property viewing or site tripping?"`.
+      - Removed legacy item references (`1345`) and any statements claiming CD Miranda Realty processes or handles Pag-IBIG housing loans.
+    - **Restructured Categories & Detailed Buyer Guides**:
+      - Implemented 5 clear buyer categories across 8 collapsible accordion items with `.faq-category-pill` headers:
+        1. **Marital Status**: Guidelines for legally married but separated individuals (marital consent or annulment/legal separation decrees).
+        2. **Co-Borrower**: Qualification rules when individual income does not meet the loan threshold.
+        3. **Employment & Buyer Eligibility**: Detailed sub-entries for OFWs (DMW employment contract, passport/visa, SPA, proof of income, and white-collar bank prioritization note), Virtual Assistants (active 1-year contract + bank statements), and Seafarers/Ship Captains (active maritime contract/job order, maritime employment records, and bank accreditation).
+        4. **Initial Requirements**: Standard 7-item checklist (2 Valid IDs, latest 1-month payslip, COE, proof of billing, TIN, Pag-IBIG Loyalty Card/MDF for identification only, 1x1 photo) with an explicit disclaimer that CD Miranda Realty does not handle or process Pag-IBIG financing transactions.
+        5. **Payment Methods & Accessibility Placeholders**: Structured options for developer payment channels (bank transfer, PDCs, payment centers, ADA) and subdivision road/expressway accessibility (MCX, CAVITEX, CALAX, UV Express, buses, jeepneys).
+    - **Styling**: Added `.faq-category-pill` badges, `.faq-q-content` flex header layout, `.faq-disclaimer-note` callouts, and increased `.faq-item.active .faq-answer` `max-height` to `1200px` for seamless mobile and desktop accordion expansion.
 
 
 

@@ -732,7 +732,45 @@
 }
 
 .faq-item.active .faq-answer {
-    max-height: 600px;
+    max-height: 1200px;
+}
+
+.faq-q-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    align-items: flex-start;
+}
+
+.faq-category-pill {
+    display: inline-block;
+    background: #eef7f1;
+    color: var(--dark-green);
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    padding: 3px 9px;
+    border-radius: 6px;
+    line-height: 1.2;
+}
+
+.faq-note {
+    margin-top: 12px;
+    font-size: 13.5px;
+    color: #556b5b;
+}
+
+.faq-disclaimer-note {
+    margin-top: 14px;
+    padding: 10px 14px;
+    background: #f7faf8;
+    border-left: 3px solid #82b992;
+    border-radius: 4px;
+    font-size: 13.5px;
+    color: #44594a;
+    line-height: 1.5;
 }
 
 .faq-answer-inner {
