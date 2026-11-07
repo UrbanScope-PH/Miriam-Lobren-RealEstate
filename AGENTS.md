@@ -798,6 +798,10 @@ path when rendering from a page.
       - Added idempotent `formatInquiryPropertyLabel()` in `frontend/pages/admin/admin-shell.js` (with inline fallbacks in `dashboard.js` and `clients.js`) so all existing and new property inquiries render as `Specific Property Inquiry: <Property Name>` (e.g. `Specific Property Inquiry: Kathleen`) while keeping `General Consultation: ...` and `General Inquiry` untouched and never double-prefixing.
       - Updated `frontend/pages/inquiry/inquiry.js` so new property-mode submissions store `Specific Property Inquiry: <Property Name>`.
       - Updated sold-out availability lookups in `backend/routers/inquiries.py`, `frontend/shared/js/supabase.js`, and `frontend/shared/js/api.js` to strip the `Specific Property Inquiry:` prefix before matching against `properties.title`.
+74. **Homepage Hero Headline Modernization (`index.html`, `index.css`):**
+    - Updated the primary hero headline on `frontend/index.html` to `"Discover Your Ideal Home with CD Miranda Realty"`.
+    - Updated the subheadline to `"Find a Home That Fits Your Needs — Explore Properties for Your Future Home."`.
+    - Expanded `.hero-content` `max-width` in `frontend/index.css` to 780px with balanced `line-height` (1.45) for clean, responsive multi-line typography across viewports.
 
 
 
