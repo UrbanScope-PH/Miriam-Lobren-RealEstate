@@ -53,6 +53,29 @@ function forbiddenResponse() {
 
 export default async function proxy(request) {
     const url = new URL(request.url);
+    const pathname = url.pathname.replace(/\/+$/, '') || '/';
+
+    // When an active admin or superadmin accesses the landing page, route directly to their dashboard
+    const isRootLanding = pathname === '/' || pathname === '/index.html' || pathname === '/frontend/index.html';
+    if (isRootLanding) {
+        const session = readAdminSession(request);
+        if (session) {
+            if (session.role === 'superadmin' && session.email === SUPERADMIN_EMAIL) {
+                return new Response(null, {
+                    status: 302,
+                    headers: { Location: '/pages/superadmin/dashboard.html', 'Cache-Control': 'private, no-store, max-age=0' }
+                });
+            }
+            if (['admin', 'superadmin'].includes(session.role)) {
+                return new Response(null, {
+                    status: 302,
+                    headers: { Location: '/pages/admin/dashboard.html', 'Cache-Control': 'private, no-store, max-age=0' }
+                });
+            }
+        }
+        return next();
+    }
+
     const kind = routeKind(url.pathname);
     if (!kind || isPublicPortalResource(url.pathname)) return next();
 

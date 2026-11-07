@@ -775,6 +775,17 @@ path when rendering from a page.
     - Removed the redundant "Professional Bio & About" textarea input from the Profile Information form on `/pages/admin/profile.html`.
     - Leaves a clean, balanced 2-column grid of 6 core administrative fields: Full Legal Name, Professional Title, Email Address, Contact Phone Number, PRC License Number, and Brokerage / Company.
     - Updated `profile.js` to guard the null `bioInput` element reference, gracefully preserving any existing bio values in background storage without runtime `TypeError` issues.
+71. **Strict Admin & Superadmin Separation from Public Homepage & Auto-Dashboard Routing (`session.js`, `proxy.js`, `vercel.json`, `middleware.py`, `web.py`):**
+    - **Problem**: When logging into an admin or superadmin account and reopening the website link (`/` or `index.html`), the user was automatically signed into the public homepage with client UI elements (client notification bell, profile chip, and client dropdown listing "Submit an Inquiry" and "Inquiry History"), which administrators should not have access to.
+    - **Solution**:
+      - **Vercel Routing Middleware (`proxy.js` & `vercel.json`)**: Added `/` and `/index.html` to `proxy.matcher`. At the Vercel edge, `proxy.js` checks `readAdminSession(request)`. If an active superadmin session is present, it returns an immediate HTTP 302 redirect to `/pages/superadmin/dashboard.html`. If an active admin session is present, it returns an HTTP 302 redirect to `/pages/admin/dashboard.html`. Unauthenticated requests pass through to serve the public landing page to guests.
+      - **FastAPI Parity (`middleware.py` & `web.py`)**: Updated `rbac_admin_guard_middleware` in `backend/middleware.py` and `serve_home` / `serve_index` in `backend/routers/web.py` to inspect authenticated request tokens and redirect admins and superadmins to their respective dashboards on local dev.
+      - **Client Session Isolation (`frontend/shared/js/session.js`)**:
+        - `dropdownHtml(user)`: Completely removed administrative portal items (`Superadmin Console` / `Admin Dashboard`) from the client dropdown, ensuring it exclusively serves normal clients.
+        - `renderNavProfile(user)`: Added `if (inAdmin || isStaff) return;` guard preventing administrators or superadmins from ever receiving client notification bells or client profile chips in public headers.
+        - `getUser()`: If a staff account is encountered on a public page, checks for an active hosted admin session via `apiGetHostedAdminSession()`. If active, automatically executes `location.replace()` to the dashboard. If expired or missing, purges stale admin `localStorage` keys (`adminUser`, `urbanscope_user`, `adminSessionToken`, `urbanscope_admin_profile`) and returns `null` so that guests on that device can browse the landing page cleanly without redirect loops.
+        - Early synchronous check: Prevents applying `.logged-in` class to `document.documentElement` for staff accounts on public pages.
+
 
 
 ---

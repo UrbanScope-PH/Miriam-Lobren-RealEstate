@@ -257,6 +257,19 @@ async def rbac_admin_guard_middleware(request: Request, call_next):
     """
     path = request.url.path
 
+    # Public landing page: authenticated administrators / superadmin are redirected to their portal
+    is_root_landing = path in ("/", "/index.html", "/frontend/index.html")
+    if is_root_landing:
+        token = extract_token_from_request(request)
+        if token:
+            user_info = get_authenticated_user_role(token)
+            if user_info:
+                user_email, user_role = user_info
+                if user_email in AUTHORIZED_SUPERADMIN_EMAILS or user_role == "superadmin":
+                    return RedirectResponse(url="/pages/superadmin/dashboard.html", status_code=status.HTTP_302_FOUND)
+                elif user_role in AUTHORIZED_ADMIN_ROLES or user_email in AUTHORIZED_ADMIN_EMAILS:
+                    return RedirectResponse(url="/pages/admin/dashboard.html", status_code=status.HTTP_302_FOUND)
+
     # Check if request targets superadmin portal page
     is_superadmin_path = (
         path == "/superadmin" or
