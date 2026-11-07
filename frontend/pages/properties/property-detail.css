@@ -807,10 +807,17 @@ html[data-auth-state="logged-in"] .inquiry-note,
 .tcp-section {
     background: #ffffff;
     border-radius: 16px;
-    padding: 36px 32px;
+    padding: 24px 28px;
     margin-bottom: 40px;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
     border: 1px solid #eef2ef;
+}
+
+/* Computation breakdown UI, calculators, and schedules hidden per requirement */
+.tcp-section-header,
+.tcp-grid,
+.tcp-table-wrapper {
+    display: none !important;
 }
 
 .tcp-section-header {

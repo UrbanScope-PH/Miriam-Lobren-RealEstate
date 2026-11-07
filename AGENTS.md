@@ -807,6 +807,14 @@ path when rendering from a page.
     - **Property Showcase & Detail Pages**:
       - Completely removed the `Property Location` box (`.location-box` with address and Google Maps iframe) from `frontend/pages/properties/property-detail.html`, `casasuerte.html`, `kathleen.html`, `Liora.html`, and `Airmen.html`, eliminating unnecessary external map iframe requests.
       - In `frontend/pages/properties/property-detail.css`: Added defensive `.location-box { display: none !important; }`, updated `.location-inquiry-grid` to a centered flex container (`display: flex; justify-content: center;`), and styled `.inquiry-card` ("Interested in this property?") with `max-width: 620px; width: 100%;` so the CTA is cleanly centered and responsive across desktop and mobile devices.
+76. **Property Computation Breakdowns Removed & Official Pricelist Sheet Preserved (`casasuerte.html`, `kathleen.html`, `Liora.html`, `Airmen.html`, `property-detail.html`, `property-detail.js`, `property-detail.css`):**
+    - **Removed Breakdown Schedules & Calculators**:
+      - Completely removed computation breakdown UI elements across all property showcase pages: `.tcp-section-header`, Key Figures KPI Grid (`.tcp-grid` showing Total Contract Price, Reservation Fee, Downpayment calculations, and Monthly Amortization estimates), and the detailed computation schedule tables (`.tcp-table-wrapper` / `<table class="tcp-table">`).
+      - Added defensive CSS rules in `property-detail.css`: `.tcp-section-header, .tcp-grid, .tcp-table-wrapper { display: none !important; }`.
+      - Reduced `.tcp-section` container padding (`padding: 24px 28px;`) for a compact presentation.
+    - **Preserved Official Pricelist / Computation Document**:
+      - Kept the official developer computation and pricelist document preview card (`.tcp-doc-card`) and financing disclaimer (`.tcp-disclaimer`) across all accredited property showcase pages (`casasuerte.html`, `kathleen.html`, `Liora.html`, `Airmen.html`) and dynamic property detail rendering (`renderDynamicTcp` in `property-detail.js`).
+      - Clicking `"View Official Pricelist"` / `"View Official Computation"` continues to open the document preview dialog modal (`#tcpDocumentModal`), allowing clients to inspect the authentic developer-issued computation/pricelist image directly. Generic properties without official document sheets do not render any speculative breakdown calculations.
 
 
 
