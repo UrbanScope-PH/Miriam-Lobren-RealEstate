@@ -414,74 +414,6 @@ function renderDynamicTcp(property) {
     if (tLower.includes('suerte')) {
         tcpHtml = `
         <section class="tcp-section">
-            <div class="tcp-section-header">
-                <div class="tcp-title-group">
-                    <h2>Total Contract Price (TCP) &amp; Sample Computation</h2>
-                    <p>Accredited Pag-IBIG (HDMF) &amp; Bank Financing options with low monthly amortization.</p>
-                </div>
-                <div class="tcp-badge-pill">
-                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
-                    <span>Pag-IBIG Accredited • LTS #0001645</span>
-                </div>
-            </div>
-            <div class="tcp-grid">
-                <div class="tcp-kpi-card">
-                    <span class="kpi-label">Total Contract Price (TCP)</span>
-                    <span class="kpi-val">₱2,454,378</span>
-                    <span class="kpi-sub">Standard Lot Area 50 sqm • Camila Model</span>
-                </div>
-                <div class="tcp-kpi-card">
-                    <span class="kpi-label">Reservation Fee</span>
-                    <span class="kpi-val">₱20,000</span>
-                    <span class="kpi-sub">Deducted from Total Downpayment</span>
-                </div>
-                <div class="tcp-kpi-card">
-                    <span class="kpi-label">20% Down Payment</span>
-                    <span class="kpi-val">₱39,795 / mo</span>
-                    <span class="kpi-sub">Payable in 18 months without interest</span>
-                </div>
-                <div class="tcp-kpi-card">
-                    <span class="kpi-label">Est. Pag-IBIG Amortization</span>
-                    <span class="kpi-val">₱12,250 / mo</span>
-                    <span class="kpi-sub">30 Years Term @ 6.25% fixed 3 yrs</span>
-                </div>
-            </div>
-            <div class="tcp-table-wrapper">
-                <table class="tcp-table">
-                    <thead>
-                        <tr>
-                            <th>Financing Package</th>
-                            <th>Loan Term</th>
-                            <th>Loanable Amount (80%)</th>
-                            <th>Monthly Amortization</th>
-                            <th>Gross Monthly Income</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td><strong>Pag-IBIG (HDMF)</strong></td>
-                            <td>30 Years</td>
-                            <td>₱1,963,502.40</td>
-                            <td><strong>₱12,249.70 / mo</strong></td>
-                            <td>~₱35,000 - ₱41,000 / mo</td>
-                        </tr>
-                        <tr>
-                            <td><strong>Pag-IBIG (HDMF)</strong></td>
-                            <td>25 Years</td>
-                            <td>₱1,963,502.40</td>
-                            <td><strong>₱13,105.79 / mo</strong></td>
-                            <td>~₱38,000 - ₱44,000 / mo</td>
-                        </tr>
-                        <tr>
-                            <td><strong>Pag-IBIG (HDMF)</strong></td>
-                            <td>20 Years</td>
-                            <td>₱1,963,502.40</td>
-                            <td><strong>₱14,495.20 / mo</strong></td>
-                            <td>~₱42,000 - ₱49,000 / mo</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
             <div class="tcp-doc-card">
                 <div class="tcp-doc-info">
                     <div class="tcp-doc-icon">
@@ -489,78 +421,19 @@ function renderDynamicTcp(property) {
                     </div>
                     <div class="tcp-doc-text">
                         <h4>Official Pag-IBIG Sample Computation &amp; Pricelist Sheet</h4>
-                        <p>Developer: RubySapphire Land Corp · DHSUD LTS No. 0001645 · Phase 1 &amp; Block 6</p>
+                        <p>Developer: RubySapphire Land Corp · DHSUD LTS No. 0001645 · As of September 1, 2026</p>
                     </div>
                 </div>
                 <button type="button" class="tcp-doc-btn" onclick="openDocumentPreview('../../assets/images/casasuerte-tcp.jpg', 'Casasuerte official computation')">
-                    <span>View Pricelist Document</span>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line><line x1="11" y1="8" x2="11" y2="14"></line><line x1="8" y1="11" x2="14" y2="11"></line></svg>
+                    <span>View Official Pricelist</span>
                 </button>
             </div>
+            <p class="tcp-disclaimer">*Estimated amortization figures are based on Pag-IBIG prevailing indicative rates (6.25% fixed for 3 years). Final loan approval and terms are subject to Pag-IBIG credit assessment.</p>
         </section>`;
     } else if (tLower.includes('kathleen')) {
         tcpHtml = `
         <section class="tcp-section">
-            <div class="tcp-section-header">
-                <div class="tcp-title-group">
-                    <h2>Total Contract Price (TCP) &amp; Sample Computation</h2>
-                    <p>Exclusive Ready-for-Occupancy (RFO) promo bank financing with up to 11% discount.</p>
-                </div>
-                <div class="tcp-badge-pill">
-                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
-                    <span>Bank Financing • DHSUD LTS #0000523</span>
-                </div>
-            </div>
-            <div class="tcp-grid">
-                <div class="tcp-kpi-card">
-                    <span class="kpi-label">Price Range</span>
-                    <span class="kpi-val">₱6.2M - ₱9M</span>
-                    <span class="kpi-sub">Townhouse Units (112 sqm Lot Area)</span>
-                </div>
-                <div class="tcp-kpi-card">
-                    <span class="kpi-label">Reservation Fee</span>
-                    <span class="kpi-val">₱50,000</span>
-                    <span class="kpi-sub">Deducted from Total Downpayment</span>
-                </div>
-                <div class="tcp-kpi-card">
-                    <span class="kpi-label">Net Promo Downpayment</span>
-                    <span class="kpi-val">4% Net DP</span>
-                    <span class="kpi-sub">11% Promo Discount Applied</span>
-                </div>
-                <div class="tcp-kpi-card">
-                    <span class="kpi-label">Est. Bank Amortization</span>
-                    <span class="kpi-val">₱52,382 / mo</span>
-                    <span class="kpi-sub">25 Years Term (End Unit Option)</span>
-                </div>
-            </div>
-            <div class="tcp-table-wrapper">
-                <table class="tcp-table">
-                    <thead>
-                        <tr>
-                            <th>Unit Type</th>
-                            <th>Total Contract Price (TCP)</th>
-                            <th>Net Down Payment (4%)</th>
-                            <th>Est. Amort (25 Yrs)</th>
-                            <th>Est. Amort (20 Yrs)</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td><strong>End Unit (RFO)</strong></td>
-                            <td><strong>₱8,814,448.12</strong></td>
-                            <td>₱352,577.92 (less ₱50k res)</td>
-                            <td><strong>₱52,381.72 / mo</strong></td>
-                            <td>₱57,549.13 / mo</td>
-                        </tr>
-                        <tr>
-                            <td><strong>Corner Unit (Block 4)</strong></td>
-                            <td><strong>₱9,394,046.71</strong></td>
-                            <td>₱375,761.87 (less ₱50k res)</td>
-                            <td><strong>₱55,826.11 / mo</strong></td>
-                            <td>₱61,333.31 / mo</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
             <div class="tcp-doc-card">
                 <div class="tcp-doc-info">
                     <div class="tcp-doc-icon">
@@ -568,56 +441,58 @@ function renderDynamicTcp(property) {
                     </div>
                     <div class="tcp-doc-text">
                         <h4>Official Bank Financing Promo Sample Computation</h4>
-                        <p>Developer: JKY Group / Jeika Properties Corp · DHSUD LTS No. 0000523 · Inclusive of Title Transfer</p>
+                        <p>Developer: JKY Group / Jeika Properties Corp · DHSUD LTS No. 0000523 · Inclusive of Title Transfer &amp; Move-in Fees</p>
                     </div>
                 </div>
                 <button type="button" class="tcp-doc-btn" onclick="openDocumentPreview('../../assets/images/kathleen-tcp.jpg', 'Kathleen official computation')">
-                    <span>View Computation Sheet</span>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line><line x1="11" y1="8" x2="11" y2="14"></line><line x1="8" y1="11" x2="14" y2="11"></line></svg>
+                    <span>View Official Computation</span>
                 </button>
             </div>
+            <p class="tcp-disclaimer">*Inclusive of Title Transfer and Move-In Fees. Interest rates quoted are prevailing bank indicative rates; final loan approval is based on buyer's credit assessment.</p>
         </section>`;
-    } else {
-        const estDp = Number(property.price || 0) * 0.2;
-        const estLoan = Number(property.price || 0) * 0.8;
-        const estAmort30 = (estLoan * 0.0625 / 12) / (1 - Math.pow(1 + 0.0625/12, -360));
-        const estAmort20 = (estLoan * 0.0625 / 12) / (1 - Math.pow(1 + 0.0625/12, -240));
-
+    } else if (tLower.includes('liora')) {
         tcpHtml = `
         <section class="tcp-section">
-            <div class="tcp-section-header">
-                <div class="tcp-title-group">
-                    <h2>Total Contract Price (TCP) &amp; Sample Computation</h2>
-                    <p>Indicative Pag-IBIG &amp; Bank Financing options with flexible downpayment terms.</p>
+            <div class="tcp-doc-card">
+                <div class="tcp-doc-info">
+                    <div class="tcp-doc-icon">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+                    </div>
+                    <div class="tcp-doc-text">
+                        <h4>Official Pag-IBIG &amp; Bank Financing Sample Computation Sheet</h4>
+                        <p>Developer: Citihomes Builder &amp; Development, Inc. (CBDI) · Effective September 1, 2026</p>
+                    </div>
                 </div>
-                <div class="tcp-badge-pill">
-                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
-                    <span>Verified Accredited Listing</span>
-                </div>
+                <button type="button" class="tcp-doc-btn" onclick="openDocumentPreview('../../assets/images/liora-tcp.jpg', 'Liora Homes official pricelist')">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line><line x1="11" y1="8" x2="11" y2="14"></line><line x1="8" y1="11" x2="14" y2="11"></line></svg>
+                    <span>View Official Pricelist</span>
+                </button>
             </div>
-            <div class="tcp-grid">
-                <div class="tcp-kpi-card">
-                    <span class="kpi-label">Total Contract Price (TCP)</span>
-                    <span class="kpi-val">₱${Number(property.price || 0).toLocaleString()}</span>
-                    <span class="kpi-sub">Indicative Listing Price</span>
-                </div>
-                <div class="tcp-kpi-card">
-                    <span class="kpi-label">Estimated Downpayment (20%)</span>
-                    <span class="kpi-val">₱${Number(estDp || 0).toLocaleString()}</span>
-                    <span class="kpi-sub">Payable in flexible monthly terms</span>
-                </div>
-                <div class="tcp-kpi-card">
-                    <span class="kpi-label">Est. Monthly Amortization (30 Yrs)</span>
-                    <span class="kpi-val">₱${Number(Math.round(estAmort30) || 0).toLocaleString()} / mo</span>
-                    <span class="kpi-sub">Pag-IBIG @ 6.25% indicative rate</span>
-                </div>
-                <div class="tcp-kpi-card">
-                    <span class="kpi-label">Est. Monthly Amortization (20 Yrs)</span>
-                    <span class="kpi-val">₱${Number(Math.round(estAmort20) || 0).toLocaleString()} / mo</span>
-                    <span class="kpi-sub">Bank / Pag-IBIG Financing</span>
-                </div>
-            </div>
-            <p class="tcp-disclaimer">*Sample computation figures are indicative and subject to developer promotions, lot classification, and official financing loan approval.</p>
+            <p class="tcp-disclaimer">*Estimated amortization figures are indicative at 6.25% fixed for 3 years. Applicable rates will be based on prevailing Pag-IBIG / Bank rates upon loan take-out.</p>
         </section>`;
+    } else if (tLower.includes('airmen')) {
+        tcpHtml = `
+        <section class="tcp-section">
+            <div class="tcp-doc-card">
+                <div class="tcp-doc-info">
+                    <div class="tcp-doc-icon">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+                    </div>
+                    <div class="tcp-doc-text">
+                        <h4>Official Developer Sample Computation Sheet</h4>
+                        <p>Simplicio R. Yutero Construction Services · Jumbo St., Airmen's Village, Pulang Lupa Dos, Las Piñas City</p>
+                    </div>
+                </div>
+                <button type="button" class="tcp-doc-btn" onclick="openDocumentPreview('../../assets/images/airmen-tcp.jpg', 'Airmen’s Village official computation')">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line><line x1="11" y1="8" x2="11" y2="14"></line><line x1="8" y1="11" x2="14" y2="11"></line></svg>
+                    <span>View Official Computation</span>
+                </button>
+            </div>
+            <p class="tcp-disclaimer">*Inclusive of Title Transfer and Move-In Fees. Final loan interest rate and approval is determined by the financing bank upon loan take-out.</p>
+        </section>`;
+    } else {
+        tcpHtml = '';
     }
 
     container.innerHTML = tcpHtml;
