@@ -131,13 +131,13 @@
     function getInquiryPageUrl() {
         const p = window.location.pathname || "";
         if (p.includes("/pages/admin/")) {
-            return "clients.html?view=inquiries";
+            return "clients.html";
         } else if (p.includes("/pages/superadmin/")) {
-            return "../admin/clients.html?view=inquiries";
+            return "../admin/clients.html";
         } else if (p.includes("/pages/")) {
-            return "../admin/clients.html?view=inquiries";
+            return "../admin/clients.html";
         }
-        return "pages/admin/clients.html?view=inquiries";
+        return "pages/admin/clients.html";
     }
 
         function buildNotificationItems(inquiries, adminEvents = []) {
@@ -652,11 +652,7 @@
         ) {
             activeSection = "properties";
         } else if (path.includes("clients.html")) {
-            if (search.includes("view=inquiries") || search.includes("status=")) {
-                activeSection = "inquiries";
-            } else {
-                activeSection = "clients";
-            }
+            activeSection = "clients";
         } else if (path.includes("profile.html")) {
             activeSection = "settings";
         }
@@ -670,9 +666,7 @@
                 match = true;
             } else if (activeSection === "properties" && (label === "properties" || href.includes("propertylist.html"))) {
                 match = true;
-            } else if (activeSection === "clients" && label === "clients" && !href.includes("view=inquiries")) {
-                match = true;
-            } else if (activeSection === "inquiries" && (label === "inquiries" || href.includes("view=inquiries"))) {
+            } else if (activeSection === "clients" && (label === "client inquiries" || label === "clients" || label === "inquiries" || href.includes("clients.html"))) {
                 match = true;
             } else if (activeSection === "settings" && (label === "settings" || href.includes("profile.html"))) {
                 match = true;

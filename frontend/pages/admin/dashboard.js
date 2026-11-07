@@ -799,8 +799,8 @@ function openInquiryModal(data) {
                         <span>Reply via Email</span>
                     </a>
                 ` : `
-                    <a href="clients.html?view=inquiries" class="btn-modal-primary">
-                        <span>Open in Clients &rarr;</span>
+                    <a href="clients.html" class="btn-modal-primary">
+                        <span>Open in Client Inquiries &rarr;</span>
                     </a>
                 `}
             </div>

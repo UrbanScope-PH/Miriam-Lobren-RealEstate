@@ -46,18 +46,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     const statCompleted = document.getElementById('statCompletedInquiries');
     const notifCount = document.getElementById('topbarInquiryCount');
 
-    // Parse URL parameter for status filter or view
+    // Parse URL parameter for status filter
     const urlParams = new URLSearchParams(window.location.search);
     const initialStatus = urlParams.get('status');
-    const viewParam = urlParams.get('view');
-    if (viewParam === 'inquiries' || initialStatus) {
-        const navClients = document.getElementById('navClients');
-        const navInquiries = document.getElementById('navInquiries');
-        if (navClients && navInquiries) {
-            navClients.classList.remove('active');
-            navInquiries.classList.add('active');
-        }
-    }
     if (initialStatus) {
         activeFilter = initialStatus;
         document.querySelectorAll('.status-tab-btn').forEach(btn => {
