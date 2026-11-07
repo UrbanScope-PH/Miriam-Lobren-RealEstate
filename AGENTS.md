@@ -815,6 +815,11 @@ path when rendering from a page.
     - **Preserved Official Pricelist / Computation Document**:
       - Kept the official developer computation and pricelist document preview card (`.tcp-doc-card`) and financing disclaimer (`.tcp-disclaimer`) across all accredited property showcase pages (`casasuerte.html`, `kathleen.html`, `Liora.html`, `Airmen.html`) and dynamic property detail rendering (`renderDynamicTcp` in `property-detail.js`).
       - Clicking `"View Official Pricelist"` / `"View Official Computation"` continues to open the document preview dialog modal (`#tcpDocumentModal`), allowing clients to inspect the authentic developer-issued computation/pricelist image directly. Generic properties without official document sheets do not render any speculative breakdown calculations.
+77. **Homepage Location Sorting & Search Bar Filter Restored (`index.html`, `index.css`, `index.js`):**
+    - **Floating Hero Search Bar**: Added back the `LOCATION` dropdown selector (`#locationFilter`) between `TYPE` and `SEARCH` in `#propertySearch` on `frontend/index.html`. Options include: `All Locations`, `Las Piñas City`, `Bacoor, Cavite`, `Naic, Cavite`, and `Trece Martires City, Cavite`.
+    - **Grid Layout**: Adjusted `.search-bar` grid template columns in `frontend/index.css` to 4 columns (`1.2fr 1.2fr 1.8fr auto`). On tablet screens (<= 1024px), configured `label.keyword` and `.search-submit` to span full width (`grid-column: 1 / -1;`) beneath the side-by-side Type and Location selectors.
+    - **Real-Time Reactive Filtering**: Added dynamic `change` event listeners to `locationFilter` and `typeFilter` in `frontend/index.js`, updating the featured property list immediately on dropdown selection in addition to search form submission.
+    - **Alphabetical Location Sorting**: Added a `Location (A-Z)` option (`value="location"`) to `#homeSortSelect` and implemented alphabetical location sorting in `sortPropertyList()`, allowing users to sort property cards directly by geographical location.
 
 
 
