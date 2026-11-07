@@ -570,7 +570,10 @@ async function submitInquiry() {
         }
         formattedMessage = scheduleNote + rawMessage;
     } else {
-        propertyTitle = selectedProperty ? (selectedProperty.title || selectedProperty.propertyName || "Property Inquiry") : "Property Inquiry";
+        const rawPropTitle = selectedProperty ? String(selectedProperty.title || selectedProperty.propertyName || "").trim() : "";
+        propertyTitle = rawPropTitle
+            ? (/^specific\s+property\s+inquiry\s*:/i.test(rawPropTitle) ? rawPropTitle : `Specific Property Inquiry: ${rawPropTitle}`)
+            : "Specific Property Inquiry";
     }
 
     const inquiryData = {

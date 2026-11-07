@@ -3,6 +3,7 @@ UrbanScope - Client & Admin Inquiry Lifecycle Router
 Handles inquiry submission, admin listing, client history, modifications, cancellations, and notifications.
 """
 
+import re
 from typing import List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
@@ -30,9 +31,15 @@ def submit_inquiry(payload: InquiryCreate):
     cursor = conn.cursor()
 
     property_title = (payload.property_title or "General Inquiry").strip()
+    lookup_title = re.sub(
+        r"^specific\s+property\s+inquiry\s*:\s*",
+        "",
+        property_title,
+        flags=re.IGNORECASE,
+    ).strip()
     cursor.execute(
         "SELECT status FROM properties WHERE LOWER(TRIM(title)) = LOWER(TRIM(?)) LIMIT 1",
-        (property_title,)
+        (lookup_title,)
     )
     matching_property = cursor.fetchone()
     if matching_property:

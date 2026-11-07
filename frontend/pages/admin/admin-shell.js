@@ -140,6 +140,25 @@
         return "pages/admin/clients.html";
     }
 
+    function formatInquiryPropertyLabel(rawTitle) {
+        const clean = String(rawTitle || "").trim();
+        if (!clean) return "General Inquiry";
+        if (/^(general\s+(consultation|inquiry|question)|consultation\s*:)/i.test(clean)) {
+            return clean;
+        }
+        if (/^(specific\s+)?property\s+inquiry$/i.test(clean)) {
+            return "Specific Property Inquiry";
+        }
+        const prefixedMatch = clean.match(/^specific\s+property\s+inquiry\s*:\s*(.*)$/i);
+        if (prefixedMatch) {
+            const rest = prefixedMatch[1].trim();
+            return rest ? `Specific Property Inquiry: ${rest}` : "Specific Property Inquiry";
+        }
+        return `Specific Property Inquiry: ${clean}`;
+    }
+
+    window.formatInquiryPropertyLabel = formatInquiryPropertyLabel;
+
         function buildNotificationItems(inquiries, adminEvents = []) {
             const items = [];
             const eventsList = Array.isArray(adminEvents)
@@ -154,7 +173,7 @@
 
                     const code = inq.inquiry_code || `INQ-2026-${String(id).padStart(3, '0')}`;
                     const clientName = inq.client_name || inq.name || 'Client';
-                    const propTitle = inq.property_title || inq.propertyTitle || 'General Inquiry';
+                    const propTitle = formatInquiryPropertyLabel(inq.property_title || inq.propertyTitle);
                     const status = (inq.status || 'Under Review').trim();
                     const statusLower = status.toLowerCase();
 
@@ -205,7 +224,7 @@
                 if (ev.type === 'approved' || ev.type === 'completed') return;
                 const evTime = ev.time || (ev.created_at ? new Date(ev.created_at).getTime() : Date.now());
                 const timeAgo = formatTimeAgo(new Date(evTime).toISOString());
-                const propTitle = ev.property_title || ev.subtitle || 'General Inquiry';
+                const propTitle = formatInquiryPropertyLabel(ev.property_title || ev.subtitle);
                 const code = `INQ-2026-${String(ev.inquiryId || 0).padStart(3, '0')}`;
                 items.push({
                     type: ev.type || 'cancelled',
