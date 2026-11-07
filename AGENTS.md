@@ -785,6 +785,13 @@ path when rendering from a page.
         - `renderNavProfile(user)`: Added `if (inAdmin || isStaff) return;` guard preventing administrators or superadmins from ever receiving client notification bells or client profile chips in public headers.
         - `getUser()`: If a staff account is encountered on a public page, checks for an active hosted admin session via `apiGetHostedAdminSession()`. If active, automatically executes `location.replace()` to the dashboard. If expired or missing, purges stale admin `localStorage` keys (`adminUser`, `urbanscope_user`, `adminSessionToken`, `urbanscope_admin_profile`) and returns `null` so that guests on that device can browse the landing page cleanly without redirect loops.
         - Early synchronous check: Prevents applying `.logged-in` class to `document.documentElement` for staff accounts on public pages.
+72. **Admin Sidebar Consolidation: Unified "Client Inquiries" Navigation (`clients.html`, `dashboard.html`, `admin-shell.js`):**
+    - **Context**: In the admin portal sidebar navigation, "Clients" (`clients.html`) and "Inquiries" (`clients.html?view=inquiries`) pointed to the exact same interface (already titled "Client Inquiries"), causing redundancy in the navigation bar.
+    - **Solution**:
+      - Combined the separate "Clients" and "Inquiries" sidebar links into a single, cohesive menu item named **"Client Inquiries"** linking directly to `clients.html`.
+      - Updated the sidebar across all admin templates (`dashboard.html`, `clients.html`, `propertylist.html`, `add-property.html`, `addproperty.html`, `edit-property.html`, `profile.html`, `users.html`).
+      - Updated `admin-shell.js` (`getInquiryPageUrl()` and `updateActiveSidebarItem()`) to canonicalize `clients.html` and accurately highlight the "Client Inquiries" menu item when visiting `clients.html`.
+      - Cleaned up redundant query parameter toggles in `clients.js` and updated dashboard action links in `dashboard.js` and `dashboard.html`.
 
 
 
