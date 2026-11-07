@@ -792,6 +792,12 @@ path when rendering from a page.
       - Updated the sidebar across all admin templates (`dashboard.html`, `clients.html`, `propertylist.html`, `add-property.html`, `addproperty.html`, `edit-property.html`, `profile.html`, `users.html`).
       - Updated `admin-shell.js` (`getInquiryPageUrl()` and `updateActiveSidebarItem()`) to canonicalize `clients.html` and accurately highlight the "Client Inquiries" menu item when visiting `clients.html`.
       - Cleaned up redundant query parameter toggles in `clients.js` and updated dashboard action links in `dashboard.js` and `dashboard.html`.
+73. **Specific Property Inquiry Prefix Formatting (`admin-shell.js`, `dashboard.js`, `clients.js`, `inquiry.js`, `inquiries.py`, `supabase.js`, `api.js`):**
+    - **Problem**: While general consultations displayed clearly as `General Consultation: <Topic>`, inquiries for a specific house/property displayed only the raw property name (e.g. `Kathleen`) across the Admin `Recent Inquiries` table, `Client Inquiries` page, and detail modals.
+    - **Solution**:
+      - Added idempotent `formatInquiryPropertyLabel()` in `frontend/pages/admin/admin-shell.js` (with inline fallbacks in `dashboard.js` and `clients.js`) so all existing and new property inquiries render as `Specific Property Inquiry: <Property Name>` (e.g. `Specific Property Inquiry: Kathleen`) while keeping `General Consultation: ...` and `General Inquiry` untouched and never double-prefixing.
+      - Updated `frontend/pages/inquiry/inquiry.js` so new property-mode submissions store `Specific Property Inquiry: <Property Name>`.
+      - Updated sold-out availability lookups in `backend/routers/inquiries.py`, `frontend/shared/js/supabase.js`, and `frontend/shared/js/api.js` to strip the `Specific Property Inquiry:` prefix before matching against `properties.title`.
 
 
 

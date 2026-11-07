@@ -1036,7 +1036,8 @@
             status: inquiry.status || 'Under Review'
         };
 
-        const inquiryTitleKey = String(payload.property_title || '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
+        const rawLookupTitle = String(payload.property_title || '').replace(/^specific\s+property\s+inquiry\s*:\s*/i, '');
+        const inquiryTitleKey = rawLookupTitle.toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
         if (inquiryTitleKey && !inquiryTitleKey.startsWith('general consultation') && !inquiryTitleKey.startsWith('general inquiry')) {
             try {
                 const properties = await apiGetProperties();

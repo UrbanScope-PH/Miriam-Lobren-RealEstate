@@ -133,6 +133,26 @@ document.addEventListener('DOMContentLoaded', async () => {
         return 'review';
     }
 
+    function formatInquiryLabel(rawTitle) {
+        if (typeof window.formatInquiryPropertyLabel === 'function') {
+            return window.formatInquiryPropertyLabel(rawTitle);
+        }
+        const clean = String(rawTitle || '').trim();
+        if (!clean) return 'General Inquiry';
+        if (/^(general\s+(consultation|inquiry|question)|consultation\s*:)/i.test(clean)) {
+            return clean;
+        }
+        if (/^(specific\s+)?property\s+inquiry$/i.test(clean)) {
+            return 'Specific Property Inquiry';
+        }
+        const prefixedMatch = clean.match(/^specific\s+property\s+inquiry\s*:\s*(.*)$/i);
+        if (prefixedMatch) {
+            const rest = prefixedMatch[1].trim();
+            return rest ? `Specific Property Inquiry: ${rest}` : 'Specific Property Inquiry';
+        }
+        return `Specific Property Inquiry: ${clean}`;
+    }
+
     function renderTable() {
         if (!tableBody) return;
 
@@ -147,7 +167,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                 const name = (inq.client_name || inq.name || '').toLowerCase();
                 const email = (inq.email || inq.client_email || '').toLowerCase();
                 const phone = (inq.phone || inq.client_phone || inq.contact_number || '').toLowerCase();
-                const prop = (inq.property_title || propertiesMap[inq.property_id] || '').toLowerCase();
+                const rawProp = inq.property_title || propertiesMap[inq.property_id] || (inq.property_id ? `Property #${inq.property_id}` : '');
+                const prop = formatInquiryLabel(rawProp).toLowerCase();
                 const msg = (inq.message || '').toLowerCase();
                 return name.includes(q) || email.includes(q) || phone.includes(q) || prop.includes(q) || msg.includes(q);
             }
@@ -175,7 +196,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             const name = inq.client_name || inq.name || 'Anonymous Client';
             const email = inq.email || inq.client_email || 'No email provided';
             const phone = inq.phone || inq.client_phone || inq.contact_number || 'N/A';
-            const propTitle = inq.property_title || propertiesMap[inq.property_id] || (inq.property_id ? `Property #${inq.property_id}` : 'General Inquiry');
+            const rawPropTitle = inq.property_title || propertiesMap[inq.property_id] || (inq.property_id ? `Property #${inq.property_id}` : '');
+            const propTitle = formatInquiryLabel(rawPropTitle);
             const normStatus = getNormalizedStatus(inq.status);
             const badgeClass = getBadgeClass(normStatus);
             const dateStr = inq.created_at ? new Date(inq.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'Recent';
@@ -265,7 +287,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         const name = inq.client_name || inq.name || 'Anonymous Client';
         const email = inq.email || inq.client_email || 'N/A';
         const phone = inq.phone || inq.client_phone || inq.contact_number || 'N/A';
-        const propTitle = inq.property_title || propertiesMap[inq.property_id] || (inq.property_id ? `Property #${inq.property_id}` : 'General Inquiry');
+        const rawPropTitle = inq.property_title || propertiesMap[inq.property_id] || (inq.property_id ? `Property #${inq.property_id}` : '');
+        const propTitle = formatInquiryLabel(rawPropTitle);
         const normStatus = getNormalizedStatus(inq.status);
         const parsedSchedule = parseInquirySchedule(inq.message || inq.notes, inq.schedule_date || inq.preferred_date);
         const schedule = parsedSchedule.display || 'No schedule requested';

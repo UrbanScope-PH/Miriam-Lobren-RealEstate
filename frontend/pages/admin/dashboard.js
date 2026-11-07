@@ -543,6 +543,26 @@ function updateInquiryDonut(inquiries) {
 
 /* INQUIRY TABLE */
 
+function formatInquiryLabel(rawTitle) {
+    if (typeof window.formatInquiryPropertyLabel === "function") {
+        return window.formatInquiryPropertyLabel(rawTitle);
+    }
+    const clean = String(rawTitle || "").trim();
+    if (!clean) return "General Inquiry";
+    if (/^(general\s+(consultation|inquiry|question)|consultation\s*:)/i.test(clean)) {
+        return clean;
+    }
+    if (/^(specific\s+)?property\s+inquiry$/i.test(clean)) {
+        return "Specific Property Inquiry";
+    }
+    const prefixedMatch = clean.match(/^specific\s+property\s+inquiry\s*:\s*(.*)$/i);
+    if (prefixedMatch) {
+        const rest = prefixedMatch[1].trim();
+        return rest ? `Specific Property Inquiry: ${rest}` : "Specific Property Inquiry";
+    }
+    return `Specific Property Inquiry: ${clean}`;
+}
+
 function renderInquiryRows(inquiries) {
     const tbody = document.getElementById("recentInquiriesBody") || document.getElementById("recentInquiryRows");
 
@@ -572,7 +592,7 @@ function renderInquiryRows(inquiries) {
         );
 
         const propertyTitle = escapeHTML(
-            inquiry.property_title || "General Inquiry"
+            formatInquiryLabel(inquiry.property_title)
         );
 
         const createdAt = inquiry.created_at
@@ -666,7 +686,7 @@ function openInquiryModal(data) {
 
     const clientName = data.clientName || "Client";
     const inquiryId = data.inquiryId || "INQ-N/A";
-    const propertyTitle = data.propertyTitle || "General Inquiry";
+    const propertyTitle = formatInquiryLabel(data.propertyTitle);
     const createdAt = data.createdAt || "Recent";
     const status = data.status || "Pending";
     const statusClass = data.statusClass || "gray";
