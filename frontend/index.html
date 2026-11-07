@@ -59,6 +59,7 @@
             <!-- FLOATING SEARCH BAR -->
             <form class="search-bar" id="propertySearch" action="#properties" method="GET"
                 onsubmit="event.preventDefault();">
+                <input type="hidden" id="locationFilter" name="location" value="all">
                 <label>
                     <span>TYPE</span>
                     <select id="typeFilter" name="type">
@@ -66,17 +67,6 @@
                         <option value="townhouse">Townhouses</option>
                         <option value="triplex">Triplex</option>
                         <option value="house-lot">House &amp; Lot</option>
-                    </select>
-                </label>
-
-                <label>
-                    <span>LOCATIONS</span>
-                    <select id="locationFilter" name="location">
-                        <option value="all">All Locations</option>
-                        <option value="las-pinas">Las Piñas City</option>
-                        <option value="bacoor">Bacoor, Cavite</option>
-                        <option value="naic">Naic, Cavite</option>
-                        <option value="trece-martires">Trece Martirez City, Cavite</option>
                     </select>
                 </label>
 

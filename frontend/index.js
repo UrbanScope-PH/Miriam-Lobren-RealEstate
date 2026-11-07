@@ -135,7 +135,7 @@ function renderFeaturedGrid(list) {
                     <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
                 </svg>
                 <h4 style="font-size: 1.15rem; color: #1e293b; margin-bottom: 6px;">No properties found matching your criteria</h4>
-                <p style="font-size: 0.9rem; color: #64748b; margin-bottom: 14px;">Try selecting a different property type, location, or clearing search keywords.</p>
+                <p style="font-size: 0.9rem; color: #64748b; margin-bottom: 14px;">Try selecting a different property type or clearing search keywords.</p>
                 <button onclick="resetHomeCategory()" style="background: #1f4928; color: #fff; border: none; padding: 9px 20px; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 0.88rem; transition: background 0.2s;">Reset Filters</button>
             </div>
         `;
