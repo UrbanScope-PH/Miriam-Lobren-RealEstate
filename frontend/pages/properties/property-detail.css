@@ -270,21 +270,15 @@
     font-size: 18px;
 }
 
-/* LOCATION & INQUIRY SECTION (PAGE 9) */
+/* LOCATION & INQUIRY SECTION (PAGE 9) - Location map hidden per requirement */
 .location-inquiry-grid {
-    display: grid;
-    grid-template-columns: 1.4fr 1fr;
-    gap: 36px;
-    align-items: start;
+    display: flex;
+    justify-content: center;
     margin-bottom: 50px;
 }
 
 .location-box {
-    background: #ffffff;
-    border-radius: 16px;
-    padding: 24px;
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
-    border: 1px solid #ebf2ec;
+    display: none !important;
 }
 
 .location-header {
@@ -337,6 +331,8 @@
     border: 1px solid #ebf2ec;
     display: flex;
     flex-direction: column;
+    max-width: 620px;
+    width: 100%;
 }
 
 .inquiry-card-header {
@@ -425,13 +421,16 @@ html[data-auth-state="logged-in"] .inquiry-note,
     }
 
     .location-inquiry-grid {
-        grid-template-columns: minmax(0, 1fr);
+        display: flex;
+        justify-content: center;
         gap: 24px;
     }
 
     .location-box,
     .inquiry-card {
         min-width: 0;
+        width: 100%;
+        max-width: 620px;
     }
 
     .main-carousel {

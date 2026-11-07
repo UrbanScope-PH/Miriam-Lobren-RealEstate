@@ -802,6 +802,11 @@ path when rendering from a page.
     - Updated the primary hero headline on `frontend/index.html` to `"Discover Your Ideal Home with CD Miranda Realty"`.
     - Updated the subheadline to `"Find a Home That Fits Your Needs — Explore Properties for Your Future Home."`.
     - Expanded `.hero-content` `max-width` in `frontend/index.css` to 780px with balanced `line-height` (1.45) for clean, responsive multi-line typography across viewports.
+75. **Location Section Removal & Centered Inquiry Layout (`index.html`, `index.css`, `index.js`, `property-detail.html`, `casasuerte.html`, `kathleen.html`, `Liora.html`, `Airmen.html`, `property-detail.css`):**
+    - **Homepage Search Bar**: Removed the `LOCATIONS` dropdown filter (`#locationFilter`) from `#propertySearch` on `frontend/index.html`. Retained a hidden input fallback (`value="all"`) for backwards compatibility. Adjusted `.search-bar` grid columns in `frontend/index.css` from 4 columns to 3 columns (`1.3fr 2fr auto`) on desktop, and updated tablet breakpoint (<= 1024px) so the `Find Property` button cleanly spans full-width (`grid-column: 1 / -1;`) beneath the Type and Search inputs. Updated the zero-results message in `frontend/index.js` to omit location.
+    - **Property Showcase & Detail Pages**:
+      - Completely removed the `Property Location` box (`.location-box` with address and Google Maps iframe) from `frontend/pages/properties/property-detail.html`, `casasuerte.html`, `kathleen.html`, `Liora.html`, and `Airmen.html`, eliminating unnecessary external map iframe requests.
+      - In `frontend/pages/properties/property-detail.css`: Added defensive `.location-box { display: none !important; }`, updated `.location-inquiry-grid` to a centered flex container (`display: flex; justify-content: center;`), and styled `.inquiry-card` ("Interested in this property?") with `max-width: 620px; width: 100%;` so the CTA is cleanly centered and responsive across desktop and mobile devices.
 
 
 
