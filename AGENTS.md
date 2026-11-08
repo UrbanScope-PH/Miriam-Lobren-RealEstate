@@ -832,19 +832,10 @@ path when rendering from a page.
         4. **Initial Requirements**: Standard 7-item checklist (2 Valid IDs, latest 1-month payslip, COE, proof of billing, TIN, Pag-IBIG Loyalty Card/MDF for identification only, 1x1 photo) with an explicit disclaimer that CD Miranda Realty does not handle or process Pag-IBIG financing transactions.
         5. **Payment Methods & Accessibility Placeholders**: Structured options for developer payment channels (bank transfer, PDCs, payment centers, ADA) and subdivision road/expressway accessibility (MCX, CAVITEX, CALAX, UV Express, buses, jeepneys).
     - **Styling**: Added `.faq-category-pill` badges, `.faq-q-content` flex header layout, `.faq-disclaimer-note` callouts, and increased `.faq-item.active .faq-answer` `max-height` to `1200px` for seamless mobile and desktop accordion expansion.
-79. **GitMCP Documentation Server Configuration (`.vscode/mcp.json`):**
-    - Configured the Model Context Protocol (MCP) server for VS Code and compatible AI assistants to access live repository documentation from `GitMCP Documentation Server` (`UrbanScope-PH/Miriam-Lobren-RealEstate`).
-    - Added `.vscode/mcp.json` defining the SSE-based MCP server endpoint:
-      ```json
-      {
-        "servers": {
-          "Miriam-Lobren-RealEstate Docs": {
-            "type": "sse",
-            "url": "https://gitmcp.io/UrbanScope-PH/Miriam-Lobren-RealEstate"
-          }
-        }
-      }
-      ```
+79. **Verification Code Sender Email Update (`urbanscope.cvsu@gmail.com`):**
+    - Updated email authentication credentials for client registration and password reset OTP verification delivery across local environment (`.env`), Python FastAPI (`backend/auth_otp.py`, `backend/routers/auth.py`), and Vercel Node serverless functions (`lib/email-auth.js`).
+    - Configured sender address as `urbanscope.cvsu@gmail.com` using Google App Password and verified live TLS/SSL SMTP authentication with Google's mail server (`smtp.gmail.com:465`).
+    - Sender name is formatted as `UrbanScope <urbanscope.cvsu@gmail.com>`.
 
 
 

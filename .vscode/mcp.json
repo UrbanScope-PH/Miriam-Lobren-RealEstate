@@ -1,9 +1,0 @@
-{
-  "servers": {
-    "Miriam-Lobren-RealEstate Docs": {
-      "type": "sse",
-      "url": "https://gitmcp.io/UrbanScope-PH/Miriam-Lobren-RealEstate"
-    }
-  }
-}
-
