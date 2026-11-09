@@ -836,6 +836,9 @@ path when rendering from a page.
     - Updated email authentication credentials for client registration and password reset OTP verification delivery across local environment (`.env`), Python FastAPI (`backend/auth_otp.py`, `backend/routers/auth.py`), and Vercel Node serverless functions (`lib/email-auth.js`).
     - Configured sender address as `urbanscope.cvsu@gmail.com` using Google App Password and verified live TLS/SSL SMTP authentication with Google's mail server (`smtp.gmail.com:465`).
     - Sender name is formatted as `UrbanScope <urbanscope.cvsu@gmail.com>`.
+80. **Homepage FAQs Category Pills Removed (`index.html`, `index.css`):**
+    - Removed the category pill badges (`.faq-category-pill` such as 'Marital Status', 'Co-Borrower', 'Employment & Buyer Eligibility', 'Initial Requirements', 'Payment Methods', 'Accessibility') rendered above each question title in the homepage FAQs accordion (`#faqsAccordion`).
+    - Questions are now direct text elements (`.faq-q-text`) inside `.faq-question`, restoring a clean, minimal accordion title layout.
 
 
 
