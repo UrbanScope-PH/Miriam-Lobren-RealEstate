@@ -93,14 +93,14 @@ function addPropertyRow(property) {
                     <img src="${imgSrc}" alt="${title}" style="width:100%;height:100%;object-fit:cover;${isSold ? 'filter:grayscale(1); opacity:0.8;' : ''}" onerror="this.src='../../assets/images/property1.jpg'">
                 </div>
                 <div>
-                    <strong style="${isSold ? 'color:#64748b;' : 'color:#1b2e21;'} font-size:0.92rem; display:block; line-height:1.3;">${title}</strong>
-                    <small style="color:#6b7f70; font-size:0.78rem;">ID #${property.id}</small>
+                    <strong style="${isSold ? 'color:var(--text-muted, #64748b);' : 'color:var(--text-dark, #1b2e21);'} font-size:0.92rem; display:block; line-height:1.3;">${title}</strong>
+                    <small style="color:var(--text-muted, #6b7f70); font-size:0.78rem;">ID #${property.id}</small>
                 </div>
             </div>
         </td>
-        <td style="color:#2d3748; font-size:0.88rem; font-weight:500;">${loc}</td>
-        <td><span style="padding:4px 9px; border-radius:6px; background:#eef5ef; color:#1a3b23; font-size:0.78rem; font-weight:600; display:inline-block;">${type}</span></td>
-        <td style="font-weight:700; color:#1b2e21; font-size:0.9rem;">${priceStr}</td>
+        <td style="color:var(--text-dark, #2d3748); font-size:0.88rem; font-weight:500;">${loc}</td>
+        <td><span style="padding:4px 9px; border-radius:6px; background:var(--light-green, #eef5ef); color:var(--dark-green, #1a3b23); font-size:0.78rem; font-weight:600; display:inline-block;">${type}</span></td>
+        <td style="font-weight:700; color:var(--text-dark, #1b2e21); font-size:0.9rem;">${priceStr}</td>
         <td>
             <span class="status-badge-table ${isSold ? 'status-badge-sold' : 'status-badge-available'}" 
                 style="${isSold ? 'background:#fee2e2; color:#b91c1c; border:1px solid #fecaca;' : 'background:#dcfce7; color:#15803d; border:1px solid #bbf7d0;'} padding:4px 10px; border-radius:12px; font-weight:600; font-size:0.78rem; display:inline-flex; align-items:center; gap:5px;">

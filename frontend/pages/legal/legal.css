@@ -510,3 +510,49 @@ body {
         justify-content: center;
     }
 }
+
+/* ==========================================================================
+   Dark Mode Overrides for Legal Pages (Terms & Privacy)
+   ========================================================================== */
+html.dark-mode {
+    --bg-page: #0e1611;
+    --card-bg: #16231b;
+    --border-color: #26392c;
+    --text-dark: #e7f0e9;
+    --text-muted: #9eb3a3;
+}
+
+html.dark-mode .legal-hero {
+    background: linear-gradient(135deg, #112618 0%, #173521 60%, #1f472d 100%);
+    border-bottom: 1px solid #26392c;
+}
+
+html.dark-mode .doc-tab.active {
+    background: #2f7a44;
+    color: #ffffff;
+    border: 1px solid rgba(134, 239, 172, 0.45);
+}
+
+html.dark-mode .legal-section p,
+html.dark-mode .legal-section ul {
+    color: #c9dbce;
+}
+
+html.dark-mode .section-head {
+    border-bottom-color: #243629;
+}
+
+html.dark-mode .section-number {
+    background: #1f3326;
+    color: #86efac;
+}
+
+html.dark-mode .legal-callout {
+    background: #121d16;
+    border-left-color: #4ade80;
+}
+
+html.dark-mode .legal-callout.warning {
+    background: rgba(217, 119, 6, 0.14);
+    border-left-color: #f59e0b;
+}

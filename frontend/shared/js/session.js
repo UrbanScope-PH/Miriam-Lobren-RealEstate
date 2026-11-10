@@ -695,42 +695,41 @@
 
     function setTheme(mode, animate) {
         var isDark = mode === 'dark';
-        if (animate) {
-            root.classList.add('theme-transitioning');
-            var veil = document.getElementById('themeFadeVeil');
-            if (!veil && document.body) {
-                veil = document.createElement('div');
-                veil.id = 'themeFadeVeil';
-                veil.className = 'theme-fade-veil';
-                veil.setAttribute('aria-hidden', 'true');
-                document.body.appendChild(veil);
-            }
-            if (veil) {
-                veil.classList.remove('active');
-                void veil.offsetWidth;
-                veil.classList.add('active');
-            }
-            if (themeTransitionTimer) clearTimeout(themeTransitionTimer);
-            themeTransitionTimer = setTimeout(function () {
-                root.classList.remove('theme-transitioning');
-                if (veil) veil.classList.remove('active');
-            }, 560);
-        }
-
-        root.classList.toggle('dark-mode', isDark);
-        root.setAttribute('data-theme', isDark ? 'dark' : 'light');
         var cleanMode = isDark ? 'dark' : 'light';
         if (window.UrbanTheme && typeof window.UrbanTheme.set === 'function') {
-            window.UrbanTheme.set(cleanMode, false);
-        } else {
+            window.UrbanTheme.set(cleanMode, animate);
+            return;
+        }
+
+        var commitThemeDom = function () {
+            root.classList.toggle('dark-mode', isDark);
+            root.setAttribute('data-theme', cleanMode);
             try { localStorage.setItem(THEME_STORAGE_KEY, cleanMode); } catch (e) { }
             try { document.cookie = 'urbanscope_theme=' + cleanMode + '; path=/; max-age=31536000; SameSite=Lax'; } catch (e) { }
             try {
                 var baseName = String(window.name || '').replace(/\s*__urbanscope_theme=(?:dark|light)/g, '').trim();
                 window.name = (baseName ? baseName + ' ' : '') + '__urbanscope_theme=' + cleanMode;
             } catch (e) { }
+            updateThemeToggleButtons(isDark);
+        };
+
+        if (animate && typeof document.startViewTransition === 'function') {
+            root.classList.remove('theme-transitioning');
+            try {
+                document.startViewTransition(commitThemeDom);
+                return;
+            } catch (e) { }
         }
-        updateThemeToggleButtons(isDark);
+
+        if (animate) {
+            root.classList.add('theme-transitioning');
+            if (themeTransitionTimer) clearTimeout(themeTransitionTimer);
+            themeTransitionTimer = setTimeout(function () {
+                root.classList.remove('theme-transitioning');
+            }, 520);
+        }
+
+        commitThemeDom();
     }
 
     function initThemeToggle() {

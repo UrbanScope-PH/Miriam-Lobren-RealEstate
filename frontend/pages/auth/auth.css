@@ -2150,6 +2150,13 @@ html.dark-mode .theme-icon-sun {
     display: none !important;
 }
 
+::view-transition-old(root),
+::view-transition-new(root) {
+    animation-duration: 0.42s;
+    animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+    mix-blend-mode: normal;
+}
+
 html.theme-transitioning,
 html.theme-transitioning body,
 html.theme-transitioning div,
@@ -2289,6 +2296,27 @@ html.dark-mode .otp-modal-icon {
     color: #86efac;
 }
 
+html.dark-mode .brand-logo-img,
+html.dark-mode .form-brand-logo {
+    filter: brightness(1.45) saturate(1.15) drop-shadow(0 0 6px rgba(134, 239, 172, 0.22));
+}
+
+html.dark-mode .toggle-pw {
+    color: #a8c5b0 !important;
+}
+
+html.dark-mode .toggle-pw:hover {
+    color: #86efac !important;
+    background-color: rgba(134, 239, 172, 0.12) !important;
+}
+
+html.dark-mode .terms-modal-close,
+html.dark-mode .otp-modal-close {
+    background: #1c2d22;
+    border-color: #2f4736;
+    color: #d8ebe0;
+}
+
 html.dark-mode .terms-modal-heading h2,
 html.dark-mode .otp-modal-card h2,
 html.dark-mode .terms-doc-section h3 {
@@ -2344,6 +2372,56 @@ html.dark-mode .btn-terms-decline {
 html.dark-mode .otp-form input {
     background: #111b15;
     border-color: #2b4031;
+    color: #86efac;
+}
+
+html.dark-mode .showcase-panel img {
+    filter: brightness(0.76) contrast(1.04) saturate(0.92);
+}
+
+html.dark-mode .google-auth-banner,
+html.dark-mode .auth-notice {
+    background-color: #16241b;
+    border-color: #2b4232;
+    color: #c9dbce;
+}
+
+html.dark-mode .google-auth-banner.is-setup,
+html.dark-mode .terms-scroll-hint {
+    background-color: rgba(245, 158, 11, 0.16);
+    border-color: rgba(251, 191, 36, 0.35);
+    color: #fde68a;
+}
+
+html.dark-mode .google-auth-banner.is-error,
+html.dark-mode #resetStatus.is-error {
+    background-color: rgba(239, 68, 68, 0.16);
+    border-color: rgba(248, 113, 113, 0.35);
+    color: #fca5a5;
+}
+
+html.dark-mode .terms-scroll-hint.is-ready {
+    background: rgba(34, 197, 94, 0.16);
+    border-color: rgba(74, 222, 128, 0.35);
+    color: #86efac;
+}
+
+html.dark-mode .terms-scroll-progress {
+    background: #1c2e22;
+}
+
+html.dark-mode .terms-doc-section code {
+    background: #111b15;
+    color: #86efac;
+}
+
+html.dark-mode .strength-bars span {
+    background-color: #24382b;
+}
+
+html.dark-mode .btn-terms-decline:hover {
+    background: #253b2c;
+    border-color: #4ade80;
     color: #86efac;
 }
 

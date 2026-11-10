@@ -974,3 +974,209 @@ body {
         font-size: 0.85rem;
     }
 }
+
+/* ==========================================================================
+   Dark Mode Overrides for Submit Inquiry Page
+   ========================================================================== */
+html.dark-mode body {
+    background-color: #0e1611;
+    color: #e7f0e9;
+}
+
+html.dark-mode .page-heading,
+html.dark-mode .section-title {
+    color: #eef6f0;
+}
+
+html.dark-mode .history-pill-link {
+    background: #17261c;
+    border-color: #2e4b37;
+    color: #86efac;
+}
+
+html.dark-mode .history-pill-link:hover {
+    background: #213628;
+    border-color: #4ade80;
+    color: #bbf7d0;
+}
+
+html.dark-mode .inquiry-mode-selector {
+    background: #142119;
+    border-color: #26392c;
+}
+
+html.dark-mode .mode-tab {
+    background: transparent;
+    color: #a8bdb0;
+}
+
+html.dark-mode .mode-tab:hover {
+    background: rgba(134, 239, 172, 0.08);
+    color: #e7f0e9;
+}
+
+html.dark-mode .mode-tab.active {
+    background: #233b2b;
+    border: 1px solid #3ea35d;
+    color: #86efac;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);
+}
+
+html.dark-mode .inquiry-form-card {
+    background: #16231b;
+    border-color: #26392c;
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.45);
+}
+
+html.dark-mode .property-summary-box {
+    background-color: #121d16;
+    border-color: #26392c;
+}
+
+html.dark-mode .summary-details h2 {
+    color: #86efac;
+}
+
+html.dark-mode .summary-specs {
+    color: #d8ebe0;
+}
+
+html.dark-mode .input-field label,
+html.dark-mode .textarea-field label {
+    color: #d6e6da;
+}
+
+html.dark-mode .form-select,
+html.dark-mode .form-input,
+html.dark-mode .input-field input,
+html.dark-mode .textarea-field textarea {
+    background-color: #111b15;
+    border-color: #2b4031;
+    color: #e7f0e9;
+}
+
+html.dark-mode .form-actions-row {
+    border-top-color: #243629;
+}
+
+html.dark-mode .cancel-btn {
+    background-color: #1c2d22;
+    border: 1px solid #2f4736;
+    color: #e7f0e9;
+}
+
+html.dark-mode .cancel-btn:hover {
+    background-color: #263d2e;
+    border-color: #4ade80;
+    color: #86efac;
+}
+
+html.dark-mode .submit-btn {
+    background-color: #3ea35d;
+    color: #ffffff;
+}
+
+html.dark-mode .submit-btn:hover {
+    background-color: #2f8548;
+    color: #ffffff;
+}
+
+html.dark-mode .modal-box {
+    background: #16231b;
+    border: 1px solid #283d2e;
+    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.6);
+}
+
+html.dark-mode .modal-back-btn,
+html.dark-mode .modal-close-btn {
+    background: #1c2d22;
+    border-color: #2f4736;
+    color: #e7f0e9;
+}
+
+html.dark-mode .modal-back-btn:hover,
+html.dark-mode .modal-close-btn:hover {
+    background: #2d5c39;
+    color: #ffffff;
+}
+
+html.dark-mode .success-modal-hero {
+    background: linear-gradient(180deg, #1b2e22 0%, #16231b 100%);
+    border-bottom-color: #243629;
+}
+
+html.dark-mode .success-icon-badge {
+    background: rgba(16, 185, 129, 0.16);
+    border-color: rgba(74, 222, 128, 0.4);
+    color: #86efac;
+}
+
+html.dark-mode .success-modal-hero h3,
+html.dark-mode .success-property-title {
+    color: #eef6f0;
+}
+
+html.dark-mode .success-card {
+    background: #121d16;
+    border-color: #243629;
+}
+
+html.dark-mode .success-card-header {
+    border-bottom-color: #243629;
+}
+
+html.dark-mode .success-status-pill {
+    background: rgba(245, 158, 11, 0.16);
+    color: #fde68a;
+    border-color: rgba(251, 191, 36, 0.35);
+}
+
+html.dark-mode .success-schedule-box {
+    background: rgba(62, 163, 93, 0.16);
+    border-color: rgba(134, 239, 172, 0.32);
+    color: #86efac;
+}
+
+html.dark-mode .success-client-row {
+    background: #16231b;
+    border-color: #26392c;
+}
+
+html.dark-mode .client-meta-item span {
+    color: #eef6f0;
+}
+
+html.dark-mode .success-note {
+    background: #17261c;
+    color: #c2d4c6;
+}
+
+html.dark-mode .success-sla-notice {
+    color: #86efac;
+}
+
+html.dark-mode .modal-footer.success-modal-footer {
+    border-top-color: #243629;
+}
+
+html.dark-mode .btn-success-primary {
+    background-color: #3ea35d;
+    color: #ffffff;
+}
+
+html.dark-mode .btn-success-primary:hover {
+    background-color: #2f8548;
+    color: #ffffff;
+}
+
+html.dark-mode .btn-secondary {
+    background-color: #1c2d22;
+    border-color: #2f4736;
+    color: #e7f0e9;
+}
+
+html.dark-mode .btn-secondary:hover {
+    background-color: #263d2e;
+    border-color: #4ade80;
+    color: #86efac;
+}

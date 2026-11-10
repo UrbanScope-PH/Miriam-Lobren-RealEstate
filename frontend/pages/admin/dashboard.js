@@ -1133,21 +1133,21 @@ function renderDashboardProperties(list) {
             '../../assets/images/property1.jpg';
 
         return `
-        <tr style="${isSold ? 'background:#fcfdfc;' : ''}">
+        <tr class="${isSold ? 'row-sold' : ''}">
             <td>
                 <div style="display:flex; align-items:center; gap:12px;">
                     <img src="${imgSrc}" alt="${title}" style="width:44px; height:44px; border-radius:6px; object-fit:cover; ${isSold ? 'filter:grayscale(1); opacity:0.8;' : ''}" onerror="this.src='../../assets/images/property1.jpg'">
                     <div>
-                        <strong style="${isSold ? 'color:#64748b;' : 'color:#1b2e21;'} font-size:0.92rem;">${title}</strong><br>
-                        <small style="color:#6b7f70;">ID #${p.id}</small>
+                        <strong style="${isSold ? 'color:var(--text-muted, #64748b);' : 'color:var(--text-dark, #1b2e21);'} font-size:0.92rem;">${title}</strong><br>
+                        <small style="color:var(--text-muted, #6b7f70);">ID #${p.id}</small>
                     </div>
                 </div>
             </td>
-            <td style="color:#2d3748; font-size:0.9rem;">${loc}</td>
-            <td><span style="padding:4px 9px; border-radius:4px; background:#eef5ef; color:#1a3b23; font-size:0.8rem; font-weight:600;">${type}</span></td>
-            <td style="font-weight:700; color:#1b2e21;">${price}</td>
+            <td style="color:var(--text-dark, #2d3748); font-size:0.9rem;">${loc}</td>
+            <td><span style="padding:4px 9px; border-radius:4px; background:var(--light-green, #eef5ef); color:var(--dark-green, #1a3b23); font-size:0.8rem; font-weight:600;">${type}</span></td>
+            <td style="font-weight:700; color:var(--text-dark, #1b2e21);">${price}</td>
             <td>
-                <span style="padding:4px 10px; border-radius:12px; font-size:0.8rem; font-weight:600; display:inline-flex; align-items:center; gap:5px; ${isSold ? 'background:#fee2e2; color:#b91c1c; border:1px solid #fecaca;' : 'background:#dcfce7; color:#15803d; border:1px solid #bbf7d0;'}">
+                <span class="status-badge-table ${isSold ? 'status-badge-sold' : 'status-badge-available'}" style="padding:4px 10px; border-radius:12px; font-size:0.8rem; font-weight:600; display:inline-flex; align-items:center; gap:5px; ${isSold ? 'background:#fee2e2; color:#b91c1c; border:1px solid #fecaca;' : 'background:#dcfce7; color:#15803d; border:1px solid #bbf7d0;'}">
                     <span style="width:6px; height:6px; border-radius:50%; background:${isSold ? '#ef4444' : '#22c55e'}; display:inline-block;"></span>
                     ${displayStatus}
                 </span>
