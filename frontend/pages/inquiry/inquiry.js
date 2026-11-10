@@ -470,6 +470,12 @@ function resetFormAndCloseModal() {
     if (textarea) textarea.value = '';
     const prefDate = document.getElementById('preferredDate');
     if (prefDate) prefDate.value = '';
+    const propPrefDate = document.getElementById('propertyPreferredDate');
+    if (propPrefDate) propPrefDate.value = '';
+    const prefTime = document.getElementById('preferredTime');
+    if (prefTime) prefTime.value = 'Flexible / Any Time';
+    const propPrefTime = document.getElementById('propertyPreferredTime');
+    if (propPrefTime) propPrefTime.value = 'Flexible / Any Time';
     showToastNotice('You can submit another consultation inquiry below.', false);
 }
 
@@ -574,6 +580,21 @@ async function submitInquiry() {
         propertyTitle = rawPropTitle
             ? (/^specific\s+property\s+inquiry\s*:/i.test(rawPropTitle) ? rawPropTitle : `Specific Property Inquiry: ${rawPropTitle}`)
             : "Specific Property Inquiry";
+
+        const propDateEl = document.getElementById('propertyPreferredDate') || document.getElementById('preferredDate');
+        const propTimeEl = document.getElementById('propertyPreferredTime') || document.getElementById('preferredTime');
+        const prefDate = propDateEl ? propDateEl.value : '';
+        const prefTime = propTimeEl ? propTimeEl.value : 'Flexible / Any Time';
+
+        let scheduleNote = '';
+        if (prefDate) {
+            scheduleDetails = `${prefDate} (${prefTime})`;
+            scheduleNote = `[Preferred Schedule: ${prefDate} | ${prefTime}]\n\n`;
+        } else if (prefTime && prefTime !== 'Flexible / Any Time') {
+            scheduleDetails = `${prefTime}`;
+            scheduleNote = `[Preferred Slot: ${prefTime}]\n\n`;
+        }
+        formattedMessage = scheduleNote + rawMessage;
     }
 
     const inquiryData = {
@@ -637,16 +658,27 @@ window.addEventListener('DOMContentLoaded', () => {
 
     refreshInquiryCooldownUi();
 
-    // Set min date on datepicker to today
+    // Set min date on datepicker to today and keep schedule inputs synced across tabs
     const dateInput = document.getElementById('preferredDate');
-    if (dateInput) {
-        const today = new Date();
-        const localToday = [
-            today.getFullYear(),
-            String(today.getMonth() + 1).padStart(2, '0'),
-            String(today.getDate()).padStart(2, '0')
-        ].join('-');
-        dateInput.min = localToday;
+    const propDateInput = document.getElementById('propertyPreferredDate');
+    const timeSelect = document.getElementById('preferredTime');
+    const propTimeSelect = document.getElementById('propertyPreferredTime');
+    const today = new Date();
+    const localToday = [
+        today.getFullYear(),
+        String(today.getMonth() + 1).padStart(2, '0'),
+        String(today.getDate()).padStart(2, '0')
+    ].join('-');
+    if (dateInput) dateInput.min = localToday;
+    if (propDateInput) propDateInput.min = localToday;
+
+    if (dateInput && propDateInput) {
+        dateInput.addEventListener('change', () => { propDateInput.value = dateInput.value; });
+        propDateInput.addEventListener('change', () => { dateInput.value = propDateInput.value; });
+    }
+    if (timeSelect && propTimeSelect) {
+        timeSelect.addEventListener('change', () => { propTimeSelect.value = timeSelect.value; });
+        propTimeSelect.addEventListener('change', () => { timeSelect.value = propTimeSelect.value; });
     }
 
     // Modal close handlers
