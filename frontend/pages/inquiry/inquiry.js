@@ -184,9 +184,9 @@ function switchInquiryMode(mode) {
             messageLabel.textContent = 'Message*';
         }
         if (messageTextarea) {
-            messageTextarea.placeholder = "I'm interested and would like to know more about this property. Are there any available units and what are the payment terms?";
-            if (!messageTextarea.value.trim()) {
-                messageTextarea.value = "I'm interested and would like to know more about this property. Are there any available units and what are the payment terms?";
+            messageTextarea.placeholder = "Tell us what you'd like to ask or know about this property, unit availability, payment terms, or your preferred site viewing schedule...";
+            if (messageTextarea.value.includes("I'm interested and would like to know more about this property")) {
+                messageTextarea.value = "";
             }
         }
 
