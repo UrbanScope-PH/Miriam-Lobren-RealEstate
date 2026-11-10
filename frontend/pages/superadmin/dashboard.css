@@ -1892,3 +1892,277 @@ tr:hover td {
         width: 100%;
     }
 }
+
+/* ==========================================================================
+   SUPERADMIN PORTAL DARK MODE & SOFT FADE ANIMATION (html.dark-mode)
+   ========================================================================== */
+.theme-toggle-btn {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 39px;
+    height: 39px;
+    padding: 0;
+    border-radius: 50%;
+    border: 1px solid #d5e2d8;
+    background: #ffffff;
+    color: var(--green, #2d5c39);
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease, transform 0.25s ease, box-shadow 0.3s ease;
+    flex-shrink: 0;
+}
+
+.theme-toggle-btn:hover {
+    background: #eef6f0;
+    border-color: var(--green, #2d5c39);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(45, 92, 57, 0.14);
+}
+
+.theme-icon-wrap {
+    position: relative;
+    width: 19px;
+    height: 19px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.theme-icon {
+    position: absolute;
+    inset: 0;
+    margin: auto;
+    transition: opacity 0.42s cubic-bezier(0.22, 1, 0.36, 1), transform 0.48s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.theme-icon-moon {
+    opacity: 1;
+    transform: rotate(0deg) scale(1);
+}
+
+.theme-icon-sun {
+    opacity: 0;
+    transform: rotate(75deg) scale(0.55);
+    color: #fbbf24;
+}
+
+html.dark-mode .theme-icon-moon {
+    opacity: 0;
+    transform: rotate(-75deg) scale(0.55);
+}
+
+html.dark-mode .theme-icon-sun {
+    opacity: 1;
+    transform: rotate(0deg) scale(1);
+}
+
+.theme-fade-veil {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 9998;
+    opacity: 0;
+    background: radial-gradient(circle at 50% 20%, rgba(45, 92, 57, 0.18), rgba(10, 18, 13, 0.26));
+}
+
+.theme-fade-veil.active {
+    animation: saThemeSoftFade 0.52s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+@keyframes saThemeSoftFade {
+    0% { opacity: 0; }
+    40% { opacity: 1; }
+    100% { opacity: 0; }
+}
+
+html.theme-transitioning,
+html.theme-transitioning body,
+html.theme-transitioning header,
+html.theme-transitioning main,
+html.theme-transitioning section,
+html.theme-transitioning div,
+html.theme-transitioning article,
+html.theme-transitioning aside,
+html.theme-transitioning table,
+html.theme-transitioning tr,
+html.theme-transitioning th,
+html.theme-transitioning td,
+html.theme-transitioning form,
+html.theme-transitioning p,
+html.theme-transitioning h1,
+html.theme-transitioning h2,
+html.theme-transitioning h3,
+html.theme-transitioning h4,
+html.theme-transitioning span,
+html.theme-transitioning a,
+html.theme-transitioning button,
+html.theme-transitioning input,
+html.theme-transitioning select,
+html.theme-transitioning textarea,
+html.theme-transitioning label {
+    transition: background-color 0.48s cubic-bezier(0.22, 1, 0.36, 1),
+                color 0.48s cubic-bezier(0.22, 1, 0.36, 1),
+                border-color 0.48s cubic-bezier(0.22, 1, 0.36, 1),
+                box-shadow 0.48s cubic-bezier(0.22, 1, 0.36, 1) !important;
+}
+
+html.dark-mode {
+    color-scheme: dark;
+    --bg-main: #0e1611;
+    --white: #16231b;
+    --green: #3ea35d;
+    --dark-green: #86efac;
+    --light-green: rgba(62, 163, 93, 0.18);
+    --accent-green: #6ee7b7;
+    --text-dark: #e7f0e9;
+    --text-muted: #9ab09f;
+    --border-color: #26392c;
+    --shadow: 0 12px 32px rgba(0, 0, 0, 0.45);
+}
+
+html.dark-mode body {
+    background-color: #0e1611;
+    color: #e7f0e9;
+}
+
+html.dark-mode .sa-topbar,
+html.dark-mode .admin-topbar {
+    background-color: #131f17;
+    border-bottom-color: #243629;
+}
+
+html.dark-mode .menu-toggle {
+    color: #e7f0e9;
+}
+
+html.dark-mode .theme-toggle-btn {
+    background: #19281f;
+    border-color: #2b4031;
+    color: #e7f0e9;
+}
+
+html.dark-mode .theme-toggle-btn:hover {
+    background: #22372a;
+    border-color: #4ade80;
+    color: #86efac;
+}
+
+html.dark-mode .sa-live-indicator {
+    background: rgba(62, 163, 93, 0.16);
+    border-color: #2f573b;
+    color: #86efac;
+}
+
+html.dark-mode .profile-dropdown,
+html.dark-mode .sa-dropdown-menu {
+    background: #16231b;
+    border-color: #293e2f;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.65);
+}
+
+html.dark-mode .profile-dropdown-divider,
+html.dark-mode .dropdown-divider {
+    background: #243629;
+}
+
+html.dark-mode .welcome-banner,
+html.dark-mode .sa-hero-card {
+    background: linear-gradient(125deg, #16271d 0%, #16231b 78%);
+    border-color: #284030;
+}
+
+html.dark-mode .kpi-card,
+html.dark-mode .sa-stat-card,
+html.dark-mode .feature-card,
+html.dark-mode .sa-card,
+html.dark-mode .filter-toolbar,
+html.dark-mode .sa-table-toolbar,
+html.dark-mode .table-card,
+html.dark-mode .users-card,
+html.dark-mode .sa-table-container,
+html.dark-mode .sa-modal {
+    background: #16231b;
+    border-color: #26392c;
+    color: #e7f0e9;
+}
+
+html.dark-mode .sa-authority-item,
+html.dark-mode .quick-action-item,
+html.dark-mode .sa-action-btn,
+html.dark-mode .sa-diag-list li,
+html.dark-mode .search-field,
+html.dark-mode .toolbar-search,
+html.dark-mode .sa-select,
+html.dark-mode .sa-role-change-summary {
+    background: #1b2b21;
+    border-color: #2b4031;
+    color: #e7f0e9;
+}
+
+html.dark-mode .quick-action-item:hover,
+html.dark-mode .sa-action-btn:hover {
+    background: #22372a;
+    border-color: #4ade80;
+}
+
+html.dark-mode .quick-action-item strong,
+html.dark-mode .sa-action-btn strong,
+html.dark-mode .sa-modal-header h3 {
+    color: #eef6f0;
+}
+
+html.dark-mode .authority-details code,
+html.dark-mode .sa-diag-list code {
+    background: #111b15;
+    color: #86efac;
+}
+
+html.dark-mode .sa-btn-outline {
+    background: #1b2b21;
+    border-color: #2f4736;
+    color: #86efac;
+}
+
+html.dark-mode .sa-btn-outline:hover {
+    background: #243b2d;
+    border-color: #4ade80;
+}
+
+html.dark-mode th,
+html.dark-mode .perm-row.header {
+    background: #1b2b21;
+    color: #9ab09f;
+    border-color: #26392c;
+}
+
+html.dark-mode td,
+html.dark-mode .perm-row {
+    border-color: #223327;
+    color: #e7f0e9;
+}
+
+html.dark-mode tr:hover td {
+    background: #1d2e24;
+}
+
+html.dark-mode .sa-modal-header,
+html.dark-mode .sa-modal-footer {
+    background: #131f17;
+    border-color: #243629;
+}
+
+html.dark-mode .sa-modal-close {
+    background: #1f3125;
+    border-color: #2f4736;
+    color: #c2d4c6;
+}
+
+html.dark-mode .sa-form-group input,
+html.dark-mode .sa-form-group select {
+    background: #111b15;
+    border-color: #2b4031;
+    color: #e7f0e9;
+}
+

@@ -10,6 +10,110 @@
     'use strict';
 
     // ----------------------------------------------------------
+    // 0. UNIVERSAL DARK MODE PREFERENCE PERSISTENCE ENGINE
+    // ----------------------------------------------------------
+    const THEME_STORAGE_KEY = 'urbanscope_theme';
+    let globalThemeTimer = null;
+
+    function getSavedUserTheme() {
+        try {
+            const fromLocal = localStorage.getItem(THEME_STORAGE_KEY);
+            if (fromLocal === 'dark' || fromLocal === 'light') return fromLocal;
+        } catch (_) {}
+
+        try {
+            const cookieMatch = document.cookie.match(/(?:^|;\s*)urbanscope_theme=(dark|light)(?:;|$)/);
+            if (cookieMatch && (cookieMatch[1] === 'dark' || cookieMatch[1] === 'light')) {
+                try { localStorage.setItem(THEME_STORAGE_KEY, cookieMatch[1]); } catch (_) {}
+                return cookieMatch[1];
+            }
+        } catch (_) {}
+
+        try {
+            if (window.name && /__urbanscope_theme=(dark|light)/.test(window.name)) {
+                const nameMatch = window.name.match(/__urbanscope_theme=(dark|light)/)[1];
+                try { localStorage.setItem(THEME_STORAGE_KEY, nameMatch); } catch (_) {}
+                return nameMatch;
+            }
+        } catch (_) {}
+
+        return 'light';
+    }
+
+    function persistUserTheme(mode) {
+        const clean = mode === 'dark' ? 'dark' : 'light';
+        try {
+            localStorage.setItem(THEME_STORAGE_KEY, clean);
+        } catch (_) {}
+        try {
+            document.cookie = 'urbanscope_theme=' + clean + '; path=/; max-age=31536000; SameSite=Lax';
+        } catch (_) {}
+        try {
+            const baseName = String(window.name || '').replace(/\s*__urbanscope_theme=(?:dark|light)/g, '').trim();
+            window.name = (baseName ? baseName + ' ' : '') + '__urbanscope_theme=' + clean;
+        } catch (_) {}
+    }
+
+    function applyUserTheme(mode, animate) {
+        const root = document.documentElement;
+        const isDark = mode === 'dark';
+
+        if (animate) {
+            root.classList.add('theme-transitioning');
+            let veil = document.getElementById('themeFadeVeil');
+            if (!veil && document.body) {
+                veil = document.createElement('div');
+                veil.id = 'themeFadeVeil';
+                veil.className = 'theme-fade-veil';
+                veil.setAttribute('aria-hidden', 'true');
+                document.body.appendChild(veil);
+            }
+            if (veil) {
+                veil.classList.remove('active');
+                void veil.offsetWidth;
+                veil.classList.add('active');
+            }
+            if (globalThemeTimer) clearTimeout(globalThemeTimer);
+            globalThemeTimer = setTimeout(() => {
+                root.classList.remove('theme-transitioning');
+                if (veil) veil.classList.remove('active');
+            }, 560);
+        }
+
+        root.classList.toggle('dark-mode', isDark);
+        root.setAttribute('data-theme', isDark ? 'dark' : 'light');
+        persistUserTheme(isDark ? 'dark' : 'light');
+
+        document.querySelectorAll('.theme-toggle-btn').forEach(btn => {
+            btn.setAttribute('aria-pressed', String(isDark));
+            btn.setAttribute('aria-label', isDark ? 'Switch to light mode' : 'Switch to dark mode');
+            btn.setAttribute('title', isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode');
+        });
+    }
+
+    // Apply saved theme immediately on script evaluation in <head>
+    applyUserTheme(getSavedUserTheme(), false);
+
+    window.addEventListener('pageshow', () => {
+        applyUserTheme(getSavedUserTheme(), false);
+    });
+
+    window.addEventListener('storage', (e) => {
+        if (e.key === THEME_STORAGE_KEY && (e.newValue === 'dark' || e.newValue === 'light')) {
+            applyUserTheme(e.newValue, true);
+        }
+    });
+
+    window.UrbanTheme = {
+        get: getSavedUserTheme,
+        set: applyUserTheme,
+        toggle: function () {
+            const currentlyDark = document.documentElement.classList.contains('dark-mode') || getSavedUserTheme() === 'dark';
+            applyUserTheme(currentlyDark ? 'light' : 'dark', true);
+        }
+    };
+
+    // ----------------------------------------------------------
     // 1. SUPABASE CONFIGURATION
     // ----------------------------------------------------------
     const SUPABASE_URL = 'https://vfspjuqymfbagesjxjmc.supabase.co';

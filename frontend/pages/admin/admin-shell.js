@@ -6,6 +6,113 @@
 (function () {
     "use strict";
 
+    const THEME_STORAGE_KEY = "urbanscope_theme";
+    const root = document.documentElement;
+    let themeTransitionTimer = null;
+
+    try {
+        const savedTheme = (window.UrbanTheme && typeof window.UrbanTheme.get === "function")
+            ? window.UrbanTheme.get()
+            : localStorage.getItem(THEME_STORAGE_KEY);
+        if (savedTheme === "dark") {
+            root.classList.add("dark-mode");
+            root.setAttribute("data-theme", "dark");
+        } else {
+            root.classList.remove("dark-mode");
+            root.setAttribute("data-theme", "light");
+        }
+    } catch (_) {}
+
+    function setAdminTheme(mode, animate) {
+        const isDark = mode === "dark";
+        const cleanMode = isDark ? "dark" : "light";
+        if (window.UrbanTheme && typeof window.UrbanTheme.set === "function") {
+            window.UrbanTheme.set(cleanMode, animate);
+            return;
+        }
+        if (animate) {
+            root.classList.add("theme-transitioning");
+            let veil = document.getElementById("themeFadeVeil");
+            if (!veil && document.body) {
+                veil = document.createElement("div");
+                veil.id = "themeFadeVeil";
+                veil.className = "theme-fade-veil";
+                veil.setAttribute("aria-hidden", "true");
+                document.body.appendChild(veil);
+            }
+            if (veil) {
+                veil.classList.remove("active");
+                void veil.offsetWidth;
+                veil.classList.add("active");
+            }
+            if (themeTransitionTimer) clearTimeout(themeTransitionTimer);
+            themeTransitionTimer = setTimeout(() => {
+                root.classList.remove("theme-transitioning");
+                if (veil) veil.classList.remove("active");
+            }, 560);
+        }
+
+        root.classList.toggle("dark-mode", isDark);
+        root.setAttribute("data-theme", cleanMode);
+        try { localStorage.setItem(THEME_STORAGE_KEY, cleanMode); } catch (_) {}
+        try { document.cookie = "urbanscope_theme=" + cleanMode + "; path=/; max-age=31536000; SameSite=Lax"; } catch (_) {}
+        try {
+            const baseName = String(window.name || "").replace(/\s*__urbanscope_theme=(?:dark|light)/g, "").trim();
+            window.name = (baseName ? baseName + " " : "") + "__urbanscope_theme=" + cleanMode;
+        } catch (_) {}
+
+        document.querySelectorAll(".theme-toggle-btn").forEach(btn => {
+            btn.setAttribute("aria-pressed", String(isDark));
+            btn.setAttribute("aria-label", isDark ? "Switch to light mode" : "Switch to dark mode");
+            btn.setAttribute("title", isDark ? "Switch to Light Mode" : "Switch to Dark Mode");
+        });
+    }
+
+    function initAdminThemeToggle() {
+        const topbarRight = document.querySelector(".topbar-right");
+        if (!topbarRight || topbarRight.querySelector(".theme-toggle-btn")) return;
+
+        const isDark = root.classList.contains("dark-mode") || root.getAttribute("data-theme") === "dark";
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "theme-toggle-btn";
+        btn.id = "adminThemeToggleBtn";
+        btn.setAttribute("aria-pressed", String(isDark));
+        btn.setAttribute("aria-label", isDark ? "Switch to light mode" : "Switch to dark mode");
+        btn.setAttribute("title", isDark ? "Switch to Light Mode" : "Switch to Dark Mode");
+        btn.innerHTML =
+            '<span class="theme-icon-wrap" aria-hidden="true">' +
+            '<svg class="theme-icon theme-icon-moon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' +
+            '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>' +
+            '</svg>' +
+            '<svg class="theme-icon theme-icon-sun" width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' +
+            '<circle cx="12" cy="12" r="5"></circle>' +
+            '<line x1="12" y1="1" x2="12" y2="3"></line>' +
+            '<line x1="12" y1="21" x2="12" y2="23"></line>' +
+            '<line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>' +
+            '<line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>' +
+            '<line x1="1" y1="12" x2="3" y2="12"></line>' +
+            '<line x1="21" y1="12" x2="23" y2="12"></line>' +
+            '<line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>' +
+            '<line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>' +
+            '</svg>' +
+            '</span>';
+
+        btn.addEventListener("click", function (e) {
+            e.stopPropagation();
+            const currentlyDark = root.classList.contains("dark-mode") || root.getAttribute("data-theme") === "dark";
+            setAdminTheme(currentlyDark ? "light" : "dark", true);
+        });
+
+        topbarRight.insertBefore(btn, topbarRight.firstChild);
+    }
+
+    window.addEventListener("storage", function (e) {
+        if (e.key === THEME_STORAGE_KEY) {
+            setAdminTheme(e.newValue === "dark" ? "dark" : "light", true);
+        }
+    });
+
     function initAdminSidebar() {
         const sidebar = document.getElementById("adminSidebar");
         const backdrop = document.getElementById("sidebarBackdrop");
@@ -751,6 +858,7 @@
     // Initialize on DOM Ready
     if (document.readyState === "loading") {
         document.addEventListener("DOMContentLoaded", function () {
+            initAdminThemeToggle();
             initAdminSidebar();
             initProfileDropdown();
             initNotificationDropdown();
@@ -758,6 +866,7 @@
             syncAdminProfileDisplay();
         });
     } else {
+        initAdminThemeToggle();
         initAdminSidebar();
         initProfileDropdown();
         initNotificationDropdown();

@@ -1502,3 +1502,375 @@
         font-size: 1.15rem;
     }
 }
+
+/* ==========================================================================
+   Dark Mode Overrides for Homepage (html.dark-mode)
+   ========================================================================== */
+html.dark-mode .featured,
+html.dark-mode .testimonials-section {
+    background-color: #0e1611;
+}
+
+html.dark-mode .about,
+html.dark-mode .faqs-section {
+    background-color: #121c16;
+    border-top-color: #213226;
+    border-bottom-color: #213226;
+}
+
+html.dark-mode .featured-title,
+html.dark-mode .about-text h2,
+html.dark-mode .testimonials-heading h2,
+html.dark-mode .faqs-heading h2 {
+    color: #6ee7b7;
+}
+
+html.dark-mode .home-sort-control label,
+html.dark-mode .testimonials-heading p,
+html.dark-mode .faqs-heading p {
+    color: #9ab09f;
+}
+
+html.dark-mode .home-sort-control select {
+    background: #16231b;
+    border-color: #2b4031;
+    color: #e7f0e9;
+}
+
+html.dark-mode .home-sort-control select:hover,
+html.dark-mode .home-sort-control select:focus {
+    border-color: #4ade80;
+    box-shadow: 0 0 0 3px rgba(74, 222, 128, 0.16);
+}
+
+html.dark-mode .category-tabs-container {
+    background-color: #152119;
+    border-color: #26392c;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+}
+
+html.dark-mode .cat-arrow {
+    background: #1c2d22;
+    border-color: #2f4736;
+    color: #86efac;
+}
+
+html.dark-mode .cat-arrow:hover {
+    background: #3ea35d;
+    border-color: #3ea35d;
+    color: #ffffff;
+}
+
+html.dark-mode .cat-tab {
+    color: #a5b9aa;
+}
+
+html.dark-mode .cat-tab:hover {
+    color: #e7f0e9;
+}
+
+html.dark-mode .cat-tab.active {
+    color: #86efac;
+}
+
+html.dark-mode .cat-tab.active::after {
+    background-color: #4ade80;
+}
+
+html.dark-mode .hero-overlay {
+    background: linear-gradient(90deg, rgba(8, 18, 11, 0.80) 0%, rgba(8, 18, 11, 0.56) 60%, rgba(8, 18, 11, 0.44) 100%);
+}
+
+html.dark-mode .property-card {
+    background: #16231b;
+    border-color: #26392c;
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.42);
+}
+
+html.dark-mode .property-card:hover {
+    border-color: #3ea35d;
+    box-shadow: 0 18px 38px rgba(0, 0, 0, 0.55);
+}
+
+html.dark-mode .property-image {
+    background-color: #0f1812;
+}
+
+html.dark-mode .property-image img {
+    filter: brightness(0.75) contrast(1.04) saturate(0.92);
+    transition: transform 0.35s ease, filter 0.35s ease;
+}
+
+html.dark-mode .property-card:hover .property-image img {
+    filter: brightness(0.86) contrast(1.03) saturate(0.98);
+}
+
+html.dark-mode .property-image::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+        180deg,
+        rgba(8, 16, 11, 0.26) 0%,
+        rgba(8, 16, 11, 0.14) 55%,
+        rgba(22, 35, 27, 0.56) 100%
+    );
+    pointer-events: none;
+    z-index: 2;
+    transition: opacity 0.35s ease;
+}
+
+html.dark-mode .property-card:hover .property-image::after {
+    opacity: 0.72;
+}
+
+html.dark-mode .property-card.card-sold {
+    background: #131c16;
+    border-color: #233227;
+}
+
+html.dark-mode .property-card.card-sold .property-image img {
+    filter: grayscale(100%) brightness(0.62) contrast(0.92);
+}
+
+html.dark-mode .property-card.card-sold .property-info {
+    background: #131c16;
+}
+
+html.dark-mode .about-image-card img {
+    filter: brightness(0.84) contrast(1.03);
+    transition: filter 0.35s ease;
+}
+
+html.dark-mode .property-info h3 {
+    color: #86efac;
+}
+
+html.dark-mode .property-location {
+    color: #a5b9aa;
+}
+
+html.dark-mode .property-details {
+    color: #bfd0c3;
+    border-bottom-color: #243629;
+}
+
+html.dark-mode .property-price {
+    color: #e7f0e9;
+}
+
+html.dark-mode .tcp-pill-tag {
+    background: rgba(62, 163, 93, 0.2);
+    color: #86efac;
+    border-color: #2f573b;
+}
+
+html.dark-mode .price-prefix,
+html.dark-mode .tcp-subtext {
+    color: #9ab09f;
+}
+
+html.dark-mode .view-all-pill {
+    background: #16231b;
+    border-color: #2f4736;
+    color: #e7f0e9;
+}
+
+html.dark-mode .view-all-pill:hover {
+    background: #22372a;
+    border-color: #4ade80;
+    color: #86efac;
+}
+
+html.dark-mode .about-text p {
+    color: #c2d4c6;
+}
+
+html.dark-mode .testimonial-card {
+    background: #16231b;
+    border-color: #26392c;
+    box-shadow: 0 10px 28px rgba(0, 0, 0, 0.4);
+}
+
+html.dark-mode .testimonial-card:hover {
+    border-color: #3ea35d;
+}
+
+html.dark-mode .testimonial-quote {
+    color: #c7d8cb;
+}
+
+html.dark-mode .author-info strong {
+    color: #eef6f0;
+}
+
+html.dark-mode .author-info span {
+    color: #9ab09f;
+}
+
+html.dark-mode .faqs-badge {
+    background: rgba(62, 163, 93, 0.18);
+    border-color: #2e5439;
+    color: #86efac;
+}
+
+html.dark-mode .faq-item {
+    background: #16231b;
+    border-color: #26392c;
+}
+
+html.dark-mode .faq-item:hover,
+html.dark-mode .faq-item.active {
+    border-color: #3ea35d;
+    box-shadow: 0 10px 28px rgba(0, 0, 0, 0.45);
+}
+
+html.dark-mode .faq-question {
+    color: #eef6f0;
+}
+
+html.dark-mode .faq-icon {
+    background: #1f3326;
+    color: #86efac;
+}
+
+html.dark-mode .faq-item.active .faq-icon {
+    background: #3ea35d;
+    color: #ffffff;
+}
+
+html.dark-mode .faq-answer-inner {
+    border-top-color: #243629;
+    color: #c2d4c6;
+}
+
+html.dark-mode .faq-answer-inner strong {
+    color: #86efac;
+}
+
+html.dark-mode .faq-note {
+    color: #a5b9aa;
+}
+
+html.dark-mode .faq-disclaimer-note {
+    background: #111b15;
+    border-left-color: #4ade80;
+    color: #c2d4c6;
+}
+
+html.dark-mode .faqs-more-help {
+    background: #16231b;
+    border-color: #2f4736;
+}
+
+html.dark-mode .faqs-more-help p {
+    color: #c2d4c6;
+}
+
+html.dark-mode .faqs-contact-link {
+    background: #2d6a3e;
+    color: #ffffff;
+}
+
+html.dark-mode .faqs-contact-link:hover,
+html.dark-mode .search-submit:hover,
+html.dark-mode .learn-more-btn:hover {
+    background: #3ea35d;
+    color: #ffffff;
+}
+
+/* CTA Banner to Footer Seamless Transition in Dark Mode */
+html.dark-mode .cta-banner {
+    background-color: #090f0b;
+    border-bottom: none;
+}
+
+html.dark-mode .cta-overlay {
+    bottom: -2px;
+    background: linear-gradient(
+        180deg,
+        rgba(10, 22, 14, 0.48) 0%,
+        rgba(10, 22, 14, 0.54) 45%,
+        rgba(10, 20, 13, 0.66) 62%,
+        rgba(9, 18, 12, 0.80) 74%,
+        rgba(9, 16, 11, 0.94) 88%,
+        #090f0b 98%,
+        #090f0b 100%
+    );
+}
+
+html.dark-mode .cta-consult-btn:hover {
+    background: #3ea35d;
+    border-color: #4ade80;
+    color: #ffffff;
+}
+
+html.dark-mode .footer {
+    border-top: none !important;
+}
+
+/* Consultation Intent Modal Dark Mode */
+html.dark-mode .intent-modal-box {
+    background: #16231b;
+    border: 1px solid #293e2f;
+    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.65);
+}
+
+html.dark-mode .modal-header {
+    border-bottom-color: #243629;
+}
+
+html.dark-mode .modal-header-icon {
+    background: #1f3326;
+    border-color: #2f4e39;
+    color: #86efac;
+}
+
+html.dark-mode .modal-title-group h3 {
+    color: #eef6f0;
+}
+
+html.dark-mode .modal-subtitle {
+    color: #9ab09f;
+}
+
+html.dark-mode .modal-close {
+    background: #1f3125;
+    border-color: #2f4736;
+    color: #c2d4c6;
+}
+
+html.dark-mode .modal-close:hover {
+    background: #283f30;
+    color: #ffffff;
+}
+
+html.dark-mode .intent-card {
+    background: #1b2b21;
+    border-color: #2d4534;
+}
+
+html.dark-mode .intent-card:hover {
+    background: #203327;
+    border-color: #4ade80;
+}
+
+html.dark-mode .intent-card-badge,
+html.dark-mode .intent-card-badge.featured {
+    background: rgba(62, 163, 93, 0.2);
+    border-color: #2f573b;
+    color: #86efac;
+}
+
+html.dark-mode .intent-info h4 {
+    color: #eef6f0;
+}
+
+html.dark-mode .intent-info p {
+    color: #b4c8b9;
+}
+
+html.dark-mode .intent-link-text,
+html.dark-mode .intent-card:hover .intent-link-text {
+    color: #86efac;
+}

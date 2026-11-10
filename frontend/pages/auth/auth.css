@@ -2074,3 +2074,292 @@ body.otp-modal-open {
         gap: 4px;
     }
 }
+
+/* ==========================================================================
+   Dark Mode & Soft Fade Animation for Auth Pages (login / register / forgot)
+   ========================================================================== */
+.form-top-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.theme-toggle-btn {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    padding: 0;
+    border-radius: 50%;
+    border: 1px solid #d5e2d8;
+    background: #ffffff;
+    color: var(--brand-primary-green);
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease, transform 0.25s ease, box-shadow 0.3s ease;
+    flex-shrink: 0;
+}
+
+.theme-toggle-btn:hover {
+    background: #eef6f0;
+    border-color: var(--brand-primary-green);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(45, 92, 57, 0.14);
+}
+
+.theme-icon-wrap {
+    position: relative;
+    width: 18px;
+    height: 18px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.theme-icon {
+    position: absolute;
+    inset: 0;
+    margin: auto;
+    transition: opacity 0.42s cubic-bezier(0.22, 1, 0.36, 1), transform 0.48s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.theme-icon-moon {
+    opacity: 1;
+    transform: rotate(0deg) scale(1);
+}
+
+.theme-icon-sun {
+    opacity: 0;
+    transform: rotate(75deg) scale(0.55);
+    color: #fbbf24;
+}
+
+html.dark-mode .theme-icon-moon {
+    opacity: 0;
+    transform: rotate(-75deg) scale(0.55);
+}
+
+html.dark-mode .theme-icon-sun {
+    opacity: 1;
+    transform: rotate(0deg) scale(1);
+}
+
+.theme-fade-veil {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 9998;
+    opacity: 0;
+    background: radial-gradient(circle at 50% 20%, rgba(45, 92, 57, 0.18), rgba(10, 18, 13, 0.26));
+}
+
+.theme-fade-veil.active {
+    animation: authThemeSoftFade 0.52s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+@keyframes authThemeSoftFade {
+    0% { opacity: 0; }
+    40% { opacity: 1; }
+    100% { opacity: 0; }
+}
+
+html.theme-transitioning,
+html.theme-transitioning body,
+html.theme-transitioning div,
+html.theme-transitioning form,
+html.theme-transitioning p,
+html.theme-transitioning h1,
+html.theme-transitioning h2,
+html.theme-transitioning h3,
+html.theme-transitioning span,
+html.theme-transitioning a,
+html.theme-transitioning button,
+html.theme-transitioning input,
+html.theme-transitioning label {
+    transition: background-color 0.48s cubic-bezier(0.22, 1, 0.36, 1),
+                color 0.48s cubic-bezier(0.22, 1, 0.36, 1),
+                border-color 0.48s cubic-bezier(0.22, 1, 0.36, 1),
+                box-shadow 0.48s cubic-bezier(0.22, 1, 0.36, 1) !important;
+}
+
+html.dark-mode {
+    color-scheme: dark;
+    --brand-primary-green: #3ea35d;
+    --brand-dark-green: #86efac;
+    --brand-light-green: rgba(62, 163, 93, 0.18);
+    --text-primary: #e7f0e9;
+    --text-secondary: #b4c8b9;
+    --text-muted: #8ea594;
+    --bg-white: #0e1611;
+    --bg-input: #142018;
+    --border-light: #283d2e;
+}
+
+html.dark-mode body,
+html.dark-mode .main-container,
+html.dark-mode .form-panel {
+    background-color: #0e1611 !important;
+    color: #e7f0e9;
+}
+
+html.dark-mode .theme-toggle-btn {
+    background: #17241c;
+    border-color: #2b4031;
+    color: #e7f0e9;
+}
+
+html.dark-mode .theme-toggle-btn:hover {
+    background: #203327;
+    border-color: #4ade80;
+}
+
+html.dark-mode .back-home-link,
+html.dark-mode .form-brand-text .brand-title,
+html.dark-mode .welcome-header h1 {
+    color: #eef6f0;
+}
+
+html.dark-mode .back-home-link:hover,
+html.dark-mode .forgot-link,
+html.dark-mode .register-prompt a,
+html.dark-mode .inline-link {
+    color: #86efac;
+}
+
+html.dark-mode .form-group label,
+html.dark-mode .checkbox-label {
+    color: #d0e0d4;
+}
+
+html.dark-mode .input-box input {
+    background-color: #142018;
+    border-color: #2b4031;
+    color: #e7f0e9;
+}
+
+html.dark-mode .input-box input:focus {
+    background-color: #18271d;
+    border-color: #4ade80;
+    box-shadow: 0 0 0 3px rgba(74, 222, 128, 0.16);
+}
+
+html.dark-mode .input-box input::placeholder {
+    color: #78907f;
+}
+
+html.dark-mode .divider::before {
+    background-color: #243629;
+}
+
+html.dark-mode .divider span {
+    background-color: #0e1611;
+    color: #8ea594;
+}
+
+html.dark-mode .btn-google {
+    background-color: #16231b;
+    border-color: #2b4031;
+    color: #e7f0e9;
+}
+
+html.dark-mode .btn-google:hover {
+    background-color: #1f3126;
+    border-color: #4ade80;
+}
+
+html.dark-mode .form-footer {
+    border-top-color: #223327;
+}
+
+html.dark-mode .terms-label:hover {
+    background-color: #16231b;
+}
+
+html.dark-mode .terms-label.is-accepted {
+    background-color: rgba(62, 163, 93, 0.16);
+    border-color: #2f573b;
+    color: #86efac;
+}
+
+/* Auth Modals (Terms & OTP) in Dark Mode */
+html.dark-mode .terms-modal-card,
+html.dark-mode .otp-modal-card,
+html.dark-mode .admin-security-card {
+    background: #16231b;
+    border-color: #293e2f;
+    color: #e7f0e9;
+    box-shadow: 0 24px 64px rgba(0, 0, 0, 0.65);
+}
+
+html.dark-mode .terms-modal-header {
+    background: linear-gradient(180deg, #1b2c21 0%, #16231b 100%);
+    border-bottom-color: #26392c;
+}
+
+html.dark-mode .terms-modal-badge-icon,
+html.dark-mode .otp-modal-icon {
+    background: #1f3326;
+    border-color: #2f4e39;
+    color: #86efac;
+}
+
+html.dark-mode .terms-modal-heading h2,
+html.dark-mode .otp-modal-card h2,
+html.dark-mode .terms-doc-section h3 {
+    color: #eef6f0;
+}
+
+html.dark-mode .terms-modal-close,
+html.dark-mode .otp-modal-close {
+    background: #1f3125;
+    border-color: #2f4736;
+    color: #c2d4c6;
+}
+
+html.dark-mode .terms-modal-body {
+    background: #16231b;
+    scrollbar-color: rgba(134, 239, 172, 0.35) #111b15;
+}
+
+html.dark-mode .terms-part-banner,
+html.dark-mode .terms-part-banner.privacy-banner,
+html.dark-mode .terms-end-callout {
+    background: #1b2b21;
+    border-color: #2d4534;
+}
+
+html.dark-mode .terms-doc-section {
+    border-bottom-color: #243629;
+}
+
+html.dark-mode .terms-doc-section p,
+html.dark-mode .terms-doc-section li,
+html.dark-mode .otp-modal-copy {
+    color: #c2d4c6;
+}
+
+html.dark-mode .terms-doc-section strong,
+html.dark-mode .otp-modal-copy strong,
+html.dark-mode .otp-form label {
+    color: #86efac;
+}
+
+html.dark-mode .terms-modal-footer {
+    background: #131f17;
+    border-top-color: #26392c;
+}
+
+html.dark-mode .btn-terms-decline {
+    background: #1c2d22;
+    border-color: #2f4736;
+    color: #e7f0e9;
+}
+
+html.dark-mode .otp-form input {
+    background: #111b15;
+    border-color: #2b4031;
+    color: #86efac;
+}
+
