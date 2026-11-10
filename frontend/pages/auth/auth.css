@@ -2147,22 +2147,7 @@ html.dark-mode .theme-icon-sun {
 }
 
 .theme-fade-veil {
-    position: fixed;
-    inset: 0;
-    pointer-events: none;
-    z-index: 9998;
-    opacity: 0;
-    background: radial-gradient(circle at 50% 20%, rgba(45, 92, 57, 0.18), rgba(10, 18, 13, 0.26));
-}
-
-.theme-fade-veil.active {
-    animation: authThemeSoftFade 0.52s cubic-bezier(0.22, 1, 0.36, 1) forwards;
-}
-
-@keyframes authThemeSoftFade {
-    0% { opacity: 0; }
-    40% { opacity: 1; }
-    100% { opacity: 0; }
+    display: none !important;
 }
 
 html.theme-transitioning,
@@ -2198,7 +2183,6 @@ html.dark-mode {
 }
 
 html.dark-mode body,
-html.dark-mode .main-container,
 html.dark-mode .form-panel {
     background-color: #0e1611 !important;
     color: #e7f0e9;

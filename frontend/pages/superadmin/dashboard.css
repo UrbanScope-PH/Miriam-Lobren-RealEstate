@@ -1959,22 +1959,7 @@ html.dark-mode .theme-icon-sun {
 }
 
 .theme-fade-veil {
-    position: fixed;
-    inset: 0;
-    pointer-events: none;
-    z-index: 9998;
-    opacity: 0;
-    background: radial-gradient(circle at 50% 20%, rgba(45, 92, 57, 0.18), rgba(10, 18, 13, 0.26));
-}
-
-.theme-fade-veil.active {
-    animation: saThemeSoftFade 0.52s cubic-bezier(0.22, 1, 0.36, 1) forwards;
-}
-
-@keyframes saThemeSoftFade {
-    0% { opacity: 0; }
-    40% { opacity: 1; }
-    100% { opacity: 0; }
+    display: none !important;
 }
 
 html.theme-transitioning,
