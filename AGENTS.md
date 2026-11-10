@@ -847,6 +847,16 @@ path when rendering from a page.
 83. **Preferred Date & Time Schedule Fields in Specific Property Inquiry (`inquiry.html`, `inquiry.js`):**
     - Updated `#propertySection` on `/pages/inquiry/inquiry.html` to include the 3-column `.consultation-fields-grid` (`Select Listing*`, `Preferred Date (Optional)`, and `Preferred Time / Slot (Optional)`), matching the layout of the General Consultation tab while displaying the selected property summary card underneath.
     - Updated `submitInquiry()`, `resetFormAndCloseModal()`, and `DOMContentLoaded` in `frontend/pages/inquiry/inquiry.js` so specific property inquiries attach `[Preferred Schedule: ...]` or `[Preferred Slot: ...]` to the submitted message and display the schedule badge in the submission confirmation modal and Admin inquiry detail modal.
+84. **Homepage FAQs Ranked by Buyer Priority (`index.html`):**
+    - Reordered the 8 FAQ items in `#faqsAccordion` on `frontend/index.html` from most universal buyer questions to specific buyer segments and legal edge cases:
+      1. *What are the initial requirements to apply for a property?* (expanded by default)
+      2. *How can I pay for my property?*
+      3. *How accessible is the subdivision and what transportation options are available?*
+      4. *If my salary is not enough, can I get a co-borrower to help pay for the property?*
+      5. *Can Overseas Filipino Workers (OFWs) purchase a house through bank financing, and what are the requirements?*
+      6. *Can a Virtual Assistant (VA) purchase a house?*
+      7. *Can a seafarer or ship captain purchase a house?*
+      8. *Can I purchase a house if I am legally married but separated?*
 
 
 
