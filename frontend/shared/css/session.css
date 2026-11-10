@@ -502,3 +502,660 @@ html[data-auth-state="logged-in"] .inquiry-note,
 .logged-in .inquiry-note {
     display: none !important;
 }
+
+/* ==========================================================================
+   Dark Mode Toggle Button & Soft Fade-In / Fade-Out Theme Animation
+   ========================================================================== */
+.theme-toggle-btn {
+    position: relative;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: 1.5px solid var(--border-color, #d1ddd3);
+    background: #ffffff;
+    color: var(--text-dark, #1b2e21);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    padding: 0;
+    flex-shrink: 0;
+    transition: background-color 0.35s ease, border-color 0.35s ease, color 0.35s ease, box-shadow 0.3s ease, transform 0.25s ease;
+}
+
+.theme-toggle-btn:hover {
+    border-color: var(--green, #2d5c39);
+    background: #f4f9f5;
+    box-shadow: 0 6px 18px rgba(45, 92, 57, 0.16);
+    transform: translateY(-1px);
+}
+
+.theme-icon-wrap {
+    position: relative;
+    width: 20px;
+    height: 20px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.theme-icon {
+    position: absolute;
+    transition: opacity 0.42s cubic-bezier(0.22, 1, 0.36, 1),
+                transform 0.42s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.theme-icon-moon {
+    opacity: 1;
+    transform: rotate(0deg) scale(1);
+}
+
+.theme-icon-sun {
+    opacity: 0;
+    transform: rotate(75deg) scale(0.55);
+    color: #fbbf24;
+}
+
+html.dark-mode .theme-icon-moon {
+    opacity: 0;
+    transform: rotate(-75deg) scale(0.55);
+}
+
+html.dark-mode .theme-icon-sun {
+    opacity: 1;
+    transform: rotate(0deg) scale(1);
+}
+
+/* Soft ambient crossfade veil when toggling themes */
+.theme-fade-veil {
+    display: none !important;
+}
+
+/* Smooth fade-in and fade-out transitions across all surfaces when switching theme */
+html.theme-transitioning,
+html.theme-transitioning body,
+html.theme-transitioning header,
+html.theme-transitioning nav,
+html.theme-transitioning main,
+html.theme-transitioning section,
+html.theme-transitioning footer,
+html.theme-transitioning div,
+html.theme-transitioning article,
+html.theme-transitioning aside,
+html.theme-transitioning form,
+html.theme-transitioning p,
+html.theme-transitioning h1,
+html.theme-transitioning h2,
+html.theme-transitioning h3,
+html.theme-transitioning h4,
+html.theme-transitioning span,
+html.theme-transitioning a,
+html.theme-transitioning button,
+html.theme-transitioning input,
+html.theme-transitioning select,
+html.theme-transitioning textarea,
+html.theme-transitioning label,
+html.theme-transitioning img {
+    transition: background-color 0.48s cubic-bezier(0.22, 1, 0.36, 1),
+                color 0.48s cubic-bezier(0.22, 1, 0.36, 1),
+                border-color 0.48s cubic-bezier(0.22, 1, 0.36, 1),
+                box-shadow 0.48s cubic-bezier(0.22, 1, 0.36, 1),
+                filter 0.48s cubic-bezier(0.22, 1, 0.36, 1) !important;
+}
+
+/* ==========================================================================
+   Dark Mode Theme Palette (html.dark-mode)
+   ========================================================================== */
+html.dark-mode {
+    color-scheme: dark;
+    --green: #3ea35d;
+    --dark-green: #86efac;
+    --light-green: rgba(62, 163, 93, 0.18);
+    --accent-green: #6ee7b7;
+    --text-dark: #e7f0e9;
+    --text-muted: #9ab09f;
+    --border-color: #26392c;
+    --card-shadow: 0 12px 32px rgba(0, 0, 0, 0.45);
+}
+
+html.dark-mode body {
+    background-color: #0e1611;
+    color: var(--text-dark);
+}
+
+/* Navbar & Topbars */
+html.dark-mode .navbar,
+html.dark-mode .inquiry-topbar,
+html.dark-mode .history-topbar {
+    background-color: rgba(14, 22, 17, 0.94);
+    border-bottom: 1px solid #223327;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+}
+
+html.dark-mode .theme-toggle-btn,
+html.dark-mode .client-notif-btn,
+html.dark-mode .profile-chip {
+    background: #17241c;
+    border-color: #2b4031;
+    color: #e7f0e9;
+}
+
+html.dark-mode .theme-toggle-btn:hover,
+html.dark-mode .client-notif-btn:hover,
+html.dark-mode .profile-chip:hover {
+    background: #203327;
+    border-color: #4ade80;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.45);
+}
+
+html.dark-mode .login-btn,
+html.dark-mode .go-back-btn,
+html.dark-mode .history-pill-link {
+    background-color: #17241c;
+    color: #d8ebe0;
+    border-color: #2e4535;
+}
+
+html.dark-mode .login-btn:hover,
+html.dark-mode .go-back-btn:hover,
+html.dark-mode .history-pill-link:hover {
+    background-color: #213528;
+    border-color: #4ade80;
+    color: #86efac;
+}
+
+/* Dropdowns (Profile & Notifications) */
+html.dark-mode .profile-dropdown,
+html.dark-mode .client-notif-dropdown {
+    background: #152119;
+    border-color: #293e2f;
+    box-shadow: 0 18px 42px rgba(0, 0, 0, 0.6);
+}
+
+html.dark-mode .profile-dropdown-head,
+html.dark-mode .client-notif-head {
+    background: #19281f;
+    border-bottom-color: #26392c;
+}
+
+html.dark-mode .profile-dropdown-head strong,
+html.dark-mode .client-notif-head strong,
+html.dark-mode .profile-dropdown a,
+html.dark-mode .profile-dropdown button,
+html.dark-mode .client-notif-item {
+    color: #e7f0e9;
+}
+
+html.dark-mode .profile-dropdown a:hover,
+html.dark-mode .profile-dropdown button:hover,
+html.dark-mode .client-notif-item:hover {
+    background: #213528;
+    color: #86efac;
+}
+
+html.dark-mode .client-notif-item {
+    border-bottom-color: #223327;
+}
+
+html.dark-mode .client-notif-item.unread {
+    background: #1c2e22;
+}
+
+html.dark-mode .client-notif-body strong {
+    color: #86efac;
+}
+
+html.dark-mode .client-notif-body p {
+    color: #bfd0c3;
+}
+
+/* Floating Hero Search Bar */
+html.dark-mode .search-bar {
+    background: #152119;
+    border: 1px solid #283d2e;
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.55);
+}
+
+html.dark-mode .search-bar label {
+    border-right-color: #283d2e;
+    color: #9ab09f;
+}
+
+html.dark-mode .search-bar select,
+html.dark-mode .search-bar input {
+    background: transparent;
+    color: #e7f0e9;
+}
+
+html.dark-mode .search-bar select option {
+    background: #152119;
+    color: #e7f0e9;
+}
+
+/* Homepage Sections & Cards */
+html.dark-mode .properties-section,
+html.dark-mode .testimonials-section {
+    background-color: #0e1611;
+}
+
+html.dark-mode .about,
+html.dark-mode .faqs-section {
+    background-color: #121c16;
+    border-color: #213226;
+}
+
+html.dark-mode .property-card,
+html.dark-mode .testimonial-card,
+html.dark-mode .faq-item {
+    background-color: #16231b;
+    border-color: #26392c;
+    box-shadow: 0 10px 28px rgba(0, 0, 0, 0.38);
+}
+
+html.dark-mode .property-card:hover,
+html.dark-mode .faq-item.active {
+    border-color: #3ea35d;
+}
+
+html.dark-mode .card-title,
+html.dark-mode .testimonial-author,
+html.dark-mode .faq-question {
+    color: #eef6f0;
+}
+
+html.dark-mode .card-loc,
+html.dark-mode .about-text p,
+html.dark-mode .testimonial-quote,
+html.dark-mode .faq-answer-inner,
+html.dark-mode .faqs-more-help p {
+    color: #c2d4c6;
+}
+
+html.dark-mode .price,
+html.dark-mode .about-text h2,
+html.dark-mode .properties-header h2,
+html.dark-mode .testimonials-heading h2,
+html.dark-mode .faqs-heading h2 {
+    color: #6ee7b7;
+}
+
+html.dark-mode .specs {
+    border-top-color: #243629;
+    border-bottom-color: #243629;
+    color: #b7cabe;
+}
+
+html.dark-mode .view-details,
+html.dark-mode .view-all-pill,
+html.dark-mode .sort-select-wrap select {
+    background-color: #1c2d22;
+    border-color: #2f4736;
+    color: #e7f0e9;
+}
+
+html.dark-mode .view-details:hover,
+html.dark-mode .view-all-pill:hover {
+    background-color: #2d5c39;
+    border-color: #3ea35d;
+    color: #ffffff;
+}
+
+html.dark-mode .faq-icon,
+html.dark-mode .faqs-badge {
+    background-color: #1f3326;
+    color: #86efac;
+}
+
+html.dark-mode .faq-item.active .faq-icon {
+    background-color: #3ea35d;
+    color: #ffffff;
+}
+
+html.dark-mode .faq-disclaimer-note {
+    background-color: #121d16;
+    border-left-color: #4ade80;
+    color: #c4d6c8;
+}
+
+/* Property Detail, Inquiry, History, Legal & Modals */
+html.dark-mode .detail-page,
+html.dark-mode .detail-container,
+html.dark-mode .inquiry-page-container,
+html.dark-mode .history-main,
+html.dark-mode .history-container,
+html.dark-mode .legal-page {
+    background-color: transparent;
+    color: #e7f0e9;
+}
+
+html.dark-mode .overview-box,
+html.dark-mode .amenities-box,
+html.dark-mode .specs-bar,
+html.dark-mode .tcp-section,
+html.dark-mode .tcp-kpi-card,
+html.dark-mode .inquiry-card,
+html.dark-mode .inquiry-form-card,
+html.dark-mode .history-card,
+html.dark-mode .stat-pill,
+html.dark-mode .empty-state,
+html.dark-mode .legal-card,
+html.dark-mode .legal-content-card,
+html.dark-mode .legal-sidebar,
+html.dark-mode .legal-toc,
+html.dark-mode .modal-box,
+html.dark-mode .intent-modal-box,
+html.dark-mode .tcp-document-modal {
+    background-color: #16231b;
+    border-color: #26392c;
+    color: #e7f0e9;
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.45);
+}
+
+html.dark-mode .spec-item {
+    border-right-color: #26392c;
+}
+
+html.dark-mode .spec-icon,
+html.dark-mode .inquiry-icon-circle,
+html.dark-mode .tcp-doc-icon,
+html.dark-mode .empty-state-icon {
+    background-color: #1f3326;
+    border-color: #2f4e39;
+    color: #86efac;
+}
+
+html.dark-mode .spec-info strong,
+html.dark-mode .detail-block h2,
+html.dark-mode .inquiry-card h3,
+html.dark-mode .tcp-header h2,
+html.dark-mode .tcp-kpi-card strong,
+html.dark-mode .tcp-doc-text h4,
+html.dark-mode .tcp-document-modal-header h3,
+html.dark-mode .inquiry-header h1,
+html.dark-mode .section-block h3,
+html.dark-mode .history-header-text h1,
+html.dark-mode .stat-pill-info strong,
+html.dark-mode .section-head h2,
+html.dark-mode .legal-section h3,
+html.dark-mode .legal-sidebar h3,
+html.dark-mode .legal-contact-info h3 {
+    color: #eef6f0;
+}
+
+html.dark-mode .detail-block p,
+html.dark-mode .amenities-grid li,
+html.dark-mode .inquiry-card > p,
+html.dark-mode .tcp-header p,
+html.dark-mode .tcp-doc-text p,
+html.dark-mode .tcp-footnote,
+html.dark-mode .inquiry-header p,
+html.dark-mode .history-header-text p,
+html.dark-mode .legal-section p,
+html.dark-mode .legal-section ul,
+html.dark-mode .legal-contact-info p {
+    color: #c2d4c6;
+}
+
+html.dark-mode .carousel-arrow,
+html.dark-mode .tcp-document-modal-close,
+html.dark-mode .modal-back-btn,
+html.dark-mode .modal-close-btn {
+    background-color: #1c2d22;
+    border-color: #2f4736;
+    color: #e7f0e9;
+}
+
+html.dark-mode .carousel-arrow:hover,
+html.dark-mode .tcp-document-modal-close:hover,
+html.dark-mode .modal-back-btn:hover,
+html.dark-mode .modal-close-btn:hover {
+    background-color: #2d5c39;
+    color: #ffffff;
+}
+
+html.dark-mode .tcp-table th,
+html.dark-mode .legal-table th {
+    background-color: #1c2d22;
+    color: #86efac;
+    border-color: #293e2f;
+}
+
+html.dark-mode .tcp-table td,
+html.dark-mode .legal-table td,
+html.dark-mode .legal-table tr:nth-child(even) td {
+    background-color: #16231b;
+    color: #d8ebe0;
+    border-color: #243629;
+}
+
+html.dark-mode .tcp-document-modal-header {
+    background: #19281f;
+    border-bottom-color: #26392c;
+}
+
+html.dark-mode .tcp-document-modal-image-wrap {
+    background: #0f1812;
+}
+
+html.dark-mode .tcp-doc-card,
+html.dark-mode .property-summary-box,
+html.dark-mode .intent-card,
+html.dark-mode .inquiry-mode-selector,
+html.dark-mode .card-message-box,
+html.dark-mode .legal-callout,
+html.dark-mode .legal-contact-box,
+html.dark-mode .success-card,
+html.dark-mode .success-schedule-box {
+    background: #1b2b21;
+    border-color: #2d4534;
+    color: #e7f0e9;
+}
+
+html.dark-mode .tcp-doc-btn {
+    background: #2d6a3e;
+    border: 1px solid #3ea35d;
+    color: #ffffff;
+}
+
+html.dark-mode .legal-callout.warning,
+html.dark-mode .sold-property-notice {
+    background-color: rgba(217, 119, 6, 0.14);
+    border-color: rgba(245, 158, 11, 0.35);
+    color: #fde68a;
+}
+
+html.dark-mode .sold-property-notice strong,
+html.dark-mode .sold-property-notice p {
+    color: #fde68a;
+}
+
+html.dark-mode .approved-banner {
+    background: rgba(34, 197, 94, 0.14);
+    border-color: rgba(74, 222, 128, 0.32);
+    color: #bbf7d0;
+}
+
+html.dark-mode .approved-banner strong,
+html.dark-mode .approved-banner span {
+    color: #bbf7d0;
+}
+
+html.dark-mode .mode-tab,
+html.dark-mode .filter-tab {
+    background-color: #16231b;
+    border-color: #293e2f;
+    color: #b4c8b9;
+}
+
+html.dark-mode .mode-tab.active,
+html.dark-mode .filter-tab.active {
+    background-color: #284231;
+    border-color: #3ea35d;
+    color: #86efac;
+}
+
+html.dark-mode .section-block,
+html.dark-mode .form-actions-row,
+html.dark-mode .card-actions-row,
+html.dark-mode .section-head,
+html.dark-mode .modal-header,
+html.dark-mode .modal-footer,
+html.dark-mode .success-card-header {
+    border-color: #243629;
+}
+
+html.dark-mode .success-modal-hero {
+    background: linear-gradient(180deg, #1b2e22 0%, #16231b 100%);
+    border-bottom-color: #26392c;
+}
+
+html.dark-mode .success-modal-hero h2,
+html.dark-mode .success-prop-info h4,
+html.dark-mode .success-schedule-info strong,
+html.dark-mode .success-client-item strong {
+    color: #eef6f0;
+}
+
+html.dark-mode .success-modal-hero p,
+html.dark-mode .success-note {
+    color: #b4c8b9;
+}
+
+html.dark-mode .modal-footer.success-modal-footer {
+    background: #131f17;
+    border-top-color: #243629;
+}
+
+html.dark-mode .cancel-btn,
+html.dark-mode .btn-secondary,
+html.dark-mode .btn-modify,
+html.dark-mode .btn-contact-secondary {
+    background-color: #1c2d22;
+    border-color: #2f4736;
+    color: #e7f0e9;
+}
+
+html.dark-mode .cancel-btn:hover,
+html.dark-mode .btn-secondary:hover,
+html.dark-mode .btn-modify:hover,
+html.dark-mode .btn-contact-secondary:hover {
+    background-color: #263d2e;
+    border-color: #4ade80;
+    color: #86efac;
+}
+
+html.dark-mode .toc-list a {
+    color: #b4c8b9;
+}
+
+html.dark-mode .toc-list a:hover,
+html.dark-mode .toc-list a.active {
+    background-color: #1f3326;
+    color: #86efac;
+}
+
+html.dark-mode input,
+html.dark-mode select,
+html.dark-mode textarea,
+html.dark-mode .form-input,
+html.dark-mode .form-select,
+html.dark-mode .form-textarea,
+html.dark-mode .search-input {
+    background-color: #111b15;
+    border-color: #2b4031;
+    color: #e7f0e9;
+}
+
+html.dark-mode input[readonly] {
+    background-color: #142018 !important;
+    color: #9ab09f !important;
+}
+
+html.dark-mode input::placeholder,
+html.dark-mode textarea::placeholder {
+    color: #78907f;
+}
+
+/* Mobile Drawer in Dark Mode */
+@media (max-width: 768px) {
+    html.dark-mode .navbar nav {
+        background-color: #131f17;
+        border-bottom-color: #26392c;
+    }
+
+    html.dark-mode .mobile-drawer-auth {
+        border-top-color: #26392c;
+    }
+
+    html.dark-mode .mobile-drawer-auth .m-login-btn {
+        border-color: #2f4736;
+        color: #e7f0e9;
+    }
+}
+
+html.dark-mode .signup-btn:hover,
+html.dark-mode .inquire-btn:hover,
+html.dark-mode .tcp-doc-btn:hover,
+html.dark-mode .submit-btn:hover,
+html.dark-mode .btn-primary:hover,
+html.dark-mode .new-inquiry-btn:hover,
+html.dark-mode .btn-save:hover,
+html.dark-mode .btn-confirm:hover,
+html.dark-mode .btn-contact-primary:hover,
+html.dark-mode .mobile-drawer-auth .m-signup-btn:hover {
+    background-color: #2f8548;
+    border-color: #3ea35d;
+    color: #ffffff;
+}
+
+html.dark-mode .cta-overlay {
+    bottom: -2px;
+    background: linear-gradient(
+        180deg,
+        rgba(10, 22, 14, 0.48) 0%,
+        rgba(10, 22, 14, 0.54) 45%,
+        rgba(10, 20, 13, 0.66) 62%,
+        rgba(9, 18, 12, 0.80) 74%,
+        rgba(9, 16, 11, 0.94) 88%,
+        #090f0b 98%,
+        #090f0b 100%
+    );
+}
+
+html.dark-mode .footer {
+    background-color: #090f0b;
+    border-top: none !important;
+}
+
+/* Soft Photo Dimming in Dark Mode */
+html.dark-mode .property-image img,
+html.dark-mode .main-image img,
+html.dark-mode .thumbnail-grid img,
+html.dark-mode .about-image-card img,
+html.dark-mode #propThumb,
+html.dark-mode .success-prop-thumb {
+    filter: brightness(0.76) contrast(1.04) saturate(0.92);
+    transition: transform 0.35s ease, filter 0.35s ease;
+}
+
+html.dark-mode .property-card:hover .property-image img,
+html.dark-mode .main-image:hover img,
+html.dark-mode .thumbnail-grid img:hover,
+html.dark-mode .thumbnail-grid img.active {
+    filter: brightness(0.86) contrast(1.03) saturate(0.98);
+}
+
+html.dark-mode .property-image::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+        180deg,
+        rgba(8, 16, 11, 0.26) 0%,
+        rgba(8, 16, 11, 0.14) 55%,
+        rgba(22, 35, 27, 0.56) 100%
+    );
+    pointer-events: none;
+    z-index: 2;
+    transition: opacity 0.35s ease;
+}

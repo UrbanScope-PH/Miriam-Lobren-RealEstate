@@ -12,11 +12,34 @@
  */
 (function () {
     var DEMO_USER_KEY = 'urbanscope_demo_user';
+    var THEME_STORAGE_KEY = 'urbanscope_theme';
     var root = document.documentElement;
     var requiresAuth = root.hasAttribute('data-require-auth');
     var currentUser = null;
     var resolved = false;
     var cachedClientNotifs = [];
+    var themeTransitionTimer = null;
+
+    // Early synchronous theme restoration to prevent flash of unstyled theme
+    try {
+        var savedTheme = (window.UrbanTheme && typeof window.UrbanTheme.get === 'function')
+            ? window.UrbanTheme.get()
+            : localStorage.getItem(THEME_STORAGE_KEY);
+        if (savedTheme !== 'dark' && savedTheme !== 'light') {
+            var cookieMatch = document.cookie.match(/(?:^|;\s*)urbanscope_theme=(dark|light)(?:;|$)/);
+            if (cookieMatch) savedTheme = cookieMatch[1];
+            else if (window.name && /__urbanscope_theme=(dark|light)/.test(window.name)) {
+                savedTheme = window.name.match(/__urbanscope_theme=(dark|light)/)[1];
+            }
+        }
+        if (savedTheme === 'dark') {
+            root.classList.add('dark-mode');
+            root.setAttribute('data-theme', 'dark');
+        } else {
+            root.classList.remove('dark-mode');
+            root.setAttribute('data-theme', 'light');
+        }
+    } catch (e) { }
 
     root.classList.add('auth-pending');
     if (requiresAuth) root.classList.add('auth-checking');
@@ -506,7 +529,9 @@
                 '<div class="client-notif-empty">Checking notifications...</div>' +
                 '</div>' +
                 '</div>';
-            acts.appendChild(notifWrap);
+            var mobileToggleEl = acts.querySelector('#mobileNavToggle');
+            if (mobileToggleEl) acts.insertBefore(notifWrap, mobileToggleEl);
+            else acts.appendChild(notifWrap);
 
             // 2. Profile Menu Chip
             var wrap = document.createElement('div');
@@ -519,7 +544,8 @@
                 '<svg class="profile-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>' +
                 '</button>' + dropdownHtml(user);
             wireAvatarFallbacks(wrap);
-            acts.appendChild(wrap);
+            if (mobileToggleEl) acts.insertBefore(wrap, mobileToggleEl);
+            else acts.appendChild(wrap);
 
             notifWrap.querySelector('#clientNotifBtn').addEventListener('click', function (e) {
                 e.stopPropagation();
@@ -657,9 +683,107 @@
     }
 
     // ------------------------------------------------------------------
+    // UI: Dark Mode Toggle with Soft Fade-In / Fade-Out Animation
+    // ------------------------------------------------------------------
+    function updateThemeToggleButtons(isDark) {
+        document.querySelectorAll('.theme-toggle-btn').forEach(function (btn) {
+            btn.setAttribute('aria-pressed', String(isDark));
+            btn.setAttribute('aria-label', isDark ? 'Switch to light mode' : 'Switch to dark mode');
+            btn.setAttribute('title', isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode');
+        });
+    }
+
+    function setTheme(mode, animate) {
+        var isDark = mode === 'dark';
+        if (animate) {
+            root.classList.add('theme-transitioning');
+            var veil = document.getElementById('themeFadeVeil');
+            if (!veil && document.body) {
+                veil = document.createElement('div');
+                veil.id = 'themeFadeVeil';
+                veil.className = 'theme-fade-veil';
+                veil.setAttribute('aria-hidden', 'true');
+                document.body.appendChild(veil);
+            }
+            if (veil) {
+                veil.classList.remove('active');
+                void veil.offsetWidth;
+                veil.classList.add('active');
+            }
+            if (themeTransitionTimer) clearTimeout(themeTransitionTimer);
+            themeTransitionTimer = setTimeout(function () {
+                root.classList.remove('theme-transitioning');
+                if (veil) veil.classList.remove('active');
+            }, 560);
+        }
+
+        root.classList.toggle('dark-mode', isDark);
+        root.setAttribute('data-theme', isDark ? 'dark' : 'light');
+        var cleanMode = isDark ? 'dark' : 'light';
+        if (window.UrbanTheme && typeof window.UrbanTheme.set === 'function') {
+            window.UrbanTheme.set(cleanMode, false);
+        } else {
+            try { localStorage.setItem(THEME_STORAGE_KEY, cleanMode); } catch (e) { }
+            try { document.cookie = 'urbanscope_theme=' + cleanMode + '; path=/; max-age=31536000; SameSite=Lax'; } catch (e) { }
+            try {
+                var baseName = String(window.name || '').replace(/\s*__urbanscope_theme=(?:dark|light)/g, '').trim();
+                window.name = (baseName ? baseName + ' ' : '') + '__urbanscope_theme=' + cleanMode;
+            } catch (e) { }
+        }
+        updateThemeToggleButtons(isDark);
+    }
+
+    function initThemeToggle() {
+        var path = location.pathname.toLowerCase().replace(/\\/g, '/');
+        var inAdmin = path.includes('/pages/admin/') || path.includes('/pages/superadmin/');
+        if (inAdmin) return;
+
+        var containers = document.querySelectorAll('.navbar .nav-acts, .inquiry-topbar .nav-acts, .history-topbar .nav-acts, .nav-acts');
+        var isDark = root.classList.contains('dark-mode') || root.getAttribute('data-theme') === 'dark';
+
+        containers.forEach(function (acts) {
+            if (acts.querySelector('.theme-toggle-btn')) return;
+
+            var btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'theme-toggle-btn';
+            btn.id = 'themeToggleBtn';
+            btn.setAttribute('aria-pressed', String(isDark));
+            btn.setAttribute('aria-label', isDark ? 'Switch to light mode' : 'Switch to dark mode');
+            btn.setAttribute('title', isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode');
+            btn.innerHTML =
+                '<span class="theme-icon-wrap" aria-hidden="true">' +
+                '<svg class="theme-icon theme-icon-moon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' +
+                '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>' +
+                '</svg>' +
+                '<svg class="theme-icon theme-icon-sun" width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' +
+                '<circle cx="12" cy="12" r="5"></circle>' +
+                '<line x1="12" y1="1" x2="12" y2="3"></line>' +
+                '<line x1="12" y1="21" x2="12" y2="23"></line>' +
+                '<line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>' +
+                '<line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>' +
+                '<line x1="1" y1="12" x2="3" y2="12"></line>' +
+                '<line x1="21" y1="12" x2="23" y2="12"></line>' +
+                '<line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>' +
+                '<line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>' +
+                '</svg>' +
+                '</span>';
+
+            btn.addEventListener('click', function (e) {
+                e.stopPropagation();
+                var currentlyDark = root.classList.contains('dark-mode') || root.getAttribute('data-theme') === 'dark';
+                setTheme(currentlyDark ? 'light' : 'dark', true);
+            });
+
+            acts.insertBefore(btn, acts.firstChild);
+        });
+    }
+
+    // ------------------------------------------------------------------
     // Init
     // ------------------------------------------------------------------
     async function init() {
+        initThemeToggle();
         currentUser = await getUser();
         resolved = true;
 
@@ -676,6 +800,7 @@
             updateInquiryNoteVisibility(false);
         }
 
+        initThemeToggle();
         initMobileNav(currentUser);
         syncGlobalFooterContact();
 
@@ -748,6 +873,9 @@
     }
 
     window.addEventListener('storage', function (e) {
+        if (e.key === THEME_STORAGE_KEY) {
+            setTheme(e.newValue === 'dark' ? 'dark' : 'light', true);
+        }
         if (e.key === 'urbanscope_admin_profile' || e.key === 'adminUser') {
             syncGlobalFooterContact();
         }
@@ -849,6 +977,7 @@
     });
 
     document.addEventListener('DOMContentLoaded', function () {
+        initThemeToggle();
         if (root.classList.contains('logged-in') || root.getAttribute('data-auth-state') === 'logged-in') {
             document.querySelectorAll('.inquiry-note').forEach(function (el) {
                 el.style.display = 'none';
@@ -856,5 +985,5 @@
         }
     });
 
-    window.UrbanSession = { getUser: getUser, logout: logout, loginUrl: loginUrl, updateInquiryNoteVisibility: updateInquiryNoteVisibility };
+    window.UrbanSession = { getUser: getUser, logout: logout, loginUrl: loginUrl, updateInquiryNoteVisibility: updateInquiryNoteVisibility, setTheme: setTheme };
 })();

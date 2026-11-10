@@ -1120,4 +1120,82 @@ html[data-auth-state="logged-in"] .inquiry-note,
     }
 }
 
+/* ==========================================================================
+   Dark Mode Overrides for Property Showcase & Official Pricelist Card
+   ========================================================================== */
+html.dark-mode .tcp-section {
+    background: #16231b;
+    border-color: #26392c;
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.45);
+}
+
+html.dark-mode .tcp-doc-card {
+    background: linear-gradient(135deg, #1b2d22 0%, #16251c 100%);
+    border-color: #2f573b;
+}
+
+html.dark-mode .tcp-doc-card:hover {
+    background: linear-gradient(135deg, #213729 0%, #1b2e22 100%);
+    border-color: #4ade80;
+}
+
+html.dark-mode .tcp-doc-icon {
+    background: #132018;
+    border: 1px solid #2b4533;
+    color: #86efac;
+}
+
+html.dark-mode .tcp-doc-text h4 {
+    color: #eef6f0;
+}
+
+html.dark-mode .tcp-doc-text p {
+    color: #a8bdb0;
+}
+
+html.dark-mode .tcp-doc-btn {
+    background: #2d6a3e;
+    border: 1px solid #3ea35d;
+    color: #ffffff;
+}
+
+html.dark-mode .tcp-doc-btn:hover {
+    background: #3ea35d;
+    border-color: #4ade80;
+    color: #ffffff;
+}
+
+html.dark-mode .tcp-disclaimer {
+    color: #8da394;
+}
+
+html.dark-mode .tcp-document-modal {
+    background: #16231b;
+    color: #eef6f0;
+}
+
+html.dark-mode .tcp-document-modal-header {
+    background: #19281f;
+    border-bottom-color: #26392c;
+}
+
+html.dark-mode .tcp-document-modal-header h2 {
+    color: #eef6f0;
+}
+
+html.dark-mode .tcp-document-modal-close {
+    background: #1f3326;
+    color: #e7f0e9;
+}
+
+html.dark-mode .tcp-document-modal-close:hover {
+    background: #2d5c39;
+    color: #ffffff;
+}
+
+html.dark-mode .tcp-document-modal-image-wrap {
+    background: #0f1812;
+}
+
+
 

@@ -7,7 +7,26 @@
  */
 (function () {
     var KEY = 'urbanscope_splash_seen';
+    var THEME_KEY = 'urbanscope_theme';
     var root = document.documentElement;
+
+    // Immediately restore user's saved theme preference (dark / light) before any paint
+    try {
+        var savedTheme = localStorage.getItem(THEME_KEY);
+        if (savedTheme !== 'dark' && savedTheme !== 'light') {
+            var cookieMatch = document.cookie.match(/(?:^|;\s*)urbanscope_theme=(dark|light)(?:;|$)/);
+            if (cookieMatch) savedTheme = cookieMatch[1];
+            else if (window.name && /__urbanscope_theme=(dark|light)/.test(window.name)) {
+                savedTheme = window.name.match(/__urbanscope_theme=(dark|light)/)[1];
+            }
+            if (savedTheme === 'dark' || savedTheme === 'light') {
+                localStorage.setItem(THEME_KEY, savedTheme);
+            }
+        }
+        var isDark = savedTheme === 'dark';
+        root.classList.toggle('dark-mode', isDark);
+        root.setAttribute('data-theme', isDark ? 'dark' : 'light');
+    } catch (e) { }
 
     try {
         if (sessionStorage.getItem(KEY) || window.location.search.includes('no_splash=1') || window.location.search.includes('open_chat=1')) return;

@@ -932,3 +932,368 @@ input:focus-visible {
         max-width: none;
     }
 }
+
+/* ==========================================================================
+   ADMIN PORTAL DARK MODE & SOFT FADE ANIMATION (html.dark-mode)
+   ========================================================================== */
+.theme-toggle-btn {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 39px;
+    height: 39px;
+    padding: 0;
+    border-radius: 50%;
+    border: 1px solid #d5e2d8;
+    background: #ffffff;
+    color: var(--green, #2d5c39);
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease, transform 0.25s ease, box-shadow 0.3s ease;
+    flex-shrink: 0;
+}
+
+.theme-toggle-btn:hover {
+    background: #eef6f0;
+    border-color: var(--green, #2d5c39);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(45, 92, 57, 0.14);
+}
+
+.theme-icon-wrap {
+    position: relative;
+    width: 19px;
+    height: 19px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.theme-icon {
+    position: absolute;
+    inset: 0;
+    margin: auto;
+    transition: opacity 0.42s cubic-bezier(0.22, 1, 0.36, 1), transform 0.48s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.theme-icon-moon {
+    opacity: 1;
+    transform: rotate(0deg) scale(1);
+}
+
+.theme-icon-sun {
+    opacity: 0;
+    transform: rotate(75deg) scale(0.55);
+    color: #fbbf24;
+}
+
+html.dark-mode .theme-icon-moon {
+    opacity: 0;
+    transform: rotate(-75deg) scale(0.55);
+}
+
+html.dark-mode .theme-icon-sun {
+    opacity: 1;
+    transform: rotate(0deg) scale(1);
+}
+
+.theme-fade-veil {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 9998;
+    opacity: 0;
+    background: radial-gradient(circle at 50% 20%, rgba(45, 92, 57, 0.18), rgba(10, 18, 13, 0.26));
+}
+
+.theme-fade-veil.active {
+    animation: adminThemeSoftFade 0.52s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+@keyframes adminThemeSoftFade {
+    0% { opacity: 0; }
+    40% { opacity: 1; }
+    100% { opacity: 0; }
+}
+
+html.theme-transitioning,
+html.theme-transitioning body,
+html.theme-transitioning header,
+html.theme-transitioning main,
+html.theme-transitioning section,
+html.theme-transitioning div,
+html.theme-transitioning article,
+html.theme-transitioning aside,
+html.theme-transitioning table,
+html.theme-transitioning tr,
+html.theme-transitioning th,
+html.theme-transitioning td,
+html.theme-transitioning form,
+html.theme-transitioning p,
+html.theme-transitioning h1,
+html.theme-transitioning h2,
+html.theme-transitioning h3,
+html.theme-transitioning h4,
+html.theme-transitioning span,
+html.theme-transitioning a,
+html.theme-transitioning button,
+html.theme-transitioning input,
+html.theme-transitioning select,
+html.theme-transitioning textarea,
+html.theme-transitioning label {
+    transition: background-color 0.48s cubic-bezier(0.22, 1, 0.36, 1),
+                color 0.48s cubic-bezier(0.22, 1, 0.36, 1),
+                border-color 0.48s cubic-bezier(0.22, 1, 0.36, 1),
+                box-shadow 0.48s cubic-bezier(0.22, 1, 0.36, 1) !important;
+}
+
+html.dark-mode {
+    color-scheme: dark;
+    --bg-main: #0e1611;
+    --white: #16231b;
+    --surface: #16231b;
+    --surface-hover: #1d2e24;
+    --text-dark: #e7f0e9;
+    --text-primary: #e7f0e9;
+    --text-muted: #9ab09f;
+    --text-secondary: #9ab09f;
+    --border-color: #26392c;
+    --border: #26392c;
+    --border-dark: #2f4736;
+    --green: #3ea35d;
+    --dark-green: #86efac;
+    --light-green: rgba(62, 163, 93, 0.18);
+    --card-shadow: 0 12px 32px rgba(0, 0, 0, 0.45);
+}
+
+html.dark-mode body {
+    background-color: #0e1611 !important;
+    color: #e7f0e9;
+}
+
+html.dark-mode .admin-topbar {
+    background-color: #131f17;
+    border-bottom-color: #243629;
+}
+
+html.dark-mode .menu-toggle {
+    color: #e7f0e9;
+}
+
+html.dark-mode .brand-text h1 {
+    color: #86efac;
+}
+
+html.dark-mode .brand-text h2 {
+    color: #9ab09f;
+}
+
+html.dark-mode .topbar-search input {
+    background-color: #19281f;
+    border-color: #2b4031;
+    color: #e7f0e9;
+}
+
+html.dark-mode .topbar-search input:focus {
+    background-color: #1d2f24;
+    border-color: #4ade80;
+}
+
+html.dark-mode .theme-toggle-btn,
+html.dark-mode .notif-btn {
+    background: #19281f;
+    border-color: #2b4031;
+    color: #e7f0e9;
+}
+
+html.dark-mode .theme-toggle-btn:hover,
+html.dark-mode .notif-btn:hover {
+    background: #22372a;
+    border-color: #4ade80;
+    color: #86efac;
+}
+
+html.dark-mode .notif-badge {
+    border-color: #131f17;
+}
+
+html.dark-mode .notif-dropdown,
+html.dark-mode .profile-dropdown {
+    background: #16231b;
+    border-color: #293e2f;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.65);
+}
+
+html.dark-mode .notif-dropdown-header,
+html.dark-mode .profile-dropdown-divider {
+    border-color: #243629;
+    background-color: transparent;
+}
+
+html.dark-mode .profile-dropdown-divider {
+    background: #243629;
+}
+
+html.dark-mode .notif-item {
+    border-bottom-color: #223327;
+}
+
+html.dark-mode .notif-item:hover,
+html.dark-mode .profile-dropdown a:hover {
+    background: #203327;
+    color: #86efac;
+}
+
+html.dark-mode .profile-dropdown-name strong,
+html.dark-mode .profile-dropdown a {
+    color: #e7f0e9;
+}
+
+html.dark-mode .profile-dropdown a.profile-signout {
+    color: #f87171;
+}
+
+html.dark-mode .profile-dropdown a.profile-signout:hover {
+    background: rgba(239, 68, 68, 0.14);
+}
+
+/* Admin Dashboard, Property List, Add/Edit Property, Clients, Profile Cards */
+html.dark-mode .analytics-card,
+html.dark-mode .kpi-card,
+html.dark-mode .feature-card,
+html.dark-mode .calendar-card,
+html.dark-mode .table-card,
+html.dark-mode .form-card,
+html.dark-mode .settings-card,
+html.dark-mode .clients-card,
+html.dark-mode .stat-pill,
+html.dark-mode .modal-box,
+html.dark-mode .modal-card {
+    background-color: #16231b !important;
+    border-color: #26392c !important;
+    color: #e7f0e9;
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.45);
+}
+
+html.dark-mode .donut-legend,
+html.dark-mode .property-illustration,
+html.dark-mode .quick-action-item,
+html.dark-mode .daily-reminder,
+html.dark-mode .calendar-main,
+html.dark-mode .calendar-agenda,
+html.dark-mode .agenda-event,
+html.dark-mode .inquiry-client-banner,
+html.dark-mode .info-grid-card,
+html.dark-mode .inquiry-message-box,
+html.dark-mode .profile-avatar-banner,
+html.dark-mode .upload-area,
+html.dark-mode .preview-item,
+html.dark-mode .image-placeholder {
+    background: #1b2b21 !important;
+    border-color: #2b4031 !important;
+    color: #e7f0e9;
+}
+
+html.dark-mode .quick-action-item:hover {
+    background-color: #22372a !important;
+    border-color: #4ade80 !important;
+}
+
+html.dark-mode .legend-label,
+html.dark-mode .legend-count,
+html.dark-mode .info-value,
+html.dark-mode .calendar-day,
+html.dark-mode .form-group label,
+html.dark-mode .card-header h3,
+html.dark-mode .form-card-header h3 {
+    color: #e7f0e9;
+}
+
+html.dark-mode .calendar-nav-btn,
+html.dark-mode .back-btn,
+html.dark-mode .cancel-btn,
+html.dark-mode .btn-reset-avatar,
+html.dark-mode .btn-modal-secondary,
+html.dark-mode .status-tab-btn,
+html.dark-mode #propertiesTable .edit-btn {
+    background-color: #1c2d22;
+    border-color: #2f4736;
+    color: #e7f0e9;
+}
+
+html.dark-mode .calendar-nav-btn:hover,
+html.dark-mode .back-btn:hover,
+html.dark-mode .cancel-btn:hover,
+html.dark-mode .btn-reset-avatar:hover,
+html.dark-mode .btn-modal-secondary:hover,
+html.dark-mode .status-tab-btn:hover,
+html.dark-mode #propertiesTable .edit-btn:hover {
+    background-color: #284231;
+    border-color: #4ade80;
+    color: #86efac;
+}
+
+html.dark-mode .status-tab-btn.active {
+    background-color: #3ea35d;
+    border-color: #3ea35d;
+    color: #ffffff;
+}
+
+/* Admin Tables */
+html.dark-mode .table-panel thead,
+html.dark-mode .data-table thead,
+html.dark-mode #propertiesTable th,
+html.dark-mode #clientsTable th,
+html.dark-mode .table-panel th {
+    background-color: #1b2b21 !important;
+    color: #9ab09f !important;
+    border-color: #26392c !important;
+}
+
+html.dark-mode .table-panel tbody tr,
+html.dark-mode #propertiesTable td,
+html.dark-mode #clientsTable td,
+html.dark-mode .table-panel td {
+    background-color: #16231b;
+    color: #e7f0e9;
+    border-color: #223327 !important;
+}
+
+html.dark-mode .table-panel tbody tr:hover,
+html.dark-mode #propertiesTable tbody tr:hover td,
+html.dark-mode #clientsTable tbody tr:hover td {
+    background-color: #1d2e24 !important;
+}
+
+/* Admin Form Inputs & Filters */
+html.dark-mode .search-input-card,
+html.dark-mode .status-select-card,
+html.dark-mode .search-field,
+html.dark-mode .status-select-inline,
+html.dark-mode .form-group input,
+html.dark-mode .form-group select,
+html.dark-mode .form-group textarea,
+html.dark-mode .input-with-prefix,
+html.dark-mode .input-with-suffix {
+    background-color: #121d16 !important;
+    border-color: #2b4031 !important;
+    color: #e7f0e9 !important;
+}
+
+html.dark-mode .input-prefix,
+html.dark-mode .input-suffix {
+    background-color: #19281f !important;
+    border-color: #2b4031 !important;
+    color: #9ab09f !important;
+}
+
+html.dark-mode .card-header,
+html.dark-mode .form-card-header,
+html.dark-mode .card-actions,
+html.dark-mode .modal-actions-footer,
+html.dark-mode .filter-toolbar {
+    border-color: #243629 !important;
+    background-color: transparent;
+}
+
