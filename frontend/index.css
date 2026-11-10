@@ -504,6 +504,8 @@
     color: #415546;
     line-height: 1.7;
     margin-bottom: 18px;
+    text-align: justify;
+    text-justify: inter-word;
 }
 
 .learn-more-btn {

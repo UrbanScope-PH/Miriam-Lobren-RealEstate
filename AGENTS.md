@@ -842,6 +842,8 @@ path when rendering from a page.
 81. **Specific Property Inquiry Grey Placeholder Update (`inquiry.js`):**
     - Removed pre-filled value assignment (`messageTextarea.value = "..."`) from the 'Specific Property Inquiry' tab mode on `/pages/inquiry/inquiry.html`.
     - Converted the message prompt into a grey placeholder (`messageTextarea.placeholder = "Tell us what you'd like to ask or know about this property, unit availability, payment terms, or your preferred site viewing schedule..."`), matching the styling and user experience of the 'General Consultation / Question' tab.
+82. **Homepage About Me Text Justification (`index.css`):**
+    - Added `text-align: justify;` and `text-justify: inter-word;` to `.about-text p` in `frontend/index.css` so all paragraphs in the homepage About Me section display with clean, aligned left and right margins.
 
 
 
