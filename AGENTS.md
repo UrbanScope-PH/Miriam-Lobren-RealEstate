@@ -839,6 +839,9 @@ path when rendering from a page.
 80. **Homepage FAQs Category Pills Removed (`index.html`, `index.css`):**
     - Removed the category pill badges (`.faq-category-pill` such as 'Marital Status', 'Co-Borrower', 'Employment & Buyer Eligibility', 'Initial Requirements', 'Payment Methods', 'Accessibility') rendered above each question title in the homepage FAQs accordion (`#faqsAccordion`).
     - Questions are now direct text elements (`.faq-q-text`) inside `.faq-question`, restoring a clean, minimal accordion title layout.
+81. **Specific Property Inquiry Grey Placeholder Update (`inquiry.js`):**
+    - Removed pre-filled value assignment (`messageTextarea.value = "..."`) from the 'Specific Property Inquiry' tab mode on `/pages/inquiry/inquiry.html`.
+    - Converted the message prompt into a grey placeholder (`messageTextarea.placeholder = "Tell us what you'd like to ask or know about this property, unit availability, payment terms, or your preferred site viewing schedule..."`), matching the styling and user experience of the 'General Consultation / Question' tab.
 
 
 
