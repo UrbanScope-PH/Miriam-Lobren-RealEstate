@@ -113,12 +113,28 @@
 
             <!-- PROPERTY INFORMATION SECTION (VISIBLE IN PROPERTY MODE) -->
             <div class="form-section" id="propertySection" style="display: none;">
-                <div class="section-title-row">
-                    <h3 class="section-title" style="margin-bottom: 0;">Selected Property</h3>
-                    <div class="property-select-group">
-                        <label for="propertySelect">Select Listing:</label>
+                <h3 class="section-title">Selected Property &amp; Preferred Schedule</h3>
+
+                <div class="consultation-fields-grid" style="margin-bottom: 16px;">
+                    <div class="input-field">
+                        <label for="propertySelect">Select Listing*</label>
                         <select id="propertySelect" class="form-select" onchange="onPropertySelectionChange()">
                             <option value="">Loading accredited properties...</option>
+                        </select>
+                    </div>
+
+                    <div class="input-field">
+                        <label for="propertyPreferredDate">Preferred Date <span class="optional-tag">(Optional)</span></label>
+                        <input type="date" id="propertyPreferredDate" class="form-input">
+                    </div>
+
+                    <div class="input-field">
+                        <label for="propertyPreferredTime">Preferred Time / Slot <span class="optional-tag">(Optional)</span></label>
+                        <select id="propertyPreferredTime" class="form-select">
+                            <option value="Flexible / Any Time">Flexible / Any Time</option>
+                            <option value="Morning (9:00 AM - 12:00 PM)">Morning (9:00 AM - 12:00 PM)</option>
+                            <option value="Afternoon (1:00 PM - 5:00 PM)">Afternoon (1:00 PM - 5:00 PM)</option>
+                            <option value="Weekend Tripping">Weekend Tripping</option>
                         </select>
                     </div>
                 </div>

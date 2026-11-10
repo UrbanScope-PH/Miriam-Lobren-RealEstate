@@ -844,6 +844,9 @@ path when rendering from a page.
     - Converted the message prompt into a grey placeholder (`messageTextarea.placeholder = "Tell us what you'd like to ask or know about this property, unit availability, payment terms, or your preferred site viewing schedule..."`), matching the styling and user experience of the 'General Consultation / Question' tab.
 82. **Homepage About Me Text Justification (`index.css`):**
     - Added `text-align: justify;` and `text-justify: inter-word;` to `.about-text p` in `frontend/index.css` so all paragraphs in the homepage About Me section display with clean, aligned left and right margins.
+83. **Preferred Date & Time Schedule Fields in Specific Property Inquiry (`inquiry.html`, `inquiry.js`):**
+    - Updated `#propertySection` on `/pages/inquiry/inquiry.html` to include the 3-column `.consultation-fields-grid` (`Select Listing*`, `Preferred Date (Optional)`, and `Preferred Time / Slot (Optional)`), matching the layout of the General Consultation tab while displaying the selected property summary card underneath.
+    - Updated `submitInquiry()`, `resetFormAndCloseModal()`, and `DOMContentLoaded` in `frontend/pages/inquiry/inquiry.js` so specific property inquiries attach `[Preferred Schedule: ...]` or `[Preferred Slot: ...]` to the submitted message and display the schedule badge in the submission confirmation modal and Admin inquiry detail modal.
 
 
 
