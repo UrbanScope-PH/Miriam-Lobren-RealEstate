@@ -1017,6 +1017,10 @@ path when rendering from a page.
     - **Full Dark Mode**: Seamless support under `html.dark-mode` with deep forest green background surfaces (`#142219`), borders (`#2b4232`), and glowing emerald badges and icons (`#48bb78` / `#86efac`).
     - **Data Integrity & Tab Sync**: Underlying native `<select>` remains in the DOM with `.custom-select-source`, guaranteeing that `document.getElementById('preferredTime').value`, tab synchronization listeners, form serialization, and modal reset functions operate without interruption.
 
+95. **Removal of FAQ Category Filter Pills (`index.html`, `index.js`, `index.css`):**
+    - Removed the redundant category filter pills (`#faqCategories`: `All (8)`, `Financing & Payments (2)`, `OFW & Eligibility (4)`, `Requirements & Location (2)`) above the homepage FAQ section.
+    - FAQs now transition cleanly and directly from the section header to the accordion list, with all 8 questions accessible in one focused view (with only the initial question open by default). Cleaned up associated filter logic from `index.js` and styling from `index.css`.
+
 ---
 
 ## Safety Rules

@@ -685,40 +685,6 @@
     gap: 14px;
 }
 
-/* FAQ CATEGORY FILTER PILLS */
-.faq-categories {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 10px;
-    flex-wrap: wrap;
-    margin-bottom: 28px;
-}
-
-.faq-cat-pill {
-    padding: 8px 18px;
-    border-radius: 30px;
-    background: #f1f7f2;
-    border: 1px solid #d4e5d8;
-    color: #3b5742;
-    font-size: 13.5px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-.faq-cat-pill:hover {
-    background: #e2f0e5;
-    border-color: #b8d9be;
-    color: var(--green);
-}
-
-.faq-cat-pill.active {
-    background: var(--green);
-    border-color: var(--green);
-    color: #ffffff;
-    box-shadow: 0 4px 12px rgba(45, 92, 57, 0.22);
-}
 
 .faq-item {
     background: #ffffff;
@@ -2002,24 +1968,6 @@ html.dark-mode .intent-card:hover .intent-link-text {
 /* ==========================================================================
    Dark Mode Styles for FAQ Pills, Spec Badges & Calculator Pill
    ========================================================================== */
-html.dark-mode .faq-cat-pill {
-    background: #18281d;
-    border-color: #274430;
-    color: #b0c9b6;
-}
-
-html.dark-mode .faq-cat-pill:hover {
-    background: #203527;
-    color: #86efac;
-    border-color: #386043;
-}
-
-html.dark-mode .faq-cat-pill.active {
-    background: #2d5c39;
-    border-color: #48bb78;
-    color: #ffffff;
-    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
-}
 
 html.dark-mode .property-details span,
 html.dark-mode .property-details .spec-pill {
