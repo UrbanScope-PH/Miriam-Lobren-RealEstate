@@ -848,6 +848,232 @@ async function submitInquiry() {
     }
 }
 
+/**
+ * Custom UrbanScope DatePicker Component
+ * Replaces raw browser native date picker with a polished, on-brand calendar dropdown.
+ */
+function initUrbanDatePicker(inputEl) {
+    if (!inputEl) return;
+    const wrap = inputEl.closest('.custom-datepicker-wrap');
+    if (!wrap) return;
+
+    let viewDate = new Date();
+    let popupEl = null;
+
+    function toIso(d) {
+        return [
+            d.getFullYear(),
+            String(d.getMonth() + 1).padStart(2, '0'),
+            String(d.getDate()).padStart(2, '0')
+        ].join('-');
+    }
+
+    const todayObj = new Date();
+    const todayStr = toIso(todayObj);
+
+    function getSelectedDate() {
+        if (!inputEl.value) return null;
+        const parts = inputEl.value.trim().split('-');
+        if (parts.length === 3) {
+            const y = Number(parts[0]), m = Number(parts[1]) - 1, d = Number(parts[2]);
+            if (!isNaN(y) && !isNaN(m) && !isNaN(d)) {
+                return new Date(y, m, d);
+            }
+        }
+        return null;
+    }
+
+    function openCalendar() {
+        document.querySelectorAll('.urban-datepicker-popup').forEach(p => p.remove());
+
+        const sel = getSelectedDate();
+        viewDate = sel ? new Date(sel.getFullYear(), sel.getMonth(), 1) : new Date(todayObj.getFullYear(), todayObj.getMonth(), 1);
+
+        popupEl = document.createElement('div');
+        popupEl.className = 'urban-datepicker-popup';
+
+        const rect = wrap.getBoundingClientRect();
+        if (rect.left + 310 > window.innerWidth - 16) {
+            popupEl.classList.add('align-right');
+        }
+
+        renderCalendar();
+        wrap.appendChild(popupEl);
+
+        setTimeout(() => {
+            document.addEventListener('click', onDocClick);
+            document.addEventListener('keydown', onDocKey);
+        }, 20);
+    }
+
+    function closeCalendar() {
+        if (popupEl) {
+            popupEl.remove();
+            popupEl = null;
+        }
+        document.removeEventListener('click', onDocClick);
+        document.removeEventListener('keydown', onDocKey);
+    }
+
+    function onDocClick(e) {
+        if (!wrap.contains(e.target)) {
+            closeCalendar();
+        }
+    }
+
+    function onDocKey(e) {
+        if (e.key === 'Escape') {
+            closeCalendar();
+        }
+    }
+
+    function renderCalendar() {
+        if (!popupEl) return;
+
+        const year = viewDate.getFullYear();
+        const month = viewDate.getMonth();
+        const monthNames = [
+            'January', 'February', 'March', 'April', 'May', 'June',
+            'July', 'August', 'September', 'October', 'November', 'December'
+        ];
+        const monthTitle = `${monthNames[month]} ${year}`;
+
+        const firstDayIndex = new Date(year, month, 1).getDay(); // 0 = Sun
+        const daysInMonth = new Date(year, month + 1, 0).getDate();
+        const prevDaysInMonth = new Date(year, month, 0).getDate();
+
+        const canGoPrev = (year > todayObj.getFullYear()) || (year === todayObj.getFullYear() && month > todayObj.getMonth());
+
+        let html = `
+            <div class="datepicker-header">
+                <button type="button" class="datepicker-nav-btn prev-month-btn" aria-label="Previous month" ${!canGoPrev ? 'disabled' : ''}>
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="15 18 9 12 15 6"></polyline>
+                    </svg>
+                </button>
+                <div class="datepicker-title">${monthTitle}</div>
+                <button type="button" class="datepicker-nav-btn next-month-btn" aria-label="Next month">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="9 18 15 12 9 6"></polyline>
+                    </svg>
+                </button>
+            </div>
+
+            <div class="datepicker-weekdays">
+                <span class="datepicker-weekday">S</span>
+                <span class="datepicker-weekday">M</span>
+                <span class="datepicker-weekday">T</span>
+                <span class="datepicker-weekday">W</span>
+                <span class="datepicker-weekday">T</span>
+                <span class="datepicker-weekday">F</span>
+                <span class="datepicker-weekday">S</span>
+            </div>
+
+            <div class="datepicker-days">
+        `;
+
+        // Leading days from prev month
+        for (let i = firstDayIndex - 1; i >= 0; i--) {
+            const d = prevDaysInMonth - i;
+            html += `<span class="datepicker-day-cell is-other-month is-disabled">${d}</span>`;
+        }
+
+        // Days of current month
+        const selectedStr = inputEl.value.trim();
+        for (let day = 1; day <= daysInMonth; day++) {
+            const thisDateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+            const isPast = thisDateStr < todayStr;
+            const isToday = thisDateStr === todayStr;
+            const isSelected = thisDateStr === selectedStr;
+
+            let classes = ['datepicker-day-cell'];
+            if (isPast) classes.push('is-disabled');
+            if (isToday) classes.push('is-today');
+            if (isSelected) classes.push('is-selected');
+
+            html += `<button type="button" class="${classes.join(' ')}" data-date="${thisDateStr}" ${isPast ? 'disabled' : ''}>${day}</button>`;
+        }
+
+        // Trailing days from next month
+        const totalCellsSoFar = firstDayIndex + daysInMonth;
+        const remainingCells = (7 - (totalCellsSoFar % 7)) % 7;
+        for (let j = 1; j <= remainingCells; j++) {
+            html += `<span class="datepicker-day-cell is-other-month is-disabled">${j}</span>`;
+        }
+
+        html += `
+            </div>
+
+            <div class="datepicker-footer">
+                <button type="button" class="datepicker-action-btn datepicker-action-clear">Clear</button>
+                <button type="button" class="datepicker-action-btn datepicker-action-today">Today</button>
+            </div>
+        `;
+
+        popupEl.innerHTML = html;
+
+        const prevBtn = popupEl.querySelector('.prev-month-btn');
+        if (prevBtn) {
+            prevBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                if (canGoPrev) {
+                    viewDate.setMonth(viewDate.getMonth() - 1);
+                    renderCalendar();
+                }
+            });
+        }
+
+        const nextBtn = popupEl.querySelector('.next-month-btn');
+        if (nextBtn) {
+            nextBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                viewDate.setMonth(viewDate.getMonth() + 1);
+                renderCalendar();
+            });
+        }
+
+        popupEl.querySelectorAll('.datepicker-day-cell[data-date]').forEach(cell => {
+            cell.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const chosen = cell.getAttribute('data-date');
+                selectDate(chosen);
+            });
+        });
+
+        const clearBtn = popupEl.querySelector('.datepicker-action-clear');
+        if (clearBtn) {
+            clearBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                selectDate('');
+            });
+        }
+
+        const todayBtn = popupEl.querySelector('.datepicker-action-today');
+        if (todayBtn) {
+            todayBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                selectDate(todayStr);
+            });
+        }
+    }
+
+    function selectDate(val) {
+        inputEl.value = val;
+        inputEl.dispatchEvent(new Event('change', { bubbles: true }));
+        inputEl.dispatchEvent(new Event('input', { bubbles: true }));
+        closeCalendar();
+    }
+
+    wrap.addEventListener('click', (e) => {
+        if (popupEl && popupEl.contains(e.target)) return;
+        if (popupEl) {
+            closeCalendar();
+        } else {
+            openCalendar();
+        }
+    });
+}
+
 window.addEventListener('DOMContentLoaded', () => {
     const submitBtn = document.querySelector('.submit-btn');
     if (submitBtn) inquirySubmitOriginalHtml = submitBtn.innerHTML;
@@ -902,6 +1128,10 @@ window.addEventListener('DOMContentLoaded', () => {
         timeSelect.addEventListener('change', () => { propTimeSelect.value = timeSelect.value; });
         propTimeSelect.addEventListener('change', () => { timeSelect.value = propTimeSelect.value; });
     }
+
+    // Initialize custom UrbanScope UI datepickers
+    if (dateInput) initUrbanDatePicker(dateInput);
+    if (propDateInput) initUrbanDatePicker(propDateInput);
 
     // Modal close handlers
     const closeBtn = document.getElementById('closeSuccessModalBtn');

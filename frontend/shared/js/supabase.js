@@ -17,6 +17,11 @@
 
     function getSavedUserTheme() {
         try {
+            const urlTheme = new URLSearchParams(window.location.search).get('theme');
+            if (urlTheme === 'dark' || urlTheme === 'light') return urlTheme;
+        } catch (_) {}
+
+        try {
             const fromLocal = localStorage.getItem(THEME_STORAGE_KEY);
             if (fromLocal === 'dark' || fromLocal === 'light') return fromLocal;
         } catch (_) {}
