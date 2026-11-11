@@ -446,6 +446,11 @@ async function loadHomeProperties(category = 'all') {
 
 // Category tabs click listeners and initialization
 document.addEventListener('DOMContentLoaded', () => {
+    // 0. Initialize Quick Home Affordability & Budget Matcher
+    if (window.UrbanCalculator && typeof UrbanCalculator.initHomepageBudgetMatcher === 'function') {
+        UrbanCalculator.initHomepageBudgetMatcher('homepageBudgetMatcher');
+    }
+
     // 1. Initial load from live database
     loadHomeProperties('all');
 

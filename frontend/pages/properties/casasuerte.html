@@ -23,6 +23,7 @@
     <link rel="stylesheet" href="property-detail.css">
     <link rel="stylesheet" href="../../shared/css/splash.css">
     <link rel="stylesheet" href="../../shared/css/session.css">
+    <link rel="stylesheet" href="../../shared/css/calculator.css">
     <link rel="stylesheet" href="../../shared/css/mobile-shell.css">
     <script src="../../shared/js/splash.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -224,6 +225,9 @@
             <p class="tcp-disclaimer">*Estimated amortization figures are based on Pag-IBIG prevailing indicative rates (6.25% fixed for 3 years). Final loan approval and terms are subject to Pag-IBIG credit assessment.</p>
         </section>
 
+        <!-- INTERACTIVE AMORTIZATION CALCULATOR -->
+        <section class="amortization-calculator-section" id="propertyCalculator"></section>
+
         <!-- INQUIRY SECTION -->
         <section class="location-inquiry-grid">
             <!-- Interested in Property CTA Card -->
@@ -310,6 +314,23 @@
             '../../assets/images/casasuerte-service.jpg',
             '../../assets/images/casasuerte-subdivision-plan.jpg'
         ];
+    </script>
+    <script src="../../shared/js/calculator.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            if (window.UrbanCalculator) {
+                UrbanCalculator.initPropertyCalculator('propertyCalculator', {
+                    tcp: 2500000,
+                    propertyTitle: 'Casasuerte',
+                    propertyId: 'casasuerte',
+                    reservationFee: 10000,
+                    defaultDpPercent: 10,
+                    defaultTermYears: 20,
+                    defaultFinancing: 'pagibig',
+                    supportedFinancing: ['pagibig', 'bank']
+                });
+            }
+        });
     </script>
     <script src="property-detail.js"></script>
 </body>

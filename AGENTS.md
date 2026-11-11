@@ -902,6 +902,26 @@ path when rendering from a page.
       - Removed duplicate `</footer>` tag and stray SVG path text artifact in `index.html`.
       - Enhanced `backend/auth.py` (`get_current_user_from_request`) to gracefully handle raw `Request` objects.
 
+87. **Interactive Monthly Amortization & Home Affordability Calculator (`calculator.js`, `calculator.css`, `index.html`, `index.js`, `property-detail.html`, `property-detail.js`, `kathleen.html`, `casasuerte.html`, `Liora.html`, `Airmen.html`, `inquiry.html`, `inquiry.js`):**
+    - **Dual Calculator Architecture**:
+      1. **Property Showcase & Detail Calculator (`initPropertyCalculator`)**:
+         - Embedded above inquiry cards on `kathleen.html`, `casasuerte.html`, `Liora.html`, `Airmen.html`, and `property-detail.html`.
+         - Pre-filled with accurate Total Contract Price (TCP) benchmarks (₱2.46M–₱8.9M), customizable downpayment percentages (10%, 15%, 20%, 30%), DP equity terms (12, 18, 24 months net of reservation fee), and loan repayment terms (5 to 30 years).
+         - Standardized Philippine financing benchmarks: **Bank Financing (7.0% indicative)** and **Pag-IBIG Fund (6.25% 3-year fixed indicative)**.
+         - Real-time KPI cards: Estimated Monthly Amortization, Required Gross Monthly Income (calculated at standard **35% debt-to-income threshold** with co-borrower pooling eligibility tips), Monthly Downpayment Equity, and Estimated Loan Balance.
+         - **1-Click "Inquire with This Calculation" Lead Converter**: Captures simulated loan parameters into `sessionStorage.urbanscope_calc_intent` and deep-links to `inquiry.html?type=property&id=...&calc=1`.
+      2. **Homepage Salary-Based Budget Matcher (`initHomepageBudgetMatcher`)**:
+         - Embedded between Featured Properties and About Me sections on `frontend/index.html`.
+         - Interactive household monthly income slider (₱25k to ₱200k/mo).
+         - Live feedback displaying maximum comfortable monthly amortization (35% GMI ceiling), estimated home purchasing power, and dynamic cards highlighting which accredited Cavite & Las Piñas subdivisions (Liora Homes, Casasuerte, Kathleen, Airmen's Triplex) match the family's income bracket with "You Qualify!" badges.
+    - **Inquiry Form Simulation Pre-Fill & Calculation Banner (`inquiry.js`, `inquiry.html`)**:
+      - On `pages/inquiry/inquiry.html`, detects `urbanscope_calc_intent` or `?calc=1` and displays an attached calculation banner (`.calc-pref-banner`) showing the selected financing program, DP equity schedule, and estimated amortization.
+      - Automatically populates the consultation inquiry message with a structured breakdown requesting developer pricelist sheets, unit availability, and site viewing.
+      - Clears intent from `sessionStorage` upon successful submission.
+    - **Pure Vanilla ES6 & Full Dark Mode Integration**:
+      - Zero npm/runtime bundler dependencies. Modular standalone calculation engine in `frontend/shared/js/calculator.js` and design-token-compatible CSS in `frontend/shared/css/calculator.css`.
+      - High-contrast custom range slider controls, segmented pill selectors, and full Dark Mode overrides (`html.dark-mode .calc-*`, `html[data-theme="dark"] .calc-*`).
+
 ---
 
 ## Safety Rules
