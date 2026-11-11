@@ -515,6 +515,26 @@
                     financing: 'Bank Financing',
                     image: 'assets/images/AirmenTriplex.WEBP',
                     link: isSubfolder ? '../properties/Airmen.html' : 'pages/properties/Airmen.html'
+                },
+                {
+                    id: 'amore',
+                    title: 'Amore Classico',
+                    location: 'Benedetto Residences, Las Piñas',
+                    minPrice: 7995000,
+                    minSalary: 140000,
+                    financing: 'Bank Financing',
+                    image: 'assets/images/amore-facade.jpg',
+                    link: isSubfolder ? '../properties/amore-classico.html' : 'pages/properties/amore-classico.html'
+                },
+                {
+                    id: 'benecia',
+                    title: 'Benecia Single-Attached',
+                    location: 'Talon IV, Las Piñas City',
+                    minPrice: 9695000,
+                    minSalary: 170000,
+                    financing: 'Bank Financing',
+                    image: 'assets/images/benecia-facade.jpg',
+                    link: isSubfolder ? '../properties/benecia.html' : 'pages/properties/benecia.html'
                 }
             ];
 
@@ -542,12 +562,12 @@
                 '        </div>',
 
                 '        <div class="budget-slider-wrap">',
-                '          <input type="range" class="calc-slider" id="bmSalarySlider" min="25000" max="200000" step="5000" value="' + defaultSalary + '">',
+                '          <input type="range" class="calc-slider" id="bmSalarySlider" min="25000" max="250000" step="5000" value="' + defaultSalary + '">',
                 '          <div class="budget-slider-labels">',
                 '            <span>₱25,000</span>',
-                '            <span>₱75,000</span>',
-                '            <span>₱125,000</span>',
-                '            <span>₱200,000+</span>',
+                '            <span>₱100,000</span>',
+                '            <span>₱175,000</span>',
+                '            <span>₱250,000+</span>',
                 '          </div>',
                 '        </div>',
 

@@ -55,7 +55,7 @@ package.json           ESM mode and Vercel Routing Middleware helper dependency
 backend/               app.py (FastAPI assembler), middleware.py (RBAC guard), routers/ (system, auth, properties, inquiries, superadmin, web), database.py, models.py, auth.py, seed_rbac.py, migration_rbac.sql
 frontend/              Everything the browser loads (served at /)
   index.html/.css/.js  Home page
-  pages/properties/    property-detail (?id=N), casasuerte.html, kathleen.html, Liora.html & Airmen.html showcases (properties.html catalog was removed)
+  pages/properties/    property-detail (?id=N), casasuerte.html, kathleen.html, Liora.html, Airmen.html, benecia.html & amore-classico.html showcases (properties.html catalog was removed)
   pages/inquiry/       Inquiry form (inquiry.html) & client history (history.html) (requires login: <html data-require-auth>)
   pages/auth/          Unified login (auto-routes by role), register, and forgot-password flow
   pages/legal/         Terms of Service (terms.html) & Privacy Policy (privacy.html)
@@ -955,6 +955,34 @@ path when rendering from a page.
       - Added `pointer-events: none;` to `.contact-fab` wrapper, while preserving `pointer-events: auto;` on its interactive triggers (`.fab-main-btn`, `.fab-action-btn`).
       - Increased `.back-to-top-btn` `z-index` from `9997` to `10001` in `common.css`, set `pointer-events: auto !important; cursor: pointer;` on `.back-to-top-btn.is-active`, and added `pointer-events: none;` to `.btt-icon`.
       - Added `pointer-events: none !important;` to `#splash.splash-exit` and all descendants to guarantee exiting splash curtains never intercept UI interactions.
+
+90. **New Property Onboarding: Benecia Single-Attached & Amore Classico (`index.html`, `index.js`, `supabase.js`, `api.js`, `calculator.js`, `benecia.html`, `amore-classico.html`, `property-detail.html`, `property-detail.js`, `inquiry.js`, `backend/database.py`, SQLite & Supabase Cloud):**
+    - **Property 5: Benecia Single-Attached House & Lot**:
+      - Location: Sihanouk Village, Barangay Talon IV, Las Piñas City.
+      - Specs: Single-Attached House, 102 sqm Lot, 117 sqm Floor, 3 Bedrooms, 2 T&B + 1 Powder Room (3 Baths), Maid's Room, Carport, Balcony, Lanai, complete turnover with front fence & gate, Ready for Occupancy (RFO).
+      - Pricing: Advertised indicative price ~₱9,695,000 (~₱9.695M), Est. Amort: ₱60,119/mo (Bank Financing, 20-yr, 20% DP).
+      - Official flyer: `frontend/assets/images/benecia-flyer.jpg` with interactive modal viewer.
+      - Exterior facade: `frontend/assets/images/benecia-facade.jpg` with full room gallery `benecia-1.jpg` to `benecia-17.jpg`.
+    - **Property 6: Amore Classico – Benedetto Residences**:
+      - Location: Benedetto Residences, Barangay Pulang Lupa Uno, Las Piñas City.
+      - Available Units: Block 1B, Lot 6; Block 1B, Lot 7; Block 2B, Lot 8.
+      - Specs: 3-Storey Townhouse, 52 sqm Lot, 102 sqm Total Developed Floor Area, 3 Bedrooms, 2 T&B + 1 Powder Room (3 Baths), Maid's Room, Family Hall, Private Patio, Ready for Occupancy (RFO).
+      - Pricing: ₱7,995,000 (₱7.995M), Est. Amort: ₱49,577/mo (Bank Financing, 20-yr, 20% DP).
+      - Official information sheet: `frontend/assets/images/amore-flyer.jpg` with interactive modal viewer.
+      - Exterior facade: `frontend/assets/images/amore-facade.jpg` with full room gallery `amore-1.jpg` to `amore-15.jpg`.
+    - **Homepage Featured Cards & Filter Engine (`index.html`, `index.js`)**:
+      - Added static and dynamic card templates with status badges, verified specs pills, TCP badges, est. amort subtexts, and share link triggers.
+      - Updated category filter engine so "House & Lot" specifically matches Benecia (`type.includes('single') || type.includes('attached') || (type.includes('house') && !type.includes('townhouse'))`), and "Townhouses" matches Amore Classico, Casasuerte, Kathleen, and Liora Homes.
+      - Updated `isAccreditedPropertyItem` and `formatPropertyTitle` to retain and format Benecia and Amore across all filters.
+    - **Home Affordability & Budget Matcher (`calculator.js`)**:
+      - Integrated Benecia (min. gross monthly household salary ₱170k, ₱9.695M TCP) and Amore Classico (min. salary ₱140k, ₱7.995M TCP) into the matching engine.
+      - Extended income slider range to ₱250,000+ so prospective luxury and multi-level homebuyers can qualify for all 6 accredited developments.
+    - **Dedicated Showcases & Dynamic Property Details (`benecia.html`, `amore-classico.html`, `property-detail.html`, `property-detail.js`)**:
+      - Created standalone showcase pages matching `Airmen.html` design standard, complete with interactive thumbnail carousels, full specifications bar, verified Google Maps embed/links, official flyer lightbox viewers, and embedded mortgage amortization calculators.
+      - Enhanced `property-detail.js` so route `/pages/properties/property-detail.html?id=5` (Benecia) and `?id=6` (Amore) automatically render full photo galleries, accurate maps, and sample computation sheets.
+    - **Inquiry Pre-Selection & Dual Storage Synchronization (`inquiry.js`, `backend/database.py`, SQLite & Supabase Cloud)**:
+      - Updated `inquiry.js` catalog fallbacks so `<select id="propertySelect">` dynamically lists both properties and auto-preselects them via `?type=property&id=5` or `?title=Benecia`.
+      - Seeded properties into local SQLite `backend/urbanscope.db` (IDs 5 and 6) and inserted into remote Supabase Cloud (`properties` table IDs 55 and 56 with `city: "Las Piñas"` and `province: "Metro Manila"`).
 
 ---
 

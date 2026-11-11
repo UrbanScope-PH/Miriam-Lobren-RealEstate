@@ -329,6 +329,24 @@ async function loadPropertiesCatalog() {
                 price: 8900000,
                 lot_area: 83.25,
                 image_url: "assets/images/AirmenTriplex.WEBP"
+            },
+            {
+                id: 5,
+                title: "Benecia Single-Attached",
+                location: "Sihanouk Village, Barangay Talon IV, Las Piñas City",
+                property_type: "Single-Attached House",
+                price: 9695000,
+                lot_area: 102,
+                image_url: "assets/images/benecia-facade.jpg"
+            },
+            {
+                id: 6,
+                title: "Amore Classico",
+                location: "Benedetto Residences, Barangay Pulang Lupa Uno, Las Piñas City",
+                property_type: "Townhouse",
+                price: 7995000,
+                lot_area: 52,
+                image_url: "assets/images/amore-facade.jpg"
             }
         ];
     }
@@ -338,6 +356,8 @@ async function loadPropertiesCatalog() {
         const title = property.title.toLowerCase();
         if (title.includes('suerte')) property.title = 'Casasuerte';
         else if (title.includes('kathleen')) property.title = 'Kathleen';
+        else if (title.includes('benecia')) property.title = 'Benecia Single-Attached';
+        else if (title.includes('amore')) property.title = 'Amore Classico';
     });
     loadedProperties = allLoadedProperties.filter(property => !isSoldOutProperty(property));
 

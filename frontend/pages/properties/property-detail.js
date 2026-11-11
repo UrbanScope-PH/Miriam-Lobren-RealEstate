@@ -212,6 +212,8 @@ async function loadPropertyFromDb() {
     const tCheck = cleanTitle.toLowerCase();
     if (tCheck.includes('suerte')) cleanTitle = 'Casasuerte';
     else if (tCheck.includes('kathleen')) cleanTitle = 'Kathleen';
+    else if (tCheck.includes('benecia')) cleanTitle = 'Benecia Single-Attached';
+    else if (tCheck.includes('amore')) cleanTitle = 'Amore Classico';
     if (titleEl) titleEl.innerText = cleanTitle;
     if (locEl) {
         locEl.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg> ${property.location}`;
@@ -277,6 +279,44 @@ async function loadPropertyFromDb() {
         propImages = [
             '../../assets/images/AirmenTriplex.WEBP',
             '../../assets/images/airmen-flyer.jpg'
+        ];
+    } else if (tLower.includes('benecia')) {
+        propImages = [
+            '../../assets/images/benecia-facade.jpg',
+            '../../assets/images/benecia-1.jpg',
+            '../../assets/images/benecia-2.jpg',
+            '../../assets/images/benecia-3.jpg',
+            '../../assets/images/benecia-5.jpg',
+            '../../assets/images/benecia-6.jpg',
+            '../../assets/images/benecia-7.jpg',
+            '../../assets/images/benecia-8.jpg',
+            '../../assets/images/benecia-10.jpg',
+            '../../assets/images/benecia-11.jpg',
+            '../../assets/images/benecia-13.jpg',
+            '../../assets/images/benecia-14.jpg',
+            '../../assets/images/benecia-15.jpg',
+            '../../assets/images/benecia-16.jpg',
+            '../../assets/images/benecia-17.jpg',
+            '../../assets/images/benecia-flyer.jpg'
+        ];
+    } else if (tLower.includes('amore')) {
+        propImages = [
+            '../../assets/images/amore-facade.jpg',
+            '../../assets/images/amore-1.jpg',
+            '../../assets/images/amore-2.jpg',
+            '../../assets/images/amore-3.jpg',
+            '../../assets/images/amore-4.jpg',
+            '../../assets/images/amore-5.jpg',
+            '../../assets/images/amore-6.jpg',
+            '../../assets/images/amore-7.jpg',
+            '../../assets/images/amore-8.jpg',
+            '../../assets/images/amore-9.jpg',
+            '../../assets/images/amore-10.jpg',
+            '../../assets/images/amore-11.jpg',
+            '../../assets/images/amore-13.jpg',
+            '../../assets/images/amore-14.jpg',
+            '../../assets/images/amore-15.jpg',
+            '../../assets/images/amore-flyer.jpg'
         ];
     }
 
@@ -387,8 +427,12 @@ async function loadPropertyFromDb() {
         mapQuery = '14.416,120.975+(Kathleen+Bacoor)';
     } else if (titleLower.includes('liora') || lLower.includes('naic')) {
         mapQuery = '14.31028,120.76329+(Liora+Homes+Naic)';
-    } else if (titleLower.includes('airmen') || lLower.includes('pulang lupa') || lLower.includes('las piñas')) {
+    } else if (titleLower.includes('airmen')) {
         mapQuery = '14.4661,120.9911+(Airmen\'s+Village+Triplex)';
+    } else if (titleLower.includes('benecia') || lLower.includes('talon')) {
+        mapQuery = '14.4375,120.9995+(Benecia+Single+Attached+Talon+IV+Las+Pinas)';
+    } else if (titleLower.includes('amore') || lLower.includes('benedetto')) {
+        mapQuery = '14.4788,120.9856+(Amore+Classico+Benedetto+Residences+Las+Pinas)';
     }
 
     if (mapIframe) {
@@ -494,6 +538,46 @@ function renderDynamicTcp(property) {
             </div>
             <p class="tcp-disclaimer">*Inclusive of Title Transfer and Move-In Fees. Final loan interest rate and approval is determined by the financing bank upon loan take-out.</p>
         </section>`;
+    } else if (tLower.includes('benecia')) {
+        tcpHtml = `
+        <section class="tcp-section">
+            <div class="tcp-doc-card">
+                <div class="tcp-doc-info">
+                    <div class="tcp-doc-icon">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+                    </div>
+                    <div class="tcp-doc-text">
+                        <h4>Official Property Specification &amp; Turnover Flyer</h4>
+                        <p>Sihanouk Village, Talon IV, Las Piñas City · Single-Attached House &amp; Lot · RFO</p>
+                    </div>
+                </div>
+                <button type="button" class="tcp-doc-btn" onclick="openDocumentPreview('../../assets/images/benecia-flyer.jpg', 'Benecia Single-Attached specifications flyer')">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line><line x1="11" y1="8" x2="11" y2="14"></line><line x1="8" y1="11" x2="14" y2="11"></line></svg>
+                    <span>View Specification Flyer</span>
+                </button>
+            </div>
+            <p class="tcp-disclaimer">*Price: Approximately ₱9.695M. Complete turnover with front fence and gate. Bank financing indicative computation available.</p>
+        </section>`;
+    } else if (tLower.includes('amore')) {
+        tcpHtml = `
+        <section class="tcp-section">
+            <div class="tcp-doc-card">
+                <div class="tcp-doc-info">
+                    <div class="tcp-doc-icon">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+                    </div>
+                    <div class="tcp-doc-text">
+                        <h4>Official Benedetto Residences Information Sheet</h4>
+                        <p>Benedetto Residences, Pulang Lupa Uno, Las Piñas City · 3-Storey Townhouse · RFO</p>
+                    </div>
+                </div>
+                <button type="button" class="tcp-doc-btn" onclick="openDocumentPreview('../../assets/images/amore-flyer.jpg', 'Amore Classico information sheet')">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line><line x1="11" y1="8" x2="11" y2="14"></line><line x1="8" y1="11" x2="14" y2="11"></line></svg>
+                    <span>View Information Sheet</span>
+                </button>
+            </div>
+            <p class="tcp-disclaimer">*Price: ₱7,995,000. Ready for Occupancy units in Block 1B / 2B. Bank financing indicative terms upon credit check.</p>
+        </section>`;
     } else {
         tcpHtml = '';
     }
@@ -543,6 +627,16 @@ function renderPropertyCalculator(property) {
         dp = 10;
         financing = 'pagibig';
         supported = ['pagibig', 'bank'];
+    } else if (tLower.includes('benecia')) {
+        resv = 50000;
+        dp = 20;
+        financing = 'bank';
+        supported = ['bank'];
+    } else if (tLower.includes('amore')) {
+        resv = 30000;
+        dp = 20;
+        financing = 'bank';
+        supported = ['bank'];
     }
 
     if (calcContainer._setTcp) {
