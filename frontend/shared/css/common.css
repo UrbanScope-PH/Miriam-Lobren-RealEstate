@@ -680,3 +680,144 @@ img, video, canvas, svg {
     }
 }
 
+/* ==========================================================================
+   Scroll-Driven Reveal System & Micro-Interactions
+   ========================================================================== */
+.reveal-on-scroll {
+    opacity: 0;
+    transform: translateY(22px);
+    transition: opacity 0.65s cubic-bezier(0.16, 1, 0.3, 1), transform 0.65s cubic-bezier(0.16, 1, 0.3, 1);
+    will-change: opacity, transform;
+}
+
+.reveal-on-scroll.is-visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.reveal-delay-1 { transition-delay: 0.1s; }
+.reveal-delay-2 { transition-delay: 0.2s; }
+.reveal-delay-3 { transition-delay: 0.3s; }
+.reveal-delay-4 { transition-delay: 0.4s; }
+
+@media (prefers-reduced-motion: reduce) {
+    .reveal-on-scroll {
+        opacity: 1 !important;
+        transform: none !important;
+        transition: none !important;
+    }
+}
+
+/* ==========================================================================
+   Floating Back-to-Top Button with Radial Scroll Progress
+   ========================================================================== */
+.back-to-top-btn {
+    position: fixed;
+    bottom: calc(92px + env(safe-area-inset-bottom, 0px));
+    right: 28px;
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: #ffffff;
+    border: 1px solid rgba(45, 92, 57, 0.18);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12);
+    cursor: pointer;
+    z-index: 10001;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(12px) scale(0.9);
+    transition: opacity 0.3s ease, transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s ease, background 0.25s ease;
+}
+
+.back-to-top-btn.is-active {
+    opacity: 1;
+    pointer-events: auto !important;
+    cursor: pointer;
+    transform: translateY(0) scale(1);
+}
+
+.back-to-top-btn:hover {
+    transform: translateY(-3px) scale(1.05);
+    box-shadow: 0 10px 24px rgba(45, 92, 57, 0.24);
+}
+
+.btt-progress-ring {
+    position: absolute;
+    top: 1px;
+    left: 1px;
+    transform: rotate(-90deg);
+    pointer-events: none;
+}
+
+.btt-progress-track {
+    stroke: rgba(45, 92, 57, 0.14);
+}
+
+.btt-progress-fill {
+    stroke: var(--green, #2d5c39);
+    stroke-linecap: round;
+    transition: stroke-dashoffset 0.15s ease-out;
+}
+
+.btt-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--green, #2d5c39);
+    pointer-events: none;
+    transition: transform 0.2s ease, color 0.2s ease;
+}
+
+.back-to-top-btn:hover .btt-icon {
+    transform: translateY(-2px);
+    color: var(--dark-green, #1a3b23);
+}
+
+/* Dark Mode Support */
+html.dark-mode .back-to-top-btn,
+html[data-theme="dark"] .back-to-top-btn {
+    background: #17241a;
+    border-color: rgba(72, 187, 120, 0.32);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+}
+
+html.dark-mode .btt-progress-track,
+html[data-theme="dark"] .btt-progress-track {
+    stroke: rgba(255, 255, 255, 0.1);
+}
+
+html.dark-mode .btt-progress-fill,
+html[data-theme="dark"] .btt-progress-fill {
+    stroke: #48bb78;
+}
+
+html.dark-mode .btt-icon,
+html[data-theme="dark"] .btt-icon {
+    color: #48bb78;
+}
+
+html.dark-mode .back-to-top-btn:hover .btt-icon,
+html[data-theme="dark"] .back-to-top-btn:hover .btt-icon {
+    color: #68d391;
+}
+
+@media (max-width: 480px) {
+    .back-to-top-btn {
+        bottom: calc(88px + env(safe-area-inset-bottom, 0px));
+        right: 20px;
+        width: 44px;
+        height: 44px;
+    }
+    .btt-progress-ring {
+        width: 42px;
+        height: 42px;
+        top: 0;
+        left: 0;
+    }
+}
+
+

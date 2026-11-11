@@ -16,6 +16,7 @@ let activeCategory = 'all';
 let activeLocation = 'all';
 let activeKeyword = '';
 let activeSort = 'featured';
+let activeMaxPrice = null;
 
 function normalizeStr(val) {
     if (!val) return '';
@@ -159,7 +160,7 @@ function renderFeaturedGrid(list) {
         const bathLabel = bathCount === 1 ? '1 Bath' : `${bathCount} Baths`;
 
         return `
-        <article class="property-card ${isSold ? 'card-sold' : ''}" onclick="location.href='${detailUrl}'">
+        <article class="property-card ${isSold ? 'card-sold' : ''} reveal-on-scroll" onclick="location.href='${detailUrl}'">
             <div class="property-image">
                 <span class="property-status-badge ${isSold ? 'badge-sold' : 'badge-available'}">
                     ${statusLabel}
@@ -183,15 +184,15 @@ function renderFeaturedGrid(list) {
                 <h3>${displayTitle}</h3>
                 <p class="property-location">${item.location}</p>
                 <div class="property-details">
-                    <span><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                    <span class="spec-pill"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                             stroke-width="2">
                             <path d="M2 4v16M2 8h18a2 2 0 0 1 2 2v10M2 17h20M6 8v9" />
                         </svg> ${bedLabel}</span>
-                    <span><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                    <span class="spec-pill"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                             stroke-width="2">
                             <path d="M9 6h6a2 2 0 0 1 2 2v10H7V8a2 2 0 0 1 2-2z" />
                         </svg> ${bathLabel}</span>
-                    <span><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                    <span class="spec-pill"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                             stroke-width="2">
                             <rect x="3" y="3" width="18" height="18" rx="2" />
                         </svg> ${specsLot}</span>
@@ -206,14 +207,22 @@ function renderFeaturedGrid(list) {
                         <strong class="property-price">${pricing.priceDisplay}</strong>
                     </div>
                     <p class="tcp-subtext">${pricing.tcpSubtext}</p>
+                    <a href="${detailUrl}#calc" class="calc-shortcut-pill" onclick="event.stopPropagation();" title="Simulate monthly payment for ${displayTitle}">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="8" y1="6" x2="16" y2="6"/><line x1="16" y1="14" x2="16" y2="18"/><path d="M16 10h.01"/><path d="M12 10h.01"/><path d="M8 10h.01"/><path d="M12 14h.01"/><path d="M8 14h.01"/><path d="M12 18h.01"/><path d="M8 18h.01"/></svg>
+                        <span>Compute Amortization</span>
+                    </a>
                 </div>
             </div>
         </article>
         `;
     }).join('');
+
+    if (window.UrbanSession && typeof UrbanSession.initScrollReveals === 'function') {
+        UrbanSession.initScrollReveals();
+    }
 }
 
-function filterPropertyList(list, category, location, keyword) {
+function filterPropertyList(list, category, location, keyword, maxPrice = null) {
     if (!list || !Array.isArray(list)) return [];
 
     const cat = (category || 'all').toLowerCase().trim();
@@ -273,6 +282,12 @@ function filterPropertyList(list, category, location, keyword) {
             if (!hasMatch) return false;
         }
 
+        // 4. Max price / budget filter
+        if (maxPrice !== null && maxPrice > 0) {
+            const price = Number(item.price) || 0;
+            if (price > maxPrice) return false;
+        }
+
         return true;
     });
 }
@@ -302,7 +317,7 @@ function sortPropertyList(list, sortKey) {
 }
 
 function applyCurrentFiltersAndRender() {
-    let filtered = filterPropertyList(allCachedProperties, activeCategory, activeLocation, activeKeyword);
+    let filtered = filterPropertyList(allCachedProperties, activeCategory, activeLocation, activeKeyword, activeMaxPrice);
     filtered = sortPropertyList(filtered, activeSort);
     renderFeaturedGrid(filtered);
 }
@@ -547,8 +562,46 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    // 7. FAQs Accordion Interactive Toggle
+    // 8. FAQs Category Filter & Accordion Interactive Toggle
     const faqItems = document.querySelectorAll('.faq-item');
+    const faqCatPills = document.querySelectorAll('.faq-cat-pill');
+
+    faqCatPills.forEach(pill => {
+        pill.addEventListener('click', () => {
+            faqCatPills.forEach(p => p.classList.remove('active'));
+            pill.classList.add('active');
+            const selectedCat = pill.getAttribute('data-faq-cat') || 'all';
+
+            let firstMatch = null;
+            faqItems.forEach(item => {
+                const itemCat = item.getAttribute('data-faq-category') || '';
+                const matches = selectedCat === 'all' || itemCat === selectedCat;
+
+                if (matches) {
+                    item.classList.remove('hidden-by-category');
+                    if (!firstMatch) firstMatch = item;
+                } else {
+                    item.classList.add('hidden-by-category');
+                    item.classList.remove('active');
+                    const qBtn = item.querySelector('.faq-question');
+                    if (qBtn) qBtn.setAttribute('aria-expanded', 'false');
+                }
+            });
+
+            // Expand first visible FAQ item in the selected category
+            if (firstMatch) {
+                faqItems.forEach(other => {
+                    other.classList.remove('active');
+                    const ob = other.querySelector('.faq-question');
+                    if (ob) ob.setAttribute('aria-expanded', 'false');
+                });
+                firstMatch.classList.add('active');
+                const fb = firstMatch.querySelector('.faq-question');
+                if (fb) fb.setAttribute('aria-expanded', 'true');
+            }
+        });
+    });
+
     faqItems.forEach(item => {
         const questionBtn = item.querySelector('.faq-question');
         if (questionBtn) {
@@ -570,7 +623,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // 8. Smooth scroll for FAQs anchor
+    // 9. Smooth scroll for FAQs anchor
     document.querySelectorAll('a[href="#faqs"]').forEach(link => {
         link.addEventListener('click', (e) => {
             e.preventDefault();
@@ -582,10 +635,10 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    // 9. Consultation Intent Modal Controller
+    // 10. Consultation Intent Modal Controller
     initConsultationIntentModal();
 
-    // 10. Dynamic Agent Profile & Contact Information (synced with admin settings)
+    // 11. Dynamic Agent Profile & Contact Information (synced with admin settings)
     initDynamicAgentDetails();
 });
 

@@ -36,7 +36,11 @@ html.splash-pending {
 #splash.splash-exit {
     transform: translateY(-101%);
     border-radius: 0 0 50% 50% / 0 0 14% 14%;
-    pointer-events: none;
+    pointer-events: none !important;
+}
+
+#splash.splash-exit * {
+    pointer-events: none !important;
 }
 
 /* Soft drifting glow orbs */
