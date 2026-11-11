@@ -1021,6 +1021,11 @@ path when rendering from a page.
     - Removed the redundant category filter pills (`#faqCategories`: `All (8)`, `Financing & Payments (2)`, `OFW & Eligibility (4)`, `Requirements & Location (2)`) above the homepage FAQ section.
     - FAQs now transition cleanly and directly from the section header to the accordion list, with all 8 questions accessible in one focused view (with only the initial question open by default). Cleaned up associated filter logic from `index.js` and styling from `index.css`.
 
+96. **Dark Mode Contrast for Notification Header & Links (`session.css`, `admin-shell.css`):**
+    - Enhanced contrast in `frontend/shared/css/session.css` for the notification header action link `.client-notif-view-all` under `html.dark-mode`. Previously rendered in low-contrast dark green (`#2d5c39`) against the `#19281f` dark dropdown header, it now uses high-contrast light mint green (`#86efac`) with hover state `#bbf7d0` (underline), exceeding WCAG AAA legibility (> 8:1 contrast ratio).
+    - Upgraded `.client-notif-time` and `.client-notif-empty` in dark mode to `#9ab09f` for crisp readability of timestamps and empty state indicators.
+    - Applied matching dark mode styling to `.view-all-link` in `frontend/pages/admin/admin-shell.css` to protect admin notifications with the same vibrant `#86efac` token.
+
 ---
 
 ## Safety Rules
