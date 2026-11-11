@@ -1079,6 +1079,11 @@ path when rendering from a page.
     - **Sorting Ordering**: Explicitly handles `featured` curated ordering (Casasuerte → Kathleen → Liora → Airmen's → Benecia → Amore), `price-low` (Liora ₱2.46M up to Benecia ₱9.695M), `price-high` (Benecia ₱9.695M down to Liora ₱2.46M), and `location`.
     - **Headless Automated Verification**: Verified with automated headless Chrome DevTools tests with zero console errors and 100% passing assertions across search, category filtering, keyword debouncing, and sort reversals.
 
+100. **Budget Matcher Space Optimization: 4-Item Fixed Height with Smooth Scroll (`frontend/shared/css/calculator.css`):**
+    - Optimized `.bm-projects-list` in the Quick Home Affordability & Budget Matcher component on `index.html` to display exactly 4 accredited homes simultaneously (`max-height: 396px`), with the remaining listings smoothly scrollable (`overflow-y: auto`, `overscroll-behavior-y: contain`).
+    - Eliminates vertical container over-stretching (reducing list height from `600px` to `396px` and total right column height from `653px` to `449px`), achieving clean visual balance with the left salary slider column (`424px`).
+    - Added custom slim scrollbars (`6px` width, rounded pills, hover micro-transitions) with matching light theme (`#c2d8c7` thumb / `#f1f5f2` track) and dark theme (`#2b4533` thumb / `#142018` track / `#4ade80` hover) tokens across WebKit and Firefox (`scrollbar-width: thin`).
+
 ---
 
 ## Safety Rules
