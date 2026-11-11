@@ -834,15 +834,24 @@
                 el.textContent = cleanEmail;
                 el.setAttribute('href', 'mailto:' + cleanEmail);
             });
+
+            var fabCall = document.getElementById('fabCallBtn');
+            if (fabCall) fabCall.setAttribute('href', 'tel:' + cleanDigits);
+            var fabSms = document.getElementById('fabSmsBtn');
+            if (fabSms) {
+                var curHref = fabSms.getAttribute('href') || '';
+                var bodyPart = curHref.includes('?') ? curHref.slice(curHref.indexOf('?')) : '';
+                fabSms.setAttribute('href', 'sms:' + cleanDigits + bodyPart);
+            }
         }
 
         function applyAgentBranding(profile) {
             if (!profile) return;
             var rawName = profile.name || profile.full_name || 'Miriam Lobren';
             var cleanName = String(rawName).replace(/\s*\((?:Admin|Administrator)\)\s*$/i, '').trim() || rawName;
-            var rawTitle = (profile.title && profile.title.trim()) || 'Real Estate Agent';
-            if (/^licensed real estate broker\s*\/\s*agent$/i.test(rawTitle)) {
-                rawTitle = 'Real Estate Agent';
+            var rawTitle = (profile.title && profile.title.trim()) || 'Real Estate Salesperson';
+            if (/^(?:licensed real estate broker\s*\/\s*agent|real estate agent|real estate sales person)$/i.test(rawTitle)) {
+                rawTitle = 'Real Estate Salesperson';
             }
 
             document.querySelectorAll('.app-brand strong, .Cname strong, #navAgentName').forEach(function (el) {
@@ -928,6 +937,102 @@
         else if (!resolved) location.replace(loginUrl(currentPage(), 'inquiry'));
     }, 5000);
 
+    // Floating Contact Action Button (Messenger, Call, SMS)
+    var CONTACT_CONFIG = {
+        messengerPage: 'miriamalobren',
+        fallbackPhone: '+63 918 964 5434'
+    };
+
+    function initContactFab() {
+        var path = location.pathname.toLowerCase().replace(/\\/g, '/');
+        if (path.includes('/pages/admin/') || path.includes('/pages/superadmin/') || path.includes('/pages/auth/')) return;
+        if (document.querySelector('.contact-fab')) return;
+
+        var currentPhone = CONTACT_CONFIG.fallbackPhone;
+        try {
+            var p = JSON.parse(localStorage.getItem('urbanscope_admin_profile') || 'null');
+            if (p && p.phone) currentPhone = p.phone;
+        } catch (_) {}
+        var cleanDigits = currentPhone.replace(/[^\d+]/g, '');
+
+        var propTitle = '';
+        var h1 = document.querySelector('.property-title, h1');
+        if (h1 && (path.includes('/properties/') || path.includes('property'))) {
+            propTitle = h1.textContent.trim();
+        }
+        var smsBody = propTitle
+            ? encodeURIComponent("Hello Miriam, I'm interested in " + propTitle + ". Is it still available?")
+            : encodeURIComponent("Hello Miriam, I'd like to ask about available properties in Cavite / Las Piñas.");
+
+        var fabWrap = document.createElement('div');
+        fabWrap.className = 'contact-fab';
+        fabWrap.id = 'contactFab';
+
+        var messengerHtml = '';
+        if (CONTACT_CONFIG.messengerPage) {
+            messengerHtml =
+                '<a href="https://m.me/' + encodeURIComponent(CONTACT_CONFIG.messengerPage) + '" class="fab-action-btn fab-msgr" target="_blank" rel="noopener noreferrer" aria-label="Chat on Facebook Messenger">' +
+                    '<svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.477 2 2 6.145 2 11.258c0 2.91 1.453 5.517 3.734 7.202V22l3.39-1.86c.92.255 1.895.394 2.876.394 5.523 0 10-4.145 10-9.258C22 6.145 17.523 2 12 2zm1.066 12.445l-2.723-2.905-5.312 2.905 5.845-6.208 2.788 2.905 5.247-2.905-5.845 6.208z"/></svg>' +
+                    '<span class="fab-label">Messenger</span>' +
+                '</a>';
+        }
+
+        fabWrap.innerHTML =
+            '<div class="fab-menu" id="fabMenu" aria-hidden="true">' +
+                messengerHtml +
+                '<a href="sms:' + cleanDigits + '?&body=' + smsBody + '" class="fab-action-btn fab-sms" id="fabSmsBtn" aria-label="Send SMS text message">' +
+                    '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>' +
+                    '<span class="fab-label">Text SMS</span>' +
+                '</a>' +
+                '<a href="tel:' + cleanDigits + '" class="fab-action-btn fab-call" id="fabCallBtn" aria-label="Call Miriam Lobren">' +
+                    '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>' +
+                    '<span class="fab-label">Call Now</span>' +
+                '</a>' +
+            '</div>' +
+            '<button type="button" class="fab-main-btn" id="fabMainBtn" aria-label="Contact Miriam Lobren" aria-expanded="false">' +
+                '<span class="fab-icon-chat">' +
+                    '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>' +
+                '</span>' +
+                '<span class="fab-icon-close">' +
+                    '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>' +
+                '</span>' +
+            '</button>';
+
+        document.body.appendChild(fabWrap);
+        document.body.classList.add('has-contact-fab');
+
+        var mainBtn = fabWrap.querySelector('#fabMainBtn');
+        var menu = fabWrap.querySelector('#fabMenu');
+
+        function toggleFab() {
+            var open = fabWrap.classList.toggle('open');
+            mainBtn.setAttribute('aria-expanded', String(open));
+            menu.setAttribute('aria-hidden', String(!open));
+        }
+
+        mainBtn.addEventListener('click', function (e) {
+            e.stopPropagation();
+            toggleFab();
+        });
+
+        document.addEventListener('click', function (e) {
+            if (!fabWrap.contains(e.target) && fabWrap.classList.contains('open')) {
+                fabWrap.classList.remove('open');
+                mainBtn.setAttribute('aria-expanded', 'false');
+                menu.setAttribute('aria-hidden', 'true');
+            }
+        });
+
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape' && fabWrap.classList.contains('open')) {
+                fabWrap.classList.remove('open');
+                mainBtn.setAttribute('aria-expanded', 'false');
+                menu.setAttribute('aria-hidden', 'true');
+                mainBtn.focus();
+            }
+        });
+    }
+
     // ------------------------------------------------------------------
     // Global handlers
     // ------------------------------------------------------------------
@@ -950,33 +1055,11 @@
                 m.classList.remove('open');
             });
         }
-
-        // Inquiry gate: contacting / inquiring needs an account
-        var link = e.target.closest('a[href]');
-        if (!link) return;
-        if (e.defaultPrevented) return;
-
-        // If on homepage with consultation intent modal, let modal triggers open the modal first
-        if (document.getElementById('consultationIntentModal') && !link.closest('#consultationIntentModal')) {
-            var rawHref = link.getAttribute('href') || '';
-            if (link.matches('#ctaConsultBtn, .cta-consult-btn, .faqs-contact-link') ||
-                rawHref === 'pages/inquiry/inquiry.html') {
-                return;
-            }
-        }
-
-        var href = link.getAttribute('href');
-        if (!href || !/(^|\/)inquiry(\.html|\/)?(\?|#|$)/.test(href)) return;
-        if (e.ctrlKey || e.metaKey || e.shiftKey || e.button !== 0) return;
-
-        e.preventDefault();
-        var user = resolved ? currentUser : await getUser();
-        if (user) location.href = href;
-        else location.href = loginUrl(rootRelative(href), 'inquiry');
     });
 
     document.addEventListener('DOMContentLoaded', function () {
         initThemeToggle();
+        initContactFab();
         if (root.classList.contains('logged-in') || root.getAttribute('data-auth-state') === 'logged-in') {
             document.querySelectorAll('.inquiry-note').forEach(function (el) {
                 el.style.display = 'none';

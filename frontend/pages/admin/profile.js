@@ -104,12 +104,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     // 4. Populate current admin profile
     const defaultProfile = {
         name: 'Miriam Lobren',
-        title: 'Real Estate Sales Person',
+        title: 'Real Estate Salesperson',
         email: 'miriamalobren@gmail.com',
         phone: '+63 918 964 5434',
-        license: 'PRC REB #402',
-        brokerage: 'CDMiranda Realty',
-        bio: "Hello! I'm Miriam Lobren, a real estate sales person with CDMiranda Realty, with over 10 years of expertise in the industry."
+        license: '',
+        brokerage: 'CD Miranda Realty',
+        bio: "Hello! I'm Miriam Lobren, a real estate salesperson with CD Miranda Realty, with over 10 years of expertise in the industry."
     };
 
     const savedProfile = JSON.parse(localStorage.getItem('urbanscope_admin_profile') || '{}');
@@ -123,10 +123,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         email: savedProfile.email || storedAdmin.email || defaultProfile.email,
         license: savedProfile.license || savedProfile.license_number || storedAdmin.license || storedAdmin.license_number || defaultProfile.license,
         title: savedProfile.title !== undefined ? savedProfile.title : (storedAdmin.title !== undefined ? storedAdmin.title : defaultProfile.title),
-        brokerage: (() => {
-            const raw = savedProfile.brokerage !== undefined ? savedProfile.brokerage : (storedAdmin.brokerage !== undefined ? storedAdmin.brokerage : defaultProfile.brokerage);
-            return /^cd\s.*realty$/i.test(String(raw || '').trim()) ? 'UrbanScope' : raw;
-        })(),
+        brokerage: savedProfile.brokerage !== undefined ? savedProfile.brokerage : (storedAdmin.brokerage !== undefined ? storedAdmin.brokerage : defaultProfile.brokerage),
         bio: savedProfile.bio !== undefined ? savedProfile.bio : (storedAdmin.bio !== undefined ? storedAdmin.bio : defaultProfile.bio)
     };
 
@@ -140,7 +137,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     if (adminNameDisplay) adminNameDisplay.textContent = currentProfile.name || 'Miriam Lobren';
     if (bannerName) bannerName.textContent = currentProfile.name || 'Miriam Lobren';
-    if (adminTitleDisplay) adminTitleDisplay.textContent = currentProfile.title || 'Real Estate Agent';
+    if (adminTitleDisplay) adminTitleDisplay.textContent = currentProfile.title || 'Real Estate Salesperson';
 
     // Asynchronously refresh with server profile if available
     (async function refreshWithRemoteProfile() {
@@ -388,7 +385,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
 
             const newName = fullNameInput.value.trim();
-            const newTitle = titleInput.value.trim() || 'Real Estate Agent';
+            const newTitle = titleInput.value.trim() || 'Real Estate Salesperson';
             const newEmail = emailInput.value.trim();
             const newPhone = phoneInput.value.trim();
             const newLicense = licenseInput.value.trim();

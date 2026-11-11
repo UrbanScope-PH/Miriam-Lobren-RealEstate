@@ -147,6 +147,22 @@ def serve_favicon():
     return JSONResponse(status_code=404, content={"detail": "Not found"})
 
 
+@public_web_router.get("/robots.txt", include_in_schema=False)
+def serve_robots():
+    robots = FRONTEND_DIR / "robots.txt"
+    if robots.exists():
+        return FileResponse(str(robots), media_type="text/plain")
+    return JSONResponse(status_code=404, content={"detail": "Not found"})
+
+
+@public_web_router.get("/sitemap.xml", include_in_schema=False)
+def serve_sitemap():
+    sitemap = FRONTEND_DIR / "sitemap.xml"
+    if sitemap.exists():
+        return FileResponse(str(sitemap), media_type="application/xml")
+    return JSONResponse(status_code=404, content={"detail": "Not found"})
+
+
 def register_web_hosting(app: FastAPI, frontend_dir: Path = FRONTEND_DIR) -> None:
     """
     Mounts portal overrides, static asset directories (pages/, shared/, assets/),

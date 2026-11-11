@@ -1,0 +1,12 @@
+User-agent: *
+Allow: /
+Allow: /pages/properties/
+Allow: /pages/legal/
+Allow: /pages/inquiry/inquiry.html
+Disallow: /pages/inquiry/history.html
+Disallow: /pages/admin/
+Disallow: /pages/superadmin/
+Disallow: /api/
+
+Sitemap: https://miriam-lobren-real-estate.vercel.app/sitemap.xml
+

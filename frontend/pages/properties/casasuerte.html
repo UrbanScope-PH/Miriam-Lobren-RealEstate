@@ -3,8 +3,23 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Casasuerte - Miriam Lobren Real Estate</title>
+    <title>Casasuerte Townhouse – Trece Martires City, Cavite | Miriam Lobren · CD Miranda Realty</title>
+    <meta name="description" content="Casasuerte 2-bedroom townhouse in Brgy. San Agustin, Trece Martires City, Cavite. TCP ₱2.50M–₱3.00M, Pag-IBIG financing available. Book a free site tripping with Miriam Lobren, CD Miranda Realty.">
+    <link rel="canonical" href="https://miriam-lobren-real-estate.vercel.app/pages/properties/casasuerte.html">
     <link rel="icon" href="../../assets/images/favicon.jpg" type="image/x-icon">
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Miriam Lobren · CD Miranda Realty">
+    <meta property="og:title" content="Casasuerte Townhouse – Trece Martires City, Cavite | Miriam Lobren">
+    <meta property="og:description" content="2 BR · 1 BA · 50-80 sqm · TCP ₱2.50M–₱3.00M · Pag-IBIG financing">
+    <meta property="og:image" content="https://miriam-lobren-real-estate.vercel.app/assets/images/og/og-casasuerte.jpg">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:url" content="https://miriam-lobren-real-estate.vercel.app/pages/properties/casasuerte.html">
+    <meta property="og:locale" content="en_PH">
+    <meta name="twitter:card" content="summary_large_image">
+
     <link rel="stylesheet" href="property-detail.css">
     <link rel="stylesheet" href="../../shared/css/splash.css">
     <link rel="stylesheet" href="../../shared/css/session.css">
@@ -21,7 +36,7 @@
             <img src="../../assets/images/logo.png" alt="ML Logo" class="brand-logo" onerror="this.style.display='none'">
             <span>
                 <strong>Miriam Lobren</strong>
-                <small>REAL ESTATE AGENT</small>
+                <small>REAL ESTATE SALESPERSON</small>
             </span>
         </a>
 
@@ -74,7 +89,7 @@
                 <button class="carousel-arrow prev" type="button" aria-label="Previous image" onclick="changeSlide(-1)">
                     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"></polyline></svg>
                 </button>
-                <img id="mainGalleryImg" src="../../assets/images/casasuerte.jpg" alt="Casasuerte Townhouse Exterior" onclick="openLightbox()" title="Click to zoom image">
+                <img id="mainGalleryImg" src="../../assets/images/casasuerte.jpg" alt="Casasuerte Townhouse Exterior" fetchpriority="high" onclick="openLightbox()" title="Click to zoom image">
                 <button class="carousel-arrow next" type="button" aria-label="Next image" onclick="changeSlide(1)">
                     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
                 </button>
@@ -92,28 +107,28 @@
             <!-- THUMBNAIL ROW -->
             <div class="thumbnails-row">
                 <div class="thumb active" onclick="selectThumb(0, '../../assets/images/casasuerte.jpg')">
-                    <img src="../../assets/images/casasuerte.jpg" alt="Casasuerte Exterior">
+                    <img src="../../assets/images/casasuerte.jpg" alt="Casasuerte Exterior" loading="lazy" decoding="async">
                 </div>
                 <div class="thumb" onclick="selectThumb(1, '../../assets/images/casasuerte-living.jpg')">
-                    <img src="../../assets/images/casasuerte-living.jpg" alt="Living Room & Solar Inverter">
+                    <img src="../../assets/images/casasuerte-living.jpg" alt="Living Room & Solar Inverter" loading="lazy" decoding="async">
                 </div>
                 <div class="thumb" onclick="selectThumb(2, '../../assets/images/casasuerte-dining.jpg')">
-                    <img src="../../assets/images/casasuerte-dining.jpg" alt="Spacious Ground Floor">
+                    <img src="../../assets/images/casasuerte-dining.jpg" alt="Spacious Ground Floor" loading="lazy" decoding="async">
                 </div>
                 <div class="thumb" onclick="selectThumb(3, '../../assets/images/casasuerte-bedroom1.jpg')">
-                    <img src="../../assets/images/casasuerte-bedroom1.jpg" alt="Master Bedroom">
+                    <img src="../../assets/images/casasuerte-bedroom1.jpg" alt="Master Bedroom" loading="lazy" decoding="async">
                 </div>
                 <div class="thumb" onclick="selectThumb(4, '../../assets/images/casasuerte-bedroom2.jpg')">
-                    <img src="../../assets/images/casasuerte-bedroom2.jpg" alt="Second Bedroom">
+                    <img src="../../assets/images/casasuerte-bedroom2.jpg" alt="Second Bedroom" loading="lazy" decoding="async">
                 </div>
                 <div class="thumb" onclick="selectThumb(5, '../../assets/images/casasuerte-bathroom.jpg')">
-                    <img src="../../assets/images/casasuerte-bathroom.jpg" alt="Modern Bathroom">
+                    <img src="../../assets/images/casasuerte-bathroom.jpg" alt="Modern Bathroom" loading="lazy" decoding="async">
                 </div>
                 <div class="thumb" onclick="selectThumb(6, '../../assets/images/casasuerte-service.jpg')">
-                    <img src="../../assets/images/casasuerte-service.jpg" alt="Service & Laundry Area">
+                    <img src="../../assets/images/casasuerte-service.jpg" alt="Service & Laundry Area" loading="lazy" decoding="async">
                 </div>
                 <div class="thumb" onclick="selectThumb(7, '../../assets/images/casasuerte-subdivision-plan.jpg')">
-                    <img src="../../assets/images/casasuerte-subdivision-plan.jpg" alt="Subdivision Site Plan">
+                    <img src="../../assets/images/casasuerte-subdivision-plan.jpg" alt="Subdivision Site Plan" loading="lazy" decoding="async">
                 </div>
             </div>
         </section>
@@ -228,7 +243,7 @@
                     <span>Submit Inquiry</span>
                 </a>
 
-                <p class="inquiry-note">*Please log in or create an account to submit an inquiry.</p>
+                <p class="inquiry-note">*No account needed. Log in only if you want to track your inquiries.</p>
             </div>
         </section>
     </main>

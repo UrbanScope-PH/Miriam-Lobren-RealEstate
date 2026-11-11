@@ -421,6 +421,37 @@ async function refreshSelectedPropertyAvailability() {
     } catch (_) {}
 }
 
+function isUserLoggedIn() {
+    try {
+        const storedUser = localStorage.getItem('urbanscope_user') || localStorage.getItem('urbanscope_demo_user');
+        if (storedUser) {
+            const u = JSON.parse(storedUser);
+            if (u && (u.email || u.id)) return true;
+        }
+    } catch (_) {}
+    return false;
+}
+
+function updateInquirySessionUi() {
+    const loggedIn = isUserLoggedIn();
+    const guestBanner = document.getElementById('guestInquiryBanner');
+    const historyLink = document.getElementById('inquiryHistoryLink');
+    const userTag = document.getElementById('userDetectedTag');
+    const infoTitle = document.getElementById('userInfoTitleText');
+
+    if (loggedIn) {
+        if (guestBanner) guestBanner.style.display = 'none';
+        if (historyLink) historyLink.style.display = 'inline-flex';
+        if (userTag) userTag.style.display = 'inline';
+        if (infoTitle) infoTitle.textContent = 'Your Information';
+    } else {
+        if (guestBanner) guestBanner.style.display = 'flex';
+        if (historyLink) historyLink.style.display = 'none';
+        if (userTag) userTag.style.display = 'none';
+        if (infoTitle) infoTitle.textContent = 'Your Contact Details';
+    }
+}
+
 function showSuccessModal(inquiryData, scheduleDetails) {
     const modal = document.getElementById('inquirySuccessModal');
     if (!modal) return;
@@ -450,6 +481,23 @@ function showSuccessModal(inquiryData, scheduleDetails) {
         if (scheduleText) scheduleText.textContent = `Schedule: ${scheduleDetails}`;
     } else {
         if (scheduleBox) scheduleBox.style.display = 'none';
+    }
+
+    const loggedInActions = document.getElementById('modalLoggedInActions');
+    const guestActions = document.getElementById('modalGuestActions');
+    if (isUserLoggedIn()) {
+        if (loggedInActions) loggedInActions.style.display = 'flex';
+        if (guestActions) guestActions.style.display = 'none';
+    } else {
+        if (loggedInActions) loggedInActions.style.display = 'none';
+        if (guestActions) guestActions.style.display = 'flex';
+        try {
+            sessionStorage.setItem('urbanscope_register_draft', JSON.stringify({
+                fullname: inquiryData.client_name,
+                email: inquiryData.client_email,
+                phone: inquiryData.client_phone
+            }));
+        } catch (_) {}
     }
 
     modal.classList.add('active');
@@ -597,11 +645,76 @@ async function submitInquiry() {
         formattedMessage = scheduleNote + rawMessage;
     }
 
+    // Anti-spam Honeypot Check
+    const hpVal = document.getElementById('companyWebsite')?.value || '';
+    if (hpVal.trim().length > 0) {
+        inquirySubmitInProgress = false;
+        if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = inquirySubmitOriginalHtml;
+            submitBtn.style.opacity = '1';
+        }
+        showSuccessModal({
+            property_title: propertyTitle,
+            client_name: clientName || 'Guest',
+            client_email: clientEmail,
+            client_phone: clientPhone
+        }, scheduleDetails);
+        return;
+    }
+
+    // Name Validation
+    if (!clientName || clientName.length < 2) {
+        inquirySubmitInProgress = false;
+        if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = inquirySubmitOriginalHtml;
+            submitBtn.style.opacity = '1';
+        }
+        showToastNotice('Please enter your full name (at least 2 characters).', true);
+        document.getElementById('clientName')?.focus();
+        return;
+    }
+
+    // Email Validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!clientEmail || !emailRegex.test(clientEmail)) {
+        inquirySubmitInProgress = false;
+        if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = inquirySubmitOriginalHtml;
+            submitBtn.style.opacity = '1';
+        }
+        showToastNotice('Please provide a valid email address so Miriam can contact you.', true);
+        document.getElementById('clientEmail')?.focus();
+        return;
+    }
+
+    // Philippine Mobile Number Validation and Normalization
+    let normalizedPhone = clientPhone.replace(/[\s\-\(\)]/g, '');
+    if (/^09\d{9}$/.test(normalizedPhone)) {
+        normalizedPhone = '+63' + normalizedPhone.slice(1);
+    } else if (/^639\d{9}$/.test(normalizedPhone)) {
+        normalizedPhone = '+' + normalizedPhone;
+    } else if (/^9\d{9}$/.test(normalizedPhone)) {
+        normalizedPhone = '+63' + normalizedPhone;
+    } else if (!/^\+639\d{9}$/.test(normalizedPhone)) {
+        inquirySubmitInProgress = false;
+        if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = inquirySubmitOriginalHtml;
+            submitBtn.style.opacity = '1';
+        }
+        showToastNotice('Please enter a valid Philippine mobile number (e.g. 0917 123 4567 or +63 917 123 4567).', true);
+        document.getElementById('clientPhone')?.focus();
+        return;
+    }
+
     const inquiryData = {
         property_title: propertyTitle,
         client_name: clientName,
         client_email: clientEmail,
-        client_phone: clientPhone,
+        client_phone: normalizedPhone,
         message: formattedMessage,
         status: 'Under Review'
     };
@@ -634,14 +747,18 @@ window.addEventListener('DOMContentLoaded', () => {
     const submitBtn = document.querySelector('.submit-btn');
     if (submitBtn) inquirySubmitOriginalHtml = submitBtn.innerHTML;
 
+    updateInquirySessionUi();
+
     document.addEventListener('urbanscope:user', (event) => {
         inquirySessionEmail = String(event.detail?.email || '').trim().toLowerCase();
         refreshInquiryCooldownUi();
+        updateInquirySessionUi();
     });
 
     window.addEventListener('storage', (event) => {
         if (event.key && (event.key.startsWith(INQUIRY_COOLDOWN_STORAGE_PREFIX) || event.key === 'urbanscope_user' || event.key === 'urbanscope_demo_user')) {
             refreshInquiryCooldownUi();
+            updateInquirySessionUi();
         }
         if (event.key === 'cached_live_properties') {
             refreshSelectedPropertyAvailability();

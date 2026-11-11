@@ -1,10 +1,25 @@
 <!DOCTYPE html>
-<html lang="en" data-require-auth>
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Submit Inquiry - Miriam Lobren</title>
+    <title>Submit Inquiry | Miriam Lobren · CD Miranda Realty</title>
+    <meta name="description" content="Submit a free property inquiry or consultation request with Miriam Lobren, CD Miranda Realty. No account required.">
+    <link rel="canonical" href="https://miriam-lobren-real-estate.vercel.app/pages/inquiry/inquiry.html">
     <link rel="icon" href="../../assets/images/favicon.jpg" type="image/x-icon">
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Miriam Lobren · CD Miranda Realty">
+    <meta property="og:title" content="Submit Inquiry | Miriam Lobren · CD Miranda Realty">
+    <meta property="og:description" content="Submit a free property inquiry or consultation request with Miriam Lobren, CD Miranda Realty. No account required.">
+    <meta property="og:image" content="https://miriam-lobren-real-estate.vercel.app/assets/images/og/og-home.jpg">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:url" content="https://miriam-lobren-real-estate.vercel.app/pages/inquiry/inquiry.html">
+    <meta property="og:locale" content="en_PH">
+    <meta name="twitter:card" content="summary_large_image">
+
     <link rel="stylesheet" href="../../shared/css/common.css">
     <link rel="stylesheet" href="../../shared/css/splash.css">
     <link rel="stylesheet" href="../../shared/css/session.css">
@@ -22,7 +37,7 @@
             <img src="../../assets/images/logo.png" alt="ML Logo" class="brand-logo" onerror="this.style.display='none'">
             <span>
                 <strong id="navAgentName">Miriam Lobren</strong>
-                <small id="navAgentTitle">REAL ESTATE AGENT</small>
+                <small id="navAgentTitle">REAL ESTATE SALESPERSON</small>
             </span>
         </a>
 
@@ -49,9 +64,15 @@
 
     <!-- MAIN INQUIRY FORM (PAGE 12) -->
     <main class="inquiry-page-container">
+        <!-- GUEST NOTICE BANNER -->
+        <div class="guest-inquiry-banner" id="guestInquiryBanner" style="display: none;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+            <span>No account required to inquire. Already registered? <a href="../auth/login.html?redirect=pages/inquiry/inquiry.html">Log in here</a> to auto-fill your contact details and track status.</span>
+        </div>
+
         <div class="inquiry-header-top">
             <h1 class="page-heading">Submit Inquiry</h1>
-            <a href="history.html" class="history-pill-link">
+            <a href="history.html" class="history-pill-link" id="inquiryHistoryLink" style="display: none;">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
                 <span>Inquiry History</span>
             </a>
@@ -157,23 +178,30 @@
                 </div>
             </div>
 
-            <!-- YOUR INFORMATION (AUTOMATICALLY DETECTED) -->
+            <!-- YOUR INFORMATION -->
             <div class="form-section">
-                <h3 class="section-title">Your Information <span class="detected-tag">(Automatically detected from your account)</span></h3>
+                <h3 class="section-title"><span id="userInfoTitleText">Your Contact Details</span> <span class="detected-tag" id="userDetectedTag" style="display: none;">(Automatically detected from your account)</span></h3>
 
                 <div class="user-info-row">
                     <div class="input-field">
-                        <label for="clientName">Name</label>
-                        <input type="text" id="clientName" value="Pedro Penduko" required>
+                        <label for="clientName">Full Name*</label>
+                        <input type="text" id="clientName" placeholder="Juan Dela Cruz" required>
                     </div>
                     <div class="input-field">
-                        <label for="clientEmail">Email</label>
-                        <input type="email" id="clientEmail" value="pedropenduko@gmail.com" required>
+                        <label for="clientEmail">Email Address*</label>
+                        <input type="email" id="clientEmail" placeholder="juan@example.com" required>
                     </div>
                     <div class="input-field">
-                        <label for="clientPhone">Phone</label>
-                        <input type="tel" id="clientPhone" value="+(63) 1234 567 890" required>
+                        <label for="clientPhone">Mobile Number*</label>
+                        <input type="tel" id="clientPhone" placeholder="0917 123 4567" inputmode="tel" required>
+                        <small class="field-hint" style="display: block; margin-top: 4px; font-size: 11px; color: var(--text-muted, #9ab09f);">Philippine mobile (e.g. 09171234567 or +639171234567)</small>
                     </div>
+                </div>
+
+                <!-- Anti-spam Honeypot Field -->
+                <div class="hp-field" style="position: absolute; left: -9999px; width: 1px; height: 1px; opacity: 0; pointer-events: none;" aria-hidden="true">
+                    <label for="companyWebsite">Website</label>
+                    <input type="text" id="companyWebsite" name="companyWebsite" tabindex="-1" autocomplete="off">
                 </div>
             </div>
 
@@ -267,11 +295,20 @@
             </div>
 
             <div class="modal-footer success-modal-footer">
-                <a href="history.html" class="btn-success-primary">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
-                    <span>View in Inquiry History</span>
-                </a>
-                <button type="button" class="btn-secondary" id="submitAnotherBtn">Submit Another</button>
+                <div class="modal-action-group" id="modalLoggedInActions">
+                    <a href="history.html" class="btn-success-primary">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                        <span>View in Inquiry History</span>
+                    </a>
+                    <button type="button" class="btn-secondary" id="submitAnotherBtn">Submit Another</button>
+                </div>
+                <div class="modal-action-group" id="modalGuestActions" style="display: none; width: 100%;">
+                    <a href="../auth/register.html" class="btn-success-primary" id="guestRegisterCtaBtn" style="flex: 1;">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><line x1="20" y1="8" x2="20" y2="14"></line><line x1="23" y1="11" x2="17" y2="11"></line></svg>
+                        <span>Create Account to Track Inquiry</span>
+                    </a>
+                    <a href="../../index.html" class="btn-secondary" id="guestHomeBtn">Back to Home</a>
+                </div>
             </div>
         </div>
     </div>

@@ -425,6 +425,10 @@ supabase/
                                              Adds email OTP challenges and protection triggers for email verification and password resets
   migrations/20261107035100_set_lead_admin_email_miriamalobren.sql
                                              Sets lead agent account to miriamalobren@gmail.com (role: admin), links properties to agent_id 17, and synchronizes profile credentials
+  migrations/20261111120000_set_default_brokerage_cd_miranda_realty.sql
+                                             Sets users.brokerage default to 'CD Miranda Realty' and normalizes legacy 'UrbanScope' rows
+  migrations/20261111120100_set_default_title_real_estate_salesperson.sql
+                                             Sets users.title default to 'Real Estate Salesperson' (RESA RA 9646 compliant) and normalizes legacy 'Real Estate Agent' rows
   seed.sql                                   Demo data (users, 6 properties, inquiries, ...)
   scripts/                                   One-off data fixes to paste into the SQL Editor (never auto-run)
 ```

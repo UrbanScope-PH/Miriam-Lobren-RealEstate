@@ -1,4 +1,4 @@
-# UrbanScope — Miriam Lobren Real Estate Agent
+# UrbanScope — Miriam Lobren · CD Miranda Realty
 
 [![Deployment](https://img.shields.io/badge/Vercel-Production%20Live-brightgreen?logo=vercel)](https://miriam-lobren-real-estate.vercel.app/)
 [![Python](https://img.shields.io/badge/Python-3.9+-3776AB?logo=python&logoColor=white)](https://www.python.org/)
@@ -8,7 +8,7 @@
 > **Better Homes, Brighter Futures**
 > A responsive real estate website for property discovery, client inquiries, and admin management.
 
-Built for **Miriam Lobren Real Estate Agent** (Las Piñas & Cavite, Philippines).
+Built for **Miriam Lobren, Real Estate Salesperson** (CD Miranda Realty, Las Piñas & Cavite, Philippines).
 
 ---
 
@@ -16,12 +16,16 @@ Built for **Miriam Lobren Real Estate Agent** (Las Piñas & Cavite, Philippines)
 
 - **Property Showcase** — featured accredited listings (Casasuerte, Kathleen, Liora Homes, Airmen's Village Triplex) with category tabs, property photo galleries, in-page financing document previews, accurate zoomed-in location maps, and Total Contract Price (TCP) computations (Pag-IBIG & Bank Financing). Sold listings remain visible with a Sold Out label but no longer accept new inquiries.
 - **Client Accounts & Google Sign-In** — email-code verification for password registration, one-time-code password recovery, PH phone validation, and one-click **Google Authentication** (OAuth 2.0 via Google Identity Services); unified sign-in that routes users by role.
-- **Consultations & Inquiries** — interactive consultation intent flow allowing clients to book general consultations (free site tripping, loan pre-approval, property advice) or inquire about specific accredited listings, with client inquiry history tracking, cross-device notification synchronization, and a one-minute per-client cooldown after successful submissions.
+- **Consultations & Inquiries** — interactive consultation intent flow allowing clients to book general consultations (free site tripping, loan pre-approval, property advice) or inquire about specific accredited listings. **Guest inquiries are accepted with zero login required** (honeypot-protected against spam), and post-submission prompts allow guests to optionally create an account with pre-filled details to track their inquiries in the client history portal.
+- **Direct Multi-Channel Contact** — floating quick-contact button (`.contact-fab`) providing instant 1-tap access to Facebook Messenger (`m.me/miriamalobren`), direct phone call (`tel:+639189645434`), and SMS with pre-composed property inquiry messages.
+- **Search Engine Optimization & Social Sharing** — full Open Graph and Twitter Card link previews across all public pages, dynamic JSON-LD `RealEstateAgent` schema markup, canonical URLs, `robots.txt`, and automated `sitemap.xml`.
+- **High-Performance Assets** — compressed progressive JPEG imagery, responsive preloading on key banners, and native `loading="lazy" decoding="async"` on all below-the-fold property thumbnails.
+- **System-Wide Dark Mode** — seamless dark theme with multi-layer preference persistence (`localStorage`, 1-year cookie, and window session), smooth crossfade transitions, comfortable photo dimming, and high-contrast accessible controls.
 - **Admin Dashboard** — KPI cards, inquiry charts, property CRUD, client inquiry tracking, and user overview.
 - **Superadmin Console** — focused account and role governance, privileged-account overview, and database health checks. Property and inquiry workflows stay in the Agent Admin portal.
 - **Administrative Access Control** — Vercel checks a signed, HttpOnly session before serving Admin and Superadmin pages. Hosted admin sign-in requires Google verification for an approved staff account; normal client sign-ins and editable browser storage cannot grant administrative access.
 - **Legal & Privacy Hub** — comprehensive Terms of Service (aligned with RESA RA 9646) and Privacy Policy (compliant with Philippine Data Privacy Act RA 10173).
-- **Responsive Design** — optimized for desktop, tablet, and mobile, with a shared mobile navigation shell across public, client, Admin, and Superadmin pages. Public and client pages use the same primary links; Admin and Superadmin retain role-specific menus with consistent mobile drawers and touch targets.
+- **Responsive Design** — optimized for desktop, tablet, and mobile, with a shared mobile navigation shell across public, client, Admin, and Superadmin pages.
 
 ---
 

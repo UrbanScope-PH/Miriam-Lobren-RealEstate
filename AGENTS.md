@@ -870,6 +870,35 @@ path when rendering from a page.
 
 
 
+86. **Phase 1 Lead Generation, Performance, Trust & Brand Architecture:**
+    - **Guest Inquiries Allowed Without Login (`inquiry.html`, `inquiry.js`, `session.js`)**:
+      - Removed `data-require-auth` attribute from `frontend/pages/inquiry/inquiry.html` and removed the regex inquiry interception in `session.js` so guests can submit inquiries and book consultations directly without being forced to register or log in first.
+      - Added a clean `#guestInquiryBanner` informing visitors that no account is required to inquire.
+      - Added honeypot spam protection (`<input type="text" id="companyWebsite" class="hp-field">` hidden off-screen) that silently traps automated bot submissions.
+      - Added real-time validation and normalization for Philippine mobile numbers (`09...` or `+63...`), client name length, and email format.
+      - Post-Submission Conversion: After a guest inquiry is submitted, the confirmation modal offers a 1-click **Create Account to Track Inquiry** button linking to `register.html`, automatically saving their full name, email, and phone number into `sessionStorage.urbanscope_register_draft` so registration is pre-filled. Inquiries submitted as a guest automatically appear in the client's Inquiry History once they register with the same email.
+    - **Floating Direct Multi-Channel Contact Button (`session.js`, `session.css`)**:
+      - Mounted a fixed floating action button (`.contact-fab`) on the bottom-right of all public pages (`index.html`, `property-detail.html`, `casasuerte.html`, `kathleen.html`, `Liora.html`, `Airmen.html`, `terms.html`, `privacy.html`).
+      - On click, smoothly reveals 3 high-converting contact channels:
+        1. **Facebook Messenger** (`m.me/miriamalobren`): Direct 1-tap chat with Miriam Lobren.
+        2. **Direct Phone Call** (`tel:+639189645434`): Instant call via mobile dialer.
+        3. **Direct SMS** (`sms:+639189645434?body=...`): Pre-composed text message dynamically including the property title when viewing a property page.
+      - Includes full accessibility (`aria-haspopup`, `aria-expanded`, keyboard Escape dismissal, outside click listener) and automatic toast positioning offset (`body.has-contact-fab .client-approval-toast, .toast-notice { bottom: 96px !important; }`).
+    - **Asset Compression & High-Performance Loading**:
+      - Compressed heavy photography assets: `home-bg.png` (2.7 MB) converted to progressive JPEG `home-bg.jpg` (324 KB, ~88% reduction); `agent.jpg` compressed from 292 KB to 61 KB; Kathleen showcase photos compressed from ~5.0 MB to ~1.1 MB total.
+      - Added `loading="lazy" decoding="async"` on all below-the-fold property card and thumbnail images.
+      - Added `fetchpriority="high"` on above-the-fold hero banners and primary gallery carousels.
+    - **Search Engine Optimization, Open Graph & Social Sharing**:
+      - Created custom 1200x630 Open Graph preview banners in `frontend/assets/images/og/` (`og-home.jpg`, `og-kathleen.jpg`, `og-casasuerte.jpg`, `og-liora.jpg`, `og-airmen.jpg`).
+      - Added full Open Graph metadata (`og:title`, `og:description`, `og:image`, `og:url`, `og:type`) and Twitter Cards (`summary_large_image`) across `index.html`, property showcases, legal pages, and authentication pages.
+      - Added structured JSON-LD `RealEstateAgent` schema markup on `index.html` referencing accredited brokerage CD Miranda Realty, contact numbers, and price range.
+      - Created `frontend/robots.txt` and `frontend/sitemap.xml`, routed through both Vercel (`vercel.json`) and local FastAPI (`backend/routers/web.py`).
+      - Added `<meta name="robots" content="noindex, nofollow">` to authenticated and administrative portal pages (`history.html`, `admin/*.html`, `superadmin/*.html`).
+    - **Brand Consistency & Regulatory Compliance**:
+      - Standardized professional role to **Real Estate Salesperson** across navigation bars, splash intro (`splash.js`), footer metadata, and backend models (in compliance with RESA RA 9646).
+      - Set public brokerage affiliation to **CD Miranda Realty** across all customer-facing touchpoints, while strictly reserving **UrbanScope** as the software system brand in copyright footers and administrative backoffices.
+      - Updated default brokerage and role migrations (`20261111120000_set_default_brokerage_cd_miranda_realty.sql` and `20261111120100_set_default_title_real_estate_salesperson.sql`).
+
 ---
 
 ## Safety Rules
