@@ -1279,7 +1279,7 @@ html.dark-mode .footer {
     border-top: none !important;
 }
 
-/* Soft Photo Dimming in Dark Mode */
+/* Natural Photo Clarity in Dark Mode (No Dimming) */
 html.dark-mode .property-image img,
 html.dark-mode .main-carousel img,
 html.dark-mode .thumb img,
@@ -1287,9 +1287,10 @@ html.dark-mode .main-image img,
 html.dark-mode .thumbnail-grid img,
 html.dark-mode .about-image-card img,
 html.dark-mode #propThumb,
-html.dark-mode .success-prop-thumb {
-    filter: brightness(0.76) contrast(1.04) saturate(0.92);
-    transition: transform 0.35s ease, filter 0.35s ease;
+html.dark-mode .success-prop-thumb,
+html.dark-mode .showcase-panel img {
+    filter: none;
+    transition: transform 0.35s ease;
 }
 
 html.dark-mode .property-card:hover .property-image img,
@@ -1299,22 +1300,11 @@ html.dark-mode .thumb.active img,
 html.dark-mode .main-image:hover img,
 html.dark-mode .thumbnail-grid img:hover,
 html.dark-mode .thumbnail-grid img.active {
-    filter: brightness(0.86) contrast(1.03) saturate(0.98);
+    filter: none;
 }
 
 html.dark-mode .property-image::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(
-        180deg,
-        rgba(8, 16, 11, 0.26) 0%,
-        rgba(8, 16, 11, 0.14) 55%,
-        rgba(22, 35, 27, 0.56) 100%
-    );
-    pointer-events: none;
-    z-index: 2;
-    transition: opacity 0.35s ease;
+    display: none !important;
 }
 
 /* ========================================================

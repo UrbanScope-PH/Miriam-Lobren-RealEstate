@@ -1175,14 +1175,14 @@ html[data-theme="dark"] .s-icon-btn:hover svg {
 
 html.dark-mode .main-carousel img,
 html.dark-mode .thumb img {
-    filter: brightness(0.76) contrast(1.04) saturate(0.92);
-    transition: opacity 0.25s ease, filter 0.35s ease;
+    filter: none;
+    transition: opacity 0.25s ease;
 }
 
 html.dark-mode .main-carousel:hover img,
 html.dark-mode .thumb:hover img,
 html.dark-mode .thumb.active img {
-    filter: brightness(0.88) contrast(1.03) saturate(0.98);
+    filter: none;
 }
 
 html.dark-mode .carousel-arrow {

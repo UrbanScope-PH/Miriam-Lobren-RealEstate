@@ -1613,10 +1613,6 @@ html.dark-mode .cat-tab.active::after {
     background-color: #4ade80;
 }
 
-html.dark-mode .hero-overlay {
-    background: linear-gradient(90deg, rgba(8, 18, 11, 0.80) 0%, rgba(8, 18, 11, 0.56) 60%, rgba(8, 18, 11, 0.44) 100%);
-}
-
 html.dark-mode .property-card {
     background: #16231b;
     border-color: #26392c;
@@ -1633,31 +1629,16 @@ html.dark-mode .property-image {
 }
 
 html.dark-mode .property-image img {
-    filter: brightness(0.75) contrast(1.04) saturate(0.92);
-    transition: transform 0.35s ease, filter 0.35s ease;
+    filter: none;
+    transition: transform 0.35s ease;
 }
 
 html.dark-mode .property-card:hover .property-image img {
-    filter: brightness(0.86) contrast(1.03) saturate(0.98);
+    filter: none;
 }
 
 html.dark-mode .property-image::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(
-        180deg,
-        rgba(8, 16, 11, 0.26) 0%,
-        rgba(8, 16, 11, 0.14) 55%,
-        rgba(22, 35, 27, 0.56) 100%
-    );
-    pointer-events: none;
-    z-index: 2;
-    transition: opacity 0.35s ease;
-}
-
-html.dark-mode .property-card:hover .property-image::after {
-    opacity: 0.72;
+    display: none !important;
 }
 
 html.dark-mode .property-card.card-sold {
@@ -1666,7 +1647,7 @@ html.dark-mode .property-card.card-sold {
 }
 
 html.dark-mode .property-card.card-sold .property-image img {
-    filter: grayscale(100%) brightness(0.62) contrast(0.92);
+    filter: grayscale(100%) contrast(90%);
 }
 
 html.dark-mode .property-card.card-sold .property-info {
@@ -1674,8 +1655,8 @@ html.dark-mode .property-card.card-sold .property-info {
 }
 
 html.dark-mode .about-image-card img {
-    filter: brightness(0.84) contrast(1.03);
-    transition: filter 0.35s ease;
+    filter: none;
+    transition: transform 0.35s ease;
 }
 
 html.dark-mode .property-info h3 {
