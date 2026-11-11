@@ -984,6 +984,10 @@ path when rendering from a page.
       - Updated `inquiry.js` catalog fallbacks so `<select id="propertySelect">` dynamically lists both properties and auto-preselects them via `?type=property&id=5` or `?title=Benecia`.
       - Seeded properties into local SQLite `backend/urbanscope.db` (IDs 5 and 6) and inserted into remote Supabase Cloud (`properties` table IDs 55 and 56 with `city: "Las Piñas"` and `province: "Metro Manila"`).
 
+91. **Removal of Card-Level "Compute Amortization" Pill (`index.html`, `index.js`, `index.css`):**
+    - The secondary `.calc-shortcut-pill` ("Compute Amortization") button at the bottom of homepage featured property cards was removed from `frontend/index.js` and `frontend/index.css`.
+    - Restores the clean, unobstructed property card layout with consistent pricing metrics (`.tcp-pill-tag`, `.property-price-row`, and `.tcp-subtext`). Clicking any card cleanly routes directly to the full property showcase or detail page with its embedded loan simulation engine.
+
 ---
 
 ## Safety Rules
