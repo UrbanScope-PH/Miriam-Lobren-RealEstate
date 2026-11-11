@@ -988,6 +988,24 @@ path when rendering from a page.
     - The secondary `.calc-shortcut-pill` ("Compute Amortization") button at the bottom of homepage featured property cards was removed from `frontend/index.js` and `frontend/index.css`.
     - Restores the clean, unobstructed property card layout with consistent pricing metrics (`.tcp-pill-tag`, `.property-price-row`, and `.tcp-subtext`). Clicking any card cleanly routes directly to the full property showcase or detail page with its embedded loan simulation engine.
 
+92. **Custom UrbanScope DatePicker UI Component (`inquiry.html`, `inquiry.css`, `inquiry.js`, `supabase.js`, `api.js`, `session.js`):**
+    - Replaced the browser's raw, unstyled native OS `<input type="date">` popup on `frontend/pages/inquiry/inquiry.html` (`preferredDate` and `propertyPreferredDate`) with a custom, bespoke UrbanScope DatePicker UI (`.custom-datepicker-wrap`, `.urban-datepicker-popup`).
+    - **Visual Polish & Tokens**: Features branded Plus Jakarta Sans typography, forest green accents (`#2d5c39` / `#48bb78`), subtle rounded elevation shadows, and custom month navigation (`‹` and `›`).
+    - **Interactive Calendar Grid**:
+      - Weekday header columns (`S  M  T  W  T  F  S`).
+      - Past calendar days are automatically dimmed and disabled (`cursor: not-allowed; opacity: 0.45; pointer-events: none;`) to prevent scheduling viewings in the past.
+      - Today's date is outlined with an emerald border ring (`is-today`).
+      - Selected date is highlighted in solid forest green with white text (`is-selected`).
+      - Trailing and leading days from adjacent months are softly faded (`is-other-month`).
+    - **Quick Actions & Dismiss**:
+      - "Today" button in footer jumps to and selects the current date.
+      - "Clear" button resets selection.
+      - Closes on outside click, `Escape` key, or selecting a valid date.
+    - **Data Contract & Synchronization**:
+      - Values are set strictly in `YYYY-MM-DD` ISO format, ensuring 100% compatibility with backend inquiry models and admin regex parsers (`/\[Preferred Schedule:\s*(\d{4}-\d{2}-\d{2})\s*\|\s*([^\]\r\n]*)\]/i`).
+      - Changes automatically propagate across General Consultation and Specific Property Inquiry tabs.
+    - **Full Dark Mode**: Seamless support under `html.dark-mode` with deep forest green background surfaces (`#142219`), borders (`#2b4232`), and glowing emerald badges (`#48bb78`).
+
 ---
 
 ## Safety Rules

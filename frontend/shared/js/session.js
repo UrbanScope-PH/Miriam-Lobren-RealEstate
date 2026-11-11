@@ -26,6 +26,10 @@
             ? window.UrbanTheme.get()
             : localStorage.getItem(THEME_STORAGE_KEY);
         if (savedTheme !== 'dark' && savedTheme !== 'light') {
+            try {
+                var urlTheme = new URLSearchParams(window.location.search).get('theme');
+                if (urlTheme === 'dark' || urlTheme === 'light') savedTheme = urlTheme;
+            } catch (e) { }
             var cookieMatch = document.cookie.match(/(?:^|;\s*)urbanscope_theme=(dark|light)(?:;|$)/);
             if (cookieMatch) savedTheme = cookieMatch[1];
             else if (window.name && /__urbanscope_theme=(dark|light)/.test(window.name)) {
