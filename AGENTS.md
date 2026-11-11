@@ -1026,6 +1026,12 @@ path when rendering from a page.
     - Upgraded `.client-notif-time` and `.client-notif-empty` in dark mode to `#9ab09f` for crisp readability of timestamps and empty state indicators.
     - Applied matching dark mode styling to `.view-all-link` in `frontend/pages/admin/admin-shell.css` to protect admin notifications with the same vibrant `#86efac` token.
 
+97. **Removal of Photo Dimming Effect in Dark Mode (`session.css`, `index.css`, `property-detail.css`, `auth.css`):**
+    - Removed all dark-mode photo dimming filters (`filter: brightness(0.76)...`) and dark vignette overlays (`.property-image::after` dark green gradient) across the site.
+    - **Homepage Hero Banner (`frontend/index.css`)**: Removed `html.dark-mode .hero-overlay` override (`0.80 -> 0.56 -> 0.44`), restoring natural background image lighting (`home-bg.jpg`) with the crisp, balanced gradient (`0.65 -> 0.35 -> 0.2`) from light mode for maximum visual fidelity.
+    - **Property Cards & Thumbnails (`frontend/index.css`, `frontend/shared/css/session.css`)**: Set `filter: none;` on `.property-image img`, `#propThumb`, `.success-prop-thumb`, and disabled the dark `.property-image::after` gradient (`display: none !important`), displaying listings (Casasuerte, Liora, Kathleen Place, Benecia, Amore Classico, Airmen's Village) with authentic, vibrant natural colors, bright skies, and full contrast in Dark Mode.
+    - **Property Detail Galleries & Showcases (`frontend/pages/properties/property-detail.css`, `frontend/pages/auth/auth.css`)**: Removed dimming from `.main-carousel img`, `.thumb img`, `.about-image-card img`, and `.showcase-panel img`, ensuring photos throughout the platform match their true-to-life presentation.
+
 ---
 
 ## Safety Rules

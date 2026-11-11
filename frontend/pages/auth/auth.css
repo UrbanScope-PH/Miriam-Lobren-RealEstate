@@ -2376,7 +2376,7 @@ html.dark-mode .otp-form input {
 }
 
 html.dark-mode .showcase-panel img {
-    filter: brightness(0.76) contrast(1.04) saturate(0.92);
+    filter: none;
 }
 
 html.dark-mode .google-auth-banner,
