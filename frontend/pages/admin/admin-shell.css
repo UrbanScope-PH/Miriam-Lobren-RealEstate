@@ -1002,6 +1002,13 @@ html.dark-mode .theme-icon-sun {
     display: none !important;
 }
 
+::view-transition-old(root),
+::view-transition-new(root) {
+    animation-duration: 0.42s;
+    animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+    mix-blend-mode: normal;
+}
+
 html.theme-transitioning,
 html.theme-transitioning body,
 html.theme-transitioning header,
@@ -1099,6 +1106,80 @@ html.dark-mode .notif-btn:hover {
     color: #86efac;
 }
 
+html.dark-mode .profile-chevron {
+    color: #cfe3d4 !important;
+}
+
+html.dark-mode .admin-profile-badge:hover .profile-chevron,
+html.dark-mode .admin-profile-badge[aria-expanded="true"] .profile-chevron {
+    color: #86efac !important;
+}
+
+html.dark-mode .hamburger-btn,
+html.dark-mode .topbar-search svg,
+html.dark-mode .search-input-card svg,
+html.dark-mode .status-select-card svg,
+html.dark-mode .password-toggle-btn {
+    color: #b4c8b9 !important;
+}
+
+html.dark-mode .password-toggle-btn:hover {
+    color: #86efac !important;
+    background-color: rgba(134, 239, 172, 0.12) !important;
+}
+
+html.dark-mode .kpi-icon,
+html.dark-mode .property-illustration-icon,
+html.dark-mode .inquiry-icon,
+html.dark-mode .reminder-icon,
+html.dark-mode .agenda-empty-icon,
+html.dark-mode .modal-header-icon,
+html.dark-mode .section-icon,
+html.dark-mode .card-header-icon,
+html.dark-mode .upload-icon {
+    background: #1f3326 !important;
+    border-color: #2f4e39 !important;
+    color: #86efac !important;
+}
+
+html.dark-mode .stat-pill-icon.blue {
+    background: rgba(59, 130, 246, 0.18) !important;
+    color: #93c5fd !important;
+}
+
+html.dark-mode .stat-pill-icon.orange {
+    background: rgba(249, 115, 22, 0.18) !important;
+    color: #fdba74 !important;
+}
+
+html.dark-mode .stat-pill-icon.green {
+    background: rgba(34, 197, 94, 0.18) !important;
+    color: #86efac !important;
+}
+
+html.dark-mode .stat-pill-icon.purple {
+    background: rgba(168, 85, 247, 0.18) !important;
+    color: #d8b4fe !important;
+}
+
+html.dark-mode .modal-close {
+    background: #1c2d22 !important;
+    border-color: #2f4736 !important;
+    color: #d8ebe0 !important;
+}
+
+html.dark-mode #inquiryDonutSvg circle:first-of-type {
+    stroke: #243629 !important;
+}
+
+html.dark-mode #donutTotalInquiries {
+    fill: #eef6f0 !important;
+}
+
+html.dark-mode #inquiryDonutSvg text:last-of-type {
+    fill: #9ab09f !important;
+}
+
 html.dark-mode .notif-badge {
     border-color: #131f17;
 }
@@ -1149,9 +1230,11 @@ html.dark-mode .kpi-card,
 html.dark-mode .feature-card,
 html.dark-mode .calendar-card,
 html.dark-mode .table-card,
+html.dark-mode .table-panel,
 html.dark-mode .form-card,
 html.dark-mode .settings-card,
 html.dark-mode .clients-card,
+html.dark-mode .users-card,
 html.dark-mode .stat-pill,
 html.dark-mode .modal-box,
 html.dark-mode .modal-card {
@@ -1159,6 +1242,83 @@ html.dark-mode .modal-card {
     border-color: #26392c !important;
     color: #e7f0e9;
     box-shadow: 0 12px 32px rgba(0, 0, 0, 0.45);
+}
+
+html.dark-mode .admin-profile-badge {
+    background: #19281f !important;
+    border: 1px solid #2b4031 !important;
+    color: #e7f0e9 !important;
+}
+
+html.dark-mode .admin-profile-badge:hover,
+html.dark-mode .admin-profile-badge[aria-expanded="true"] {
+    background: #22372a !important;
+    border-color: #4ade80 !important;
+}
+
+html.dark-mode .calendar-day:hover {
+    background: #213628 !important;
+    border-color: #3ea35d !important;
+}
+
+html.dark-mode .table-panel .status.pending,
+html.dark-mode .status-badge.review,
+html.dark-mode .status-badge.pending,
+html.dark-mode #propertiesTable .status-toggle-btn.btn-make-sold {
+    background: rgba(245, 158, 11, 0.16) !important;
+    color: #fde68a !important;
+    border-color: rgba(251, 191, 36, 0.35) !important;
+}
+
+html.dark-mode .table-panel .status.approved,
+html.dark-mode .status-badge.approved,
+html.dark-mode .status-badge-available,
+html.dark-mode #propertiesTable .view-btn,
+html.dark-mode #propertiesTable .status-toggle-btn.btn-make-available,
+html.dark-mode .btn-modal-approve.approved,
+html.dark-mode .btn-modal-approve:disabled,
+html.dark-mode .alert-box.success,
+html.dark-mode .role-badge.admin {
+    background: rgba(34, 197, 94, 0.16) !important;
+    color: #86efac !important;
+    border-color: rgba(74, 222, 128, 0.35) !important;
+}
+
+html.dark-mode .table-panel .status.completed,
+html.dark-mode .table-panel .status.review,
+html.dark-mode .status-badge.completed,
+html.dark-mode .role-badge.client,
+html.dark-mode .info-banner {
+    background: rgba(59, 130, 246, 0.16) !important;
+    color: #93c5fd !important;
+    border-color: rgba(96, 165, 250, 0.35) !important;
+}
+
+html.dark-mode .table-panel .status.rejected,
+html.dark-mode .status-badge.cancelled,
+html.dark-mode .status-badge.resubmission,
+html.dark-mode .status-badge-sold,
+html.dark-mode #propertiesTable .delete-btn,
+html.dark-mode .alert-box.error {
+    background: rgba(239, 68, 68, 0.16) !important;
+    color: #fca5a5 !important;
+    border-color: rgba(248, 113, 113, 0.35) !important;
+}
+
+html.dark-mode .action-view-btn,
+html.dark-mode .action-btn.view,
+html.dark-mode .cancel-modal-btn {
+    background: #1c2e22 !important;
+    border-color: #2f523a !important;
+    color: #86efac !important;
+}
+
+html.dark-mode .action-view-btn:hover,
+html.dark-mode .action-btn.view:hover,
+html.dark-mode .cancel-modal-btn:hover {
+    background: #253e2d !important;
+    border-color: #4ade80 !important;
+    color: #bbf7d0 !important;
 }
 
 html.dark-mode .donut-legend,
@@ -1236,11 +1396,16 @@ html.dark-mode .table-panel th {
     border-color: #26392c !important;
 }
 
-html.dark-mode .table-panel tbody tr,
+html.dark-mode .table-panel tbody tr {
+    background-color: #16231b;
+    color: #e7f0e9;
+    border-color: #223327 !important;
+}
+
 html.dark-mode #propertiesTable td,
 html.dark-mode #clientsTable td,
 html.dark-mode .table-panel td {
-    background-color: #16231b;
+    background-color: transparent;
     color: #e7f0e9;
     border-color: #223327 !important;
 }

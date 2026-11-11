@@ -1123,10 +1123,139 @@ html[data-auth-state="logged-in"] .inquiry-note,
 /* ==========================================================================
    Dark Mode Overrides for Property Showcase & Official Pricelist Card
    ========================================================================== */
+html.dark-mode .status-badge.available {
+    background-color: rgba(62, 163, 93, 0.22);
+    color: #86efac;
+    border: 1px solid rgba(134, 239, 172, 0.38);
+}
+
+html.dark-mode .status-badge.sold,
+html.dark-mode .status-badge.reserved {
+    background-color: rgba(239, 68, 68, 0.22);
+    color: #fca5a5;
+    border: 1px solid rgba(252, 165, 165, 0.38);
+}
+
+html.dark-mode .s-icon-btn {
+    width: 40px;
+    height: 40px;
+    background-color: #17241c;
+    border: 1.5px solid #294532;
+    color: #e8f5ec;
+}
+
+html.dark-mode .s-icon-btn svg {
+    stroke: #e8f5ec !important;
+}
+
+html.dark-mode .s-icon-btn:hover {
+    background-color: #213528;
+    border-color: #4ade80;
+}
+
+html.dark-mode .s-icon-btn:hover svg {
+    stroke: #86efac !important;
+}
+
+html.dark-mode .main-carousel img,
+html.dark-mode .thumb img {
+    filter: brightness(0.76) contrast(1.04) saturate(0.92);
+    transition: opacity 0.25s ease, filter 0.35s ease;
+}
+
+html.dark-mode .main-carousel:hover img,
+html.dark-mode .thumb:hover img,
+html.dark-mode .thumb.active img {
+    filter: brightness(0.88) contrast(1.03) saturate(0.98);
+}
+
+html.dark-mode .carousel-arrow {
+    background: rgba(22, 35, 27, 0.88);
+    border: 1px solid rgba(134, 239, 172, 0.32);
+    color: #eef6f0;
+}
+
+html.dark-mode .carousel-arrow:hover {
+    background: #2d5c39;
+    border-color: #86efac;
+    color: #ffffff;
+}
+
+html.dark-mode .specs-bar,
+html.dark-mode .inquiry-card {
+    background: #16231b;
+    border-color: #26392c;
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.45);
+}
+
+html.dark-mode .submit-inquiry-btn:hover {
+    background-color: #2f8548;
+    color: #ffffff;
+}
+
+html.dark-mode .submit-inquiry-btn.inquiry-closed,
+html.dark-mode .submit-inquiry-btn.inquiry-closed:hover {
+    background-color: #1c2820;
+    color: #7e9485;
+    border: 1px solid #2b3d30;
+}
+
 html.dark-mode .tcp-section {
     background: #16231b;
     border-color: #26392c;
     box-shadow: 0 12px 32px rgba(0, 0, 0, 0.45);
+}
+
+html.dark-mode .tcp-badge-pill {
+    background: rgba(62, 163, 93, 0.2);
+    color: #86efac;
+    border-color: rgba(134, 239, 172, 0.38);
+}
+
+html.dark-mode .tcp-kpi-card {
+    background: #121d16;
+    border-color: #26392c;
+}
+
+html.dark-mode .tcp-kpi-card:hover {
+    border-color: #3ea35d;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.35);
+}
+
+html.dark-mode .tcp-kpi-card .kpi-label {
+    color: #9ab09f;
+}
+
+html.dark-mode .tcp-kpi-card .kpi-val {
+    color: #86efac;
+}
+
+html.dark-mode .tcp-kpi-card .kpi-sub {
+    color: #8da394;
+}
+
+html.dark-mode .tcp-table-wrapper {
+    border-color: #26392c;
+}
+
+html.dark-mode .tcp-table th {
+    background: #1c2d22;
+    color: #86efac;
+    border-bottom-color: #293e2f;
+}
+
+html.dark-mode .tcp-table td {
+    background: transparent;
+    color: #d8ebe0;
+    border-bottom-color: #243629;
+}
+
+html.dark-mode .tcp-table tr:hover td {
+    background: #1b2c22;
+}
+
+html.dark-mode .tcp-table td strong {
+    color: #86efac;
 }
 
 html.dark-mode .tcp-doc-card {

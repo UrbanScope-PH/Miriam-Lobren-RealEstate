@@ -30,42 +30,40 @@
             window.UrbanTheme.set(cleanMode, animate);
             return;
         }
+        const commitThemeDom = () => {
+            root.classList.toggle("dark-mode", isDark);
+            root.setAttribute("data-theme", cleanMode);
+            try { localStorage.setItem(THEME_STORAGE_KEY, cleanMode); } catch (_) {}
+            try { document.cookie = "urbanscope_theme=" + cleanMode + "; path=/; max-age=31536000; SameSite=Lax"; } catch (_) {}
+            try {
+                const baseName = String(window.name || "").replace(/\s*__urbanscope_theme=(?:dark|light)/g, "").trim();
+                window.name = (baseName ? baseName + " " : "") + "__urbanscope_theme=" + cleanMode;
+            } catch (_) {}
+
+            document.querySelectorAll(".theme-toggle-btn").forEach(btn => {
+                btn.setAttribute("aria-pressed", String(isDark));
+                btn.setAttribute("aria-label", isDark ? "Switch to light mode" : "Switch to dark mode");
+                btn.setAttribute("title", isDark ? "Switch to Light Mode" : "Switch to Dark Mode");
+            });
+        };
+
+        if (animate && typeof document.startViewTransition === "function") {
+            root.classList.remove("theme-transitioning");
+            try {
+                document.startViewTransition(commitThemeDom);
+                return;
+            } catch (_) {}
+        }
+
         if (animate) {
             root.classList.add("theme-transitioning");
-            let veil = document.getElementById("themeFadeVeil");
-            if (!veil && document.body) {
-                veil = document.createElement("div");
-                veil.id = "themeFadeVeil";
-                veil.className = "theme-fade-veil";
-                veil.setAttribute("aria-hidden", "true");
-                document.body.appendChild(veil);
-            }
-            if (veil) {
-                veil.classList.remove("active");
-                void veil.offsetWidth;
-                veil.classList.add("active");
-            }
             if (themeTransitionTimer) clearTimeout(themeTransitionTimer);
             themeTransitionTimer = setTimeout(() => {
                 root.classList.remove("theme-transitioning");
-                if (veil) veil.classList.remove("active");
-            }, 560);
+            }, 520);
         }
 
-        root.classList.toggle("dark-mode", isDark);
-        root.setAttribute("data-theme", cleanMode);
-        try { localStorage.setItem(THEME_STORAGE_KEY, cleanMode); } catch (_) {}
-        try { document.cookie = "urbanscope_theme=" + cleanMode + "; path=/; max-age=31536000; SameSite=Lax"; } catch (_) {}
-        try {
-            const baseName = String(window.name || "").replace(/\s*__urbanscope_theme=(?:dark|light)/g, "").trim();
-            window.name = (baseName ? baseName + " " : "") + "__urbanscope_theme=" + cleanMode;
-        } catch (_) {}
-
-        document.querySelectorAll(".theme-toggle-btn").forEach(btn => {
-            btn.setAttribute("aria-pressed", String(isDark));
-            btn.setAttribute("aria-label", isDark ? "Switch to light mode" : "Switch to dark mode");
-            btn.setAttribute("title", isDark ? "Switch to Light Mode" : "Switch to Dark Mode");
-        });
+        commitThemeDom();
     }
 
     function initAdminThemeToggle() {

@@ -1826,6 +1826,60 @@ html.dark-mode .modal-header-icon {
     color: #86efac;
 }
 
+html.dark-mode .icon-general {
+    background: linear-gradient(135deg, #1b3524 0%, #14281b 100%);
+    color: #86efac;
+    border-color: #2f573b;
+}
+
+html.dark-mode .icon-property {
+    background: linear-gradient(135deg, #163330 0%, #112624 100%);
+    color: #5eead4;
+    border-color: #28544f;
+}
+
+html.dark-mode .modal-close {
+    background: #1c2d22;
+    border-color: #2f4736;
+    color: #d8ebe0;
+}
+
+html.dark-mode .card-icon-btn {
+    background: rgba(14, 24, 18, 0.78);
+    border: 1px solid rgba(134, 239, 172, 0.32);
+    color: #eef6f0;
+}
+
+html.dark-mode .card-icon-btn:hover {
+    background: #2d5c39;
+    border-color: #86efac;
+    color: #ffffff;
+}
+
+html.dark-mode .property-card.card-sold {
+    background: #131c16;
+    border-color: #253429;
+}
+
+html.dark-mode .property-card.card-sold .property-info {
+    background: #131c16;
+}
+
+html.dark-mode .property-card.card-sold .property-info h3,
+html.dark-mode .property-card.card-sold .property-info .property-price {
+    color: #94a99b;
+}
+
+html.dark-mode .property-card.card-sold .property-details span,
+html.dark-mode .property-card.card-sold .property-location {
+    color: #7c9183;
+}
+
+html.dark-mode .home-empty-state {
+    background: #16231b !important;
+    border-color: #2b4232 !important;
+}
+
 html.dark-mode .modal-title-group h3 {
     color: #eef6f0;
 }

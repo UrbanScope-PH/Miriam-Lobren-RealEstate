@@ -896,3 +896,244 @@ body {
         text-align: center;
     }
 }
+
+/* ==========================================================================
+   Dark Mode Overrides for Client Inquiry History
+   ========================================================================== */
+html.dark-mode {
+    --danger-red: #fca5a5;
+    --danger-bg: rgba(239, 68, 68, 0.16);
+    --danger-border: rgba(248, 113, 113, 0.35);
+    --warning-amber: #fde68a;
+    --warning-bg: rgba(245, 158, 11, 0.16);
+    --warning-border: rgba(251, 191, 36, 0.35);
+    --info-blue: #93c5fd;
+    --info-bg: rgba(59, 130, 246, 0.16);
+    --info-border: rgba(96, 165, 250, 0.35);
+    --success-green: #86efac;
+    --success-bg: rgba(34, 197, 94, 0.16);
+    --success-border: rgba(74, 222, 128, 0.35);
+}
+
+html.dark-mode body {
+    background-color: #0e1611;
+    color: #e7f0e9;
+}
+
+html.dark-mode .history-header {
+    background: linear-gradient(135deg, #13281b 0%, #193824 55%, #20472e 100%);
+    border: 1px solid #2b4e37;
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.45);
+}
+
+html.dark-mode .header-action-btn {
+    background: #3ea35d;
+    color: #ffffff;
+    border: 1px solid rgba(134, 239, 172, 0.45);
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3);
+}
+
+html.dark-mode .header-action-btn:hover {
+    background: #2f8548;
+    border-color: #86efac;
+    color: #ffffff;
+}
+
+html.dark-mode .history-stats-bar .stat-pill {
+    background: rgba(13, 23, 17, 0.56);
+    border: 1px solid rgba(134, 239, 172, 0.22);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+html.dark-mode .stat-pill-label {
+    color: rgba(215, 238, 222, 0.78);
+}
+
+html.dark-mode .stat-pill-value {
+    color: #ffffff;
+}
+
+html.dark-mode .filter-tab {
+    background: #16231b;
+    border-color: #293e2f;
+    color: #b4c8b9;
+}
+
+html.dark-mode .filter-tab:hover {
+    background: #1d2f24;
+    border-color: #3ea35d;
+    color: #86efac;
+}
+
+html.dark-mode .filter-tab.active {
+    background: #284231;
+    border-color: #3ea35d;
+    color: #86efac;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.28);
+}
+
+html.dark-mode .search-input {
+    background: #142018;
+    border-color: #293e2f;
+    color: #e7f0e9;
+}
+
+html.dark-mode .search-input:focus {
+    background: #17261c;
+    border-color: #4ade80;
+    box-shadow: 0 0 0 3px rgba(74, 222, 128, 0.16);
+}
+
+html.dark-mode .inquiry-card {
+    background: #16231b;
+    border-color: #26392c;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.38);
+}
+
+html.dark-mode .inquiry-card:hover {
+    border-color: #385942;
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.48);
+}
+
+html.dark-mode .topic-icon-badge {
+    background: #1f3326;
+    border: 1px solid #2f4e39;
+    color: #86efac;
+}
+
+html.dark-mode .card-title {
+    color: #eef6f0;
+}
+
+html.dark-mode .card-message-box {
+    background: #121d16;
+    border-color: #243629;
+}
+
+html.dark-mode .card-message-text {
+    color: #e2ede5;
+}
+
+html.dark-mode .card-actions-row {
+    border-top-color: #243629;
+}
+
+html.dark-mode .btn-modify {
+    background-color: #1c2d22;
+    border-color: #2f4e39;
+    color: #86efac;
+}
+
+html.dark-mode .btn-modify:hover {
+    background-color: #253d2e;
+    border-color: #4ade80;
+    color: #bbf7d0;
+}
+
+html.dark-mode .btn-cancel {
+    background-color: rgba(245, 158, 11, 0.14);
+    border-color: rgba(251, 191, 36, 0.35);
+    color: #fde68a;
+}
+
+html.dark-mode .btn-cancel:hover {
+    background-color: rgba(245, 158, 11, 0.24);
+    border-color: rgba(251, 191, 36, 0.55);
+}
+
+html.dark-mode .btn-delete:hover {
+    background-color: rgba(239, 68, 68, 0.26);
+    border-color: rgba(248, 113, 113, 0.55);
+}
+
+html.dark-mode .status-closed {
+    background-color: rgba(148, 163, 184, 0.16);
+    color: #cbd5e1;
+    border-color: rgba(148, 163, 184, 0.32);
+}
+
+html.dark-mode .status-closed .status-dot {
+    background-color: #94a3b8;
+}
+
+html.dark-mode .empty-state {
+    background: #16231b;
+    border-color: #2b4232;
+}
+
+html.dark-mode .empty-state-icon {
+    background: #1f3326;
+    color: #86efac;
+}
+
+html.dark-mode .empty-state h3 {
+    color: #86efac;
+}
+
+html.dark-mode .modal-box {
+    background: #16231b;
+    border: 1px solid #283d2e;
+    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.6);
+}
+
+html.dark-mode .modal-header {
+    border-bottom-color: #243629;
+}
+
+html.dark-mode .modal-icon-badge {
+    background: #1f3326;
+    color: #86efac;
+}
+
+html.dark-mode .modal-title-group h3 {
+    color: #eef6f0;
+}
+
+html.dark-mode .modal-close-btn:hover {
+    background: #23382a;
+    color: #eef6f0;
+}
+
+html.dark-mode .form-group label {
+    color: #d6e6da;
+}
+
+html.dark-mode .form-input,
+html.dark-mode .form-textarea {
+    background: #111b15;
+    border-color: #2b4031;
+    color: #e7f0e9;
+}
+
+html.dark-mode .modal-footer {
+    background: #131f17;
+    border-top-color: #243629;
+}
+
+html.dark-mode .btn-secondary {
+    background: #1c2d22;
+    border-color: #2f4736;
+    color: #e7f0e9;
+}
+
+html.dark-mode .btn-secondary:hover {
+    background: #263d2e;
+    border-color: #4ade80;
+    color: #86efac;
+}
+
+html.dark-mode .btn-primary-modal {
+    background: #3ea35d;
+    color: #ffffff;
+}
+
+html.dark-mode .btn-primary-modal:hover {
+    background: #2f8548;
+    color: #ffffff;
+}
+
+html.dark-mode .toast-notice {
+    background: #1f3d29;
+    border: 1px solid #3ea35d;
+    color: #ffffff;
+}

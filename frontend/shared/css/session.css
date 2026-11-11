@@ -571,6 +571,13 @@ html.dark-mode .theme-icon-sun {
     display: none !important;
 }
 
+::view-transition-old(root),
+::view-transition-new(root) {
+    animation-duration: 0.42s;
+    animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+    mix-blend-mode: normal;
+}
+
 /* Smooth fade-in and fade-out transitions across all surfaces when switching theme */
 html.theme-transitioning,
 html.theme-transitioning body,
@@ -648,6 +655,56 @@ html.dark-mode .profile-chip:hover {
     box-shadow: 0 6px 18px rgba(0, 0, 0, 0.45);
 }
 
+html.dark-mode .brand-logo {
+    filter: brightness(1.45) saturate(1.15) drop-shadow(0 0 6px rgba(134, 239, 172, 0.22));
+}
+
+html.dark-mode .profile-chevron {
+    color: #cfe3d4 !important;
+}
+
+html.dark-mode .profile-chip:hover .profile-chevron,
+html.dark-mode .profile-menu.open .profile-chevron {
+    color: #86efac !important;
+}
+
+html.dark-mode .client-notif-btn svg {
+    stroke: #e8f5ec !important;
+}
+
+html.dark-mode .client-notif-btn:hover svg {
+    stroke: #86efac !important;
+}
+
+html.dark-mode .client-notif-icon {
+    background: #1f3526 !important;
+    color: #86efac !important;
+    border: 1px solid #2f523a !important;
+}
+
+html.dark-mode .profile-dropdown a svg,
+html.dark-mode .profile-dropdown button svg {
+    color: #86efac;
+    stroke: currentColor;
+}
+
+html.dark-mode .hamburger-line {
+    background-color: #e8f5ec !important;
+}
+
+html.dark-mode .property-specs svg,
+html.dark-mode .card-specs svg,
+html.dark-mode .spec-item svg,
+html.dark-mode .property-loc svg,
+html.dark-mode .summary-loc svg,
+html.dark-mode .summary-specs svg,
+html.dark-mode .contact-item svg,
+html.dark-mode .search-wrap svg,
+html.dark-mode .location-header svg {
+    color: #86efac !important;
+    stroke: currentColor;
+}
+
 html.dark-mode .login-btn,
 html.dark-mode .go-back-btn,
 html.dark-mode .history-pill-link {
@@ -672,7 +729,15 @@ html.dark-mode .client-notif-dropdown {
     box-shadow: 0 18px 42px rgba(0, 0, 0, 0.6);
 }
 
-html.dark-mode .profile-dropdown-head,
+html.dark-mode .profile-dropdown-head {
+    background: transparent !important;
+    border-bottom-color: #26392c;
+}
+
+html.dark-mode .profile-dropdown-head small {
+    color: #9ab09f;
+}
+
 html.dark-mode .client-notif-head {
     background: #19281f;
     border-bottom-color: #26392c;
@@ -818,6 +883,40 @@ html.dark-mode .faq-disclaimer-note {
 }
 
 /* Property Detail, Inquiry, History, Legal & Modals */
+html.dark-mode .status-badge.available {
+    background-color: rgba(62, 163, 93, 0.22) !important;
+    color: #86efac !important;
+    border: 1px solid rgba(134, 239, 172, 0.38) !important;
+}
+
+html.dark-mode .status-badge.sold,
+html.dark-mode .status-badge.reserved {
+    background-color: rgba(239, 68, 68, 0.22) !important;
+    color: #fca5a5 !important;
+    border: 1px solid rgba(252, 165, 165, 0.38) !important;
+}
+
+html.dark-mode .s-icon-btn {
+    width: 40px;
+    height: 40px;
+    background-color: #17241c !important;
+    border: 1.5px solid #294532 !important;
+    color: #e8f5ec !important;
+}
+
+html.dark-mode .s-icon-btn svg {
+    stroke: #e8f5ec !important;
+}
+
+html.dark-mode .s-icon-btn:hover {
+    background-color: #213528 !important;
+    border-color: #4ade80 !important;
+}
+
+html.dark-mode .s-icon-btn:hover svg {
+    stroke: #86efac !important;
+}
+
 html.dark-mode .detail-page,
 html.dark-mode .detail-container,
 html.dark-mode .inquiry-page-container,
@@ -836,7 +935,6 @@ html.dark-mode .tcp-kpi-card,
 html.dark-mode .inquiry-card,
 html.dark-mode .inquiry-form-card,
 html.dark-mode .history-card,
-html.dark-mode .stat-pill,
 html.dark-mode .empty-state,
 html.dark-mode .legal-card,
 html.dark-mode .legal-content-card,
@@ -849,6 +947,29 @@ html.dark-mode .tcp-document-modal {
     border-color: #26392c;
     color: #e7f0e9;
     box-shadow: 0 12px 32px rgba(0, 0, 0, 0.45);
+}
+
+html.dark-mode .history-header {
+    background: linear-gradient(135deg, #13281b 0%, #193824 55%, #20472e 100%);
+    border: 1px solid #2b4e37;
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.45);
+}
+
+html.dark-mode .header-action-btn {
+    background: #3ea35d !important;
+    color: #ffffff !important;
+    border: 1px solid rgba(134, 239, 172, 0.45) !important;
+}
+
+html.dark-mode .header-action-btn:hover {
+    background: #2f8548 !important;
+    border-color: #86efac !important;
+    color: #ffffff !important;
+}
+
+html.dark-mode .history-stats-bar .stat-pill {
+    background: rgba(13, 23, 17, 0.56) !important;
+    border: 1px solid rgba(134, 239, 172, 0.22) !important;
 }
 
 html.dark-mode .spec-item {
@@ -921,9 +1042,14 @@ html.dark-mode .legal-table th {
 }
 
 html.dark-mode .tcp-table td,
-html.dark-mode .legal-table td,
+html.dark-mode .legal-table td {
+    background-color: transparent;
+    color: #d8ebe0;
+    border-color: #243629;
+}
+
 html.dark-mode .legal-table tr:nth-child(even) td {
-    background-color: #16231b;
+    background-color: #19281f;
     color: #d8ebe0;
     border-color: #243629;
 }
@@ -980,7 +1106,12 @@ html.dark-mode .approved-banner span {
     color: #bbf7d0;
 }
 
-html.dark-mode .mode-tab,
+html.dark-mode .mode-tab {
+    background-color: transparent;
+    border-color: transparent;
+    color: #b4c8b9;
+}
+
 html.dark-mode .filter-tab {
     background-color: #16231b;
     border-color: #293e2f;
@@ -1022,7 +1153,7 @@ html.dark-mode .success-note {
 }
 
 html.dark-mode .modal-footer.success-modal-footer {
-    background: #131f17;
+    background: transparent;
     border-top-color: #243629;
 }
 
@@ -1129,6 +1260,8 @@ html.dark-mode .footer {
 
 /* Soft Photo Dimming in Dark Mode */
 html.dark-mode .property-image img,
+html.dark-mode .main-carousel img,
+html.dark-mode .thumb img,
 html.dark-mode .main-image img,
 html.dark-mode .thumbnail-grid img,
 html.dark-mode .about-image-card img,
@@ -1139,6 +1272,9 @@ html.dark-mode .success-prop-thumb {
 }
 
 html.dark-mode .property-card:hover .property-image img,
+html.dark-mode .main-carousel:hover img,
+html.dark-mode .thumb:hover img,
+html.dark-mode .thumb.active img,
 html.dark-mode .main-image:hover img,
 html.dark-mode .thumbnail-grid img:hover,
 html.dark-mode .thumbnail-grid img.active {
