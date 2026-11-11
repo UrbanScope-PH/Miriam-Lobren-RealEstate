@@ -1079,6 +1079,19 @@ path when rendering from a page.
     - **Sorting Ordering**: Explicitly handles `featured` curated ordering (Casasuerte → Kathleen → Liora → Airmen's → Benecia → Amore), `price-low` (Liora ₱2.46M up to Benecia ₱9.695M), `price-high` (Benecia ₱9.695M down to Liora ₱2.46M), and `location`.
     - **Headless Automated Verification**: Verified with automated headless Chrome DevTools tests with zero console errors and 100% passing assertions across search, category filtering, keyword debouncing, and sort reversals.
 
+100. **Budget Matcher Space Optimization: 4-Item Fixed Height with Smooth Scroll (`frontend/shared/css/calculator.css`):**
+    - Optimized `.bm-projects-list` in the Quick Home Affordability & Budget Matcher component on `index.html` to display exactly 4 accredited homes simultaneously (`max-height: 396px`), with the remaining listings smoothly scrollable (`overflow-y: auto`, `overscroll-behavior-y: contain`).
+    - Eliminates vertical container over-stretching (reducing list height from `600px` to `396px` and total right column height from `653px` to `449px`), achieving clean visual balance with the left salary slider column (`424px`).
+    - Added custom slim scrollbars (`6px` width, rounded pills, hover micro-transitions) with matching light theme (`#c2d8c7` thumb / `#f1f5f2` track) and dark theme (`#2b4533` thumb / `#142018` track / `#4ade80` hover) tokens across WebKit and Firefox (`scrollbar-width: thin`).
+
+101. **Hero Floating Search Bar Custom Dropdowns for Property Type & Location (`frontend/index.html`, `frontend/index.css`, `frontend/index.js`):**
+    - Replaced the browser's unstyled native OS `<select>` popups on `#typeFilter` (Property Type) and `#locationFilter` (Location) with custom UrbanScope dropdown components (`initSearchSelect`).
+    - **Trigger Button**: Borderless pill trigger integrated directly into the floating hero bar, featuring live selected value display, custom SVG icons, and a smooth 180°-rotating chevron arrow.
+    - **Dropdown Menu**: Floating glass-morphism menu (`border-radius: 16px`, soft depth shadow, smooth scale/fade entry animation `urbanSelectFade`), positioned right below each field column.
+    - **Rich Option Items**: Each option renders an SVG icon (Townhouses, Triplex, House & Lot, Philippines Map Pin, Compass), clean title text, hover tint (`#edf6f0`), and an emerald checkmark (`✓`) for the active selection.
+    - **Seamless Event Sync**: Dispatches native `change` and `input` events upon selection, immediately triggering live grid filtering and keeping category tabs and reset buttons 100% in sync. Includes outside click detection and `Escape` key handlers.
+    - **Full Dark Mode Theme**: Fully styled with dark emerald tones (`#142219` background, `#2b4232` border, `#86efac` active highlights, `#e7f0e9` text).
+
 ---
 
 ## Safety Rules

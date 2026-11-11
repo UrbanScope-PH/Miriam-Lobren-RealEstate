@@ -274,8 +274,14 @@ function resetHomeCategory() {
     const typeSelect = document.getElementById('typeFilter');
     const locSelect = document.getElementById('locationFilter');
     const keywordInput = document.getElementById('keyword');
-    if (typeSelect) typeSelect.value = 'all';
-    if (locSelect) locSelect.value = 'all';
+    if (typeSelect) {
+        typeSelect.value = 'all';
+        typeSelect.dispatchEvent(new Event('change'));
+    }
+    if (locSelect) {
+        locSelect.value = 'all';
+        locSelect.dispatchEvent(new Event('change'));
+    }
     if (keywordInput) keywordInput.value = '';
 
     syncCategoryTabs('all');
@@ -581,6 +587,168 @@ async function loadHomeProperties(category = 'all') {
 }
 
 // Category tabs click listeners and initialization
+/**
+ * Custom Search Select Dropdown for the Floating Hero Search Bar
+ * Replaces unstyled native OS select dropdowns with an on-brand, animated custom menu.
+ */
+function initSearchSelect(selectEl) {
+    if (!selectEl) return;
+    if (selectEl.dataset.searchSelectInitialized === 'true') return;
+    selectEl.dataset.searchSelectInitialized = 'true';
+
+    selectEl.classList.add('search-select-source');
+
+    const wrap = document.createElement('div');
+    wrap.className = 'search-select-wrap';
+    selectEl.parentNode.insertBefore(wrap, selectEl);
+    wrap.appendChild(selectEl);
+
+    const trigger = document.createElement('button');
+    trigger.type = 'button';
+    trigger.className = 'search-select-trigger';
+    trigger.setAttribute('aria-haspopup', 'listbox');
+    trigger.setAttribute('aria-expanded', 'false');
+
+    const valueSpan = document.createElement('span');
+    valueSpan.className = 'search-select-value';
+
+    const arrowSpan = document.createElement('span');
+    arrowSpan.className = 'search-select-arrow';
+    arrowSpan.setAttribute('aria-hidden', 'true');
+    arrowSpan.innerHTML = `
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="6 9 12 15 18 9"></polyline>
+        </svg>
+    `;
+
+    trigger.appendChild(valueSpan);
+    trigger.appendChild(arrowSpan);
+    wrap.appendChild(trigger);
+
+    let dropdownEl = null;
+
+    function getOptionIcon(val, text) {
+        const v = String(val || '').toLowerCase();
+        const t = String(text || '').toLowerCase();
+
+        // Property types
+        if (v === 'all' && (t.includes('property') || t.includes('all properties') || t.includes('types'))) {
+            return `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg>`;
+        }
+        if (v === 'townhouse' || t.includes('townhouse')) {
+            return `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 21h18M3 10l5-4 5 4v11H3V10zm10 0l4-3.2 4 3.2V21h-8"/></svg>`;
+        }
+        if (v === 'triplex' || t.includes('triplex')) {
+            return `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="9" y1="7" x2="15" y2="7"/><line x1="9" y1="12" x2="15" y2="12"/><line x1="9" y1="17" x2="15" y2="17"/></svg>`;
+        }
+        if (v === 'house-lot' || t.includes('house')) {
+            return `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>`;
+        }
+
+        // Locations
+        if (v === 'all' && (t.includes('location') || t.includes('all locations'))) {
+            return `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/></svg>`;
+        }
+        if (t.includes('piñas') || t.includes('pinas') || t.includes('bacoor') || t.includes('naic') || t.includes('trece') || t.includes('cavite')) {
+            return `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>`;
+        }
+
+        return `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 14 14"/></svg>`;
+    }
+
+    function updateDisplay() {
+        const selectedOpt = selectEl.options[selectEl.selectedIndex] || selectEl.options[0];
+        if (!selectedOpt) return;
+        const icon = getOptionIcon(selectedOpt.value, selectedOpt.text);
+        valueSpan.innerHTML = `<span class="search-select-icon">${icon}</span><span class="search-select-text">${selectedOpt.text}</span>`;
+    }
+
+    function closeDropdown() {
+        wrap.classList.remove('is-open');
+        trigger.setAttribute('aria-expanded', 'false');
+        if (dropdownEl) {
+            dropdownEl.remove();
+            dropdownEl = null;
+        }
+    }
+
+    function openDropdown() {
+        // Close any other open dropdowns across the page
+        document.querySelectorAll('.search-select-wrap.is-open').forEach(w => w.classList.remove('is-open'));
+        document.querySelectorAll('.search-select-dropdown').forEach(d => d.remove());
+
+        wrap.classList.add('is-open');
+        trigger.setAttribute('aria-expanded', 'true');
+
+        dropdownEl = document.createElement('div');
+        dropdownEl.className = 'search-select-dropdown';
+        dropdownEl.setAttribute('role', 'listbox');
+
+        Array.from(selectEl.options).forEach((opt, idx) => {
+            const isSelected = idx === selectEl.selectedIndex;
+            const optDiv = document.createElement('div');
+            optDiv.className = 'search-select-option' + (isSelected ? ' is-selected' : '');
+            optDiv.setAttribute('role', 'option');
+            optDiv.setAttribute('aria-selected', isSelected ? 'true' : 'false');
+            optDiv.setAttribute('data-value', opt.value);
+
+            const iconSvg = getOptionIcon(opt.value, opt.text);
+            optDiv.innerHTML = `
+                <div class="search-select-option-content">
+                    <span class="search-select-option-icon">${iconSvg}</span>
+                    <span class="search-select-option-text">${opt.text}</span>
+                </div>
+                <span class="search-select-check" aria-hidden="true">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="20 6 9 17 4 12"></polyline>
+                    </svg>
+                </span>
+            `;
+
+            optDiv.addEventListener('click', (e) => {
+                e.stopPropagation();
+                selectEl.value = opt.value;
+                updateDisplay();
+                selectEl.dispatchEvent(new Event('change', { bubbles: true }));
+                selectEl.dispatchEvent(new Event('input', { bubbles: true }));
+                closeDropdown();
+            });
+
+            dropdownEl.appendChild(optDiv);
+        });
+
+        wrap.appendChild(dropdownEl);
+    }
+
+    trigger.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (wrap.classList.contains('is-open')) {
+            closeDropdown();
+        } else {
+            openDropdown();
+        }
+    });
+
+    selectEl.addEventListener('change', updateDisplay);
+
+    document.addEventListener('click', (e) => {
+        if (!wrap.contains(e.target)) {
+            closeDropdown();
+        }
+    });
+
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && wrap.classList.contains('is-open')) {
+            closeDropdown();
+            trigger.focus();
+        }
+    });
+
+    // Initial display
+    updateDisplay();
+}
+
 function initHomepage() {
     // 0. Initialize Quick Home Affordability & Budget Matcher
     if (window.UrbanCalculator && typeof UrbanCalculator.initHomepageBudgetMatcher === 'function') {
@@ -638,6 +806,7 @@ function initHomepage() {
                 else if (category === 'apartments') typeSelect.value = 'apartment';
                 else if (category === 'townhouses') typeSelect.value = 'townhouse';
                 else typeSelect.value = category;
+                typeSelect.dispatchEvent(new Event('change'));
             }
 
             applyCurrentFiltersAndRender();
@@ -670,6 +839,10 @@ function initHomepage() {
             applyCurrentFiltersAndRender();
         });
     }
+
+    // Initialize custom UrbanScope search bar dropdowns (Property Type & Location)
+    if (typeFilter) initSearchSelect(typeFilter);
+    if (locFilter) initSearchSelect(locFilter);
 
     // 5. Check if query params were passed on page load
     const urlParams = new URLSearchParams(window.location.search);

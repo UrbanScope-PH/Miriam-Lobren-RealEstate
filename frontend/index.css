@@ -73,22 +73,26 @@
 }
 
 .search-bar label {
+    position: relative;
     display: flex;
     flex-direction: column;
     gap: 2px;
     border-right: 1px solid #e1e8e2;
     padding-right: 16px;
+    cursor: pointer;
 }
 
 .search-bar label.keyword {
     border-right: none;
 }
 
-.search-bar label span:not(.sr-only) {
-    font-size: 11px;
+.search-field-label {
+    font-size: 13px;
     font-weight: 700;
-    color: var(--text-dark);
-    letter-spacing: 0.8px;
+    color: var(--text-dark, #1b2e21);
+    letter-spacing: 0.2px;
+    user-select: none;
+    margin-bottom: 2px;
 }
 
 .search-bar select,
@@ -96,7 +100,7 @@
     border: none;
     outline: none;
     font-size: 15px;
-    color: var(--text-dark);
+    color: var(--text-dark, #1b2e21);
     font-family: inherit;
     font-weight: 500;
     background: transparent;
@@ -106,6 +110,174 @@
 
 .search-bar input::placeholder {
     color: #64748b;
+}
+
+/* ============================================================
+   CUSTOM SEARCH BAR DROPDOWN SELECT UI (Property Type & Location)
+   ============================================================ */
+.search-select-source {
+    position: absolute !important;
+    width: 1px !important;
+    height: 1px !important;
+    padding: 0 !important;
+    margin: -1px !important;
+    overflow: hidden !important;
+    clip: rect(0, 0, 0, 0) !important;
+    white-space: nowrap !important;
+    border: 0 !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+}
+
+.search-select-wrap {
+    position: relative;
+    width: 100%;
+}
+
+.search-select-trigger {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    width: 100%;
+    padding: 2px 0;
+    background: transparent;
+    border: none;
+    font-size: 15px;
+    font-weight: 500;
+    color: var(--text-dark, #1b2e21);
+    cursor: pointer;
+    font-family: inherit;
+    outline: none;
+    text-align: left;
+    transition: color 0.15s ease;
+}
+
+.search-select-wrap:hover .search-select-trigger,
+.search-select-wrap.is-open .search-select-trigger {
+    color: var(--green, #2d5c39);
+}
+
+.search-select-value {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.search-select-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--green, #2d5c39);
+    flex-shrink: 0;
+}
+
+.search-select-arrow {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: #64748b;
+    transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1), color 0.15s ease;
+    flex-shrink: 0;
+}
+
+.search-select-wrap.is-open .search-select-arrow {
+    transform: rotate(180deg);
+    color: var(--green, #2d5c39);
+}
+
+.search-select-dropdown {
+    position: absolute;
+    top: calc(100% + 14px);
+    left: 0;
+    width: max(100%, 260px);
+    background: #ffffff;
+    border: 1px solid #dce8df;
+    border-radius: 16px;
+    box-shadow: 0 20px 42px -4px rgba(15, 33, 20, 0.18), 0 8px 18px -2px rgba(45, 92, 57, 0.08);
+    padding: 6px;
+    z-index: 1050;
+    animation: searchSelectFade 0.16s cubic-bezier(0.16, 1, 0.3, 1);
+    transform-origin: top left;
+    box-sizing: border-box;
+}
+
+@keyframes searchSelectFade {
+    from {
+        opacity: 0;
+        transform: translateY(-6px) scale(0.98);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+.search-select-option {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 10px 14px;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-dark, #1b2e21);
+    cursor: pointer;
+    transition: all 0.14s ease;
+    user-select: none;
+}
+
+.search-select-option:hover {
+    background: #edf6f0;
+    color: #1e5c33;
+}
+
+.search-select-option.is-selected {
+    background: #e2f0e6;
+    color: #15803d;
+    font-weight: 700;
+}
+
+.search-select-option-content {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    flex: 1;
+    min-width: 0;
+}
+
+.search-select-option-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--green, #2d5c39);
+    flex-shrink: 0;
+}
+
+.search-select-option-text {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.search-select-check {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: #15803d;
+    flex-shrink: 0;
+    opacity: 0;
+    transition: opacity 0.15s ease;
+}
+
+.search-select-option.is-selected .search-select-check {
+    opacity: 1;
 }
 
 /* Primary CTA Button (Rule 10, 14, 17) */
@@ -2018,6 +2190,72 @@ html.dark-mode .property-details .spec-pill {
 html.dark-mode .property-details span svg,
 html.dark-mode .property-details .spec-pill svg {
     color: #48bb78;
+}
+
+/* Dark Mode overrides for Search Bar & Custom Search Select */
+html.dark-mode .search-bar {
+    background: rgba(18, 30, 22, 0.96);
+    border-color: rgba(45, 75, 52, 0.6);
+    box-shadow: 0 18px 45px rgba(0, 0, 0, 0.5);
+}
+
+html.dark-mode .search-bar label {
+    border-right-color: #27402f;
+}
+
+html.dark-mode .search-field-label {
+    color: #e2ede5;
+}
+
+html.dark-mode .search-select-trigger {
+    color: #e7f0e9;
+}
+
+html.dark-mode .search-select-wrap:hover .search-select-trigger,
+html.dark-mode .search-select-wrap.is-open .search-select-trigger {
+    color: #86efac;
+}
+
+html.dark-mode .search-select-icon,
+html.dark-mode .search-select-option-icon,
+html.dark-mode .search-select-check {
+    color: #86efac;
+}
+
+html.dark-mode .search-select-arrow {
+    color: #8fa896;
+}
+
+html.dark-mode .search-select-wrap.is-open .search-select-arrow {
+    color: #86efac;
+}
+
+html.dark-mode .search-select-dropdown {
+    background: #142219;
+    border-color: #2b4232;
+    box-shadow: 0 20px 45px -4px rgba(0, 0, 0, 0.7), 0 8px 18px -4px rgba(0, 0, 0, 0.4);
+}
+
+html.dark-mode .search-select-option {
+    color: #e7f0e9;
+}
+
+html.dark-mode .search-select-option:hover {
+    background: rgba(72, 187, 120, 0.15);
+    color: #86efac;
+}
+
+html.dark-mode .search-select-option.is-selected {
+    background: rgba(72, 187, 120, 0.22);
+    color: #86efac;
+}
+
+html.dark-mode .search-bar input {
+    color: #e7f0e9;
+}
+
+html.dark-mode .search-bar input::placeholder {
+    color: #8fa896;
 }
 
 
