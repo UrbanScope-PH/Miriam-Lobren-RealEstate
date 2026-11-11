@@ -621,13 +621,25 @@ function resetFormAndCloseModal() {
     const textarea = document.getElementById('inquiryMessage');
     if (textarea) textarea.value = '';
     const prefDate = document.getElementById('preferredDate');
-    if (prefDate) prefDate.value = '';
+    if (prefDate) {
+        prefDate.value = '';
+        prefDate.dispatchEvent(new Event('change', { bubbles: true }));
+    }
     const propPrefDate = document.getElementById('propertyPreferredDate');
-    if (propPrefDate) propPrefDate.value = '';
+    if (propPrefDate) {
+        propPrefDate.value = '';
+        propPrefDate.dispatchEvent(new Event('change', { bubbles: true }));
+    }
     const prefTime = document.getElementById('preferredTime');
-    if (prefTime) prefTime.value = 'Flexible / Any Time';
+    if (prefTime) {
+        prefTime.value = 'Flexible / Any Time';
+        prefTime.dispatchEvent(new Event('change', { bubbles: true }));
+    }
     const propPrefTime = document.getElementById('propertyPreferredTime');
-    if (propPrefTime) propPrefTime.value = 'Flexible / Any Time';
+    if (propPrefTime) {
+        propPrefTime.value = 'Flexible / Any Time';
+        propPrefTime.dispatchEvent(new Event('change', { bubbles: true }));
+    }
     showToastNotice('You can submit another consultation inquiry below.', false);
 }
 
@@ -1074,6 +1086,177 @@ function initUrbanDatePicker(inputEl) {
     });
 }
 
+/**
+ * Custom UrbanScope Select Dropdown Component
+ * Replaces unstyled native OS select dropdowns with an on-brand, animated custom menu.
+ */
+function initUrbanSelect(selectEl) {
+    if (!selectEl) return;
+    if (selectEl.dataset.urbanSelectInitialized === 'true') return;
+    selectEl.dataset.urbanSelectInitialized = 'true';
+
+    selectEl.classList.add('custom-select-source');
+
+    const wrap = document.createElement('div');
+    wrap.className = 'custom-select-wrap';
+    selectEl.parentNode.insertBefore(wrap, selectEl);
+    wrap.appendChild(selectEl);
+
+    const trigger = document.createElement('button');
+    trigger.type = 'button';
+    trigger.className = 'custom-select-trigger';
+    trigger.setAttribute('aria-haspopup', 'listbox');
+    trigger.setAttribute('aria-expanded', 'false');
+
+    const valueSpan = document.createElement('span');
+    valueSpan.className = 'custom-select-value';
+
+    const arrowSpan = document.createElement('span');
+    arrowSpan.className = 'custom-select-arrow';
+    arrowSpan.setAttribute('aria-hidden', 'true');
+    arrowSpan.innerHTML = `
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="6 9 12 15 18 9"></polyline>
+        </svg>
+    `;
+
+    trigger.appendChild(valueSpan);
+    trigger.appendChild(arrowSpan);
+    wrap.appendChild(trigger);
+
+    let dropdownEl = null;
+
+    function getOptionIcon(val, text) {
+        const lower = (String(val || '') + ' ' + String(text || '')).toLowerCase();
+        if (lower.includes('morning') || lower.includes('9:00 am')) {
+            return `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>`;
+        }
+        if (lower.includes('afternoon') || lower.includes('1:00 pm')) {
+            return `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 18a5 5 0 0 0-10 0"/><line x1="12" y1="2" x2="12" y2="4"/><line x1="4.22" y1="10.22" x2="5.64" y2="11.64"/><line x1="1" y1="18" x2="3" y2="18"/><line x1="21" y1="18" x2="23" y2="18"/><line x1="18.36" y1="11.64" x2="19.78" y2="10.22"/><line x1="23" y1="22" x2="1" y2="22"/></svg>`;
+        }
+        if (lower.includes('weekend') || lower.includes('tripping')) {
+            return `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><circle cx="12" cy="15" r="2"/></svg>`;
+        }
+        if (lower.includes('flexible') || lower.includes('any time')) {
+            return `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>`;
+        }
+        if (lower.includes('tripping / viewing')) {
+            return `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>`;
+        }
+        if (lower.includes('loan') || lower.includes('pre-approval')) {
+            return `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>`;
+        }
+        if (lower.includes('investment') || lower.includes('buying')) {
+            return `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>`;
+        }
+        if (lower.includes('selling') || lower.includes('appraisal')) {
+            return `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>`;
+        }
+        if (lower.includes('general') || lower.includes('question')) {
+            return `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>`;
+        }
+        return '';
+    }
+
+    function updateDisplay() {
+        const selectedOpt = selectEl.options[selectEl.selectedIndex] || selectEl.options[0];
+        if (!selectedOpt) return;
+        const icon = getOptionIcon(selectedOpt.value, selectedOpt.text);
+        valueSpan.innerHTML = (icon ? icon + ' ' : '') + `<span>${selectedOpt.text}</span>`;
+    }
+
+    function openDropdown() {
+        document.querySelectorAll('.custom-select-wrap.is-open').forEach(w => w.classList.remove('is-open'));
+        document.querySelectorAll('.custom-select-dropdown').forEach(d => d.remove());
+        document.querySelectorAll('.urban-datepicker-popup').forEach(p => p.remove());
+
+        wrap.classList.add('is-open');
+        trigger.setAttribute('aria-expanded', 'true');
+
+        dropdownEl = document.createElement('div');
+        dropdownEl.className = 'custom-select-dropdown';
+
+        const rect = wrap.getBoundingClientRect();
+        if (rect.left + 260 > window.innerWidth - 16) {
+            dropdownEl.classList.add('align-right');
+        }
+
+        const currentVal = selectEl.value;
+        Array.from(selectEl.options).forEach(opt => {
+            const isSel = opt.value === currentVal;
+            const optRow = document.createElement('div');
+            optRow.className = 'custom-select-option' + (isSel ? ' is-selected' : '');
+            optRow.setAttribute('role', 'option');
+            optRow.setAttribute('aria-selected', String(isSel));
+            optRow.setAttribute('data-value', opt.value);
+
+            const iconSvg = getOptionIcon(opt.value, opt.text);
+            optRow.innerHTML = `
+                <div class="custom-select-option-content">
+                    ${iconSvg ? `<span class="custom-select-option-icon">${iconSvg}</span>` : ''}
+                    <span class="custom-select-option-text">${opt.text}</span>
+                </div>
+                <svg class="custom-select-check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="20 6 9 17 4 12"></polyline>
+                </svg>
+            `;
+
+            optRow.addEventListener('click', (e) => {
+                e.stopPropagation();
+                selectEl.value = opt.value;
+                selectEl.dispatchEvent(new Event('change', { bubbles: true }));
+                selectEl.dispatchEvent(new Event('input', { bubbles: true }));
+                updateDisplay();
+                closeDropdown();
+            });
+
+            dropdownEl.appendChild(optRow);
+        });
+
+        wrap.appendChild(dropdownEl);
+
+        setTimeout(() => {
+            document.addEventListener('click', onDocClick);
+            document.addEventListener('keydown', onDocKey);
+        }, 15);
+    }
+
+    function closeDropdown() {
+        wrap.classList.remove('is-open');
+        trigger.setAttribute('aria-expanded', 'false');
+        if (dropdownEl) {
+            dropdownEl.remove();
+            dropdownEl = null;
+        }
+        document.removeEventListener('click', onDocClick);
+        document.removeEventListener('keydown', onDocKey);
+    }
+
+    function onDocClick(e) {
+        if (!wrap.contains(e.target)) {
+            closeDropdown();
+        }
+    }
+
+    function onDocKey(e) {
+        if (e.key === 'Escape') {
+            closeDropdown();
+        }
+    }
+
+    trigger.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (wrap.classList.contains('is-open')) {
+            closeDropdown();
+        } else {
+            openDropdown();
+        }
+    });
+
+    selectEl.addEventListener('change', updateDisplay);
+    updateDisplay();
+}
+
 window.addEventListener('DOMContentLoaded', () => {
     const submitBtn = document.querySelector('.submit-btn');
     if (submitBtn) inquirySubmitOriginalHtml = submitBtn.innerHTML;
@@ -1132,6 +1315,12 @@ window.addEventListener('DOMContentLoaded', () => {
     // Initialize custom UrbanScope UI datepickers
     if (dateInput) initUrbanDatePicker(dateInput);
     if (propDateInput) initUrbanDatePicker(propDateInput);
+
+    // Initialize custom UrbanScope UI dropdown selects
+    const topicSelect = document.getElementById('consultationTopic');
+    if (topicSelect) initUrbanSelect(topicSelect);
+    if (timeSelect) initUrbanSelect(timeSelect);
+    if (propTimeSelect) initUrbanSelect(propTimeSelect);
 
     // Modal close handlers
     const closeBtn = document.getElementById('closeSuccessModalBtn');
