@@ -1197,6 +1197,15 @@ html.dark-mode .profile-dropdown-divider {
     background-color: transparent;
 }
 
+html.dark-mode .view-all-link {
+    color: #86efac;
+}
+
+html.dark-mode .view-all-link:hover {
+    color: #bbf7d0;
+    text-decoration: underline;
+}
+
 html.dark-mode .profile-dropdown-divider {
     background: #243629;
 }

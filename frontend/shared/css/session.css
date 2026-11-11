@@ -743,6 +743,20 @@ html.dark-mode .client-notif-head {
     border-bottom-color: #26392c;
 }
 
+html.dark-mode .client-notif-view-all {
+    color: #86efac;
+}
+
+html.dark-mode .client-notif-view-all:hover {
+    color: #bbf7d0;
+    text-decoration: underline;
+}
+
+html.dark-mode .client-notif-time,
+html.dark-mode .client-notif-empty {
+    color: #9ab09f;
+}
+
 html.dark-mode .profile-dropdown-head strong,
 html.dark-mode .client-notif-head strong,
 html.dark-mode .profile-dropdown a,
