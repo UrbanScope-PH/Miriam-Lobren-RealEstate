@@ -144,7 +144,7 @@
 
         <!-- DISCOVER OUR FEATURED PROPERTIES -->
         <section class="section featured" id="properties">
-            <div class="featured-header-row">
+            <div class="featured-header-row reveal-on-scroll">
                 <div class="section-heading" style="margin-bottom:0;">
                     <h2>Discover Our Featured Properties</h2>
                 </div>
@@ -162,7 +162,7 @@
             </div>
 
             <!-- CATEGORY TABS CAROUSEL -->
-            <div class="category-tabs-container">
+            <div class="category-tabs-container reveal-on-scroll reveal-delay-1">
                 <button class="cat-arrow left" type="button" aria-label="Previous categories"
                     onclick="scrollCategories(-1)">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
@@ -431,7 +431,7 @@
         <!-- ABOUT ME SECTION -->
         <section class="about" id="about">
             <div class="about-content">
-                <div class="about-text">
+                <div class="about-text reveal-on-scroll">
                     <h2>About Me</h2>
                     <p>Hello! I'm <strong id="aboutAgentName">Miriam Lobren</strong>, a <span
                             id="aboutAgentRoleText">licensed real estate professional</span> with <strong
@@ -458,7 +458,7 @@
                     </a>
                 </div>
 
-                <div class="about-image-card">
+                <div class="about-image-card reveal-on-scroll reveal-delay-2">
                     <img id="aboutAgentPhoto" src="assets/images/agent.jpg" alt="Miriam Lobren - Real Estate Salesperson"
                         loading="lazy" decoding="async"
                         onerror="this.src='assets/images/home-bg.jpg'">
@@ -469,15 +469,23 @@
         <!-- FREQUENTLY ASKED QUESTIONS (FAQS) SECTION -->
         <section class="faqs-section" id="faqs">
             <div class="faqs-container">
-                <div class="faqs-heading">
+                <div class="faqs-heading reveal-on-scroll">
                     <span class="faqs-badge">Got Questions?</span>
                     <h2>Frequently Asked Questions</h2>
                     <p>Everything you need to know about buying, reserving, and financing your dream home with CD Miranda Realty.</p>
                 </div>
 
-                <div class="faqs-accordion" id="faqsAccordion">
+                <!-- FAQ CATEGORY FILTER PILLS -->
+                <div class="faq-categories reveal-on-scroll reveal-delay-1" id="faqCategories" role="tablist" aria-label="FAQ Categories">
+                    <button type="button" class="faq-cat-pill active" data-faq-cat="all">All (8)</button>
+                    <button type="button" class="faq-cat-pill" data-faq-cat="financing">Financing &amp; Payments (2)</button>
+                    <button type="button" class="faq-cat-pill" data-faq-cat="eligibility">OFW &amp; Eligibility (4)</button>
+                    <button type="button" class="faq-cat-pill" data-faq-cat="requirements">Requirements &amp; Location (2)</button>
+                </div>
+
+                <div class="faqs-accordion reveal-on-scroll reveal-delay-2" id="faqsAccordion">
                     <!-- FAQ 1: Initial Requirements -->
-                    <div class="faq-item active">
+                    <div class="faq-item active" data-faq-category="requirements">
                         <button class="faq-question" type="button" aria-expanded="true">
                             <span class="faq-q-text">What are the initial requirements to apply for a property?</span>
                             <span class="faq-icon" aria-hidden="true">
@@ -506,7 +514,7 @@
                     </div>
 
                     <!-- FAQ 2: Payment Methods -->
-                    <div class="faq-item">
+                    <div class="faq-item" data-faq-category="financing">
                         <button class="faq-question" type="button" aria-expanded="false">
                             <span class="faq-q-text">How can I pay for my property?</span>
                             <span class="faq-icon" aria-hidden="true">
@@ -532,7 +540,7 @@
                     </div>
 
                     <!-- FAQ 3: Accessibility -->
-                    <div class="faq-item">
+                    <div class="faq-item" data-faq-category="requirements">
                         <button class="faq-question" type="button" aria-expanded="false">
                             <span class="faq-q-text">How accessible is the subdivision and what transportation options are available?</span>
                             <span class="faq-icon" aria-hidden="true">
@@ -557,7 +565,7 @@
                     </div>
 
                     <!-- FAQ 4: Co-Borrower -->
-                    <div class="faq-item">
+                    <div class="faq-item" data-faq-category="financing">
                         <button class="faq-question" type="button" aria-expanded="false">
                             <span class="faq-q-text">If my salary is not enough, can I get a co-borrower to help pay for the property?</span>
                             <span class="faq-icon" aria-hidden="true">
@@ -576,7 +584,7 @@
                     </div>
 
                     <!-- FAQ 5: Employment & Buyer Eligibility - OFWs -->
-                    <div class="faq-item">
+                    <div class="faq-item" data-faq-category="eligibility">
                         <button class="faq-question" type="button" aria-expanded="false">
                             <span class="faq-q-text">Can Overseas Filipino Workers (OFWs) purchase a house through bank financing, and what are the requirements?</span>
                             <span class="faq-icon" aria-hidden="true">
@@ -603,7 +611,7 @@
                     </div>
 
                     <!-- FAQ 6: Employment & Buyer Eligibility - Virtual Assistants -->
-                    <div class="faq-item">
+                    <div class="faq-item" data-faq-category="eligibility">
                         <button class="faq-question" type="button" aria-expanded="false">
                             <span class="faq-q-text">Can a Virtual Assistant (VA) purchase a house?</span>
                             <span class="faq-icon" aria-hidden="true">
@@ -622,7 +630,7 @@
                     </div>
 
                     <!-- FAQ 7: Employment & Buyer Eligibility - Seafarers -->
-                    <div class="faq-item">
+                    <div class="faq-item" data-faq-category="eligibility">
                         <button class="faq-question" type="button" aria-expanded="false">
                             <span class="faq-q-text">Can a seafarer or ship captain purchase a house?</span>
                             <span class="faq-icon" aria-hidden="true">
@@ -641,7 +649,7 @@
                     </div>
 
                     <!-- FAQ 8: Marital Status -->
-                    <div class="faq-item">
+                    <div class="faq-item" data-faq-category="eligibility">
                         <button class="faq-question" type="button" aria-expanded="false">
                             <span class="faq-q-text">Can I purchase a house if I am legally married but separated?</span>
                             <span class="faq-icon" aria-hidden="true">
@@ -709,7 +717,7 @@
         <!-- CTA SECTION (READY TO TRANSFORM YOUR PROPERTY?) -->
         <section class="cta-banner" id="contact">
             <div class="cta-overlay"></div>
-            <div class="cta-content">
+            <div class="cta-content reveal-on-scroll">
                 <h2>Ready to Find Your Dream Property?</h2>
                 <p>Partner with <span id="ctaAgentName">Miriam Lobren</span> &amp; <span
                         id="ctaAgentBrokerage">CD Miranda Realty</span> for accredited listings, smooth bank and Pag-IBIG loan

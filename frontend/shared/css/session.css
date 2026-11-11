@@ -1314,6 +1314,7 @@ html.dark-mode .property-image::after {
     display: flex;
     flex-direction: column;
     align-items: flex-end;
+    pointer-events: none;
 }
 
 body.has-contact-fab .client-approval-toast,
@@ -1334,6 +1335,7 @@ body.has-contact-fab .toast-notice {
     align-items: center;
     justify-content: center;
     position: relative;
+    pointer-events: auto;
     transition: transform 0.25s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.25s ease, background 0.25s ease;
 }
 
@@ -1406,6 +1408,7 @@ body.has-contact-fab .toast-notice {
     font-weight: 700;
     box-shadow: 0 6px 20px rgba(0, 0, 0, 0.16);
     border: 1px solid #d5e2d8;
+    pointer-events: auto;
     transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
 }
 

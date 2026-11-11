@@ -913,7 +913,7 @@ path when rendering from a page.
       2. **Homepage Salary-Based Budget Matcher (`initHomepageBudgetMatcher`)**:
          - Embedded between Featured Properties and About Me sections on `frontend/index.html`.
          - Interactive household monthly income slider (₱25k to ₱200k/mo).
-         - Live feedback displaying maximum comfortable monthly amortization (35% GMI ceiling), estimated home purchasing power, and dynamic cards highlighting which accredited Cavite & Las Piñas subdivisions (Liora Homes, Casasuerte, Kathleen, Airmen's Triplex) match the family's income bracket with "You Qualify!" badges.
+         - Live feedback displaying maximum comfortable monthly amortization (35% GMI ceiling), estimated home purchasing power, and dynamic cards highlighting which accredited Cavite & Las Piñas subdivisions (Liora Homes `LioraHomes.jpg`, Casasuerte `casasuerte.jpg`, Kathleen `kathleen-facade.jpg`, Airmen's Triplex `AirmenTriplex.WEBP`) match the family's income bracket with "You Qualify!" badges, dynamic subfolder base-path resolution, and `property1.jpg` image fallback handling.
     - **Inquiry Form Simulation Pre-Fill & Calculation Banner (`inquiry.js`, `inquiry.html`)**:
       - On `pages/inquiry/inquiry.html`, detects `urbanscope_calc_intent` or `?calc=1` and displays an attached calculation banner (`.calc-pref-banner`) showing the selected financing program, DP equity schedule, and estimated amortization.
       - Automatically populates the consultation inquiry message with a structured breakdown requesting developer pricelist sheets, unit availability, and site viewing.
@@ -921,6 +921,40 @@ path when rendering from a page.
     - **Pure Vanilla ES6 & Full Dark Mode Integration**:
       - Zero npm/runtime bundler dependencies. Modular standalone calculation engine in `frontend/shared/js/calculator.js` and design-token-compatible CSS in `frontend/shared/css/calculator.css`.
       - High-contrast custom range slider controls, segmented pill selectors, and full Dark Mode overrides (`html.dark-mode .calc-*`, `html[data-theme="dark"] .calc-*`).
+
+88. **Modern UI, Custom Iconography, Scroll Animations & Layout Enhancements (`common.css`, `session.js`, `index.html`, `index.css`, `index.js`, `property-detail.css`):**
+    - **Scroll-Driven Reveal System & Accessibility (`common.css`, `session.js`)**:
+      - Added hardware-accelerated `.reveal-on-scroll` utility classes using native `IntersectionObserver` (threshold: 0.08, rootMargin: -25px) with subtle stagger delays (`.reveal-delay-1` through `.reveal-delay-4`).
+      - Applied to homepage sections (Featured properties, Budget Matcher, About Me, FAQs, CTA banner), dynamically re-triggered via `UrbanSession.initScrollReveals()` when property cards are updated.
+      - Automatically respects accessibility preferences: disables all transforms and opacity transitions when `prefers-reduced-motion: reduce` is detected.
+    - **Floating Back-to-Top with Circular Scroll Progress Ring (`common.css`, `session.js`)**:
+      - Floating circular button (`#backToTopBtn`) appears dynamically once scrolled 320px down, positioned above the floating contact FAB at `bottom: 92px; right: 28px;` (adjusted to `bottom: 88px; right: 20px;` on mobile).
+      - Renders an SVG radial progress circle (`#bttProgressFill`) with dynamic `stroke-dashoffset` calculating scroll percentage in real-time, accompanied by a chevron up-arrow for smooth 1-tap scrolling to top.
+      - Full Dark Mode adaptation (`#17241a` background, `#48bb78` emerald stroke fill).
+    - **Hero Glassmorphic Floating Search (`index.html`, `index.css`)**:
+      - Enhanced Hero search bar with backdrop blur (`backdrop-filter: blur(14px)`), translucent border (`rgba(255, 255, 255, 0.85)`), and green focus glow ring (`0 20px 48px rgba(45, 92, 57, 0.22)`).
+      - Clean, uncluttered layout keeping direct focus on property type, location, and keyword inputs.
+    - **Property Card Micro-Interactions, Spec Pills & Calculator Shortcut (`index.css`, `index.js`, `property-detail.css`)**:
+      - Elevated property cards with hover lift (`translateY(-8px)`), ambient green glow shadow (`0 16px 36px rgba(45, 92, 57, 0.14)`), and image zoom (`scale(1.05)`).
+      - Redesigned card specs with rounded `.spec-pill` containers (`#f1f7f2` background, green SVG icons).
+      - Added direct `.calc-shortcut-pill` ("Compute Amortization") linking directly to the property's calculation simulator.
+      - Added interactive hover lift to 4-column spec boxes on property detail showcase pages (`.specs-bar .spec-item:hover`).
+    - **FAQ Accordion Polish & Category Filter Pills (`index.html`, `index.css`, `index.js`)**:
+      - Enforced single-open accordion behavior with smooth height, opacity, and visibility transition (`max-height: 0` to `1200px`).
+      - Only the first item ("What are the initial requirements to apply for a property?") is expanded by default, with all subsequent FAQs fully collapsed (0px height).
+      - Added topic category filter pills (`[ All (8) ]`, `[ Financing & Payments (2) ]`, `[ OFW & Eligibility (4) ]`, `[ Requirements & Location (2) ]`).
+      - Filtering by category seamlessly shows/hides matching questions (`.hidden-by-category`) and automatically expands the first item in the selected category while keeping all others closed.
+      - Full Dark Mode support across all new chips, pills, and cards (`html.dark-mode`).
+
+89. **Desktop 125% Zoom Preservation & Floating Button Hit-Testing Fixes (`common.css`, `session.css`, `splash.css`):**
+    - **Desktop 125% Zoom Maintained**:
+      - Preserved `zoom: 1.25;` on `html` across `common.css`, `inquiry.css`, and `auth.css` to keep the generous, high-resolution desktop typography and UI scale requested by the client.
+      - Confirmed that with clean footer markup (removing stray markup outside the footer), the footer bottom rests flush against the viewport bottom (`gapAtBottom: 0px`).
+    - **Floating Contact FAB Pointer Interception & Back-to-Top Clickability**:
+      - `.contact-fab` (`session.css`) is a fixed container (`bottom: 24px; right: 24px;`) spanning ~258px tall to contain `.fab-menu` + `.fab-main-btn`. Its transparent box previously overlapped `#backToTopBtn` (`bottom: 92px; right: 28px;`) with a higher `z-index: 9998`, swallowing clicks on the arrow.
+      - Added `pointer-events: none;` to `.contact-fab` wrapper, while preserving `pointer-events: auto;` on its interactive triggers (`.fab-main-btn`, `.fab-action-btn`).
+      - Increased `.back-to-top-btn` `z-index` from `9997` to `10001` in `common.css`, set `pointer-events: auto !important; cursor: pointer;` on `.back-to-top-btn.is-active`, and added `pointer-events: none;` to `.btt-icon`.
+      - Added `pointer-events: none !important;` to `#splash.splash-exit` and all descendants to guarantee exiting splash curtains never intercept UI interactions.
 
 ---
 

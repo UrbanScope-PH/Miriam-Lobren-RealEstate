@@ -472,6 +472,9 @@
             if (!container) return;
 
             // Project threshold benchmarks
+            var isSubfolder = window.location.pathname.includes('/pages/');
+            var imgBase = isSubfolder ? '../../' : '';
+
             var PROJECTS = [
                 {
                     id: 'liora',
@@ -480,8 +483,8 @@
                     minPrice: 2460000,
                     minSalary: 42000,
                     financing: 'Pag-IBIG / Bank',
-                    image: 'assets/images/Liora.jpg',
-                    link: 'pages/properties/Liora.html'
+                    image: 'assets/images/LioraHomes.jpg',
+                    link: isSubfolder ? '../properties/Liora.html' : 'pages/properties/Liora.html'
                 },
                 {
                     id: 'casasuerte',
@@ -491,7 +494,7 @@
                     minSalary: 45000,
                     financing: 'Pag-IBIG / Bank',
                     image: 'assets/images/casasuerte.jpg',
-                    link: 'pages/properties/casasuerte.html'
+                    link: isSubfolder ? '../properties/casasuerte.html' : 'pages/properties/casasuerte.html'
                 },
                 {
                     id: 'kathleen',
@@ -500,8 +503,8 @@
                     minPrice: 6200000,
                     minSalary: 105000,
                     financing: 'Bank Financing',
-                    image: 'assets/images/kathleen.jpg',
-                    link: 'pages/properties/kathleen.html'
+                    image: 'assets/images/kathleen-facade.jpg',
+                    link: isSubfolder ? '../properties/kathleen.html' : 'pages/properties/kathleen.html'
                 },
                 {
                     id: 'airmen',
@@ -510,8 +513,8 @@
                     minPrice: 8900000,
                     minSalary: 155000,
                     financing: 'Bank Financing',
-                    image: 'assets/images/Airmen.jpg',
-                    link: 'pages/properties/Airmen.html'
+                    image: 'assets/images/AirmenTriplex.WEBP',
+                    link: isSubfolder ? '../properties/Airmen.html' : 'pages/properties/Airmen.html'
                 }
             ];
 
@@ -608,7 +611,7 @@
                     html += [
                         '<div class="bm-project-item ' + (qualifies ? 'qualified' : 'unqualified') + '">',
                         '  <div class="bm-item-thumb">',
-                        '    <img src="' + p.image + '" alt="' + p.title + '" loading="lazy">',
+                        '    <img src="' + imgBase + p.image + '" alt="' + p.title + '" loading="lazy" onerror="this.src=\'' + imgBase + 'assets/images/property1.jpg\'">',
                         '    <span class="bm-item-badge ' + (qualifies ? 'badge-match' : 'badge-gap') + '">',
                         qualifies ? '✓ You Qualify' : 'Needs ₱' + (p.minSalary).toLocaleString('en-PH'),
                         '    </span>',

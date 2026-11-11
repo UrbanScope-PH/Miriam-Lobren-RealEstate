@@ -1054,6 +1054,114 @@
     }
 
     // ------------------------------------------------------------------
+    // Scroll-Driven Reveals System (IntersectionObserver)
+    // ------------------------------------------------------------------
+    function initScrollReveals() {
+        if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+            document.querySelectorAll('.reveal-on-scroll').forEach(function (el) {
+                el.classList.add('is-visible');
+            });
+            return;
+        }
+        var reveals = document.querySelectorAll('.reveal-on-scroll:not(.is-visible)');
+        if (!reveals.length) return;
+
+        if (!('IntersectionObserver' in window)) {
+            reveals.forEach(function (el) { el.classList.add('is-visible'); });
+            return;
+        }
+
+        var observer = new IntersectionObserver(function (entries, obs) {
+            entries.forEach(function (entry) {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('is-visible');
+                    obs.unobserve(entry.target);
+                }
+            });
+        }, {
+            threshold: 0.08,
+            rootMargin: '0px 0px -25px 0px'
+        });
+
+        reveals.forEach(function (el) {
+            observer.observe(el);
+        });
+    }
+
+    // ------------------------------------------------------------------
+    // Floating Back-to-Top Button with Radial Scroll Progress
+    // ------------------------------------------------------------------
+    function initBackToTop() {
+        var path = location.pathname.toLowerCase().replace(/\\/g, '/');
+        if (path.includes('/pages/admin/') || path.includes('/pages/superadmin/')) return;
+        if (document.querySelector('.back-to-top-btn')) return;
+
+        var btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'back-to-top-btn';
+        btn.id = 'backToTopBtn';
+        btn.setAttribute('aria-label', 'Back to top of page');
+        btn.innerHTML =
+            '<svg class="btt-progress-ring" width="46" height="46" viewBox="0 0 46 46" aria-hidden="true">' +
+                '<circle class="btt-progress-track" cx="23" cy="23" r="19" fill="none" stroke-width="3"></circle>' +
+                '<circle class="btt-progress-fill" id="bttProgressFill" cx="23" cy="23" r="19" fill="none" stroke-width="3"></circle>' +
+            '</svg>' +
+            '<span class="btt-icon" aria-hidden="true">' +
+                '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">' +
+                    '<polyline points="18 15 12 9 6 15"></polyline>' +
+                '</svg>' +
+            '</span>';
+
+        document.body.appendChild(btn);
+
+        var circle = btn.querySelector('#bttProgressFill');
+        var radius = 19;
+        var circumference = 2 * Math.PI * radius; // ~119.38
+        if (circle) {
+            circle.style.strokeDasharray = circumference;
+            circle.style.strokeDashoffset = circumference;
+        }
+
+        function updateScrollProgress() {
+            var scrollTop = window.pageYOffset || document.documentElement.scrollTop || document.body.scrollTop || 0;
+            var scrollHeight = (document.documentElement.scrollHeight || document.body.scrollHeight) - window.innerHeight;
+
+            if (scrollTop > 320) {
+                btn.classList.add('is-active');
+            } else {
+                btn.classList.remove('is-active');
+            }
+
+            if (circle && scrollHeight > 0) {
+                var progress = Math.min(Math.max(scrollTop / scrollHeight, 0), 1);
+                var offset = circumference - (progress * circumference);
+                circle.style.strokeDashoffset = offset;
+            }
+        }
+
+        var ticking = false;
+        window.addEventListener('scroll', function () {
+            if (!ticking) {
+                window.requestAnimationFrame(function () {
+                    updateScrollProgress();
+                    ticking = false;
+                });
+                ticking = true;
+            }
+        }, { passive: true });
+
+        btn.addEventListener('click', function (e) {
+            e.preventDefault();
+            window.scrollTo({
+                top: 0,
+                behavior: 'smooth'
+            });
+        });
+
+        updateScrollProgress();
+    }
+
+    // ------------------------------------------------------------------
     // Global handlers
     // ------------------------------------------------------------------
     document.addEventListener('click', async function (e) {
@@ -1080,6 +1188,8 @@
     document.addEventListener('DOMContentLoaded', function () {
         initThemeToggle();
         initContactFab();
+        initScrollReveals();
+        initBackToTop();
         if (root.classList.contains('logged-in') || root.getAttribute('data-auth-state') === 'logged-in') {
             document.querySelectorAll('.inquiry-note').forEach(function (el) {
                 el.style.display = 'none';
@@ -1087,5 +1197,12 @@
         }
     });
 
-    window.UrbanSession = { getUser: getUser, logout: logout, loginUrl: loginUrl, updateInquiryNoteVisibility: updateInquiryNoteVisibility, setTheme: setTheme };
+    window.UrbanSession = {
+        getUser: getUser,
+        logout: logout,
+        loginUrl: loginUrl,
+        updateInquiryNoteVisibility: updateInquiryNoteVisibility,
+        setTheme: setTheme,
+        initScrollReveals: initScrollReveals
+    };
 })();
