@@ -55,11 +55,14 @@ SECRET_KEY = os.environ.get("URBANSCOPE_SECRET_KEY", "urbanscope-real-estate-sec
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_DAYS = 7
 
+# Default UrbanScope Google OAuth 2.0 Web Client ID (Google Identity Services)
+DEFAULT_GOOGLE_CLIENT_ID = "981770655747-t222jr0ias09rl7aga3302p9am64so43.apps.googleusercontent.com"
+
 
 def get_google_client_id() -> str:
     """
     Returns the configured Google OAuth 2.0 Client ID from environment variables,
-    live .env file, or .env.example fallback (allowing immediate pickup without restarting).
+    live .env file, or default UrbanScope client fallback (allowing immediate pickup without restarting).
     """
     client_id = os.environ.get("GOOGLE_CLIENT_ID", "").strip()
     if not client_id:
@@ -67,7 +70,9 @@ def get_google_client_id() -> str:
     if not client_id:
         client_id = _parse_env_file(ROOT_DIR / ".env.example").get("GOOGLE_CLIENT_ID", "").strip()
     if client_id.lower().startswith("your_google_client_id") or client_id.lower().startswith("paste_"):
-        return ""
+        client_id = ""
+    if not client_id:
+        client_id = DEFAULT_GOOGLE_CLIENT_ID
     if client_id:
         os.environ["GOOGLE_CLIENT_ID"] = client_id
     return client_id

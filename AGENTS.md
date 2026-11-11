@@ -1006,6 +1006,11 @@ path when rendering from a page.
       - Changes automatically propagate across General Consultation and Specific Property Inquiry tabs.
     - **Full Dark Mode**: Seamless support under `html.dark-mode` with deep forest green background surfaces (`#142219`), borders (`#2b4232`), and glowing emerald badges (`#48bb78`).
 
+93. **Google Identity Services Client ID Auto-Fallback (`backend/auth.py`, `.env`, `.env.example`):**
+    - Configured official Web Client ID `981770655747-t222jr0ias09rl7aga3302p9am64so43.apps.googleusercontent.com` in `.env` and `.env.example`.
+    - Updated `get_google_client_id()` in `backend/auth.py` with automatic `DEFAULT_GOOGLE_CLIENT_ID` fallback to match `frontend/shared/js/supabase.js` and `api.js`.
+    - Eliminates the `"Google Sign-In is not configured on the server. Add GOOGLE_CLIENT_ID to your .env file."` error banner and ensures `GET /api/auth/google/config` reports `enabled: true`.
+
 ---
 
 ## Safety Rules
