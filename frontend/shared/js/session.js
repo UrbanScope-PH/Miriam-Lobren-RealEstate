@@ -837,6 +837,16 @@
                 el.setAttribute('aria-label', 'Call Miriam Lobren (' + cleanPhone + ')');
             });
 
+            document.querySelectorAll('.social-icon.fb, a[href*="facebook.com"]').forEach(function (el) {
+                el.setAttribute('href', 'https://www.facebook.com/miriam.lobren/');
+                el.setAttribute('aria-label', 'Visit Miriam Lobren on Facebook');
+            });
+
+            document.querySelectorAll('.social-icon.msgr, #footerMessengerLink, a[href*="m.me"]').forEach(function (el) {
+                el.setAttribute('href', 'https://m.me/miriam.lobren');
+                el.setAttribute('aria-label', 'Chat on Facebook Messenger');
+            });
+
             document.querySelectorAll('.footer-contact a[href^="mailto:"], #footerAgentEmail, .footer-contact-item a[href^="mailto:"]').forEach(function (el) {
                 if (!el.classList.contains('social-icon')) {
                     el.textContent = cleanEmail;
@@ -948,7 +958,8 @@
 
     // Floating Contact Action Button (Messenger, Call, SMS)
     var CONTACT_CONFIG = {
-        messengerPage: 'miriamalobren',
+        facebookUrl: 'https://www.facebook.com/miriam.lobren/',
+        messengerPage: 'miriam.lobren',
         fallbackPhone: '+63 918 964 5434'
     };
 
