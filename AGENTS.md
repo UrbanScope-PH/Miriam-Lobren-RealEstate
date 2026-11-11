@@ -1092,6 +1092,24 @@ path when rendering from a page.
     - **Seamless Event Sync**: Dispatches native `change` and `input` events upon selection, immediately triggering live grid filtering and keeping category tabs and reset buttons 100% in sync. Includes outside click detection and `Escape` key handlers.
     - **Full Dark Mode Theme**: Fully styled with dark emerald tones (`#142219` background, `#2b4232` border, `#86efac` active highlights, `#e7f0e9` text).
 
+102. **Custom On-Brand UI Dropdown for "Sort by:" (`frontend/index.html`, `frontend/index.css`, `frontend/index.js`):**
+    - Replaced the native browser OS `<select id="homeSortSelect">` popup with a bespoke UrbanScope UI dropdown (`initSortSelect`).
+    - **Trigger Button (`.sort-select-trigger`)**: Styled with clean border (`#cbd9ce`), pill radius (`10px`), subtle hover elevation, active focus ring (`rgba(45, 92, 57, 0.12)`), active option label, dynamic SVG icon, and animated chevron arrow with 180° rotation on toggle.
+    - **Dropdown Menu (`.sort-select-dropdown`) & Stacking Context Elevation**:
+      - Floating panel with soft shadow (`0 18px 40px -4px rgba(15, 33, 20, 0.16)`), 14px rounded corners, smooth entrance animation (`sortSelectFade`), and high z-index (`1050`).
+      - **Stacking Context Fix**: Because `.featured-header-row` and `.category-tabs-container` both use `.reveal-on-scroll` (which introduces CSS `transform: translateY(0)` creating isolated stacking contexts), `.category-tabs-container` and downstream `#propertyGrid` previously painted on top of the open dropdown. Resolved by giving `.featured-header-row` `position: relative; z-index: 50;` by default and elevating it to `z-index: 1200 !important;` whenever the dropdown is open (via `:has(.sort-select-wrap.is-open)` in CSS and `.has-open-dropdown` in `frontend/index.js`), with `.home-sort-control` elevated to `z-index: 1250` and `.sort-select-wrap.is-open` to `z-index: 1300`. This guarantees the dropdown menu renders 100% in front of the category filter tabs and property cards.
+    - **Rich Option Presentation (`.sort-select-option`)**: Every sort option features a bespoke SVG icon:
+      - *Featured*: Star icon
+      - *Location (A-Z)*: Map pin icon
+      - *Property Type*: Building icon
+      - *Newest First*: Clock icon
+      - *Price: Low to High*: Ascending step arrow icon
+      - *Price: High to Low*: Descending step arrow icon
+      - Active item renders an emerald checkmark (`✓`) with bold highlight (`#e2f0e6` light, `#193d26` dark).
+    - **Event & State Sync**: Selection updates the hidden `<select>` value and dispatches a bubbling `change` event, instantly triggering property card re-sorting. Includes mutual closing of other open dropdowns, outside click detection, and `Escape` key support.
+    - **Full Dark Mode Support**: Custom tokens for dark theme (`#142219` background, `#2a4030` border, `#86efac` active text/checkmark, `#233829` hover state).
+    - **Automated Verification**: Verified using headless Chrome DevTools protocol (`test_sort_select.js`, dark mode test, and element hit-testing) confirming opening, complete front-stack visibility over category tabs and cards, option selection, instant DOM card re-ordering (Low to High and High to Low), and screenshot capture.
+
 ---
 
 ## Safety Rules
