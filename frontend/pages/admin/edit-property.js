@@ -27,7 +27,9 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 
     if (!propertyId || !/^\d+$/.test(propertyId)) {
-        alert("Invalid or missing property ID.");
+        if (typeof window.showFeedbackToast === 'function') {
+            window.showFeedbackToast("Invalid or missing property ID.", "error");
+        }
         window.location.href = "propertylist.html";
         return;
     }
@@ -111,7 +113,9 @@ document.addEventListener("DOMContentLoaded", async () => {
     function verifyAdmin() {
         const adminUser = localStorage.getItem("adminUser") || localStorage.getItem("urbanscope_user");
         if (!adminUser) {
-            alert("Please log in as an administrator to manage listings.");
+            if (typeof window.showFeedbackToast === 'function') {
+                window.showFeedbackToast("Please log in as an administrator to manage listings.", "warn");
+            }
             window.location.href = "../auth/login.html";
             return false;
         }
@@ -146,7 +150,9 @@ document.addEventListener("DOMContentLoaded", async () => {
         }
 
         if (!data) {
-            alert("The selected property was not found.");
+            if (typeof window.showFeedbackToast === 'function') {
+                window.showFeedbackToast("The selected property was not found.", "error");
+            }
             window.location.href = "propertylist.html";
             return;
         }
@@ -209,7 +215,11 @@ document.addEventListener("DOMContentLoaded", async () => {
         }
 
         if (!file.type.startsWith("image/")) {
-            alert("Please select a valid image file.");
+            if (typeof window.showFeedbackToast === 'function') {
+                window.showFeedbackToast("Please select a valid image file.", "warn");
+            } else {
+                alert("Please select a valid image file.");
+            }
             imageInput.value = "";
             renderCurrentImages(currentImageUrl);
             return;
@@ -235,7 +245,11 @@ document.addEventListener("DOMContentLoaded", async () => {
         event.preventDefault();
 
         if (!currentProperty) {
-            alert("Property details have not loaded yet. Please wait.");
+            if (typeof window.showFeedbackToast === 'function') {
+                window.showFeedbackToast("Property details have not loaded yet. Please wait.", "info");
+            } else {
+                alert("Property details have not loaded yet. Please wait.");
+            }
             return;
         }
 
@@ -246,7 +260,11 @@ document.addEventListener("DOMContentLoaded", async () => {
         const status = getField("status")?.value || "Available";
 
         if (!title || !location || !propertyType || !status || price < 0) {
-            alert("Please fill in all required fields.");
+            if (typeof window.showFeedbackToast === 'function') {
+                window.showFeedbackToast("Please fill in all required fields.", "warn");
+            } else {
+                alert("Please fill in all required fields.");
+            }
             return;
         }
 
@@ -296,11 +314,19 @@ document.addEventListener("DOMContentLoaded", async () => {
                 localStorage.setItem("properties", JSON.stringify(props));
             } catch (e) {}
 
-            alert("✓ Property updated successfully!");
-            window.location.href = "propertylist.html";
+            if (typeof window.showFeedbackToast === 'function') {
+                window.showFeedbackToast("✓ Property updated successfully!", "success");
+            }
+            setTimeout(() => {
+                window.location.href = "propertylist.html";
+            }, 500);
         } catch (error) {
             console.error("Error updating property:", error);
-            alert("Could not update property: " + error.message);
+            if (typeof window.showFeedbackToast === 'function') {
+                window.showFeedbackToast("Could not update property: " + error.message, "error");
+            } else {
+                alert("Could not update property: " + error.message);
+            }
             if (saveButton) {
                 saveButton.disabled = false;
                 saveButton.textContent = originalButtonText;

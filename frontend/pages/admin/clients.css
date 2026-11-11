@@ -624,3 +624,31 @@ tr:hover td {
         height: 36px;
     }
 }
+
+/* ============================================================
+   20 UI/UX DESIGN SYSTEM POLISHES (RULES 3, 10, 14, 16, 18)
+   ============================================================ */
+.clients-header h1,
+.clients-table-panel h2 {
+    text-wrap: balance;
+}
+
+.stat-pill strong,
+.col-phone,
+.col-inquiries-count,
+.col-registered-date {
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: 'tnum' 1;
+}
+
+.clients-table-panel {
+    border-radius: 16px;
+    overflow: hidden;
+}
+
+.clients-filter-bar {
+    border-radius: 12px;
+}
+.clients-filter-bar input {
+    border-radius: 8px;
+}

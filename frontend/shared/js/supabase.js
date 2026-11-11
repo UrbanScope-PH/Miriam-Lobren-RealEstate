@@ -4387,6 +4387,40 @@
     window.apiGetInquiries = apiGetInquiries;
     window.apiUpdateInquiryStatus = apiUpdateInquiryStatus;
     window.apiGetMyInquiries = apiGetMyInquiries;
+    function showFeedbackToast(msg, type = 'success') {
+        if (!msg || typeof document === 'undefined') return;
+        let toast = document.getElementById('urbanFeedbackToast');
+        if (!toast) {
+            toast = document.createElement('div');
+            toast.id = 'urbanFeedbackToast';
+            document.body.appendChild(toast);
+        }
+
+        let iconHtml = '<span class="toast-icon-success">✓</span>';
+        if (type === 'error' || type === 'danger') {
+            iconHtml = '<span class="toast-icon-error">✕</span>';
+        } else if (type === 'info') {
+            iconHtml = '<span class="toast-icon-info">ℹ</span>';
+        } else if (type === 'warn' || type === 'warning') {
+            iconHtml = '<span class="toast-icon-warn">⚠</span>';
+        }
+
+        toast.className = 'urban-feedback-toast';
+        toast.innerHTML = `${iconHtml} <span>${msg}</span>`;
+
+        requestAnimationFrame(() => {
+            toast.classList.add('show');
+        });
+
+        clearTimeout(toast._timer);
+        toast._timer = setTimeout(() => {
+            toast.classList.remove('show');
+        }, 3200);
+    }
+
+    window.showFeedbackToast = showFeedbackToast;
+    window.urbanToast = showFeedbackToast;
+
     window.apiUpdateMyInquiry = apiUpdateMyInquiry;
     window.apiDeleteMyInquiry = apiDeleteMyInquiry;
     window.apiCancelMyInquiry = apiCancelMyInquiry;

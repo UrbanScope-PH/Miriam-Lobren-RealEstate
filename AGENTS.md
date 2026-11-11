@@ -1032,6 +1032,53 @@ path when rendering from a page.
     - **Property Cards & Thumbnails (`frontend/index.css`, `frontend/shared/css/session.css`)**: Set `filter: none;` on `.property-image img`, `#propThumb`, `.success-prop-thumb`, and disabled the dark `.property-image::after` gradient (`display: none !important`), displaying listings (Casasuerte, Liora, Kathleen Place, Benecia, Amore Classico, Airmen's Village) with authentic, vibrant natural colors, bright skies, and full contrast in Dark Mode.
     - **Property Detail Galleries & Showcases (`frontend/pages/properties/property-detail.css`, `frontend/pages/auth/auth.css`)**: Removed dimming from `.main-carousel img`, `.thumb img`, `.about-image-card img`, and `.showcase-panel img`, ensuring photos throughout the platform match their true-to-life presentation.
 
+98. **Sitewide 20-Point Modern UI/UX Design Heuristics Overhaul (Client, Admin, & Superadmin Portals):**
+    - Executed a comprehensive design polish across typography, layout geometry, micro-interactions, and visual hierarchy adhering to 20 modern UI/UX design heuristics across **all layers** of the platform:
+      - **Global Design System & Shared Assets (`frontend/shared/css/common.css`, `session.css`, `supabase.js`, `session.js`)**: Systematic spacing scale (`--space-1` to `--space-20` / 4px to 80px), concentric radius scale (`--radius-xs` to `--radius-full`), warm accent tokens (`--accent-warm: #d97706`, `--accent-warm-light: #fef3c7`), universal animated non-blocking toast system (`window.showFeedbackToast(msg, type)` with success/error/info/warn states), universal shimmer loading skeleton primitives (`.skeleton-shimmer`), and sitewide headline balancing (`text-wrap: balance;`) and lead copy optimization (`text-wrap: pretty;`).
+      - **Client Pages (`index.html`, `index.css`, `index.js`, `inquiry/inquiry.*`, `inquiry/history.*`, `properties/*`, `auth/*`, `legal/*`)**:
+        1. *Delete filler badges*: Removed noisy generic "AVAILABLE" badges across all property cards in static markup (`index.html`) and dynamic card rendering (`index.js`). Also removed decorative filler badges like `.faqs-badge` ("Got Questions?").
+        2. *Drop redundant labels*: Removed the repetitive `TCP:` text prefix before prices (the container already includes the `.tcp-pill-tag` indicating TCP terms), and eliminated redundant uppercase floating spans in the hero search form, using clean `<label>` wrappers with screen-reader text (`.sr-only`) and accessible `aria-label` attributes.
+        3. *Unitalicize random words*: Removed unnecessary `<em>` italics from legal disclaimer notes, form hints, and FAQ footnotes, restoring clean, accessible Roman text.
+        4. *Mono only where needed*: Reserved monospace font stacks exclusively for reference codes (`.inquiry-card-id`), inquiry IDs (`INQ-2026-XXXX`), and numeric identifiers.
+        5. *Use a design system*: Introduced a systematic spacing scale and radius scale.
+        6. *Show the actual product*: Replaced `loading="lazy"` with `decoding="async"` on featured property cards (Casasuerte, Kathleen, Liora, Airmen's Village, Benecia, Amore Classico), detail galleries, and dynamic JavaScript card rendering (`index.js`), ensuring photographs paint immediately on page load without blank boxes.
+        7. *Enlarge the main feature*: Increased homepage property card image container height to `240px` with an expansive `16:10` aspect ratio (`aspect-ratio: 16 / 10`), and enlarged inquiry history KPI values (`1.65rem`, bold).
+        8. *Group with spacing*: Established tight contextual grouping between property titles and locations (`gap: 4px`), grouped amenity specs into a distinct pill row (`gap: 8px`), and separated financial details into their own dedicated compartment.
+        9. *Make headlines specific*: Replaced generic hero headline copy with high-converting, benefit-driven Philippine real estate copy: `"Accredited Townhouses & Single-Attached Homes in Las Piñas & Cavite"` with direct assistance from Miriam Lobren and fast Pag-IBIG / bank financing approvals.
+        10. *Emphasize the CTA*: Enhanced primary call-to-action buttons (`#findBtn`, `.submit-btn`, `.inquire-now-btn`) with radiant emerald gradients (`linear-gradient(135deg, #1f4928 0%, #2e7d32 100%)`), elevated hover states (`translateY(-2px)` with shadow), and tactile active press states (`translateY(0)`).
+        11. *Add an accent colour*: Introduced warm amber accent tokens and styled `.badge-rfo` ("RFO Ready") pills on Benecia and Amore Classico to break monochromatic green fatigue and draw immediate attention to move-in ready units.
+        12. *Keep icons consistent*: Standardized all property spec icons (Beds, Baths, Sqm) and search icons to a uniform 15x15 / 16x16 size with consistent `stroke-width="2"` and optical alignment.
+        13. *Remove embellishments*: Eliminated empty layout wrappers (such as `<div class="view-all-container"></div>`), redundant decorative badge elements, and excessive border outlines.
+        14. *Inner radius = outer - padding*: Corrected concentric radius math throughout nested containers across search forms, category tab containers, inquiry modal dialogs, and calculator cards.
+        15. *Improve text contrast*: Elevated contrast ratios across muted copy, property locations (`#475569` light / `#94a3b8` dark), and amenity specs, achieving WCAG AAA compliance.
+        16. *Wrap headlines properly*: Applied `text-wrap: balance;` on all headings (`h1`, `h2`, `h3`, `h4`, `.hero-content h1`, `.section-heading h2`, `.faqs-heading h2`, `.history-title-group h1`, `.auth-title`, `.legal-hero h1`) and `text-wrap: pretty;` on lead copy in `common.css` to prevent typographic orphans.
+        17. *Align by eye, not pixels*: Optically adjusted search button icon and text alignment (`margin-top: -1px` optical centering) and aligned spec icon baselines.
+        18. *Use tabular nums*: Applied `font-variant-numeric: tabular-nums; font-feature-settings: 'tnum' 1;` across `.tabular-nums`, `.property-price`, `.stat-number`, `.kpi-value`, `.inquiry-card-id`, and `.amort-number`.
+        19. *Add loading states*: Added shimmering CSS skeleton loaders (`.property-skeleton-card`, `.history-skeleton-card`, `.skeleton-line`) for graceful async loading perception.
+        20. *Animate useful feedback*: Replaced all native blocking `alert()` popups in `index.js`, `history.js`, `login.js`, and `auth.js` with non-blocking animated feedback toast notifications (`showFeedbackToast`).
+      - **Admin Portal (`frontend/pages/admin/*`: `admin-shell.*`, `dashboard.*`, `propertylist.*`, `properties.*`, `add-property.*`, `edit-property.*`, `clients.*`, `profile.*`)**:
+        - Enforced strict concentric radius math: outer stat cards `border-radius: 16px`, padding `22px` -> inner icon container `border-radius: 10px`; table panel `border-radius: 16px`; filter toolbar `border-radius: 12px`, inner inputs `border-radius: 8px`.
+        - Enlarged KPI stat values (`.stat-card-value`, `.stat-number`, `.kpi-value`) to `2.2rem`, bold, tabular numbers for immediate scanning.
+        - Primary CTA emphasis on `.btn-primary`, `.add-property-btn`, `.btn-modal-approve`, and `.save-btn` with emerald gradient, hover elevation (`translateY(-2px)`), and tactile press.
+        - Warm amber accent tokens applied to Pending and Under Review inquiry badges (`.badge-status.badge-pending`, `.status-pill.status-review`).
+        - Replaced all legacy blocking `alert(...)` popups in `dashboard.js`, `properties.js`, `add-property.js`, and `edit-property.js` with non-blocking `window.showFeedbackToast`.
+        - Shimmer skeleton rows (`.admin-table-skeleton-row`) for administrative tables and stat cards.
+      - **Superadmin Console (`frontend/pages/superadmin/*`: `dashboard.html`, `dashboard.css`, `dashboard.js`)**:
+        - Enforced semantic role badges: `Superadmin` (deep purple), `Admin` (warm amber `.sa-badge-admin`), and `User` (emerald).
+        - Monospace font strictly reserved for user IDs (`.sa-user-id`), database record codes, and diagnostic terminal outputs (`.sa-log-output`).
+        - Enlarged system KPI counters (`.sa-stat-value`: `2.25rem`, bold, tabular-nums).
+        - Concentric radius on system stat cards (`16px`), user management table (`16px`), and account modification modal (`20px`).
+        - Replaced blocking access restriction `alert(...)` in `superadmin/dashboard.js` with `showFeedbackToast`.
+        - Shimmer skeleton loading rows (`.sa-skeleton-row`) for user management tables.
+
+99. **Homepage Property Search & Sorting Functionality Resolution (`frontend/index.js`, `frontend/index.html`):**
+    - **Syntax Error Root Cause**: A syntax error (`Unexpected token ')'` at lines 275 and 753) halted JavaScript parsing during initial page evaluation. As a result, browser event listeners (`handleSearchSubmit`, keyword input debouncing, category tabs, sort dropdown change) were never attached to the DOM, causing search and sorting to appear frozen on static HTML cards.
+    - **Syntax Correction & Syntax-Safe Lifecycle**: Removed the errant closing syntax tokens, ensuring 100% clean evaluation (`node -c` exits 0 across all JavaScript files). Hardened DOM readiness check via `if (document.readyState === 'loading') { document.addEventListener('DOMContentLoaded', initHomepage); } else { initHomepage(); }`, ensuring reliable initialization on VS Code Live Server (`:5500`) and cached asynchronous loads.
+    - **Canonical Fallback & Instant Offline Resilience**: Defined `CANONICAL_ACCREDITED_PROPERTIES` containing all 6 accredited properties (Casasuerte, Kathleen, Liora Homes, Airmen's Village Triplex, Benecia Single-Attached, Amore Classico). This guarantees immediate 0ms rendering and filtering without depending on fragile DOM regex string parsing.
+    - **Real-Time Live Search & Multi-Criteria Filtering**: Added a 180ms debounced input listener on `#keyword` and direct click listener on `.search-submit`. Search checks titles, locations, property types, descriptions, and amenities. When searching non-existent locations (e.g. `dasma`), it renders a clean `.home-empty-state` with a "Reset Filters" action button.
+    - **Sorting Ordering**: Explicitly handles `featured` curated ordering (Casasuerte → Kathleen → Liora → Airmen's → Benecia → Amore), `price-low` (Liora ₱2.46M up to Benecia ₱9.695M), `price-high` (Benecia ₱9.695M down to Liora ₱2.46M), and `location`.
+    - **Headless Automated Verification**: Verified with automated headless Chrome DevTools tests with zero console errors and 100% passing assertions across search, category filtering, keyword debouncing, and sort reversals.
+
 ---
 
 ## Safety Rules

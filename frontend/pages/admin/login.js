@@ -16,7 +16,11 @@ if (adminLoginForm) {
         const password = document.getElementById('password').value;
 
         if (!adminId.includes('@')) {
-            alert('Please enter your admin email address.');
+            if (typeof window.showFeedbackToast === 'function') {
+                window.showFeedbackToast('Please enter your admin email address.', 'warn');
+            } else {
+                alert('Please enter your admin email address.');
+            }
             return;
         }
 
@@ -48,7 +52,11 @@ if (adminLoginForm) {
                 throw new Error('Authentication gateway not available.');
             }
         } catch (error) {
-            alert('Admin login failed: ' + error.message);
+            if (typeof window.showFeedbackToast === 'function') {
+                window.showFeedbackToast('Admin login failed: ' + error.message, 'error');
+            } else {
+                alert('Admin login failed: ' + error.message);
+            }
             btn.disabled = false;
             btn.innerText = originalText;
         }

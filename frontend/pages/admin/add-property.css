@@ -885,3 +885,59 @@
         padding: 24px 10px;
     }
 }
+
+/* ============================================================
+   ADD PROPERTY 20 UI/UX DESIGN SYSTEM POLISHES
+   ============================================================ */
+.form-card-header h2,
+.section-title {
+    text-wrap: balance;
+}
+
+.form-card-header p {
+    text-wrap: pretty;
+}
+
+.price-input,
+.area-input,
+.specs-input {
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: 'tnum' 1;
+}
+
+/* Emphasize Primary CTA (Rule 10) */
+.save-property-btn,
+.btn-publish {
+    background: linear-gradient(135deg, var(--green, #1f4928) 0%, var(--forest, #2e7d32) 100%) !important;
+    color: #ffffff !important;
+    box-shadow: 0 4px 14px rgba(31, 73, 40, 0.28) !important;
+    border-radius: var(--radius-md, 8px) !important;
+    font-weight: 600 !important;
+    transition: transform 0.18s ease, box-shadow 0.18s ease !important;
+}
+
+.save-property-btn:hover,
+.btn-publish:hover {
+    transform: translateY(-2px) !important;
+    box-shadow: 0 6px 18px rgba(31, 73, 40, 0.38) !important;
+}
+
+.save-property-btn:active,
+.btn-publish:active {
+    transform: translateY(0) !important;
+    box-shadow: 0 2px 8px rgba(31, 73, 40, 0.25) !important;
+}
+
+/* Concentric Radius: Outer card 16px, inner inputs 8px (Rule 14) */
+.property-form-card {
+    border-radius: 16px !important;
+}
+.property-form-card input,
+.property-form-card select,
+.property-form-card textarea {
+    border-radius: 8px !important;
+}
+.upload-area {
+    border-radius: 12px !important;
+}
+

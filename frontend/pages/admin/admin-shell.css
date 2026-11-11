@@ -1456,3 +1456,161 @@ html.dark-mode .filter-toolbar {
     background-color: transparent;
 }
 
+/* ============================================================
+   ADMIN SHELL 20 UI/UX DESIGN SYSTEM POLISHES
+   ============================================================ */
+
+/* Headline Balance & Lead Wrap (Rule 16) */
+.topbar-title,
+.page-header h1,
+.table-panel-header h2,
+.table-panel-header h3,
+.card-header h2,
+.card-header h3,
+.modal-header h3,
+.stat-card-title {
+    text-wrap: balance;
+}
+
+.page-header p,
+.card-header p,
+.table-panel-header p {
+    text-wrap: pretty;
+}
+
+/* Mono strictly for IDs & Reference Codes (Rule 4) */
+.inquiry-id,
+.prop-code,
+.client-id,
+.ref-number,
+.user-id-badge {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace !important;
+    font-size: 0.84rem;
+    letter-spacing: 0.02em;
+}
+
+/* Tabular Nums (Rule 18) */
+.stat-card-value,
+.stat-number,
+.kpi-value,
+.metric-value,
+.table-panel td.col-price,
+.table-panel td.col-num,
+.table-panel td.col-date,
+.table-panel td.col-phone,
+.inquiry-schedule,
+.price-display,
+.sqm-display {
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: 'tnum' 1;
+}
+
+/* Enlarge Main Feature: KPI Stats (Rule 7) */
+.stat-card-value,
+.stat-number {
+    font-size: 2.2rem !important;
+    font-weight: 800 !important;
+    line-height: 1.05 !important;
+    letter-spacing: -0.02em !important;
+}
+
+/* Emphasize Primary Admin CTA (Rule 10) */
+.btn-primary,
+.action-btn-primary,
+.btn-modal-approve,
+.btn-save-profile,
+.btn-add-property {
+    background: linear-gradient(135deg, var(--green, #1f4928) 0%, var(--forest, #2e7d32) 100%) !important;
+    color: #ffffff !important;
+    border: none !important;
+    box-shadow: 0 4px 14px rgba(31, 73, 40, 0.28) !important;
+    font-weight: 600 !important;
+    border-radius: var(--radius-md, 8px) !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    cursor: pointer !important;
+    transition: transform 0.18s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.18s ease !important;
+}
+
+.btn-primary:hover,
+.action-btn-primary:hover,
+.btn-modal-approve:hover,
+.btn-save-profile:hover,
+.btn-add-property:hover {
+    transform: translateY(-2px) !important;
+    box-shadow: 0 6px 18px rgba(31, 73, 40, 0.38) !important;
+}
+
+.btn-primary:active,
+.action-btn-primary:active,
+.btn-modal-approve:active,
+.btn-save-profile:active,
+.btn-add-property:active {
+    transform: translateY(0) !important;
+    box-shadow: 0 2px 8px rgba(31, 73, 40, 0.25) !important;
+}
+
+/* Warm Accent for Pending / Review Status (Rule 11) */
+.badge-status.badge-pending,
+.badge-status.badge-review,
+.status-pill.status-pending,
+.status-pill.status-review {
+    background: var(--accent-warm-light, #fef3c7) !important;
+    color: var(--accent-warm-dark, #b45309) !important;
+    border: 1px solid var(--accent-warm-border, #fde68a) !important;
+    font-weight: 600 !important;
+}
+
+html.dark-mode .badge-status.badge-pending,
+html.dark-mode .badge-status.badge-review,
+html.dark-mode .status-pill.status-pending,
+html.dark-mode .status-pill.status-review {
+    background: rgba(245, 158, 11, 0.16) !important;
+    color: #fbbf24 !important;
+    border-color: rgba(245, 158, 11, 0.35) !important;
+}
+
+/* Inner Radius = Outer - Padding (Rule 14) */
+.stat-card {
+    border-radius: 16px !important;
+    padding: 22px !important;
+}
+.stat-card-icon {
+    border-radius: 10px !important; /* 16 - 6 */
+}
+.table-panel {
+    border-radius: 16px !important;
+    overflow: hidden !important;
+}
+.filter-toolbar {
+    border-radius: 12px !important;
+}
+.filter-toolbar input,
+.filter-toolbar select {
+    border-radius: 8px !important;
+}
+
+/* Unitalicize notes & empty states (Rule 3) */
+.table-empty-text,
+.field-hint,
+.admin-note,
+.form-help {
+    font-style: normal !important;
+}
+
+/* Loading Skeleton Shimmer for Admin (Rule 19) */
+.admin-table-skeleton-row {
+    height: 48px;
+    background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%);
+    background-size: 200% 100%;
+    animation: skeletonShimmer 1.6s ease-in-out infinite;
+    border-radius: 6px;
+    margin: 8px 0;
+}
+html.dark-mode .admin-table-skeleton-row {
+    background: linear-gradient(90deg, #1c2b20 25%, #25392a 50%, #1c2b20 75%);
+    background-size: 200% 100%;
+}
+
+

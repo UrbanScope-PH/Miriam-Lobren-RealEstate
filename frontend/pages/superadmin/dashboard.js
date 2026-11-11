@@ -325,7 +325,11 @@
 
             // Strict check: only urbanscope.cvsu@gmail.com with superadmin role
             if (cleanEmail !== 'urbanscope.cvsu@gmail.com' || role !== 'superadmin') {
-                alert('Access Restricted: Exclusive Superadministrator access required.');
+                if (typeof window.showFeedbackToast === 'function') {
+                    window.showFeedbackToast('Access Restricted: Exclusive Superadministrator access required.', 'warn');
+                } else {
+                    alert('Access Restricted: Exclusive Superadministrator access required.');
+                }
                 window.location.href = '../admin/dashboard.html';
                 return false;
             }

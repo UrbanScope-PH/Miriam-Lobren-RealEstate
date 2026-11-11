@@ -2425,3 +2425,55 @@ html.dark-mode .btn-terms-decline:hover {
     color: #86efac;
 }
 
+/* ============================================================
+   20 UI/UX DESIGN SYSTEM POLISHES (RULES 3, 10, 14, 16, 18)
+   ============================================================ */
+.auth-title,
+.slide-text h2,
+.terms-modal-header h3 {
+    text-wrap: balance;
+}
+
+.auth-subtitle,
+.slide-text p,
+.terms-modal-header p {
+    text-wrap: pretty;
+}
+
+/* Unitalicize hints (Rule 3) */
+.form-group-note,
+.form-hint,
+.disclaimer-text {
+    font-style: normal !important;
+}
+
+/* Emphasize Primary Auth CTA (Rule 10) */
+.btn-submit {
+    background: linear-gradient(135deg, var(--green, #1f4928) 0%, var(--forest, #2e7d32) 100%) !important;
+    box-shadow: 0 4px 14px rgba(31, 73, 40, 0.28);
+    transition: transform 0.18s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.18s ease;
+}
+
+.btn-submit:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 18px rgba(31, 73, 40, 0.38);
+}
+
+.btn-submit:active:not(:disabled) {
+    transform: translateY(0);
+    box-shadow: 0 2px 8px rgba(31, 73, 40, 0.25);
+}
+
+/* Concentric Radius Math: Outer Card vs Inner Inputs (Rule 14) */
+.auth-card {
+    border-radius: 20px;
+}
+.input-with-icon input,
+.auth-form input {
+    border-radius: 10px;
+}
+.social-btn {
+    border-radius: 10px;
+}
+
+

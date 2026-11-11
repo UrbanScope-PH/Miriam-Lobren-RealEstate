@@ -170,9 +170,16 @@ if (confirmDelete) {
             if (deleteModal) deleteModal.classList.remove("show");
             selectedPropertyId = null;
             await loadSavedProperties();
+            if (typeof window.showFeedbackToast === 'function') {
+                window.showFeedbackToast("✓ Property deleted successfully.", "success");
+            }
         } catch (err) {
             console.error("Delete notice:", err);
-            alert("Could not delete property: " + (err.message || "Unknown error"));
+            if (typeof window.showFeedbackToast === 'function') {
+                window.showFeedbackToast("Could not delete property: " + (err.message || "Unknown error"), "error");
+            } else {
+                alert("Could not delete property: " + (err.message || "Unknown error"));
+            }
         } finally {
             confirmDelete.disabled = false;
             confirmDelete.innerText = "Delete Property";
@@ -261,9 +268,16 @@ document.addEventListener(
                 }
 
                 await loadSavedProperties();
+                if (typeof window.showFeedbackToast === 'function') {
+                    window.showFeedbackToast("✓ Property status updated successfully.", "success");
+                }
             } catch (err) {
                 console.error("Status toggle notice:", err);
-                alert("Could not update property status. Please check your connection.");
+                if (typeof window.showFeedbackToast === 'function') {
+                    window.showFeedbackToast("Could not update property status. Please check your connection.", "error");
+                } else {
+                    alert("Could not update property status. Please check your connection.");
+                }
                 button.disabled = false;
                 button.innerText = isCurrentlySold ? 'Mark Available' : 'Mark as Sold';
             }
@@ -281,7 +295,11 @@ document.addEventListener(
             const propertyTitle = button.dataset.title || button.closest("tr")?.querySelector("strong")?.textContent || "this property";
 
             if (!propertyId) {
-                alert("This property cannot be deleted yet.");
+                if (typeof window.showFeedbackToast === 'function') {
+                    window.showFeedbackToast("This property cannot be deleted yet.", "warn");
+                } else {
+                    alert("This property cannot be deleted yet.");
+                }
                 return;
             }
 
@@ -311,14 +329,25 @@ document.addEventListener(
 
                         if (success) {
                             await loadSavedProperties();
+                            if (typeof window.showFeedbackToast === 'function') {
+                                window.showFeedbackToast("✓ Property deleted successfully.", "success");
+                            }
                         } else {
-                            alert("Could not delete property. Please check your admin permissions.");
+                            if (typeof window.showFeedbackToast === 'function') {
+                                window.showFeedbackToast("Could not delete property. Please check your admin permissions.", "error");
+                            } else {
+                                alert("Could not delete property. Please check your admin permissions.");
+                            }
                             button.disabled = false;
                             button.innerText = 'Delete';
                         }
                     } catch (err) {
                         console.error("Delete notice:", err);
-                        alert("Could not delete property: " + (err.message || "Unknown error"));
+                        if (typeof window.showFeedbackToast === 'function') {
+                            window.showFeedbackToast("Could not delete property: " + (err.message || "Unknown error"), "error");
+                        } else {
+                            alert("Could not delete property: " + (err.message || "Unknown error"));
+                        }
                         button.disabled = false;
                         button.innerText = 'Delete';
                     }

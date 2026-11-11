@@ -135,12 +135,22 @@ if (loginForm) {
                     }
                 }
             } else {
-                alert('Login failed: ' + (res?.error || 'Invalid email or password.'));
+                const failMsg = res?.error || 'Invalid email or password.';
+                if (typeof window.showFeedbackToast === 'function') {
+                    window.showFeedbackToast(failMsg, 'error');
+                } else {
+                    alert('Login failed: ' + failMsg);
+                }
                 btn.disabled = false;
                 btn.innerText = originalText;
             }
         } catch (err) {
-            alert('Login failed: ' + (err.message || 'An unexpected error occurred.'));
+            const errMsg = err.message || 'An unexpected error occurred.';
+            if (typeof window.showFeedbackToast === 'function') {
+                window.showFeedbackToast(errMsg, 'error');
+            } else {
+                alert('Login failed: ' + errMsg);
+            }
             btn.disabled = false;
             btn.innerText = originalText;
         }

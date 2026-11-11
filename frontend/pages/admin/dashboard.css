@@ -2076,6 +2076,87 @@
     }
 }
 
+/* ============================================================
+   ADMIN DASHBOARD 20 UI/UX DESIGN SYSTEM POLISHES
+   ============================================================ */
+
+/* Headline Balance & Lead Wrap (Rule 16) */
+.welcome-banner h2,
+.analytics-card-header h3,
+.table-panel-header h2,
+.table-title,
+.inquiry-client-name {
+    text-wrap: balance;
+}
+
+.welcome-banner p,
+.table-panel-header p,
+.inquiry-message-card p {
+    text-wrap: pretty;
+}
+
+/* Enlarge Main Feature: KPI Metric Numbers (Rule 7) */
+.kpi-value {
+    font-size: 2.15rem !important;
+    font-weight: 800 !important;
+    line-height: 1 !important;
+    letter-spacing: -0.02em !important;
+    font-variant-numeric: tabular-nums !important;
+    font-feature-settings: 'tnum' 1 !important;
+}
+
+/* Concentric Radius Math (Rule 14) */
+.kpi-card {
+    border-radius: 16px !important;
+    padding: 20px 18px !important;
+}
+.kpi-icon {
+    border-radius: 10px !important;
+}
+.analytics-card {
+    border-radius: 16px !important;
+}
+.inquiry-modal-content {
+    border-radius: 20px !important;
+}
+.inquiry-client-banner {
+    border-radius: 14px !important;
+}
+.inquiry-message-card {
+    border-radius: 12px !important;
+}
+
+/* CTA Emphasis on Action View & Modal Approve (Rule 10) */
+.action-view-btn {
+    border-radius: 8px !important;
+    font-weight: 600 !important;
+    transition: transform 0.16s ease, box-shadow 0.16s ease !important;
+}
+.action-view-btn:hover {
+    transform: translateY(-1px) !important;
+    box-shadow: 0 4px 10px rgba(30, 92, 51, 0.22) !important;
+}
+.action-view-btn:active {
+    transform: translateY(0) !important;
+}
+
+.btn-modal-approve {
+    background: linear-gradient(135deg, var(--green, #1f4928) 0%, var(--forest, #2e7d32) 100%) !important;
+    color: #ffffff !important;
+    box-shadow: 0 4px 14px rgba(31, 73, 40, 0.28) !important;
+    border-radius: 8px !important;
+    font-weight: 600 !important;
+    transition: transform 0.18s ease, box-shadow 0.18s ease !important;
+}
+.btn-modal-approve:hover {
+    transform: translateY(-2px) !important;
+    box-shadow: 0 6px 18px rgba(31, 73, 40, 0.38) !important;
+}
+.btn-modal-approve:active {
+    transform: translateY(0) !important;
+}
+
+
 
 
 
