@@ -384,6 +384,90 @@ async function loadPropertiesCatalog() {
         setPropertySelection(loadedProperties[0] || null);
         switchInquiryMode('general');
     }
+
+    // Check for calculation intent from Property Amortization Calculator
+    checkCalculatorIntent(matched || selectedProperty);
+}
+
+function showCalculatorPrefBanner(intentData) {
+    const wrap = document.getElementById('calcPrefBannerWrap');
+    if (!wrap || !intentData) return;
+
+    const fName = intentData.financingType === 'pagibig' ? 'Pag-IBIG Fund' : 'Bank Financing';
+    const rate = intentData.financingRate ? `${intentData.financingRate}%` : '';
+    const amort = intentData.monthlyAmortization ? '₱' + Number(intentData.monthlyAmortization).toLocaleString('en-PH') + '/mo' : '';
+    const term = intentData.loanTermYears || 20;
+    const dpPct = intentData.dpPercent || 20;
+    const dpMonths = intentData.dpMonths || 12;
+
+    wrap.innerHTML = `
+        <div class="calc-pref-banner" role="status">
+            <div class="calc-pref-icon" aria-hidden="true">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="4" y="2" width="16" height="20" rx="2"></rect>
+                    <line x1="8" y1="6" x2="16" y2="6"></line>
+                    <line x1="16" y1="14" x2="16" y2="18"></line>
+                    <path d="M16 10h.01"></path>
+                    <path d="M12 10h.01"></path>
+                    <path d="M8 10h.01"></path>
+                    <path d="M12 14h.01"></path>
+                    <path d="M8 14h.01"></path>
+                    <path d="M12 18h.01"></path>
+                    <path d="M8 18h.01"></path>
+                </svg>
+            </div>
+            <div class="calc-pref-content">
+                <strong>Simulated Financing Preference Attached:</strong>
+                <span>${fName} ${rate ? '(' + rate + ')' : ''} · ${dpPct}% DP (${dpMonths} mos) · ${term} Years${amort ? ' · Est. Amort: <strong>' + amort + '</strong>' : ''}</span>
+            </div>
+        </div>
+    `;
+}
+
+function checkCalculatorIntent(selectedProp) {
+    const urlParams = new URLSearchParams(window.location.search);
+    const hasCalcParam = urlParams.get('calc') === '1' || urlParams.get('calc') === 'true';
+
+    let intentData = null;
+    try {
+        const stored = sessionStorage.getItem('urbanscope_calc_intent');
+        if (stored) intentData = JSON.parse(stored);
+    } catch (e) { }
+
+    if (!hasCalcParam && !intentData) return;
+
+    const messageTextarea = document.getElementById('inquiryMessage');
+    if (!messageTextarea) return;
+
+    if (intentData) {
+        const propName = intentData.propertyTitle || (selectedProp ? selectedProp.title : 'this property');
+        const fName = intentData.financingType === 'pagibig' ? 'Pag-IBIG Fund (6.25% Indicative)' : 'Bank Financing (7.0% Indicative)';
+        const amort = intentData.monthlyAmortization ? '₱' + Number(intentData.monthlyAmortization).toLocaleString('en-PH') + '/mo' : '';
+        const dpMonths = intentData.dpMonths || 12;
+        const monthlyDp = intentData.monthlyDp ? '₱' + Number(intentData.monthlyDp).toLocaleString('en-PH') + '/mo' : '';
+        const term = intentData.loanTermYears || 20;
+        const dpPct = intentData.dpPercent || 20;
+        const requiredGmi = intentData.requiredGmi ? '₱' + Number(intentData.requiredGmi).toLocaleString('en-PH') + '/mo' : '';
+
+        const note = [
+            `Hi Miriam, I am interested in ${propName}. I simulated the financing with the following details:`,
+            `• Financing: ${fName}`,
+            `• Downpayment: ${dpPct}% Equity (${monthlyDp} for ${dpMonths} months)`,
+            `• Loan Term: ${term} Years`,
+            amort ? `• Est. Monthly Amortization: ${amort}` : '',
+            requiredGmi ? `• Target Monthly Income: ${requiredGmi} (35% GMI ceiling)` : '',
+            '',
+            `I would like to request an official developer computation sheet, schedule a site viewing, and confirm current block & lot availability.`
+        ].filter(Boolean).join('\n');
+
+        if (!messageTextarea.value || messageTextarea.value.trim() === '') {
+            messageTextarea.value = note;
+        }
+
+        showCalculatorPrefBanner(intentData);
+
+        // Keep intent in case the user refreshes or switches modes, or clear after submission
+    }
 }
 
 function updatePropertyAvailability(property) {
@@ -734,6 +818,7 @@ async function submitInquiry() {
     inquirySubmitInProgress = false;
 
     if (result && result.success) {
+        try { sessionStorage.removeItem('urbanscope_calc_intent'); } catch (e) { }
         startInquiryCooldown(ownerEmail);
         showSuccessModal(inquiryData, scheduleDetails);
     } else {

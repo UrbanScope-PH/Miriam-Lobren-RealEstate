@@ -23,6 +23,7 @@
     <link rel="stylesheet" href="property-detail.css">
     <link rel="stylesheet" href="../../shared/css/splash.css">
     <link rel="stylesheet" href="../../shared/css/session.css">
+    <link rel="stylesheet" href="../../shared/css/calculator.css">
     <link rel="stylesheet" href="../../shared/css/mobile-shell.css">
     <script src="../../shared/js/splash.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -191,6 +192,9 @@ Perfect for growing families looking for a premium urban lifestyle without the h
             <p class="tcp-disclaimer">*Inclusive of Title Transfer and Move-In Fees. Final loan interest rate and approval is determined by the financing bank upon loan take-out.</p>
         </section>
 
+        <!-- INTERACTIVE AMORTIZATION CALCULATOR -->
+        <section class="amortization-calculator-section" id="propertyCalculator"></section>
+
         <!-- INQUIRY SECTION -->
         <section class="location-inquiry-grid">
             <!-- Interested in Property CTA Card -->
@@ -270,6 +274,23 @@ Perfect for growing families looking for a premium urban lifestyle without the h
             '../../assets/images/AirmenTriplex.WEBP',
             '../../assets/images/airmen-flyer.jpg'
         ];
+    </script>
+    <script src="../../shared/js/calculator.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            if (window.UrbanCalculator) {
+                UrbanCalculator.initPropertyCalculator('propertyCalculator', {
+                    tcp: 8900000,
+                    propertyTitle: "Airmen's Triplex",
+                    propertyId: 'airmen',
+                    reservationFee: 50000,
+                    defaultDpPercent: 20,
+                    defaultTermYears: 20,
+                    defaultFinancing: 'bank',
+                    supportedFinancing: ['bank']
+                });
+            }
+        });
     </script>
     <script src="property-detail.js"></script>
 </body>

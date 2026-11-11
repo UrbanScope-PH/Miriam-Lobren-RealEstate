@@ -23,6 +23,7 @@
     <link rel="stylesheet" href="property-detail.css">
     <link rel="stylesheet" href="../../shared/css/splash.css">
     <link rel="stylesheet" href="../../shared/css/session.css">
+    <link rel="stylesheet" href="../../shared/css/calculator.css">
     <link rel="stylesheet" href="../../shared/css/mobile-shell.css">
     <script src="../../shared/js/splash.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -217,6 +218,9 @@
             <p class="tcp-disclaimer">*Estimated amortization figures are indicative at 6.25% fixed for 3 years. Applicable rates will be based on prevailing Pag-IBIG / Bank rates upon loan take-out.</p>
         </section>
 
+        <!-- INTERACTIVE AMORTIZATION CALCULATOR -->
+        <section class="amortization-calculator-section" id="propertyCalculator"></section>
+
         <!-- INQUIRY SECTION -->
         <section class="location-inquiry-grid">
             <!-- Interested in Property CTA Card -->
@@ -305,6 +309,23 @@
             '../../assets/images/liora-rainwater.jpg',
             '../../assets/images/liora-community.jpg'
         ];
+    </script>
+    <script src="../../shared/js/calculator.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            if (window.UrbanCalculator) {
+                UrbanCalculator.initPropertyCalculator('propertyCalculator', {
+                    tcp: 2460000,
+                    propertyTitle: 'Liora Homes',
+                    propertyId: 'liora',
+                    reservationFee: 15000,
+                    defaultDpPercent: 10,
+                    defaultTermYears: 20,
+                    defaultFinancing: 'pagibig',
+                    supportedFinancing: ['pagibig', 'bank']
+                });
+            }
+        });
     </script>
     <script src="property-detail.js"></script>
 </body>

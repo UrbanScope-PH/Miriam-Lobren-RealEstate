@@ -402,6 +402,9 @@ async function loadPropertyFromDb() {
 
     // Dynamic TCP Section Rendering
     renderDynamicTcp(property);
+
+    // Dynamic Amortization Calculator Rendering
+    renderPropertyCalculator(property);
 }
 
 function renderDynamicTcp(property) {
@@ -498,6 +501,66 @@ function renderDynamicTcp(property) {
     container.innerHTML = tcpHtml;
 }
 
+function parsePropertyPrice(priceVal) {
+    if (typeof priceVal === 'number') return priceVal;
+    if (!priceVal) return 2500000;
+    const cleaned = String(priceVal).replace(/,/g, '');
+    const match = cleaned.match(/\d+(\.\d+)?/);
+    return match ? Number(match[0]) : 2500000;
+}
+
+function renderPropertyCalculator(property) {
+    const calcContainer = document.getElementById('propertyCalculator');
+    if (!calcContainer || !window.UrbanCalculator) return;
+
+    const tcp = parsePropertyPrice(property ? property.price : 2500000);
+    const title = property ? (property.title || 'Property') : 'Casasuerte';
+    const id = property ? (property.id || '') : '';
+    const tLower = title.toLowerCase();
+
+    let resv = 20000;
+    let dp = 10;
+    let financing = 'pagibig';
+    let supported = ['pagibig', 'bank'];
+
+    if (tLower.includes('kathleen')) {
+        resv = 50000;
+        dp = 20;
+        financing = 'bank';
+        supported = ['bank'];
+    } else if (tLower.includes('airmen')) {
+        resv = 50000;
+        dp = 20;
+        financing = 'bank';
+        supported = ['bank'];
+    } else if (tLower.includes('liora')) {
+        resv = 15000;
+        dp = 10;
+        financing = 'pagibig';
+        supported = ['pagibig', 'bank'];
+    } else if (tLower.includes('suerte')) {
+        resv = 10000;
+        dp = 10;
+        financing = 'pagibig';
+        supported = ['pagibig', 'bank'];
+    }
+
+    if (calcContainer._setTcp) {
+        calcContainer._setTcp(tcp, title, id, resv);
+    } else {
+        UrbanCalculator.initPropertyCalculator('propertyCalculator', {
+            tcp: tcp,
+            propertyTitle: title,
+            propertyId: id,
+            reservationFee: resv,
+            defaultDpPercent: dp,
+            defaultTermYears: 20,
+            defaultFinancing: financing,
+            supportedFinancing: supported
+        });
+    }
+}
+
 function checkInquiryAuthNote(user) {
     let isLoggedIn = Boolean(user);
     if (!isLoggedIn) {
@@ -526,6 +589,7 @@ window.addEventListener('DOMContentLoaded', () => {
         loadPropertyFromDb();
     } else {
         loadStaticPropertyAvailability();
+        renderPropertyCalculator(null);
     }
     checkInquiryAuthNote();
     const searchToggle = document.getElementById('searchToggle');
