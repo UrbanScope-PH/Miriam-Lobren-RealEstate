@@ -825,13 +825,22 @@
             var cleanEmail = email || 'miriamalobren@gmail.com';
             var cleanDigits = cleanPhone.replace(/[^\d+]/g, '');
 
-            document.querySelectorAll('.footer-contact a[href^="tel:"], footer a[href^="tel:"], #footerAgentPhone').forEach(function (el) {
-                el.textContent = cleanPhone;
+            document.querySelectorAll('.footer-contact a[href^="tel:"], #footerAgentPhone, .footer-contact-item a[href^="tel:"]').forEach(function (el) {
+                if (!el.classList.contains('social-icon')) {
+                    el.textContent = cleanPhone;
+                }
                 el.setAttribute('href', 'tel:' + cleanDigits);
             });
 
-            document.querySelectorAll('.footer-contact a[href^="mailto:"], footer a[href^="mailto:"], #footerAgentEmail').forEach(function (el) {
-                el.textContent = cleanEmail;
+            document.querySelectorAll('.social-icon[href^="tel:"], .social-icon.call-link').forEach(function (el) {
+                el.setAttribute('href', 'tel:' + cleanDigits);
+                el.setAttribute('aria-label', 'Call Miriam Lobren (' + cleanPhone + ')');
+            });
+
+            document.querySelectorAll('.footer-contact a[href^="mailto:"], #footerAgentEmail, .footer-contact-item a[href^="mailto:"]').forEach(function (el) {
+                if (!el.classList.contains('social-icon')) {
+                    el.textContent = cleanEmail;
+                }
                 el.setAttribute('href', 'mailto:' + cleanEmail);
             });
 

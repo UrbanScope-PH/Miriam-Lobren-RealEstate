@@ -898,6 +898,9 @@ path when rendering from a page.
       - Standardized professional role to **Real Estate Salesperson** across navigation bars, splash intro (`splash.js`), footer metadata, and backend models (in compliance with RESA RA 9646).
       - Set public brokerage affiliation to **CD Miranda Realty** across all customer-facing touchpoints, while strictly reserving **UrbanScope** as the software system brand in copyright footers and administrative backoffices.
       - Updated default brokerage and role migrations (`20261111120000_set_default_brokerage_cd_miranda_realty.sql` and `20261111120100_set_default_title_real_estate_salesperson.sql`).
+      - Filtered out legacy dummy license numbers (`PRC REB #402`, `0031892`) in `index.js`, normalized `CD Miranda Realty` spacing, and ensured `applyContact()` in `session.js` never overwrites `.social-icon` SVG contents with phone text strings.
+      - Removed duplicate `</footer>` tag and stray SVG path text artifact in `index.html`.
+      - Enhanced `backend/auth.py` (`get_current_user_from_request`) to gracefully handle raw `Request` objects.
 
 ---
 
