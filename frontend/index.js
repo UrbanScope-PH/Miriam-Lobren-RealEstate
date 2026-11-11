@@ -11,7 +11,106 @@ function scrollCategories(direction) {
     }
 }
 
-let allCachedProperties = [];
+const CANONICAL_ACCREDITED_PROPERTIES = [
+    {
+        id: 1,
+        title: "Casasuerte",
+        propertyName: "Casasuerte Townhouse",
+        location: "Barangay San Agustin, Trece Martires City, Cavite",
+        property_type: "Townhouse",
+        price: 2500000,
+        bedrooms: 2,
+        bathrooms: 1,
+        lot_area: 50,
+        floor_area: 50.8,
+        status: "Available",
+        image_url: "assets/images/casasuerte.jpg",
+        description: "Casasuerte stands out as an attractive option for first-time homebuyers and modern families looking for a sustainable yet affordable home. Built-in solar power system included.",
+        amenities: "Gated Entrance, Clubhouse, Basketball Court, Parks, Built-in Solar Power System, Paved Concrete Roads"
+    },
+    {
+        id: 2,
+        title: "Kathleen",
+        propertyName: "Kathleen Townhouse",
+        location: "Molino 7, Bacoor, Cavite",
+        property_type: "Townhouse",
+        price: 6200000,
+        bedrooms: 3,
+        bathrooms: 2,
+        lot_area: 112,
+        floor_area: 112,
+        status: "Available",
+        image_url: "assets/images/kathleen-facade.jpg",
+        description: "Secure, family-friendly residential community offering 275 premium townhouses in Molino VII, Bacoor, Cavite. Just 12 minutes from EVIA Lifestyle Center along Daang-Hari.",
+        amenities: "Gated Entrance, Clubhouse, Park, Basketball Court, CCTV, Green-Oriented Community, Steel Gates Included, Modular Cabinets"
+    },
+    {
+        id: 3,
+        title: "Liora Homes",
+        propertyName: "Liora Homes Naic",
+        location: "Brgy. Malainen Bago, Naic, Cavite",
+        property_type: "Townhouse",
+        price: 2462400,
+        bedrooms: 2,
+        bathrooms: 1,
+        lot_area: 50,
+        floor_area: 44,
+        status: "Available",
+        image_url: "assets/images/LioraHomes.jpg",
+        description: "Liora Homes Naic Amora EcoLove townhomes equipped with solar panel systems and rainwater storage tanks, awarded 3 Stars by PHILGBC under the BERDE program.",
+        amenities: "Clubhouse, Covered Basketball Court, Swimming Pool, Playground & Park, Solar-Ready System, Rainwater Harvesting"
+    },
+    {
+        id: 4,
+        title: "Airmen's Village Triplex",
+        propertyName: "Airmen's Village Triplex",
+        location: "Pulang Lupa Dos, Las Piñas City",
+        property_type: "Triplex",
+        price: 8900000,
+        bedrooms: 3,
+        bathrooms: 3,
+        lot_area: 83.25,
+        floor_area: 143.78,
+        status: "Available",
+        image_url: "assets/images/AirmenTriplex.WEBP",
+        description: "Modern, Ready-for-Occupancy (RFO) triplex townhouse offering the perfect blend of space, comfort, and accessibility. Located in a secure community in Las Piñas.",
+        amenities: "Clubhouse, Basketball Court, Swimming Pool, Playground & Park, 24/7 Security, Balcony"
+    },
+    {
+        id: 5,
+        title: "Benecia Single-Attached",
+        propertyName: "Benecia Single-Attached House and Lot",
+        location: "Sihanouk Village, Barangay Talon IV, Las Piñas City",
+        property_type: "Single-Attached House",
+        price: 9695000,
+        bedrooms: 3,
+        bathrooms: 3,
+        lot_area: 102,
+        floor_area: 117,
+        status: "Available",
+        image_url: "assets/images/benecia-facade.jpg",
+        description: "Benecia Single Attached offers a modern and spacious home in Sihanouk Village, Talon IV, Las Piñas City. Complete turnover with front fence and gate, ready for occupancy.",
+        amenities: "Single-Attached House Design, Private Carport, Front Fence and Gate, Balcony, Lanai, Functional Multi-Level Living Spaces, Maid's Room, Powder Room, RFO Ready"
+    },
+    {
+        id: 6,
+        title: "Amore Classico",
+        propertyName: "Amore Classico – Benedetto Residences",
+        location: "Benedetto Residences, Barangay Pulang Lupa Uno, Las Piñas City",
+        property_type: "Townhouse",
+        price: 7995000,
+        bedrooms: 3,
+        bathrooms: 3,
+        lot_area: 52,
+        floor_area: 102,
+        status: "Available",
+        image_url: "assets/images/amore-facade.jpg",
+        description: "Amore Classico by Benedetto Residences is a thoughtfully designed three-storey townhouse in Barangay Pulang Lupa Uno, Las Piñas City. Ready for Occupancy (RFO).",
+        amenities: "Three-Storey Townhouse Design, Spacious Family Hall, Dedicated Maid's Room, Functional Multi-Level Living Spaces, Private Patio, Powder Room, RFO Ready"
+    }
+];
+
+let allCachedProperties = [...CANONICAL_ACCREDITED_PROPERTIES];
 let activeCategory = 'all';
 let activeLocation = 'all';
 let activeKeyword = '';
@@ -113,16 +212,57 @@ function getPropertyPricingMeta(item) {
     };
 }
 
+function showFeedbackToast(msg, icon = '✓') {
+    let toast = document.getElementById('urbanFeedbackToast');
+    if (!toast) {
+        toast = document.createElement('div');
+        toast.id = 'urbanFeedbackToast';
+        toast.style.cssText = `
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%) translateY(20px);
+            background: rgba(15, 23, 42, 0.94);
+            color: #ffffff;
+            font-size: 13.5px;
+            font-weight: 600;
+            padding: 10px 20px;
+            border-radius: 999px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.25);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            z-index: 99999;
+            opacity: 0;
+            pointer-events: none;
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            transition: all 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+        `;
+        document.body.appendChild(toast);
+    }
+    toast.innerHTML = `<span style="color: #4ade80; font-weight: 800;">${icon}</span> <span>${msg}</span>`;
+    requestAnimationFrame(() => {
+        toast.style.opacity = '1';
+        toast.style.transform = 'translateX(-50%) translateY(0)';
+    });
+    clearTimeout(toast._timer);
+    toast._timer = setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateX(-50%) translateY(20px)';
+    }, 2400);
+}
+
 function copyPropertyLink(id) {
     const url = window.location.origin + '/pages/properties/property-detail.html?id=' + id;
     if (navigator.clipboard && navigator.clipboard.writeText) {
         navigator.clipboard.writeText(url).then(() => {
-            alert('Property link copied to clipboard!');
+            showFeedbackToast('Property link copied to clipboard!');
         }).catch(() => {
-            alert('Property link: ' + url);
+            showFeedbackToast('Property link copied!');
         });
     } else {
-        alert('Property link: ' + url);
+        showFeedbackToast('Property link copied!');
     }
 }
 
@@ -167,7 +307,6 @@ function renderFeaturedGrid(list) {
         const specsLot = item.lot_area ? `${item.lot_area} sqm` : (item.floor_area ? `${item.floor_area} sqm` : 'N/A');
         const rawStatus = String(item.status || 'Available').trim().toLowerCase();
         const isSold = rawStatus === 'sold' || rawStatus === 'sold out';
-        const statusLabel = isSold ? 'Sold Out' : 'Available';
         const pricing = getPropertyPricingMeta(item);
 
         const displayTitle = formatPropertyTitle(item.title);
@@ -177,13 +316,16 @@ function renderFeaturedGrid(list) {
         const bedLabel = bedCount === 1 ? '1 Bed' : `${bedCount} Beds`;
         const bathLabel = bathCount === 1 ? '1 Bath' : `${bathCount} Baths`;
 
+        const isRfo = (pricing.tcpSubtext || '').toLowerCase().includes('rfo') || (item.title || '').toLowerCase().includes('benecia') || (item.title || '').toLowerCase().includes('amore');
+        const badgeHtml = isSold
+            ? `<span class="property-status-badge badge-sold">Sold Out</span>`
+            : (isRfo ? `<span class="property-status-badge badge-rfo">RFO Ready</span>` : '');
+
         return `
         <article class="property-card ${isSold ? 'card-sold' : ''} reveal-on-scroll" onclick="location.href='${detailUrl}'">
             <div class="property-image">
-                <span class="property-status-badge ${isSold ? 'badge-sold' : 'badge-available'}">
-                    ${statusLabel}
-                </span>
-                <img src="${imgSrc}" alt="${displayTitle}" loading="lazy" decoding="async" onerror="this.src='assets/images/property1.jpg'">
+                ${badgeHtml}
+                <img src="${imgSrc}" alt="${displayTitle}" decoding="async" onerror="this.src='assets/images/property1.jpg'">
                 <div class="card-actions">
                     <button class="card-icon-btn share-btn" type="button" aria-label="Share property"
                         onclick="event.stopPropagation(); copyPropertyLink('${item.id}')">
@@ -199,18 +341,18 @@ function renderFeaturedGrid(list) {
                 </div>
             </div>
             <div class="property-info">
-                <h3>${displayTitle}</h3>
+                <h3 class="property-title">${displayTitle}</h3>
                 <p class="property-location">${item.location}</p>
                 <div class="property-details">
-                    <span class="spec-pill"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                    <span class="spec-pill"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                             stroke-width="2">
                             <path d="M2 4v16M2 8h18a2 2 0 0 1 2 2v10M2 17h20M6 8v9" />
                         </svg> ${bedLabel}</span>
-                    <span class="spec-pill"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                    <span class="spec-pill"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                             stroke-width="2">
                             <path d="M9 6h6a2 2 0 0 1 2 2v10H7V8a2 2 0 0 1 2-2z" />
                         </svg> ${bathLabel}</span>
-                    <span class="spec-pill"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                    <span class="spec-pill"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                             stroke-width="2">
                             <rect x="3" y="3" width="18" height="18" rx="2" />
                         </svg> ${specsLot}</span>
@@ -221,10 +363,9 @@ function renderFeaturedGrid(list) {
                         <span>${pricing.tcpTag}</span>
                     </div>
                     <div class="property-price-row">
-                        <span class="price-prefix">TCP:</span>
-                        <strong class="property-price">${pricing.priceDisplay}</strong>
+                        <strong class="property-price tabular-nums">${pricing.priceDisplay}</strong>
                     </div>
-                    <p class="tcp-subtext">${pricing.tcpSubtext}</p>
+                    <p class="tcp-subtext tabular-nums">${pricing.tcpSubtext}</p>
                 </div>
             </div>
         </article>
@@ -326,6 +467,18 @@ function sortPropertyList(list, sortKey) {
             const locB = (b.location || '').toLowerCase();
             return locA.localeCompare(locB);
         });
+    } else if (sortKey === 'featured') {
+        const order = ['suerte', 'kathleen', 'liora', 'airmen', 'benecia', 'amore'];
+        sorted.sort((a, b) => {
+            const titleA = (a.title || a.propertyName || '').toLowerCase();
+            const titleB = (b.title || b.propertyName || '').toLowerCase();
+            const idxA = order.findIndex(o => titleA.includes(o));
+            const idxB = order.findIndex(o => titleB.includes(o));
+            if (idxA !== -1 && idxB !== -1) return idxA - idxB;
+            if (idxA !== -1) return -1;
+            if (idxB !== -1) return 1;
+            return (Number(a.id) || 0) - (Number(b.id) || 0);
+        });
     }
     return sorted;
 }
@@ -404,77 +557,31 @@ function isAccreditedPropertyItem(item) {
 async function loadHomeProperties(category = 'all') {
     activeCategory = category;
 
-    // Purge any stale legacy properties from browser caches
-    try {
-        ['cached_live_properties', 'urbanScopeProperties', 'properties'].forEach(k => {
-            const raw = localStorage.getItem(k);
-            if (raw) {
-                const parsed = JSON.parse(raw);
-                if (Array.isArray(parsed)) {
-                    const clean = parsed.filter(isAccreditedPropertyItem);
-                    localStorage.setItem(k, JSON.stringify(clean));
-                }
-            }
-        });
-    } catch (_) {}
-
-    // Fast-path: if properties are already loaded in memory, filter and render instantly
-    if (allCachedProperties.length > 0) {
-        allCachedProperties = allCachedProperties.filter(isAccreditedPropertyItem);
-        applyCurrentFiltersAndRender();
-        return;
+    // Fast-path: immediately render canonical accredited properties so filtering and sorting work with zero delay
+    if (!allCachedProperties || allCachedProperties.length === 0) {
+        allCachedProperties = [...CANONICAL_ACCREDITED_PROPERTIES];
     }
+    applyCurrentFiltersAndRender();
 
-    // Try local storage cache immediately
-    try {
-        const cached = JSON.parse(localStorage.getItem('cached_live_properties') || localStorage.getItem('urbanScopeProperties') || '[]');
-        if (Array.isArray(cached) && cached.length > 0) {
-            allCachedProperties = cached.filter(isAccreditedPropertyItem);
-            if (allCachedProperties.length > 0) {
-                applyCurrentFiltersAndRender();
-            }
-        }
-    } catch (e) { }
-
-    // Fetch from backend API
+    // Fetch fresh live data from backend API if available
     if (typeof apiGetProperties === 'function') {
         try {
             const data = await apiGetProperties({});
             if (data && Array.isArray(data) && data.length > 0) {
-                allCachedProperties = data.filter(isAccreditedPropertyItem);
-                applyCurrentFiltersAndRender();
-                return;
+                const accredited = data.filter(isAccreditedPropertyItem);
+                if (accredited.length > 0) {
+                    allCachedProperties = accredited;
+                    applyCurrentFiltersAndRender();
+                }
             }
         } catch (e) {
             console.warn('Live property fetch notice:', e);
         }
     }
-
-    // Fallback: parse initial static DOM property cards if data isn't in memory yet
-    if (allCachedProperties.length === 0) {
-        const staticArticles = document.querySelectorAll('#propertyGrid article.property-card');
-        if (staticArticles.length > 0) {
-            allCachedProperties = Array.from(staticArticles).map((art, idx) => {
-                const title = art.querySelector('h3')?.textContent.trim() || `Property ${idx + 1}`;
-                const location = art.querySelector('.property-location')?.textContent.trim() || 'Cavite';
-                const priceText = art.querySelector('.property-price')?.textContent.replace(/[^0-9.]/g, '') || '0';
-                const img = art.querySelector('img')?.getAttribute('src') || 'assets/images/property1.jpg';
-                return {
-                    id: idx + 1,
-                    title: title,
-                    location: location,
-                    property_type: title.toLowerCase().includes('villa') ? 'Villa' : (title.toLowerCase().includes('triplex') ? 'Triplex' : 'Townhouse'),
-                    price: parseFloat(priceText) || 0,
-                    image_url: img
-                };
-            });
-            applyCurrentFiltersAndRender();
-        }
-    }
 }
 
 // Category tabs click listeners and initialization
-document.addEventListener('DOMContentLoaded', () => {
+function initHomepage() {
     // 0. Initialize Quick Home Affordability & Budget Matcher
     if (window.UrbanCalculator && typeof UrbanCalculator.initHomepageBudgetMatcher === 'function') {
         UrbanCalculator.initHomepageBudgetMatcher('homepageBudgetMatcher');
@@ -483,10 +590,36 @@ document.addEventListener('DOMContentLoaded', () => {
     // 1. Initial load from live database
     loadHomeProperties('all');
 
-    // 2. Intercept search bar form submission (prevents page reload / navigation)
+    // 2. Intercept search bar form submission & button click (prevents page reload / navigation)
     const searchForm = document.getElementById('propertySearch');
     if (searchForm) {
         searchForm.addEventListener('submit', handleSearchSubmit);
+    }
+    const searchBtn = document.querySelector('.search-submit');
+    if (searchBtn) {
+        searchBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            handleSearchSubmit(e);
+        });
+    }
+
+    // Real-time live search on keyword typing
+    const keywordInput = document.getElementById('keyword');
+    if (keywordInput) {
+        let kwDebounce = null;
+        keywordInput.addEventListener('input', (e) => {
+            clearTimeout(kwDebounce);
+            kwDebounce = setTimeout(() => {
+                activeKeyword = e.target.value.trim();
+                applyCurrentFiltersAndRender();
+            }, 180);
+        });
+        keywordInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                handleSearchSubmit(e);
+            }
+        });
     }
 
     // 3. Category tabs interaction
@@ -617,7 +750,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // 11. Dynamic Agent Profile & Contact Information (synced with admin settings)
     initDynamicAgentDetails();
-});
+}
 
 function initConsultationIntentModal() {
     const modal = document.getElementById('consultationIntentModal');
@@ -851,5 +984,11 @@ async function initDynamicAgentDetails() {
     document.addEventListener('visibilitychange', () => {
         if (!document.hidden) handleReSync();
     });
+}
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initHomepage);
+} else {
+    initHomepage();
 }
 

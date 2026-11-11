@@ -401,7 +401,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
             if (pwd && confirmPwd && pwd.value !== confirmPwd.value) {
                 e.preventDefault();
-                alert("Passwords do not match! Please check and try again.");
+                if (typeof window.showFeedbackToast === 'function') {
+                    window.showFeedbackToast("Passwords do not match! Please check and try again.", "warn");
+                } else {
+                    alert("Passwords do not match! Please check and try again.");
+                }
                 confirmPwd.focus();
             }
         });

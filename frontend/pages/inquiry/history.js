@@ -366,7 +366,11 @@
         const saveBtn = document.getElementById('modifySaveBtn');
 
         if (!property_title || !message) {
-            alert('Please provide both a property/topic title and your inquiry details.');
+            if (typeof window.showFeedbackToast === 'function') {
+                window.showFeedbackToast('Please provide both a property/topic title and your inquiry details.', 'warn');
+            } else {
+                showToast('Please provide both a property/topic title and your inquiry details.');
+            }
             return;
         }
 
@@ -401,7 +405,11 @@
             renderInquiries();
             showToast('✓ Inquiry details successfully updated');
         } else {
-            alert('Failed to update inquiry. It may have already been approved or processed.');
+            if (typeof window.showFeedbackToast === 'function') {
+                window.showFeedbackToast('Failed to update inquiry. It may have already been approved or processed.', 'error');
+            } else {
+                showToast('Failed to update inquiry. Please try again.');
+            }
             loadInquiries(true);
         }
     };
@@ -456,7 +464,11 @@
             renderInquiries();
             showToast('✓ Inquiry cancelled. Admin has been notified.');
         } else {
-            alert('Failed to cancel inquiry. Please try again.');
+            if (typeof window.showFeedbackToast === 'function') {
+                window.showFeedbackToast('Failed to cancel inquiry. Please try again.', 'error');
+            } else {
+                showToast('Failed to cancel inquiry. Please try again.');
+            }
         }
     };
 
@@ -498,7 +510,11 @@
             renderInquiries();
             showToast('✓ Inquiry deleted. Admin has been notified of your cancellation.');
         } else {
-            alert('Failed to delete inquiry. Please try again.');
+            if (typeof window.showFeedbackToast === 'function') {
+                window.showFeedbackToast('Failed to delete inquiry. Please try again.', 'error');
+            } else {
+                showToast('Failed to delete inquiry. Please try again.');
+            }
         }
     };
 

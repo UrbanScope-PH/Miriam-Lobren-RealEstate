@@ -556,3 +556,37 @@ html.dark-mode .legal-callout.warning {
     background: rgba(217, 119, 6, 0.14);
     border-left-color: #f59e0b;
 }
+
+/* ============================================================
+   LEGAL HUB 20 UI/UX DESIGN SYSTEM POLISHES
+   ============================================================ */
+.legal-hero h1,
+.legal-section h2,
+.legal-section h3 {
+    text-wrap: balance;
+}
+
+.legal-section p,
+.legal-hero p {
+    text-wrap: pretty;
+}
+
+.legal-date,
+.section-number,
+.legal-law-cite {
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: 'tnum' 1;
+}
+
+/* Concentric Radius Math (Rule 14) */
+.legal-doc-switcher {
+    border-radius: 9999px;
+    padding: 4px;
+}
+.doc-tab {
+    border-radius: 9999px;
+}
+.legal-callout {
+    border-radius: 12px;
+}
+

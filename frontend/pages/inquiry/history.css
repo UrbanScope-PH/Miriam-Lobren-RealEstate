@@ -1137,3 +1137,91 @@ html.dark-mode .toast-notice {
     border: 1px solid #3ea35d;
     color: #ffffff;
 }
+
+/* ============================================================
+   20 UI/UX DESIGN SYSTEM POLISHES (RULES 4, 7, 14, 16, 18, 19)
+   ============================================================ */
+.history-title-group h1,
+.inquiry-card-title,
+.modal-header h3 {
+    text-wrap: balance;
+}
+
+.history-title-group p,
+.modal-body p {
+    text-wrap: pretty;
+}
+
+.stat-pill-value,
+.inquiry-card-id,
+.inquiry-date,
+.inquiry-phone,
+.inquiry-schedule-text {
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: 'tnum' 1;
+}
+
+/* Mono strictly for ID (Rule 4) */
+.inquiry-card-id {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-size: 0.85rem;
+    letter-spacing: 0.02em;
+}
+
+/* Enlarge main feature: KPI Values (Rule 7) */
+.stat-pill-value {
+    font-size: 1.65rem;
+    font-weight: 800;
+    line-height: 1.1;
+}
+
+/* Inner radius math: Modal (Rule 14) */
+.modal-content {
+    border-radius: 20px;
+    padding: 0;
+    overflow: hidden;
+}
+.modal-header {
+    padding: 24px 28px 18px;
+}
+.modal-body {
+    padding: 20px 28px;
+}
+.modal-footer {
+    padding: 16px 28px 24px;
+}
+.btn-primary-modal,
+.btn-secondary,
+.btn-danger-modal {
+    border-radius: 10px;
+}
+
+/* Shimmer Loading Skeleton for Inquiry History (Rule 19) */
+.history-skeleton-card {
+    background: #ffffff;
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    padding: 24px;
+    margin-bottom: 16px;
+}
+html.dark-mode .history-skeleton-card {
+    background: #152219;
+    border-color: #243828;
+}
+.skeleton-line {
+    height: 16px;
+    margin-bottom: 12px;
+    border-radius: 6px;
+}
+.skeleton-line.title {
+    width: 60%;
+    height: 22px;
+}
+.skeleton-line.meta {
+    width: 40%;
+}
+.skeleton-line.desc {
+    width: 90%;
+    height: 14px;
+}
+

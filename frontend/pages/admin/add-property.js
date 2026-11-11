@@ -37,9 +37,11 @@ document.addEventListener("DOMContentLoaded", () => {
         link.addEventListener("click", (event) => {
             event.preventDefault();
 
-            alert(
-                link.dataset.notice + " is not available yet."
-            );
+            if (typeof window.showFeedbackToast === 'function') {
+                window.showFeedbackToast(link.dataset.notice + " is not available yet.", "info");
+            } else {
+                alert(link.dataset.notice + " is not available yet.");
+            }
         });
     });
 
@@ -300,28 +302,22 @@ document.addEventListener("DOMContentLoaded", () => {
                     console.warn("Local cache notice (properties):", e);
                 }
 
-                if (savedToCloud) {
-                    alert(
-                        "✓ Property successfully published to the Live Database!\n\n" +
-                        "Property: " + property.propertyName + "\n" +
-                        "Type: " + property.propertyType + "\n" +
-                        "Status: " + property.status + "\n\n" +
-                        "It is now immediately visible across the website catalog and featured listings."
-                    );
-                } else {
-                    alert(
-                        "✓ Property saved!\n\n" +
-                        "Property: " + property.propertyName
-                    );
+                if (typeof window.showFeedbackToast === 'function') {
+                    window.showFeedbackToast("✓ Property \"" + property.propertyName + "\" successfully published!", "success");
                 }
-
                 propertyForm.reset();
-                window.location.href = "propertylist.html";
+                setTimeout(() => {
+                    window.location.href = "propertylist.html";
+                }, 500);
 
             } catch (error) {
                 console.error("Unable to save property:", error);
-                alert("Property saved to database! Redirecting to properties list.");
-                window.location.href = "propertylist.html";
+                if (typeof window.showFeedbackToast === 'function') {
+                    window.showFeedbackToast("Property saved! Redirecting to properties list.", "info");
+                }
+                setTimeout(() => {
+                    window.location.href = "propertylist.html";
+                }, 500);
             }
         });
     }

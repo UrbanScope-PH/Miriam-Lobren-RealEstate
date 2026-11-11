@@ -521,3 +521,28 @@
     filter: grayscale(60%) contrast(95%);
 }
 
+/* ============================================================
+   20 UI/UX DESIGN SYSTEM POLISHES (RULES 3, 10, 14, 16, 18)
+   ============================================================ */
+.listing-info h3,
+.catalog-title {
+    text-wrap: balance;
+}
+
+.listing-price,
+.listing-specs span,
+.listing-meta-item {
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: 'tnum' 1;
+}
+
+.listing-card {
+    border-radius: 16px;
+    overflow: hidden;
+}
+
+.listing-image {
+    aspect-ratio: 16 / 10;
+}
+
+

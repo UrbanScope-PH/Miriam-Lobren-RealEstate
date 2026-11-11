@@ -439,3 +439,52 @@ textarea {
         height: 36px;
     }
 }
+
+/* ============================================================
+   20 UI/UX DESIGN SYSTEM POLISHES (RULES 3, 10, 14, 16, 18)
+   ============================================================ */
+.card-header h2,
+.profile-details-preview h3 {
+    text-wrap: balance;
+}
+
+.card-header p {
+    text-wrap: pretty;
+}
+
+.profile-phone-input,
+.prc-license-num {
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: 'tnum' 1;
+}
+
+/* CTA Emphasis: Save Profile (Rule 10) */
+.save-btn,
+.btn-save-profile {
+    background: linear-gradient(135deg, var(--green, #1f4928) 0%, var(--forest, #2e7d32) 100%) !important;
+    box-shadow: 0 4px 14px rgba(31, 73, 40, 0.28) !important;
+    font-weight: 600 !important;
+    transition: transform 0.18s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.18s ease !important;
+}
+
+.save-btn:hover,
+.btn-save-profile:hover {
+    transform: translateY(-2px) !important;
+    box-shadow: 0 6px 18px rgba(31, 73, 40, 0.38) !important;
+}
+
+.save-btn:active,
+.btn-save-profile:active {
+    transform: translateY(0) !important;
+    box-shadow: 0 2px 8px rgba(31, 73, 40, 0.25) !important;
+}
+
+/* Concentric Radius: Card 16px, inner inputs 8px (Rule 14) */
+.settings-card {
+    border-radius: 16px !important;
+}
+.settings-form input,
+.settings-form textarea {
+    border-radius: 8px !important;
+}
+

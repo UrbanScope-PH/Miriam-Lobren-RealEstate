@@ -1346,6 +1346,83 @@ html.dark-mode .spec-item:hover {
     background: #192a1e;
 }
 
+/* ============================================================
+   20 UI/UX DESIGN SYSTEM POLISHES (RULES 3, 10, 14, 16, 18)
+   ============================================================ */
+.property-header h1,
+.detail-title,
+.section-title,
+.specs-card h3,
+.location-card h3,
+.calculator-card h3 {
+    text-wrap: balance;
+}
+
+.property-description p,
+.about-text p,
+.tcp-disclaimer {
+    text-wrap: pretty;
+}
+
+/* Unitalicize random notes (Rule 3) */
+.tcp-disclaimer,
+.disclaimer-note,
+.note-text {
+    font-style: normal !important;
+}
+
+/* Tabular Nums (Rule 18) */
+.property-price,
+.hero-price-amount,
+.spec-value,
+.spec-number,
+.amort-val,
+.calc-output,
+.monthly-amort-amount,
+.downpayment-val,
+.spec-item span,
+.tcp-price-figure {
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: 'tnum' 1;
+}
+
+/* Emphasize Primary CTA Buttons (Rule 10) */
+.inquire-now-btn,
+.schedule-viewing-btn,
+.calc-btn-primary {
+    background: linear-gradient(135deg, var(--green, #1f4928) 0%, var(--forest, #2e7d32) 100%);
+    box-shadow: 0 4px 14px rgba(31, 73, 40, 0.28);
+    transition: transform 0.18s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.18s ease;
+}
+
+.inquire-now-btn:hover,
+.schedule-viewing-btn:hover,
+.calc-btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 18px rgba(31, 73, 40, 0.38);
+}
+
+.inquire-now-btn:active,
+.schedule-viewing-btn:active,
+.calc-btn-primary:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 8px rgba(31, 73, 40, 0.25);
+}
+
+/* Concentric Radius Math (Rule 14) */
+.calculator-card {
+    border-radius: 18px;
+    padding: 24px;
+}
+.calculator-card .calc-field input,
+.calculator-card .calc-field select {
+    border-radius: 10px; /* 18px outer - 8px delta */
+}
+.calc-result-box {
+    border-radius: 12px;
+}
+
+
 
 
 

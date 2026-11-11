@@ -19,7 +19,11 @@ document.querySelectorAll("[data-placeholder]").forEach(link => {
     link.addEventListener("click", event => {
         event.preventDefault();
 
-        alert(`${link.dataset.placeholder} is not available yet.`);
+        if (typeof window.showFeedbackToast === 'function') {
+            window.showFeedbackToast(`${link.dataset.placeholder} is not available yet.`, 'info');
+        } else {
+            alert(`${link.dataset.placeholder} is not available yet.`);
+        }
     });
 });
 
@@ -1194,9 +1198,16 @@ window.togglePropertyStatus = async function(id, currentStatus) {
             });
         }
         await loadDashboardData();
+        if (typeof window.showFeedbackToast === 'function') {
+            window.showFeedbackToast('✓ Property status updated successfully.', 'success');
+        }
     } catch (err) {
         console.error("Dashboard toggle status error:", err);
-        alert("Failed to update property status. Please check your connection.");
+        if (typeof window.showFeedbackToast === 'function') {
+            window.showFeedbackToast("Failed to update property status. Please check your connection.", "error");
+        } else {
+            alert("Failed to update property status. Please check your connection.");
+        }
     }
 };
 
@@ -1221,12 +1232,24 @@ window.deletePropertyListing = async function(id, title) {
 
         if (success) {
             await loadDashboardData();
+            if (typeof window.showFeedbackToast === 'function') {
+                window.showFeedbackToast("✓ Property deleted successfully.", "success");
+            }
         } else {
-            alert("Could not delete property. Please verify your admin session.");
+            if (typeof window.showFeedbackToast === 'function') {
+                window.showFeedbackToast("Could not delete property. Please verify your admin session.", "error");
+            } else {
+                alert("Could not delete property. Please verify your admin session.");
+            }
         }
     } catch (err) {
         console.error("Dashboard delete property error:", err);
-        alert("Failed to delete property: " + (err.message || "Unknown error"));
+        const errMsg = "Failed to delete property: " + (err.message || "Unknown error");
+        if (typeof window.showFeedbackToast === 'function') {
+            window.showFeedbackToast(errMsg, "error");
+        } else {
+            alert(errMsg);
+        }
     }
 };
 

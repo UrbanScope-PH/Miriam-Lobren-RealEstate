@@ -2229,3 +2229,127 @@ html.dark-mode .sa-toast {
     color: #eef6f0;
 }
 
+/* ============================================================
+   SUPERADMIN 20 UI/UX DESIGN SYSTEM POLISHES
+   ============================================================ */
+
+/* Headline Balance & Lead Text (Rule 16) */
+.sa-page-title,
+.sa-card h3,
+.sa-card h2,
+.sa-modal-header h3,
+.sa-table-header h2 {
+    text-wrap: balance;
+}
+
+.sa-page-subtitle,
+.sa-card p,
+.sa-modal-header p {
+    text-wrap: pretty;
+}
+
+/* Mono strictly for User IDs & Hashes (Rule 4) */
+.sa-user-id,
+.sa-code,
+.sa-log-output,
+.sa-hash-val {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace !important;
+    font-size: 0.85rem;
+    letter-spacing: 0.02em;
+}
+
+/* Tabular Nums (Rule 18) */
+.sa-stat-value,
+.sa-user-id,
+.sa-date,
+.sa-phone,
+.sa-counter {
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: 'tnum' 1;
+}
+
+/* Enlarge Main Feature: System KPI Stats (Rule 7) */
+.sa-stat-value {
+    font-size: 2.25rem !important;
+    font-weight: 800 !important;
+    line-height: 1.05 !important;
+    letter-spacing: -0.02em !important;
+}
+
+/* Emphasize Primary Superadmin CTA (Rule 10) */
+.btn-sa-primary,
+.sa-btn-submit,
+.btn-save-user {
+    background: linear-gradient(135deg, var(--green, #1f4928) 0%, var(--forest, #2e7d32) 100%) !important;
+    color: #ffffff !important;
+    border: none !important;
+    box-shadow: 0 4px 14px rgba(31, 73, 40, 0.28) !important;
+    font-weight: 600 !important;
+    border-radius: var(--radius-md, 8px) !important;
+    transition: transform 0.18s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.18s ease !important;
+}
+
+.btn-sa-primary:hover,
+.sa-btn-submit:hover,
+.btn-save-user:hover {
+    transform: translateY(-2px) !important;
+    box-shadow: 0 6px 18px rgba(31, 73, 40, 0.38) !important;
+}
+
+.btn-sa-primary:active,
+.sa-btn-submit:active,
+.btn-save-user:active {
+    transform: translateY(0) !important;
+    box-shadow: 0 2px 8px rgba(31, 73, 40, 0.25) !important;
+}
+
+/* Warm Accent for Admin Role Badge (Rule 11) */
+.sa-badge-admin,
+.badge-role-admin {
+    background: var(--accent-warm-light, #fef3c7) !important;
+    color: var(--accent-warm-dark, #b45309) !important;
+    border: 1px solid var(--accent-warm-border, #fde68a) !important;
+    font-weight: 600 !important;
+}
+
+html.dark-mode .sa-badge-admin,
+html.dark-mode .badge-role-admin {
+    background: rgba(245, 158, 11, 0.16) !important;
+    color: #fbbf24 !important;
+    border-color: rgba(245, 158, 11, 0.35) !important;
+}
+
+/* Concentric Radius Math (Rule 14) */
+.sa-card {
+    border-radius: 16px !important;
+}
+.sa-card-icon {
+    border-radius: 10px !important;
+}
+.sa-table-wrapper {
+    border-radius: 16px !important;
+    overflow: hidden !important;
+}
+.sa-modal-card {
+    border-radius: 20px !important;
+}
+.sa-modal-card input,
+.sa-modal-card select {
+    border-radius: 8px !important;
+}
+
+/* Shimmer Loading Skeleton (Rule 19) */
+.sa-skeleton-row {
+    height: 44px;
+    background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%);
+    background-size: 200% 100%;
+    animation: skeletonShimmer 1.6s ease-in-out infinite;
+    border-radius: 6px;
+    margin: 8px 0;
+}
+html.dark-mode .sa-skeleton-row {
+    background: linear-gradient(90deg, #1c2b20 25%, #25392a 50%, #1c2b20 75%);
+    background-size: 200% 100%;
+}
+
+

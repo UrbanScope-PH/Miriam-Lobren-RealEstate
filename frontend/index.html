@@ -98,16 +98,16 @@
         <section class="hero" id="home">
             <div class="hero-overlay"></div>
             <div class="hero-content">
-                <h1>Discover Your Ideal Home with CD Miranda Realty</h1>
-                <p>Find a Home That Fits Your Needs — Explore Properties for Your Future Home.</p>
+                <h1>Accredited Townhouses &amp; Single-Attached Homes in Las Piñas &amp; Cavite</h1>
+                <p>Direct assistance from Miriam Lobren for clean-title pre-selling &amp; RFO homes, with fast Pag-IBIG and commercial bank loan approvals.</p>
             </div>
 
             <!-- FLOATING SEARCH BAR -->
             <form class="search-bar" id="propertySearch" action="#properties" method="GET"
                 onsubmit="event.preventDefault();">
                 <label>
-                    <span>TYPE</span>
-                    <select id="typeFilter" name="type">
+                    <span class="sr-only">Property Type</span>
+                    <select id="typeFilter" name="type" aria-label="Property Type">
                         <option value="all">All Property Types</option>
                         <option value="townhouse">Townhouses</option>
                         <option value="triplex">Triplex</option>
@@ -116,8 +116,8 @@
                 </label>
 
                 <label>
-                    <span>LOCATION</span>
-                    <select id="locationFilter" name="location">
+                    <span class="sr-only">Location</span>
+                    <select id="locationFilter" name="location" aria-label="Location">
                         <option value="all">All Locations</option>
                         <option value="las-pinas">Las Piñas City</option>
                         <option value="bacoor">Bacoor, Cavite</option>
@@ -127,14 +127,14 @@
                 </label>
 
                 <label class="keyword">
-                    <span>SEARCH</span>
-                    <input id="keyword" name="keyword" type="text" placeholder="Enter keywords">
+                    <span class="sr-only">Search Keywords</span>
+                    <input id="keyword" name="keyword" type="text" placeholder="Search subdivisions or locations..." aria-label="Search keywords">
                 </label>
 
                 <button class="g-btn search-submit" type="submit">
                     <span>Find Property</span>
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-                        stroke-linecap="round" stroke-linejoin="round">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+                        stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                         <circle cx="11" cy="11" r="8"></circle>
                         <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
                     </svg>
@@ -146,7 +146,7 @@
         <section class="section featured" id="properties">
             <div class="featured-header-row reveal-on-scroll">
                 <div class="section-heading" style="margin-bottom:0;">
-                    <h2>Discover Our Featured Properties</h2>
+                    <h2>Featured Homes in Las Piñas &amp; Cavite</h2>
                 </div>
                 <div class="home-sort-control">
                     <label for="homeSortSelect">Sort by:</label>
@@ -190,11 +190,8 @@
                 <!-- Property 1: Casasuerte -->
                 <article class="property-card" onclick="location.href='pages/properties/casasuerte.html'">
                     <div class="property-image">
-                        <span class="property-status-badge badge-available">
-                            Available
-                        </span>
                         <img src="assets/images/casasuerte.jpg" alt="Casasuerte Townhouse"
-                            loading="lazy" decoding="async"
+                            decoding="async"
                             onerror="this.src='assets/images/property1.jpg'">
                         <div class="card-actions">
                             <button class="card-icon-btn share-btn" type="button" aria-label="Share property"
@@ -237,7 +234,6 @@
                                 <span>TCP Available • Pag-IBIG</span>
                             </div>
                             <div class="property-price-row">
-                                <span class="price-prefix">TCP:</span>
                                 <strong class="property-price">₱2.50M - ₱3.00M</strong>
                             </div>
                             <p class="tcp-subtext">Est. Amort: ₱12,250/mo • Res: ₱20,000</p>
@@ -248,11 +244,8 @@
                 <!-- Property 2: Kathleen -->
                 <article class="property-card" onclick="location.href='pages/properties/kathleen.html'">
                     <div class="property-image">
-                        <span class="property-status-badge badge-available">
-                            Available
-                        </span>
                         <img src="assets/images/kathleen-facade.jpg" alt="Kathleen Townhouse"
-                            loading="lazy" decoding="async"
+                            decoding="async"
                             onerror="this.src='assets/images/property1.jpg'">
                         <div class="card-actions">
                             <button class="card-icon-btn share-btn" type="button" aria-label="Share property"
@@ -295,7 +288,6 @@
                                 <span>TCP Available • Bank Financing</span>
                             </div>
                             <div class="property-price-row">
-                                <span class="price-prefix">TCP:</span>
                                 <strong class="property-price">₱6.20M - ₱9.00M</strong>
                             </div>
                             <p class="tcp-subtext">Est. Amort: ₱52,382/mo • Res: ₱50,000</p>
@@ -306,11 +298,8 @@
                 <!-- Property 3: Liora Homes -->
                 <article class="property-card" onclick="location.href='pages/properties/Liora.html'">
                     <div class="property-image">
-                        <span class="property-status-badge badge-available">
-                            Available
-                        </span>
                         <img src="assets/images/LioraHomes.jpg" alt="Liora Homes"
-                            loading="lazy" decoding="async"
+                            decoding="async"
                             onerror="this.src='assets/images/property1.jpg'">
                         <div class="card-actions">
                             <button class="card-icon-btn share-btn" type="button" aria-label="Share property"
@@ -353,7 +342,6 @@
                                 <span>TCP Available • Pag-IBIG &amp; Bank</span>
                             </div>
                             <div class="property-price-row">
-                                <span class="price-prefix">TCP:</span>
                                 <strong class="property-price">₱2.46M - ₱2.89M</strong>
                             </div>
                             <p class="tcp-subtext">Est. Amort: ₱14,476/mo • Res: ₱12,000</p>
@@ -364,11 +352,8 @@
                 <!-- Property 4: Airmen's Village Triplex -->
                 <article class="property-card" onclick="location.href='pages/properties/Airmen.html'">
                     <div class="property-image">
-                        <span class="property-status-badge badge-available">
-                            Available
-                        </span>
                         <img src="assets/images/AirmenTriplex.WEBP" alt="Airmen's Village Triplex"
-                            loading="lazy" decoding="async"
+                            decoding="async"
                             onerror="this.src='assets/images/property1.jpg'">
                         <div class="card-actions">
                             <button class="card-icon-btn share-btn" type="button" aria-label="Share property"
@@ -411,7 +396,6 @@
                                 <span>TCP Available • Bank Financing</span>
                             </div>
                             <div class="property-price-row">
-                                <span class="price-prefix">TCP:</span>
                                 <strong class="property-price">₱8.90M - ₱9.03M</strong>
                             </div>
                             <p class="tcp-subtext">Est. Amort: ₱53,658/mo • Res: ₱50,000</p>
@@ -422,11 +406,11 @@
                 <!-- Property 5: Benecia Single-Attached -->
                 <article class="property-card" onclick="location.href='pages/properties/benecia.html'">
                     <div class="property-image">
-                        <span class="property-status-badge badge-available">
-                            Available
+                        <span class="property-status-badge badge-rfo">
+                            RFO Ready
                         </span>
                         <img src="assets/images/benecia-facade.jpg" alt="Benecia Single-Attached House"
-                            loading="lazy" decoding="async"
+                            decoding="async"
                             onerror="this.src='assets/images/property1.jpg'">
                         <div class="card-actions">
                             <button class="card-icon-btn share-btn" type="button" aria-label="Share property"
@@ -469,7 +453,6 @@
                                 <span>TCP Available • Bank Financing</span>
                             </div>
                             <div class="property-price-row">
-                                <span class="price-prefix">TCP:</span>
                                 <strong class="property-price">₱9.695M</strong>
                             </div>
                             <p class="tcp-subtext">Est. Amort: ₱60,119/mo • RFO Ready</p>
@@ -480,11 +463,11 @@
                 <!-- Property 6: Amore Classico -->
                 <article class="property-card" onclick="location.href='pages/properties/amore-classico.html'">
                     <div class="property-image">
-                        <span class="property-status-badge badge-available">
-                            Available
+                        <span class="property-status-badge badge-rfo">
+                            RFO Ready
                         </span>
                         <img src="assets/images/amore-facade.jpg" alt="Amore Classico Townhouse"
-                            loading="lazy" decoding="async"
+                            decoding="async"
                             onerror="this.src='assets/images/property1.jpg'">
                         <div class="card-actions">
                             <button class="card-icon-btn share-btn" type="button" aria-label="Share property"
@@ -527,17 +510,12 @@
                                 <span>TCP Available • Bank Financing</span>
                             </div>
                             <div class="property-price-row">
-                                <span class="price-prefix">TCP:</span>
                                 <strong class="property-price">₱7.995M</strong>
                             </div>
                             <p class="tcp-subtext">Est. Amort: ₱49,577/mo • RFO Ready</p>
                         </div>
                     </div>
                 </article>
-            </div>
-
-            <div class="view-all-container">
-
             </div>
         </section>
 
@@ -586,7 +564,6 @@
         <section class="faqs-section" id="faqs">
             <div class="faqs-container">
                 <div class="faqs-heading reveal-on-scroll">
-                    <span class="faqs-badge">Got Questions?</span>
                     <h2>Frequently Asked Questions</h2>
                     <p>Everything you need to know about buying, reserving, and financing your dream home with CD Miranda Realty.</p>
                 </div>
@@ -642,7 +619,7 @@
                                     <li>Accredited payment centers and online developer merchant facilities</li>
                                     <li>Auto-debit arrangements (ADA) with your designated financing bank</li>
                                 </ul>
-                                <p class="faq-note"><em>*Official receipts (ORs) are issued directly by accredited property developers for all received payments.</em></p>
+                                <p class="faq-note">*Official receipts (ORs) are issued directly by accredited property developers for all received payments.</p>
                             </div>
                         </div>
                     </div>
@@ -667,7 +644,7 @@
                                     <li>Accessible public transportation including UV Express commuter vans, modern jeepneys, buses, and local tricycle terminals</li>
                                     <li>Convenient proximity to schools, tertiary hospitals, shopping malls, and civic centers</li>
                                 </ul>
-                                <p class="faq-note"><em>*Specific transportation routes, terminal locations, and travel schedules may vary by individual property subdivision.</em></p>
+                                <p class="faq-note">*Specific transportation routes, terminal locations, and travel schedules may vary by individual property subdivision.</p>
                             </div>
                         </div>
                     </div>
@@ -713,7 +690,7 @@
                                     <li>Special Power of Attorney (SPA) / locally notarized authorization for your representative in the Philippines</li>
                                     <li>Proof of income, bank statements, and formal job description</li>
                                 </ul>
-                                <p class="faq-note"><em>*Note: Not all OFWs automatically qualify for bank financing. Approval is subject to bank evaluation, as certain properties and banks require specific job descriptions (often prioritizing white-collar roles).</em></p>
+                                <p class="faq-note">*Note: Not all OFWs automatically qualify for bank financing. Approval is subject to bank evaluation, as certain properties and banks require specific job descriptions (often prioritizing white-collar roles).</p>
                             </div>
                         </div>
                     </div>
