@@ -350,6 +350,38 @@ def init_db():
                 "assets/images/AirmenTriplex.WEBP",
                 "This modern, Ready-for-Occupancy (RFO) triplex townhouse offers the perfect blend of space, comfort, and accessibility. Located in a secure and peaceful community in Las Piñas, it is highly accessible to major roads, commercial hubs, schools, and airports.",
                 "Clubhouse, Basketball Court, Swimming Pool, Playground & Park, 24/7 Security, Balcony"
+            ),
+            (
+                "Benecia Single-Attached",
+                "Sihanouk Village, Barangay Talon IV, Las Piñas City",
+                "Single-Attached House",
+                9695000.0,
+                3,
+                3,
+                102.0,
+                117.0,
+                1,
+                2,
+                "Available",
+                "assets/images/benecia-facade.jpg",
+                "Benecia Single Attached offers a modern and spacious home designed for families looking for comfort, privacy, and functionality. Located in Sihanouk Village, Barangay Talon IV, Las Piñas City, this property provides a practical residential setting with convenient access to surrounding establishments and main roads. Complete turnover with front fence and gate.",
+                "Single-Attached House Design, Private Carport, Front Fence and Gate, Balcony, Lanai, Functional Multi-Level Living Spaces, Spacious Indoor Living Areas, Maid's Room, Powder Room, Ready for Occupancy (RFO)"
+            ),
+            (
+                "Amore Classico",
+                "Benedetto Residences, Barangay Pulang Lupa Uno, Las Piñas City",
+                "Townhouse",
+                7995000.0,
+                3,
+                3,
+                52.0,
+                102.0,
+                1,
+                3,
+                "Available",
+                "assets/images/amore-facade.jpg",
+                "Amore Classico by Benedetto Residences is a thoughtfully designed three-storey townhouse ideal for growing families who need more space, comfort, and functionality. Located in Barangay Pulang Lupa Uno, Las Piñas City, offering functional multi-level living with family hall and private patio.",
+                "Three-Storey Townhouse Design, Spacious Family Hall, Dedicated Maid's Room, Functional Multi-Level Living Spaces, Private Patio, Powder Room, Ready-for-Occupancy (RFO) Units"
             )
         ]
 
@@ -362,7 +394,7 @@ def init_db():
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """, properties_seed)
         conn.commit()
-        print("✓ Database seeded with 4 accredited featured properties")
+        print("✓ Database seeded with 6 accredited featured properties")
 
     # Inquiries table is ready for client submissions
 

@@ -288,7 +288,7 @@ Seeding happens inside `init_db()` **only when the table is empty**, per table.
 | `miriamalobren@gmail.com` | `111112` (or updated via Admin Profile) | `admin` | Miriam Lobren (Lead Admin) |
 | `admin.realestate@gmail.com` | `realestate2026` | `admin` | Real Estate Admin |
 
-**Properties (4 accredited featured listings)**
+**Properties (6 accredited featured listings)**
 
 | Title | Location | Type | Price (₱) | Specs |
 | :--- | :--- | :--- | ---: | :--- |
@@ -296,6 +296,8 @@ Seeding happens inside `init_db()` **only when the table is empty**, per table.
 | Kathleen | Molino 7, Bacoor, Cavite | Townhouse | 6,200,000 | 3 Beds, 2 Baths, 112.0 sqm |
 | Liora Homes | Brgy. Malainen Bago, Naic, Cavite | Townhouse | 2,462,400 | 2 Beds, 1 Bath, 44.0 sqm |
 | Airmen's Village Triplex | Pulang Lupa Dos, Las Piñas City | Triplex | 8,900,000 | 3 Beds, 3 Baths, 143.78 sqm |
+| Benecia Single-Attached | Sihanouk Village, Barangay Talon IV, Las Piñas City | Single Attached | 9,695,000 | 3 Beds, 3 Baths, 117.0 sqm |
+| Amore Classico | Benedetto Residences, Barangay Pulang Lupa Uno, Las Piñas City | Townhouse | 7,995,000 | 3 Beds, 3 Baths, 102.0 sqm |
 
 **Inquiries (3)** — Sarah Jenkins (*Under Review*), Mark Anthony Cruz (*Approved*),
 Maria Elena Santos (*Completed*).

@@ -294,16 +294,18 @@
             }
         } catch (e) {}
 
-        // Strictly retain only accredited properties: Airmen, Casasuerte, Kathleen, Liora
+        // Strictly retain only accredited properties: Airmen, Casasuerte, Kathleen, Liora, Benecia, Amore Classico
         liveProperties = liveProperties.filter(p => {
             if (!p) return false;
             const t = (p.title || p.propertyName || p.name || '').toLowerCase().trim();
-            return t.includes('airmen') || t.includes('suerte') || t.includes('kathleen') || t.includes('liora');
+            return t.includes('airmen') || t.includes('suerte') || t.includes('kathleen') || t.includes('liora') || t.includes('benecia') || t.includes('amore');
         }).map(p => {
             if (!p) return p;
             const t = (p.title || p.propertyName || p.name || '').toLowerCase().trim();
             if (t.includes('suerte')) p.title = 'Casasuerte';
             else if (t.includes('kathleen')) p.title = 'Kathleen';
+            else if (t.includes('benecia')) p.title = 'Benecia Single-Attached';
+            else if (t.includes('amore')) p.title = 'Amore Classico';
             return p;
         });
 
@@ -377,6 +379,40 @@
                     image_url: "assets/images/AirmenTriplex.WEBP",
                     description: "Modern, Ready-for-Occupancy (RFO) triplex residential townhouse located in a secure and peaceful community in Las Piñas.",
                     amenities: "Clubhouse, Basketball Court, Swimming Pool, Playground & Park, 24/7 Security, Balcony"
+                },
+                {
+                    id: 5,
+                    title: "Benecia Single-Attached",
+                    location: "Sihanouk Village, Barangay Talon IV, Las Piñas City",
+                    property_type: "Single-Attached House",
+                    price: 9695000.0,
+                    bedrooms: 3,
+                    bathrooms: 3,
+                    lot_area: 102.0,
+                    floor_area: 117.0,
+                    carports: 1,
+                    storeys: 2,
+                    status: "Available",
+                    image_url: "assets/images/benecia-facade.jpg",
+                    description: "Benecia Single Attached offers a modern and spacious home designed for families looking for comfort, privacy, and functionality in Sihanouk Village, Talon IV, Las Piñas City.",
+                    amenities: "Single-Attached House Design, Private Carport, Front Fence and Gate, Balcony, Lanai, Functional Multi-Level Living Spaces, Spacious Indoor Living Areas, Maid's Room, Powder Room, Ready for Occupancy (RFO)"
+                },
+                {
+                    id: 6,
+                    title: "Amore Classico",
+                    location: "Benedetto Residences, Barangay Pulang Lupa Uno, Las Piñas City",
+                    property_type: "Townhouse",
+                    price: 7995000.0,
+                    bedrooms: 3,
+                    bathrooms: 3,
+                    lot_area: 52.0,
+                    floor_area: 102.0,
+                    carports: 1,
+                    storeys: 3,
+                    status: "Available",
+                    image_url: "assets/images/amore-facade.jpg",
+                    description: "Amore Classico by Benedetto Residences is a thoughtfully designed three-storey townhouse ideal for growing families who need more space, comfort, and functionality in Pulang Lupa Uno, Las Piñas City.",
+                    amenities: "Three-Storey Townhouse Design, Spacious Family Hall, Dedicated Maid's Room, Functional Multi-Level Living Spaces, Private Patio, Powder Room, Ready-for-Occupancy (RFO) Units"
                 }
             ];
         }
@@ -392,7 +428,7 @@
                             if (Array.isArray(parsed)) {
                                 const clean = parsed.filter(p => {
                                     const t = (p.title || p.propertyName || p.name || '').toLowerCase().trim();
-                                    return t.includes('airmen') || t.includes('suerte') || t.includes('kathleen') || t.includes('liora');
+                                    return t.includes('airmen') || t.includes('suerte') || t.includes('kathleen') || t.includes('liora') || t.includes('benecia') || t.includes('amore');
                                 });
                                 localStorage.setItem(k, JSON.stringify(clean));
                             }

@@ -35,6 +35,8 @@ function formatPropertyTitle(title) {
     if (t.includes('kathleen')) return 'Kathleen';
     if (t.includes('liora')) return 'Liora Homes';
     if (t.includes('airmen')) return "Airmen's Village Triplex";
+    if (t.includes('benecia')) return "Benecia Single-Attached";
+    if (t.includes('amore')) return "Amore Classico";
     return title;
 }
 
@@ -45,6 +47,8 @@ function resolveCardImage(url, item) {
         if (t.includes('kathleen')) return 'assets/images/kathleen-facade.jpg';
         if (t.includes('liora')) return 'assets/images/LioraHomes.jpg';
         if (t.includes('airmen')) return 'assets/images/AirmenTriplex.WEBP';
+        if (t.includes('benecia')) return 'assets/images/benecia-facade.jpg';
+        if (t.includes('amore')) return 'assets/images/amore-facade.jpg';
     }
     if (!url) return 'assets/images/casasuerte.jpg';
     if (url.startsWith('http') || url.startsWith('data:')) return url;
@@ -58,6 +62,8 @@ function getPropertyDetailUrl(item) {
     if (title.includes('airmen')) return 'pages/properties/Airmen.html';
     if (title.includes('suerte')) return 'pages/properties/casasuerte.html';
     if (title.includes('kathleen')) return 'pages/properties/kathleen.html';
+    if (title.includes('benecia')) return 'pages/properties/benecia.html';
+    if (title.includes('amore')) return 'pages/properties/amore-classico.html';
     return `pages/properties/property-detail.html?id=${item.id}`;
 }
 
@@ -86,6 +92,18 @@ function getPropertyPricingMeta(item) {
             priceDisplay: '₱8.90M - ₱9.03M',
             tcpTag: 'TCP Available • Bank Financing',
             tcpSubtext: 'Est. Amort: ₱53,658/mo • Res: ₱50,000'
+        };
+    } else if (t.includes('benecia')) {
+        return {
+            priceDisplay: '₱9.695M',
+            tcpTag: 'TCP Available • Bank Financing',
+            tcpSubtext: 'Est. Amort: ₱60,119/mo • RFO Ready'
+        };
+    } else if (t.includes('amore')) {
+        return {
+            priceDisplay: '₱7.995M',
+            tcpTag: 'TCP Available • Bank Financing',
+            tcpSubtext: 'Est. Amort: ₱49,577/mo • RFO Ready'
         };
     }
     return {
@@ -243,13 +261,13 @@ function filterPropertyList(list, category, location, keyword, maxPrice = null) 
             } else if (cat === 'apartments' || cat === 'apartment') {
                 matchesCat = type.includes('apartment') || type.includes('condo') || title.includes('apartment') || title.includes('condo');
             } else if (cat === 'townhouses' || cat === 'townhouse') {
-                matchesCat = type.includes('townhouse') || title.includes('townhouse') || title.includes('suerte') || title.includes('kathleen') || title.includes('liora');
+                matchesCat = type.includes('townhouse') || title.includes('townhouse') || title.includes('suerte') || title.includes('kathleen') || title.includes('liora') || title.includes('amore');
             } else if (cat === 'triplex' || cat === 'triplexes') {
                 matchesCat = type.includes('triplex') || title.includes('triplex') || title.includes('airmen');
             } else if (cat === 'luxury' || cat === 'luxury villas') {
                 matchesCat = type.includes('villa') || price >= 5000000 || title.includes('luxury') || desc.includes('luxury');
             } else if (cat === 'house-lot' || cat === 'house & lot') {
-                matchesCat = true;
+                matchesCat = type.includes('single') || type.includes('attached') || title.includes('benecia') || (type.includes('house') && !type.includes('townhouse'));
             } else if (cat === 'subdivision') {
                 matchesCat = type.includes('subdivision') || title.includes('subdivision') || (item.subdivision_name && item.subdivision_name.trim().length > 0);
             } else {
@@ -384,7 +402,7 @@ function handleSearchSubmit(e) {
 function isAccreditedPropertyItem(item) {
     if (!item) return false;
     const t = (item.title || item.propertyName || item.name || '').toLowerCase().trim();
-    return t.includes('airmen') || t.includes('suerte') || t.includes('kathleen') || t.includes('liora');
+    return t.includes('airmen') || t.includes('suerte') || t.includes('kathleen') || t.includes('liora') || t.includes('benecia') || t.includes('amore');
 }
 
 async function loadHomeProperties(category = 'all') {
