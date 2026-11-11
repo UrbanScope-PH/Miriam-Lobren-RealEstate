@@ -14,11 +14,11 @@ import urllib.request
 import urllib.error
 from pathlib import Path
 from datetime import datetime, timedelta, timezone
-from typing import Optional, Set
+from typing import Optional, Set, Any
 # pyrefly: ignore [missing-import]
 import jwt
 # pyrefly: ignore [missing-import]
-from fastapi import Header, Cookie, Depends, HTTPException, status
+from fastapi import Header, Cookie, Depends, HTTPException, status, Request
 
 ROOT_DIR = Path(__file__).resolve().parent.parent
 ENV_FILE_PATH = ROOT_DIR / ".env"
@@ -253,19 +253,28 @@ def decode_access_token(token: str) -> Optional[dict]:
 
 
 def get_current_user_from_request(
-    authorization: Optional[str] = Header(None),
+    authorization: Any = Header(None),
     access_token: Optional[str] = Cookie(None)
 ) -> Optional[dict]:
     """
     Extracts and authenticates the user from either the Authorization header
-    (Bearer token) or the access_token HTTP-only cookie.
+    (Bearer token), the access_token HTTP-only cookie, or directly from a Request object.
     """
     token = None
-    if authorization:
+    if isinstance(authorization, Request) or hasattr(authorization, "headers"):
+        req = authorization
+        auth_hdr = req.headers.get("authorization") or req.headers.get("Authorization")
+        if auth_hdr and isinstance(auth_hdr, str):
+            parts = auth_hdr.split()
+            if len(parts) == 2 and parts[0].lower() == "bearer":
+                token = parts[1]
+        if not token and hasattr(req, "cookies"):
+            token = req.cookies.get("access_token")
+    elif isinstance(authorization, str) and authorization:
         parts = authorization.split()
         if len(parts) == 2 and parts[0].lower() == "bearer":
             token = parts[1]
-    elif access_token:
+    elif access_token and isinstance(access_token, str):
         token = access_token.strip()
 
     if not token:

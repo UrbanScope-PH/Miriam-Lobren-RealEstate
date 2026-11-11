@@ -639,7 +639,10 @@ function renderHomepageAgentDetails(profile) {
         title = 'Real Estate Salesperson';
     }
     const rawBrok = String(profile.brokerage || '').trim();
-    const brokerage = (!rawBrok || /^urbanscope(?:\s+realty)?$/i.test(rawBrok)) ? 'CD Miranda Realty' : rawBrok;
+    let brokerage = rawBrok;
+    if (!brokerage || /^(?:urbanscope(?:\s+realty)?|cdmiranda\s*realty|cd\s*miranda\s*realty)$/i.test(brokerage)) {
+        brokerage = 'CD Miranda Realty';
+    }
     const phone = profile.phone || '+63 918 964 5434';
     const email = profile.email || 'miriamalobren@gmail.com';
     const bio = profile.bio || 'Serving Las Piñas, Cavite, and surrounding prime locations with high-integrity real estate solutions.';
@@ -665,7 +668,11 @@ function renderHomepageAgentDetails(profile) {
     const aboutBrokerage = document.getElementById('aboutAgentBrokerage');
     if (aboutBrokerage) aboutBrokerage.textContent = brokerage;
     const aboutBio = document.getElementById('aboutAgentBioText');
-    if (aboutBio && bio) aboutBio.textContent = bio;
+    if (aboutBio && bio) {
+        aboutBio.textContent = String(bio)
+            .replace(/cdmiranda\s*realty/gi, 'CD Miranda Realty')
+            .replace(/real estate sales person/gi, 'real estate salesperson');
+    }
     const aboutPhoto = document.getElementById('aboutAgentPhoto');
     if (aboutPhoto && avatarUrl) {
         aboutPhoto.src = avatarUrl;
@@ -690,12 +697,24 @@ function renderHomepageAgentDetails(profile) {
     const footerName = document.getElementById('footerAgentName');
     if (footerName) footerName.textContent = cleanName;
     const footerBio = document.getElementById('footerAgentBio');
-    if (footerBio && bio) {
-        const lowerTitle = title.toLowerCase();
-        footerBio.textContent = `Trusted ${lowerTitle} affiliated with ${brokerage}. ${bio}`;
+    if (footerBio) {
+        let cleanBio = String(bio || '')
+            .replace(/cdmiranda\s*realty/gi, 'CD Miranda Realty')
+            .replace(/real estate sales person/gi, 'real estate salesperson');
+        if (/^trusted real estate salesperson/i.test(cleanBio)) {
+            footerBio.textContent = cleanBio;
+        } else if (/^trusted real estate/i.test(cleanBio)) {
+            footerBio.textContent = cleanBio.replace(/^trusted real estate\s+[a-z\s]+affiliated with\s+[^.]+\.\s*/i, `Trusted ${title.toLowerCase()} affiliated with ${brokerage}. `);
+        } else if (/^hello!\s*i'm/i.test(cleanBio)) {
+            footerBio.textContent = cleanBio;
+        } else {
+            footerBio.textContent = `Trusted ${title.toLowerCase()} affiliated with ${brokerage}. ${cleanBio}`;
+        }
     }
     const licenseNote = document.getElementById('footerAgentLicense');
-    const licNum = (profile.license_number || profile.license || '').trim();
+    const rawLic = (profile.license_number || profile.license || '').trim();
+    const isDummyLic = /^prc\s*(?:reb|res)?\s*#?\s*(?:402|0031892)$/i.test(rawLic);
+    const licNum = isDummyLic ? '' : rawLic;
     if (licenseNote) {
         if (licNum) {
             licenseNote.textContent = `PRC Accreditation No. ${licNum} · ${brokerage}`;
@@ -730,8 +749,24 @@ async function initDynamicAgentDetails() {
     } catch (e) { }
 
     if (localProfile) {
+        let changed = false;
         if (localProfile.title && /^(?:licensed real estate broker\s*\/\s*agent|real estate agent|real estate sales person)$/i.test(localProfile.title.trim())) {
             localProfile.title = 'Real Estate Salesperson';
+            changed = true;
+        }
+        if (!localProfile.brokerage || /^(?:urbanscope(?:\s+realty)?|cdmiranda\s*realty)$/i.test(String(localProfile.brokerage).trim())) {
+            localProfile.brokerage = 'CD Miranda Realty';
+            changed = true;
+        }
+        if (localProfile.license && /^prc\s*(?:reb|res)?\s*#?\s*(?:402|0031892)$/i.test(String(localProfile.license).trim())) {
+            localProfile.license = '';
+            changed = true;
+        }
+        if (localProfile.license_number && /^prc\s*(?:reb|res)?\s*#?\s*(?:402|0031892)$/i.test(String(localProfile.license_number).trim())) {
+            localProfile.license_number = '';
+            changed = true;
+        }
+        if (changed) {
             try {
                 localStorage.setItem('urbanscope_admin_profile', JSON.stringify(localProfile));
             } catch (e) {}
