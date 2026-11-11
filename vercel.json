@@ -32,6 +32,8 @@
     { "source": "/index.css", "destination": "/frontend/index.css" },
     { "source": "/index.js", "destination": "/frontend/index.js" },
     { "source": "/favicon.ico", "destination": "/frontend/assets/images/favicon.jpg" },
+    { "source": "/robots.txt", "destination": "/frontend/robots.txt" },
+    { "source": "/sitemap.xml", "destination": "/frontend/sitemap.xml" },
     { "source": "/pages/:path*", "destination": "/frontend/pages/:path*" },
     { "source": "/shared/:path*", "destination": "/frontend/shared/:path*" },
     { "source": "/assets/:path*", "destination": "/frontend/assets/:path*" }

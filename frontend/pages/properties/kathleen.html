@@ -3,8 +3,23 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kathleen - Miriam Lobren Real Estate</title>
+    <title>Kathleen Townhouse – Molino 7, Bacoor, Cavite | Miriam Lobren · CD Miranda Realty</title>
+    <meta name="description" content="Kathleen 3-bedroom townhouse in Molino 7, Bacoor, Cavite. TCP ₱6.20M–₱9.00M, bank financing available. Book a free site tripping with Miriam Lobren, CD Miranda Realty.">
+    <link rel="canonical" href="https://miriam-lobren-real-estate.vercel.app/pages/properties/kathleen.html">
     <link rel="icon" href="../../assets/images/favicon.jpg" type="image/x-icon">
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Miriam Lobren · CD Miranda Realty">
+    <meta property="og:title" content="Kathleen Townhouse – Molino 7, Bacoor, Cavite | Miriam Lobren">
+    <meta property="og:description" content="3 BR · 2 BA · 112 sqm · TCP ₱6.20M–₱9.00M · Bank financing available">
+    <meta property="og:image" content="https://miriam-lobren-real-estate.vercel.app/assets/images/og/og-kathleen.jpg">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:url" content="https://miriam-lobren-real-estate.vercel.app/pages/properties/kathleen.html">
+    <meta property="og:locale" content="en_PH">
+    <meta name="twitter:card" content="summary_large_image">
+
     <link rel="stylesheet" href="property-detail.css">
     <link rel="stylesheet" href="../../shared/css/splash.css">
     <link rel="stylesheet" href="../../shared/css/session.css">
@@ -21,7 +36,7 @@
             <img src="../../assets/images/logo.png" alt="ML Logo" class="brand-logo" onerror="this.style.display='none'">
             <span>
                 <strong>Miriam Lobren</strong>
-                <small>REAL ESTATE AGENT</small>
+                <small>REAL ESTATE SALESPERSON</small>
             </span>
         </a>
 
@@ -74,7 +89,7 @@
                 <button class="carousel-arrow prev" type="button" aria-label="Previous image" onclick="changeSlide(-1)">
                     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"></polyline></svg>
                 </button>
-                <img id="mainGalleryImg" src="../../assets/images/kathleen-facade.jpg" alt="Kathleen Modern Townhouse" onclick="openLightbox()" title="Click to zoom image">
+                <img id="mainGalleryImg" src="../../assets/images/kathleen-facade.jpg" alt="Kathleen Modern Townhouse" fetchpriority="high" onclick="openLightbox()" title="Click to zoom image">
                 <button class="carousel-arrow next" type="button" aria-label="Next image" onclick="changeSlide(1)">
                     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
                 </button>
@@ -92,28 +107,28 @@
             <!-- THUMBNAIL ROW -->
             <div class="thumbnails-row">
                 <div class="thumb active" onclick="selectThumb(0, '../../assets/images/kathleen-facade.jpg')">
-                    <img src="../../assets/images/kathleen-facade.jpg" alt="Kathleen Townhouse Facade">
+                    <img src="../../assets/images/kathleen-facade.jpg" alt="Kathleen Townhouse Facade" loading="lazy" decoding="async">
                 </div>
                 <div class="thumb" onclick="selectThumb(1, '../../assets/images/kathleen-living.jpg')">
-                    <img src="../../assets/images/kathleen-living.jpg" alt="Zen Living Room">
+                    <img src="../../assets/images/kathleen-living.jpg" alt="Zen Living Room" loading="lazy" decoding="async">
                 </div>
                 <div class="thumb" onclick="selectThumb(2, '../../assets/images/kathleen-dining.jpg')">
-                    <img src="../../assets/images/kathleen-dining.jpg" alt="Dining & Living Open Plan">
+                    <img src="../../assets/images/kathleen-dining.jpg" alt="Dining & Living Open Plan" loading="lazy" decoding="async">
                 </div>
                 <div class="thumb" onclick="selectThumb(3, '../../assets/images/kathleen-interior.jpg')">
-                    <img src="../../assets/images/kathleen-interior.jpg" alt="Modular Kitchen & Staircase">
+                    <img src="../../assets/images/kathleen-interior.jpg" alt="Modular Kitchen & Staircase" loading="lazy" decoding="async">
                 </div>
                 <div class="thumb" onclick="selectThumb(4, '../../assets/images/kathleen-gate.jpg')">
-                    <img src="../../assets/images/kathleen-gate.jpg" alt="Steel Gate & Entry">
+                    <img src="../../assets/images/kathleen-gate.jpg" alt="Steel Gate & Entry" loading="lazy" decoding="async">
                 </div>
                 <div class="thumb" onclick="selectThumb(5, '../../assets/images/kathleen-carport.jpg')">
-                    <img src="../../assets/images/kathleen-carport.jpg" alt="Covered Carport">
+                    <img src="../../assets/images/kathleen-carport.jpg" alt="Covered Carport" loading="lazy" decoding="async">
                 </div>
                 <div class="thumb" onclick="selectThumb(6, '../../assets/images/kathleen-hallway.jpg')">
-                    <img src="../../assets/images/kathleen-hallway.jpg" alt="Second Floor Hallway">
+                    <img src="../../assets/images/kathleen-hallway.jpg" alt="Second Floor Hallway" loading="lazy" decoding="async">
                 </div>
                 <div class="thumb" onclick="selectThumb(7, '../../assets/images/kathleen-map.jpg')">
-                    <img src="../../assets/images/kathleen-map.jpg" alt="Subdivision Vicinity Map">
+                    <img src="../../assets/images/kathleen-map.jpg" alt="Subdivision Vicinity Map" loading="lazy" decoding="async">
                 </div>
             </div>
         </section>
@@ -229,7 +244,7 @@
                     <span>Submit Inquiry</span>
                 </a>
 
-                <p class="inquiry-note">*Please log in or create an account to submit an inquiry.</p>
+                <p class="inquiry-note">*No account needed. Log in only if you want to track your inquiries.</p>
             </div>
         </section>
     </main>

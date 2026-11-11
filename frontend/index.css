@@ -5,7 +5,7 @@
     position: relative;
     width: 100%;
     min-height: 560px;
-    background: url('assets/images/home-bg.png') center/cover no-repeat;
+    background: url('assets/images/home-bg.jpg') center/cover no-repeat;
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -842,7 +842,7 @@
     position: relative;
     padding: 120px 6% 140px;
     min-height: 520px;
-    background: url('assets/images/home-bg.png') center/cover no-repeat;
+    background: url('assets/images/home-bg.jpg') center/cover no-repeat;
     text-align: center;
     color: #ffffff;
     overflow: hidden;

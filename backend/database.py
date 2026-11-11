@@ -64,8 +64,8 @@ def init_db():
             avatar_url TEXT DEFAULT 'assets/images/agent.jpg',
             google_id TEXT,
             license_number TEXT DEFAULT '',
-            title TEXT DEFAULT 'Real Estate Agent',
-            brokerage TEXT DEFAULT 'UrbanScope',
+            title TEXT DEFAULT 'Real Estate Salesperson',
+            brokerage TEXT DEFAULT 'CD Miranda Realty',
             bio TEXT DEFAULT '',
             email_verified_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
@@ -149,11 +149,11 @@ def init_db():
     if "license_number" not in existing_user_cols:
         cursor.execute("ALTER TABLE users ADD COLUMN license_number TEXT DEFAULT ''")
     if "title" not in existing_user_cols:
-        cursor.execute("ALTER TABLE users ADD COLUMN title TEXT DEFAULT 'Real Estate Agent'")
-    cursor.execute("UPDATE users SET title = 'Real Estate Agent' WHERE title IS NULL OR title = 'Licensed Real Estate Broker / Agent'")
+        cursor.execute("ALTER TABLE users ADD COLUMN title TEXT DEFAULT 'Real Estate Salesperson'")
+    cursor.execute("UPDATE users SET title = 'Real Estate Salesperson' WHERE title IS NULL OR title = 'Licensed Real Estate Broker / Agent' OR title = 'Real Estate Agent'")
     if "brokerage" not in existing_user_cols:
-        cursor.execute("ALTER TABLE users ADD COLUMN brokerage TEXT DEFAULT 'UrbanScope'")
-    cursor.execute("UPDATE users SET brokerage = 'UrbanScope' WHERE brokerage IS NULL OR (LOWER(brokerage) LIKE 'cd %' AND LOWER(brokerage) LIKE '%realty%')")
+        cursor.execute("ALTER TABLE users ADD COLUMN brokerage TEXT DEFAULT 'CD Miranda Realty'")
+    cursor.execute("UPDATE users SET brokerage = 'CD Miranda Realty' WHERE brokerage IS NULL OR brokerage = '' OR brokerage = 'UrbanScope' OR brokerage = 'UrbanScope Realty'")
     if "bio" not in existing_user_cols:
         cursor.execute("ALTER TABLE users ADD COLUMN bio TEXT DEFAULT ''")
     cursor.execute("CREATE UNIQUE INDEX IF NOT EXISTS idx_users_google_id ON users(google_id) WHERE google_id IS NOT NULL")
@@ -244,7 +244,7 @@ def init_db():
     accounts_to_sync = [
         ("admin.realestate@gmail.com", admin_pass, "Miriam Lobren (Admin)", "+63 900 000 0000", "admin"),
         ("miriamalobren@gmail.com", miriam_pass, "Miriam Lobren", "+63 918 964 5434", "admin"),
-        ("miriam@gmail.com", admin_pass, "Miriam Lobren", "09123456789", "admin"),
+        ("miriam@gmail.com", admin_pass, "Miriam Lobren", "+63 918 964 5434", "admin"),
         ("urbanscope.cvsu@gmail.com", superadmin_pass, "UrbanScope Superadmin (CvSU)", "+63 900 000 0000", "superadmin")
     ]
 

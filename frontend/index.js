@@ -64,25 +64,25 @@ function getPropertyPricingMeta(item) {
     const t = (item.title || item.propertyName || '').toLowerCase();
     if (t.includes('suerte')) {
         return {
-            priceDisplay: '₱2.50M - ₱3M',
+            priceDisplay: '₱2.50M - ₱3.00M',
             tcpTag: 'TCP Available • Pag-IBIG',
             tcpSubtext: 'Est. Amort: ₱12,250/mo • Res: ₱20,000'
         };
     } else if (t.includes('kathleen')) {
         return {
-            priceDisplay: '₱6.2M - ₱9M',
+            priceDisplay: '₱6.20M - ₱9.00M',
             tcpTag: 'TCP Available • Bank Financing',
             tcpSubtext: 'Est. Amort: ₱52,382/mo • Res: ₱50,000'
         };
     } else if (t.includes('liora')) {
         return {
-            priceDisplay: '₱2,462,400 - ₱2,894,400',
+            priceDisplay: '₱2.46M - ₱2.89M',
             tcpTag: 'TCP Available • Pag-IBIG & Bank',
             tcpSubtext: 'Est. Amort: ₱14,476/mo • Res: ₱12,000'
         };
     } else if (t.includes('airmen')) {
         return {
-            priceDisplay: '₱8,900,000 - ₱9,029,240',
+            priceDisplay: '₱8.90M - ₱9.03M',
             tcpTag: 'TCP Available • Bank Financing',
             tcpSubtext: 'Est. Amort: ₱53,658/mo • Res: ₱50,000'
         };
@@ -153,13 +153,18 @@ function renderFeaturedGrid(list) {
 
         const displayTitle = formatPropertyTitle(item.title);
 
+        const bedCount = Number(item.bedrooms || 0);
+        const bathCount = Number(item.bathrooms || 0);
+        const bedLabel = bedCount === 1 ? '1 Bed' : `${bedCount} Beds`;
+        const bathLabel = bathCount === 1 ? '1 Bath' : `${bathCount} Baths`;
+
         return `
         <article class="property-card ${isSold ? 'card-sold' : ''}" onclick="location.href='${detailUrl}'">
             <div class="property-image">
                 <span class="property-status-badge ${isSold ? 'badge-sold' : 'badge-available'}">
                     ${statusLabel}
                 </span>
-                <img src="${imgSrc}" alt="${displayTitle}" onerror="this.src='assets/images/property1.jpg'">
+                <img src="${imgSrc}" alt="${displayTitle}" loading="lazy" decoding="async" onerror="this.src='assets/images/property1.jpg'">
                 <div class="card-actions">
                     <button class="card-icon-btn share-btn" type="button" aria-label="Share property"
                         onclick="event.stopPropagation(); copyPropertyLink('${item.id}')">
@@ -181,11 +186,11 @@ function renderFeaturedGrid(list) {
                     <span><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                             stroke-width="2">
                             <path d="M2 4v16M2 8h18a2 2 0 0 1 2 2v10M2 17h20M6 8v9" />
-                        </svg> ${item.bedrooms || 0} Beds</span>
+                        </svg> ${bedLabel}</span>
                     <span><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                             stroke-width="2">
                             <path d="M9 6h6a2 2 0 0 1 2 2v10H7V8a2 2 0 0 1 2-2z" />
-                        </svg> ${item.bathrooms || 0} Baths</span>
+                        </svg> ${bathLabel}</span>
                     <span><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                             stroke-width="2">
                             <rect x="3" y="3" width="18" height="18" rx="2" />
@@ -629,12 +634,12 @@ function renderHomepageAgentDetails(profile) {
 
     const rawName = profile.name || profile.full_name || 'Miriam Lobren';
     const cleanName = String(rawName).replace(/\s*\((?:Admin|Administrator)\)\s*$/i, '').trim() || rawName;
-    let title = (profile.title && profile.title.trim()) || 'Real Estate Agent';
-    if (/^licensed real estate broker\s*\/\s*agent$/i.test(title)) {
-        title = 'Real Estate Agent';
+    let title = (profile.title && profile.title.trim()) || 'Real Estate Salesperson';
+    if (/^(?:licensed real estate broker\s*\/\s*agent|real estate agent|real estate sales person)$/i.test(title)) {
+        title = 'Real Estate Salesperson';
     }
     const rawBrok = String(profile.brokerage || '').trim();
-    const brokerage = (!rawBrok || /^cd\s.*realty$/i.test(rawBrok)) ? 'UrbanScope' : rawBrok;
+    const brokerage = (!rawBrok || /^urbanscope(?:\s+realty)?$/i.test(rawBrok)) ? 'CD Miranda Realty' : rawBrok;
     const phone = profile.phone || '+63 918 964 5434';
     const email = profile.email || 'miriamalobren@gmail.com';
     const bio = profile.bio || 'Serving Las Piñas, Cavite, and surrounding prime locations with high-integrity real estate solutions.';
@@ -649,7 +654,7 @@ function renderHomepageAgentDetails(profile) {
 
     // Browser tab document title
     if (cleanName && title) {
-        document.title = `${cleanName} | ${title}`;
+        document.title = `${cleanName} | ${title} – Las Piñas & Cavite Properties`;
     }
 
     // 2. About Me Section
@@ -687,9 +692,17 @@ function renderHomepageAgentDetails(profile) {
     const footerBio = document.getElementById('footerAgentBio');
     if (footerBio && bio) {
         const lowerTitle = title.toLowerCase();
-        footerBio.textContent = brokerage.toLowerCase() === 'urbanscope'
-            ? `Trusted ${lowerTitle}. ${bio}`
-            : `Trusted ${lowerTitle} affiliated with ${brokerage}. ${bio}`;
+        footerBio.textContent = `Trusted ${lowerTitle} affiliated with ${brokerage}. ${bio}`;
+    }
+    const licenseNote = document.getElementById('footerAgentLicense');
+    const licNum = (profile.license_number || profile.license || '').trim();
+    if (licenseNote) {
+        if (licNum) {
+            licenseNote.textContent = `PRC Accreditation No. ${licNum} · ${brokerage}`;
+            licenseNote.style.display = 'block';
+        } else {
+            licenseNote.style.display = 'none';
+        }
     }
     const footerPhone = document.getElementById('footerAgentPhone');
     if (footerPhone) {
@@ -717,8 +730,8 @@ async function initDynamicAgentDetails() {
     } catch (e) { }
 
     if (localProfile) {
-        if (localProfile.title && /^licensed real estate broker\s*\/\s*agent$/i.test(localProfile.title.trim())) {
-            localProfile.title = 'Real Estate Agent';
+        if (localProfile.title && /^(?:licensed real estate broker\s*\/\s*agent|real estate agent|real estate sales person)$/i.test(localProfile.title.trim())) {
+            localProfile.title = 'Real Estate Salesperson';
             try {
                 localStorage.setItem('urbanscope_admin_profile', JSON.stringify(localProfile));
             } catch (e) {}

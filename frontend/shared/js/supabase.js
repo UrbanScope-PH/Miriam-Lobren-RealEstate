@@ -2740,17 +2740,17 @@
                     if (data && data.email && isRealAgentEmail(data.email)) {
                         const cachedTitle = (cached && cached.title && cached.title.trim()) ? cached.title.trim() : null;
                         const backendTitle = (data.title && data.title.trim()) ? data.title.trim() : null;
-                        const effectiveTitle = backendTitle || cachedTitle || 'Real Estate Agent';
+                        const effectiveTitle = backendTitle || cachedTitle || 'Real Estate Salesperson';
 
                         const merged = {
                             name: data.full_name || data.name || (cached && cached.name) || 'Miriam Lobren',
                             full_name: data.full_name || data.name || (cached && cached.full_name) || 'Miriam Lobren',
                             email: data.email || (cached && cached.email) || 'miriamalobren@gmail.com',
-                            phone: data.phone || (cached && cached.phone) || '09123456789',
-                            license: data.license_number || data.license || (cached && cached.license) || 'PRC REB #0031892',
-                            license_number: data.license_number || data.license || (cached && cached.license_number) || 'PRC REB #0031892',
+                            phone: data.phone || (cached && cached.phone) || '+63 918 964 5434',
+                            license: data.license_number || data.license || (cached && cached.license) || '',
+                            license_number: data.license_number || data.license || (cached && cached.license_number) || '',
                             title: effectiveTitle,
-                            brokerage: (!data.brokerage || /^cd\s.*realty$/i.test(String(data.brokerage).trim())) ? ((cached && cached.brokerage) || 'UrbanScope') : data.brokerage,
+                            brokerage: data.brokerage || (cached && cached.brokerage) || 'CD Miranda Realty',
                             bio: data.bio || (cached && cached.bio) || 'Serving Las Piñas, Cavite, and surrounding prime locations with high-integrity real estate solutions.',
                             avatar_url: data.avatar_url || (cached && cached.avatar_url) || 'assets/images/agent.jpg'
                         };
@@ -2811,23 +2811,20 @@
                 if (u) {
                     const cachedTitle = (cached && cached.title && cached.title.trim()) ? cached.title.trim() : null;
                     const remoteTitle = (u.title && u.title.trim()) ? u.title.trim() : null;
-                    const effectiveTitle = remoteTitle || cachedTitle || 'Real Estate Agent';
+                    const effectiveTitle = remoteTitle || cachedTitle || 'Real Estate Salesperson';
 
                     const effectiveEmail = u.email || 'miriamalobren@gmail.com';
-                    const effectivePhone = u.phone || (cached && cached.phone) || '09123456789';
+                    const effectivePhone = u.phone || (cached && cached.phone) || '+63 918 964 5434';
 
                     const merged = {
                         name: u.full_name || (cached && cached.name) || 'Miriam Lobren',
                         full_name: u.full_name || (cached && cached.full_name) || 'Miriam Lobren',
                         email: effectiveEmail,
                         phone: effectivePhone,
-                        license: u.license_number || (cached && cached.license) || 'PRC REB #0031892',
-                        license_number: u.license_number || (cached && cached.license_number) || 'PRC REB #0031892',
+                        license: u.license_number || (cached && cached.license) || '',
+                        license_number: u.license_number || (cached && cached.license_number) || '',
                         title: effectiveTitle,
-                        brokerage: (() => {
-                            const b = u.brokerage || (cached && cached.brokerage) || '';
-                            return (!b || /^cd\s.*realty$/i.test(String(b).trim())) ? ((cached && cached.brokerage) || 'UrbanScope') : b;
-                        })(),
+                        brokerage: u.brokerage || (cached && cached.brokerage) || 'CD Miranda Realty',
                         bio: u.bio || (cached && cached.bio) || 'Serving Las Piñas, Cavite, and surrounding prime locations with high-integrity real estate solutions.',
                         avatar_url: u.avatar_url || (cached && cached.avatar_url) || 'assets/images/agent.jpg'
                     };
@@ -2850,11 +2847,11 @@
             name: (cached && cached.name) || 'Miriam Lobren',
             full_name: (cached && cached.full_name) || 'Miriam Lobren',
             email: (cached && cached.email) || 'miriamalobren@gmail.com',
-            phone: (cached && cached.phone) || '09123456789',
-            license: (cached && cached.license) || 'PRC REB #0031892',
-            license_number: (cached && cached.license_number) || 'PRC REB #0031892',
-            title: (cached && cached.title) || 'Real Estate Agent',
-            brokerage: (cached && cached.brokerage) || 'UrbanScope',
+            phone: (cached && cached.phone) || '+63 918 964 5434',
+            license: (cached && cached.license) || '',
+            license_number: (cached && cached.license_number) || '',
+            title: (cached && cached.title) || 'Real Estate Salesperson',
+            brokerage: (cached && cached.brokerage) || 'CD Miranda Realty',
             bio: (cached && cached.bio) || 'Serving Las Piñas, Cavite, and surrounding prime locations with high-integrity real estate solutions.',
             avatar_url: (cached && cached.avatar_url) || 'assets/images/agent.jpg'
         };
@@ -3092,12 +3089,12 @@
                                 email: adminEmail,
                                 password_hash: newHash,
                                 full_name: storedAdmin.full_name || storedAdmin.name || 'Miriam Lobren',
-                                phone: storedAdmin.phone || '+63 917 123 4567',
+                                phone: storedAdmin.phone || '+63 918 964 5434',
                                 role: storedAdmin.role || 'admin',
                                 avatar_url: storedAdmin.avatar_url || 'assets/images/agent.jpg',
-                                license_number: storedAdmin.license_number || 'PRC REB #0031892',
-                                title: storedAdmin.title || 'Real Estate Agent',
-                                brokerage: storedAdmin.brokerage || 'UrbanScope Realty'
+                                license_number: storedAdmin.license_number || '',
+                                title: storedAdmin.title || 'Real Estate Salesperson',
+                                brokerage: storedAdmin.brokerage || 'CD Miranda Realty'
                             })
                         });
                     }
@@ -3163,12 +3160,12 @@
                             email: adminEmail,
                             password_hash: newHash,
                             full_name: storedAdmin.full_name || storedAdmin.name || 'Miriam Lobren',
-                            phone: storedAdmin.phone || '+63 917 123 4567',
+                            phone: storedAdmin.phone || '+63 918 964 5434',
                             role: storedAdmin.role || 'admin',
                             avatar_url: storedAdmin.avatar_url || 'assets/images/agent.jpg',
-                            license_number: storedAdmin.license_number || 'PRC REB #0031892',
-                            title: storedAdmin.title || 'Real Estate Agent',
-                            brokerage: storedAdmin.brokerage || 'UrbanScope Realty'
+                            license_number: storedAdmin.license_number || '',
+                            title: storedAdmin.title || 'Real Estate Salesperson',
+                            brokerage: storedAdmin.brokerage || 'CD Miranda Realty'
                         })
                     });
                 }

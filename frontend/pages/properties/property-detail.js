@@ -285,7 +285,7 @@ async function loadPropertyFromDb() {
         if (thumbsContainer) {
             thumbsContainer.innerHTML = propImages.map((src, idx) => `
                 <div class="thumb ${idx === 0 ? 'active' : ''}" onclick="selectThumb(${idx}, '${src}')">
-                    <img src="${src}" alt="Photo ${idx + 1}">
+                    <img src="${src}" alt="Photo ${idx + 1}" loading="lazy" decoding="async">
                 </div>
             `).join('');
         }
@@ -823,7 +823,7 @@ function syncLightboxImage() {
     if (thumbsContainer) {
         thumbsContainer.innerHTML = galleryImages.map((src, i) => `
             <div class="lightbox-thumb ${i === currentSlide ? 'active' : ''}" onclick="selectLightboxSlide(${i})">
-                <img src="${src}" alt="Slide ${i + 1}">
+                <img src="${src}" alt="Slide ${i + 1}" loading="lazy" decoding="async">
             </div>
         `).join('');
     }

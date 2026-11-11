@@ -1123,37 +1123,44 @@ html[data-auth-state="logged-in"] .inquiry-note,
 /* ==========================================================================
    Dark Mode Overrides for Property Showcase & Official Pricelist Card
    ========================================================================== */
-html.dark-mode .status-badge.available {
-    background-color: rgba(62, 163, 93, 0.22);
-    color: #86efac;
-    border: 1px solid rgba(134, 239, 172, 0.38);
+html.dark-mode .status-badge.available,
+html[data-theme="dark"] .status-badge.available {
+    background-color: rgba(62, 163, 93, 0.22) !important;
+    color: #86efac !important;
+    border: 1px solid rgba(134, 239, 172, 0.38) !important;
 }
 
 html.dark-mode .status-badge.sold,
-html.dark-mode .status-badge.reserved {
-    background-color: rgba(239, 68, 68, 0.22);
-    color: #fca5a5;
-    border: 1px solid rgba(252, 165, 165, 0.38);
+html.dark-mode .status-badge.reserved,
+html[data-theme="dark"] .status-badge.sold,
+html[data-theme="dark"] .status-badge.reserved {
+    background-color: rgba(239, 68, 68, 0.22) !important;
+    color: #fca5a5 !important;
+    border: 1px solid rgba(252, 165, 165, 0.38) !important;
 }
 
-html.dark-mode .s-icon-btn {
+html.dark-mode .s-icon-btn,
+html[data-theme="dark"] .s-icon-btn {
     width: 40px;
     height: 40px;
-    background-color: #17241c;
-    border: 1.5px solid #294532;
-    color: #e8f5ec;
+    background-color: #17241c !important;
+    border: 1.5px solid #294532 !important;
+    color: #e8f5ec !important;
 }
 
-html.dark-mode .s-icon-btn svg {
+html.dark-mode .s-icon-btn svg,
+html[data-theme="dark"] .s-icon-btn svg {
     stroke: #e8f5ec !important;
 }
 
-html.dark-mode .s-icon-btn:hover {
-    background-color: #213528;
-    border-color: #4ade80;
+html.dark-mode .s-icon-btn:hover,
+html[data-theme="dark"] .s-icon-btn:hover {
+    background-color: #213528 !important;
+    border-color: #4ade80 !important;
 }
 
-html.dark-mode .s-icon-btn:hover svg {
+html.dark-mode .s-icon-btn:hover svg,
+html[data-theme="dark"] .s-icon-btn:hover svg {
     stroke: #86efac !important;
 }
 

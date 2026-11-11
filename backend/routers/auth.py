@@ -1004,10 +1004,10 @@ def get_public_agent_profile():
             "full_name": "Miriam Lobren",
             "email": "miriamalobren@gmail.com",
             "phone": "+63 918 964 5434",
-            "license": "PRC REB #402",
-            "license_number": "PRC REB #402",
-            "title": "Real Estate Sales Person",
-            "brokerage": "CDMiranda Realty",
+            "license": "",
+            "license_number": "",
+            "title": "Real Estate Salesperson",
+            "brokerage": "CD Miranda Realty",
             "bio": "Serving Las Piñas, Cavite, and surrounding prime locations with high-integrity real estate solutions.",
             "avatar_url": "assets/images/agent.jpg"
         }
@@ -1015,8 +1015,11 @@ def get_public_agent_profile():
     data["name"] = data.get("full_name") or "Miriam Lobren"
     data["license"] = data.get("license_number") or ""
     brok = (data.get("brokerage") or "").strip()
-    if not brok or (brok.lower().startswith("cd ") and "realty" in brok.lower()):
-        data["brokerage"] = "UrbanScope"
+    if not brok:
+        data["brokerage"] = "CD Miranda Realty"
+    title = (data.get("title") or "").strip()
+    if not title or title.lower() in ("real estate agent", "licensed real estate broker / agent"):
+        data["title"] = "Real Estate Salesperson"
     if data.get("email"):
         AUTHORIZED_ADMIN_EMAILS.add(data["email"].lower().strip())
     return data

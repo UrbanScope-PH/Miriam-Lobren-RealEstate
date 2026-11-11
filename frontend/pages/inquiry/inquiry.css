@@ -41,6 +41,38 @@ body {
     padding: 0 4%;
 }
 
+.guest-inquiry-banner {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: #eef6f0;
+    border: 1px solid #c8dece;
+    border-radius: 10px;
+    padding: 10px 14px;
+    font-size: 0.88rem;
+    color: #1e3f27;
+    margin-bottom: 16px;
+    line-height: 1.4;
+}
+
+.guest-inquiry-banner svg {
+    color: #2d5c39;
+    flex-shrink: 0;
+}
+
+.guest-inquiry-banner a {
+    color: #1f582f;
+    font-weight: 700;
+    text-decoration: underline;
+}
+
+.modal-action-group {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+}
+
 .inquiry-header-top {
     display: flex;
     align-items: center;
@@ -1178,5 +1210,16 @@ html.dark-mode .btn-secondary {
 html.dark-mode .btn-secondary:hover {
     background-color: #263d2e;
     border-color: #4ade80;
+    color: #86efac;
+}
+
+html.dark-mode .guest-inquiry-banner {
+    background: #17261d;
+    border-color: #27402f;
+    color: #d1e3d6;
+}
+
+html.dark-mode .guest-inquiry-banner svg,
+html.dark-mode .guest-inquiry-banner a {
     color: #86efac;
 }
