@@ -576,45 +576,8 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    // 8. FAQs Category Filter & Accordion Interactive Toggle
+    // 8. FAQs Accordion Interactive Toggle
     const faqItems = document.querySelectorAll('.faq-item');
-    const faqCatPills = document.querySelectorAll('.faq-cat-pill');
-
-    faqCatPills.forEach(pill => {
-        pill.addEventListener('click', () => {
-            faqCatPills.forEach(p => p.classList.remove('active'));
-            pill.classList.add('active');
-            const selectedCat = pill.getAttribute('data-faq-cat') || 'all';
-
-            let firstMatch = null;
-            faqItems.forEach(item => {
-                const itemCat = item.getAttribute('data-faq-category') || '';
-                const matches = selectedCat === 'all' || itemCat === selectedCat;
-
-                if (matches) {
-                    item.classList.remove('hidden-by-category');
-                    if (!firstMatch) firstMatch = item;
-                } else {
-                    item.classList.add('hidden-by-category');
-                    item.classList.remove('active');
-                    const qBtn = item.querySelector('.faq-question');
-                    if (qBtn) qBtn.setAttribute('aria-expanded', 'false');
-                }
-            });
-
-            // Expand first visible FAQ item in the selected category
-            if (firstMatch) {
-                faqItems.forEach(other => {
-                    other.classList.remove('active');
-                    const ob = other.querySelector('.faq-question');
-                    if (ob) ob.setAttribute('aria-expanded', 'false');
-                });
-                firstMatch.classList.add('active');
-                const fb = firstMatch.querySelector('.faq-question');
-                if (fb) fb.setAttribute('aria-expanded', 'true');
-            }
-        });
-    });
 
     faqItems.forEach(item => {
         const questionBtn = item.querySelector('.faq-question');
