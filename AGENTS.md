@@ -880,7 +880,7 @@ path when rendering from a page.
     - **Floating Direct Multi-Channel Contact Button (`session.js`, `session.css`)**:
       - Mounted a fixed floating action button (`.contact-fab`) on the bottom-right of all public pages (`index.html`, `property-detail.html`, `casasuerte.html`, `kathleen.html`, `Liora.html`, `Airmen.html`, `terms.html`, `privacy.html`).
       - On click, smoothly reveals 3 high-converting contact channels:
-        1. **Facebook Messenger** (`m.me/miriamalobren`): Direct 1-tap chat with Miriam Lobren.
+        1. **Facebook Messenger** (`https://m.me/miriam.lobren`): Direct 1-tap chat with Miriam Lobren.
         2. **Direct Phone Call** (`tel:+639189645434`): Instant call via mobile dialer.
         3. **Direct SMS** (`sms:+639189645434?body=...`): Pre-composed text message dynamically including the property title when viewing a property page.
       - Includes full accessibility (`aria-haspopup`, `aria-expanded`, keyboard Escape dismissal, outside click listener) and automatic toast positioning offset (`body.has-contact-fab .client-approval-toast, .toast-notice { bottom: 96px !important; }`).
