@@ -1405,6 +1405,8 @@ html.dark-mode .property-status-badge.badge-rfo {
 }
 
 .featured-header-row {
+    position: relative;
+    z-index: 50;
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -1413,11 +1415,23 @@ html.dark-mode .property-status-badge.badge-rfo {
     gap: 12px;
 }
 
+.featured-header-row:has(.sort-select-wrap.is-open),
+.featured-header-row.has-open-dropdown {
+    z-index: 1200 !important;
+}
+
 .home-sort-control {
+    position: relative;
+    z-index: 55;
     display: flex;
     align-items: center;
     gap: 8px;
     min-width: 0;
+}
+
+.home-sort-control:has(.sort-select-wrap.is-open),
+.home-sort-control.has-open-dropdown {
+    z-index: 1250 !important;
 }
 
 .home-sort-control label {
@@ -1438,6 +1452,198 @@ html.dark-mode .property-status-badge.badge-rfo {
     cursor: pointer;
     max-width: 280px;
     text-overflow: ellipsis;
+}
+
+/* ============================================================
+   CUSTOM SORT SELECT DROPDOWN UI (#homeSortSelect)
+   ============================================================ */
+.sort-select-source {
+    position: absolute !important;
+    width: 1px !important;
+    height: 1px !important;
+    padding: 0 !important;
+    margin: -1px !important;
+    overflow: hidden !important;
+    clip: rect(0, 0, 0, 0) !important;
+    white-space: nowrap !important;
+    border: 0 !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+}
+
+.sort-select-wrap {
+    position: relative;
+    display: inline-block;
+}
+
+.sort-select-wrap.is-open {
+    z-index: 1300 !important;
+}
+
+.sort-select-trigger {
+    display: inline-flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 8px 14px;
+    border: 1px solid #cbd9ce;
+    border-radius: 10px;
+    background: #ffffff;
+    font-size: 0.88rem;
+    font-weight: 600;
+    color: #1b2e21;
+    cursor: pointer;
+    font-family: inherit;
+    outline: none;
+    min-width: 185px;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    box-sizing: border-box;
+}
+
+.sort-select-wrap:hover .sort-select-trigger {
+    border-color: var(--green, #2d5c39);
+    box-shadow: 0 2px 8px rgba(45, 92, 57, 0.08);
+}
+
+.sort-select-wrap.is-open .sort-select-trigger {
+    border-color: var(--green, #2d5c39);
+    box-shadow: 0 0 0 3px rgba(45, 92, 57, 0.12);
+}
+
+.sort-select-value {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.sort-select-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--green, #2d5c39);
+    flex-shrink: 0;
+}
+
+.sort-select-arrow {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: #64748b;
+    transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1), color 0.15s ease;
+    flex-shrink: 0;
+}
+
+.sort-select-wrap.is-open .sort-select-arrow {
+    transform: rotate(180deg);
+    color: var(--green, #2d5c39);
+}
+
+.sort-select-dropdown {
+    position: absolute;
+    top: calc(100% + 6px);
+    right: 0;
+    width: max(100%, 220px);
+    background: #ffffff;
+    border: 1px solid #dce8df;
+    border-radius: 14px;
+    box-shadow: 0 18px 40px -4px rgba(15, 33, 20, 0.16), 0 6px 16px -2px rgba(45, 92, 57, 0.08);
+    padding: 6px;
+    z-index: 1050;
+    animation: sortSelectFade 0.16s cubic-bezier(0.16, 1, 0.3, 1);
+    transform-origin: top right;
+    box-sizing: border-box;
+}
+
+@keyframes sortSelectFade {
+    from {
+        opacity: 0;
+        transform: translateY(-6px) scale(0.98);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+.sort-select-option {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 9px 12px;
+    border-radius: 8px;
+    font-size: 13.5px;
+    font-weight: 500;
+    color: var(--text-dark, #1b2e21);
+    cursor: pointer;
+    transition: all 0.12s ease;
+    user-select: none;
+}
+
+.sort-select-option:hover {
+    background: #edf6f0;
+    color: #1e5c33;
+}
+
+.sort-select-option.is-selected {
+    background: #e2f0e6;
+    color: #15803d;
+    font-weight: 700;
+}
+
+.sort-select-option-content {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    flex: 1;
+    min-width: 0;
+}
+
+.sort-select-option-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--green, #2d5c39);
+    flex-shrink: 0;
+}
+
+.sort-select-option-text {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.sort-select-check {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: #15803d;
+    flex-shrink: 0;
+    opacity: 0;
+    transition: opacity 0.15s ease;
+}
+
+.sort-select-option.is-selected .sort-select-check {
+    opacity: 1;
+}
+
+@media (max-width: 768px) {
+    .sort-select-wrap {
+        width: 100%;
+    }
+    .sort-select-trigger {
+        width: 100%;
+    }
+    .sort-select-dropdown {
+        width: 100%;
+        left: 0;
+        right: 0;
+    }
 }
 
 @media (max-width: 480px) {
@@ -2256,6 +2462,53 @@ html.dark-mode .search-bar input {
 
 html.dark-mode .search-bar input::placeholder {
     color: #8fa896;
+}
+
+/* Dark Mode overrides for Sort Select */
+html.dark-mode .sort-select-trigger {
+    background: #16231b;
+    border-color: #2b4031;
+    color: #e7f0e9;
+}
+
+html.dark-mode .sort-select-wrap:hover .sort-select-trigger,
+html.dark-mode .sort-select-wrap.is-open .sort-select-trigger {
+    border-color: #4ade80;
+    box-shadow: 0 0 0 3px rgba(74, 222, 128, 0.16);
+}
+
+html.dark-mode .sort-select-icon,
+html.dark-mode .sort-select-option-icon,
+html.dark-mode .sort-select-check {
+    color: #86efac;
+}
+
+html.dark-mode .sort-select-arrow {
+    color: #8fa896;
+}
+
+html.dark-mode .sort-select-wrap.is-open .sort-select-arrow {
+    color: #86efac;
+}
+
+html.dark-mode .sort-select-dropdown {
+    background: #142219;
+    border-color: #2b4232;
+    box-shadow: 0 20px 45px -4px rgba(0, 0, 0, 0.7), 0 8px 18px -4px rgba(0, 0, 0, 0.4);
+}
+
+html.dark-mode .sort-select-option {
+    color: #e7f0e9;
+}
+
+html.dark-mode .sort-select-option:hover {
+    background: rgba(72, 187, 120, 0.15);
+    color: #86efac;
+}
+
+html.dark-mode .sort-select-option.is-selected {
+    background: rgba(72, 187, 120, 0.22);
+    color: #86efac;
 }
 
 

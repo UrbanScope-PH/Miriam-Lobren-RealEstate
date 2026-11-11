@@ -749,6 +749,173 @@ function initSearchSelect(selectEl) {
     updateDisplay();
 }
 
+/**
+ * Custom Sort Dropdown Component for Featured Properties Grid
+ * Replaces unstyled native OS sort select with an on-brand, animated custom menu.
+ */
+function initSortSelect(selectEl) {
+    if (!selectEl) return;
+    if (selectEl.dataset.sortSelectInitialized === 'true') return;
+    selectEl.dataset.sortSelectInitialized = 'true';
+
+    selectEl.classList.add('sort-select-source');
+
+    const wrap = document.createElement('div');
+    wrap.className = 'sort-select-wrap';
+    selectEl.parentNode.insertBefore(wrap, selectEl);
+    wrap.appendChild(selectEl);
+
+    const trigger = document.createElement('button');
+    trigger.type = 'button';
+    trigger.className = 'sort-select-trigger';
+    trigger.setAttribute('aria-haspopup', 'listbox');
+    trigger.setAttribute('aria-expanded', 'false');
+
+    const valueSpan = document.createElement('span');
+    valueSpan.className = 'sort-select-value';
+
+    const arrowSpan = document.createElement('span');
+    arrowSpan.className = 'sort-select-arrow';
+    arrowSpan.setAttribute('aria-hidden', 'true');
+    arrowSpan.innerHTML = `
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="6 9 12 15 18 9"></polyline>
+        </svg>
+    `;
+
+    trigger.appendChild(valueSpan);
+    trigger.appendChild(arrowSpan);
+    wrap.appendChild(trigger);
+
+    let dropdownEl = null;
+
+    function getSortOptionIcon(val, text) {
+        const v = String(val || '').toLowerCase();
+        const t = String(text || '').toLowerCase();
+
+        if (v === 'featured' || t.includes('featured')) {
+            return `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>`;
+        }
+        if (v === 'location' || t.includes('location')) {
+            return `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>`;
+        }
+        if (v === 'type' || t.includes('type')) {
+            return `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 21h18M3 10l5-4 5 4v11H3V10zm10 0l4-3.2 4 3.2V21h-8"/></svg>`;
+        }
+        if (v === 'newest' || t.includes('newest')) {
+            return `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 14 14"/></svg>`;
+        }
+        if (v === 'price-low' || t.includes('low to high')) {
+            return `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 18 13.5 8.5 8.5 13.5 1 6"/><polyline points="17 18 23 18 23 12"/></svg>`;
+        }
+        if (v === 'price-high' || t.includes('high to low')) {
+            return `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>`;
+        }
+
+        return `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 14 14"/></svg>`;
+    }
+
+    function updateDisplay() {
+        const selectedOpt = selectEl.options[selectEl.selectedIndex] || selectEl.options[0];
+        if (!selectedOpt) return;
+        const icon = getSortOptionIcon(selectedOpt.value, selectedOpt.text);
+        valueSpan.innerHTML = `<span class="sort-select-icon">${icon}</span><span class="sort-select-text">${selectedOpt.text}</span>`;
+    }
+
+    function closeDropdown() {
+        wrap.classList.remove('is-open');
+        trigger.setAttribute('aria-expanded', 'false');
+        const headerRow = wrap.closest('.featured-header-row');
+        if (headerRow) headerRow.classList.remove('has-open-dropdown');
+        const sortControl = wrap.closest('.home-sort-control');
+        if (sortControl) sortControl.classList.remove('has-open-dropdown');
+        if (dropdownEl) {
+            dropdownEl.remove();
+            dropdownEl = null;
+        }
+    }
+
+    function openDropdown() {
+        // Close any other open dropdowns across the page
+        document.querySelectorAll('.search-select-wrap.is-open, .sort-select-wrap.is-open').forEach(w => w.classList.remove('is-open'));
+        document.querySelectorAll('.featured-header-row.has-open-dropdown, .home-sort-control.has-open-dropdown, .search-bar.has-open-dropdown').forEach(el => el.classList.remove('has-open-dropdown'));
+        document.querySelectorAll('.search-select-dropdown, .sort-select-dropdown').forEach(d => d.remove());
+
+        wrap.classList.add('is-open');
+        trigger.setAttribute('aria-expanded', 'true');
+        const headerRow = wrap.closest('.featured-header-row');
+        if (headerRow) headerRow.classList.add('has-open-dropdown');
+        const sortControl = wrap.closest('.home-sort-control');
+        if (sortControl) sortControl.classList.add('has-open-dropdown');
+
+        dropdownEl = document.createElement('div');
+        dropdownEl.className = 'sort-select-dropdown';
+        dropdownEl.setAttribute('role', 'listbox');
+
+        Array.from(selectEl.options).forEach((opt, idx) => {
+            const isSelected = idx === selectEl.selectedIndex;
+            const optDiv = document.createElement('div');
+            optDiv.className = 'sort-select-option' + (isSelected ? ' is-selected' : '');
+            optDiv.setAttribute('role', 'option');
+            optDiv.setAttribute('aria-selected', isSelected ? 'true' : 'false');
+            optDiv.setAttribute('data-value', opt.value);
+
+            const iconSvg = getSortOptionIcon(opt.value, opt.text);
+            optDiv.innerHTML = `
+                <div class="sort-select-option-content">
+                    <span class="sort-select-option-icon">${iconSvg}</span>
+                    <span class="sort-select-option-text">${opt.text}</span>
+                </div>
+                <span class="sort-select-check" aria-hidden="true">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="20 6 9 17 4 12"></polyline>
+                    </svg>
+                </span>
+            `;
+
+            optDiv.addEventListener('click', (e) => {
+                e.stopPropagation();
+                selectEl.value = opt.value;
+                updateDisplay();
+                selectEl.dispatchEvent(new Event('change', { bubbles: true }));
+                closeDropdown();
+            });
+
+            dropdownEl.appendChild(optDiv);
+        });
+
+        wrap.appendChild(dropdownEl);
+    }
+
+    trigger.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (wrap.classList.contains('is-open')) {
+            closeDropdown();
+        } else {
+            openDropdown();
+        }
+    });
+
+    selectEl.addEventListener('change', updateDisplay);
+
+    document.addEventListener('click', (e) => {
+        if (!wrap.contains(e.target)) {
+            closeDropdown();
+        }
+    });
+
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && wrap.classList.contains('is-open')) {
+            closeDropdown();
+            trigger.focus();
+        }
+    });
+
+    // Initial display
+    updateDisplay();
+}
+
 function initHomepage() {
     // 0. Initialize Quick Home Affordability & Budget Matcher
     if (window.UrbanCalculator && typeof UrbanCalculator.initHomepageBudgetMatcher === 'function') {
@@ -820,6 +987,7 @@ function initHomepage() {
             activeSort = e.target.value;
             applyCurrentFiltersAndRender();
         });
+        initSortSelect(sortSelect);
     }
 
     // Real-time search bar dropdown filters
