@@ -1574,3 +1574,229 @@ html.dark-mode .datepicker-action-today {
 html.dark-mode .datepicker-action-today:hover {
     background: rgba(72, 187, 120, 0.15);
 }
+
+/* ============================================================
+   CUSTOM URBAN-SCOPE SELECT DROPDOWN UI
+   ============================================================ */
+.custom-select-source {
+    position: absolute !important;
+    width: 1px !important;
+    height: 1px !important;
+    padding: 0 !important;
+    margin: -1px !important;
+    overflow: hidden !important;
+    clip: rect(0, 0, 0, 0) !important;
+    white-space: nowrap !important;
+    border: 0 !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+}
+
+.custom-select-wrap {
+    position: relative;
+    width: 100%;
+}
+
+.custom-select-trigger {
+    width: 100%;
+    padding: 10px 14px;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    font-size: 14px;
+    color: var(--text-dark);
+    background-color: #ffffff;
+    font-family: inherit;
+    outline: none;
+    transition: all 0.2s ease;
+    box-sizing: border-box;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    text-align: left;
+}
+
+.custom-select-wrap:hover .custom-select-trigger {
+    border-color: rgba(45, 92, 57, 0.4);
+}
+
+.custom-select-wrap.is-open .custom-select-trigger {
+    border-color: var(--green);
+    box-shadow: 0 0 0 3px rgba(45, 92, 57, 0.12);
+}
+
+.custom-select-value {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-weight: 500;
+}
+
+.custom-select-value svg {
+    color: var(--green);
+    flex-shrink: 0;
+}
+
+.custom-select-arrow {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-muted);
+    transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), color 0.15s ease;
+    flex-shrink: 0;
+}
+
+.custom-select-wrap.is-open .custom-select-arrow {
+    transform: rotate(180deg);
+    color: var(--green);
+}
+
+.custom-select-dropdown {
+    position: absolute;
+    top: calc(100% + 6px);
+    left: 0;
+    width: 100%;
+    min-width: max(100%, 285px);
+    background: #ffffff;
+    border: 1px solid #dce8df;
+    border-radius: 12px;
+    box-shadow: 0 16px 36px -4px rgba(15, 23, 42, 0.14), 0 6px 16px -2px rgba(45, 92, 57, 0.08);
+    padding: 6px;
+    z-index: 1060;
+    font-family: inherit;
+    box-sizing: border-box;
+    animation: urbanSelectFade 0.16s cubic-bezier(0.16, 1, 0.3, 1);
+    transform-origin: top left;
+}
+
+.custom-select-dropdown.align-right {
+    left: auto;
+    right: 0;
+    transform-origin: top right;
+}
+
+@keyframes urbanSelectFade {
+    from {
+        opacity: 0;
+        transform: translateY(-5px) scale(0.98);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+.custom-select-option {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 9px 12px;
+    border-radius: 8px;
+    font-size: 13.5px;
+    font-weight: 500;
+    color: var(--text-dark);
+    cursor: pointer;
+    transition: all 0.12s ease;
+    user-select: none;
+}
+
+.custom-select-option:hover {
+    background: var(--light-green);
+    color: var(--green);
+}
+
+.custom-select-option.is-selected {
+    background: rgba(45, 92, 57, 0.08);
+    color: var(--green);
+    font-weight: 700;
+}
+
+.custom-select-option-content {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    flex: 1;
+    min-width: 0;
+}
+
+.custom-select-option-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--green);
+    flex-shrink: 0;
+}
+
+.custom-select-option-text {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.custom-select-check {
+    color: var(--green);
+    flex-shrink: 0;
+    opacity: 0;
+    transition: opacity 0.15s ease;
+}
+
+.custom-select-option.is-selected .custom-select-check {
+    opacity: 1;
+}
+
+/* Dark Mode Support for Custom Select */
+html.dark-mode .custom-select-trigger {
+    background-color: #111b15;
+    border-color: #2b4031;
+    color: #e7f0e9;
+}
+
+html.dark-mode .custom-select-wrap:hover .custom-select-trigger {
+    border-color: #48bb78;
+}
+
+html.dark-mode .custom-select-wrap.is-open .custom-select-trigger {
+    border-color: #48bb78;
+    box-shadow: 0 0 0 3px rgba(72, 187, 120, 0.18);
+}
+
+html.dark-mode .custom-select-value svg,
+html.dark-mode .custom-select-option-icon svg,
+html.dark-mode .custom-select-check {
+    color: #48bb78;
+}
+
+html.dark-mode .custom-select-arrow {
+    color: #8da495;
+}
+
+html.dark-mode .custom-select-wrap.is-open .custom-select-arrow {
+    color: #48bb78;
+}
+
+html.dark-mode .custom-select-dropdown {
+    background: #142219;
+    border-color: #2b4232;
+    box-shadow: 0 18px 40px -4px rgba(0, 0, 0, 0.7), 0 8px 16px -4px rgba(0, 0, 0, 0.4);
+}
+
+html.dark-mode .custom-select-option {
+    color: #e7f0e9;
+}
+
+html.dark-mode .custom-select-option:hover {
+    background: rgba(72, 187, 120, 0.16);
+    color: #86efac;
+}
+
+html.dark-mode .custom-select-option.is-selected {
+    background: rgba(72, 187, 120, 0.18);
+    color: #86efac;
+}

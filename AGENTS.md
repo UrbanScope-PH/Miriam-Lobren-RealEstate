@@ -1011,6 +1011,12 @@ path when rendering from a page.
     - Updated `get_google_client_id()` in `backend/auth.py` with automatic `DEFAULT_GOOGLE_CLIENT_ID` fallback to match `frontend/shared/js/supabase.js` and `api.js`.
     - Eliminates the `"Google Sign-In is not configured on the server. Add GOOGLE_CLIENT_ID to your .env file."` error banner and ensures `GET /api/auth/google/config` reports `enabled: true`.
 
+94. **Custom UrbanScope Select Dropdown UI Component (`inquiry.html`, `inquiry.css`, `inquiry.js`):**
+    - Replaced the browser's raw, unstyled native OS `<select>` popup menu on `frontend/pages/inquiry/inquiry.html` for `preferredTime`, `propertyPreferredTime`, and `consultationTopic` with a bespoke UrbanScope Custom Select UI (`.custom-select-wrap`, `.custom-select-trigger`, `.custom-select-dropdown`).
+    - **Visual Polish & Tokens**: Features custom rotating chevron arrow, floating elevation card shadow, option icons (clock, morning sun, afternoon sun/horizon, weekend trip, viewing house, loan badge, investment chart, selling tag, inquiry bubble), and a sharp green checkmark indicator (`✓`) on the selected option.
+    - **Full Dark Mode**: Seamless support under `html.dark-mode` with deep forest green background surfaces (`#142219`), borders (`#2b4232`), and glowing emerald badges and icons (`#48bb78` / `#86efac`).
+    - **Data Integrity & Tab Sync**: Underlying native `<select>` remains in the DOM with `.custom-select-source`, guaranteeing that `document.getElementById('preferredTime').value`, tab synchronization listeners, form serialization, and modal reset functions operate without interruption.
+
 ---
 
 ## Safety Rules
