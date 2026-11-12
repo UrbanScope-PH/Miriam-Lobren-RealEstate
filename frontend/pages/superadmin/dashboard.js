@@ -556,7 +556,7 @@
                         <button type="button" class="btn-table-action" onclick="window.saRoleChangePrompt('${safeIdAttr}', '${nextRole}')">
                             ${nextRoleLabel}
                         </button>
-                        <button type="button" class="btn-table-action danger" onclick="window.saDeleteUserPrompt('${safeIdAttr}')">
+                        <button type="button" class="btn-table-action danger" onclick="window.saDeleteUserPrompt('${safeIdAttr}', '${escapeHtml(u.email || '')}')">
                             Delete
                         </button>
                     </div>
@@ -606,7 +606,7 @@
         const matched = allUsers.find(u => String(u.id) === String(userId));
         const email = maybeEmail || (matched ? matched.email : `#${userId}`);
 
-        if (!confirm(`Are you sure you want to permanently delete the account for ${email}? This action cannot be undone.`)) {
+        if (!confirm(`Are you sure you want to permanently delete the account for ${email}? All associated inquiries and client history will also be removed. This action cannot be undone.`)) {
             return;
         }
 
@@ -625,7 +625,7 @@
             }
 
             if (result && result.success) {
-                showToast(`Account ${email} deleted successfully.`);
+                showToast(`Account ${email} and associated inquiry history deleted successfully.`);
                 await loadUsers();
                 await loadOverview();
             } else {

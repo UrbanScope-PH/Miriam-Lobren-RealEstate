@@ -755,6 +755,8 @@
     function applyLocalInquiryState(list) {
         if (!Array.isArray(list)) return [];
         const deletedIds = new Set(getDeletedInquiryIds());
+        const deletedUserEmails = new Set(getDeletedUserEmails());
+        const deletedUserIds = new Set(getDeletedUserIds());
         const overrides = getInquiryOverrides();
         let cached = [];
         try {
@@ -762,7 +764,16 @@
         } catch (_) {}
 
         const updatedList = list
-            .filter(item => item && !deletedIds.has(String(item.id)))
+            .filter(item => {
+                if (!item) return false;
+                if (deletedIds.has(String(item.id))) return false;
+                const itemEmail = String(item.client_email || '').trim().toLowerCase();
+                const itemClientId = String(item.client_id || '').trim();
+                if (itemEmail && deletedUserEmails.has(itemEmail)) return false;
+                if (itemEmail.startsWith('deleted_')) return false;
+                if (itemClientId && deletedUserIds.has(itemClientId)) return false;
+                return true;
+            })
             .map(item => {
                 const key = String(item.id);
                 let merged = { ...item };
@@ -1779,12 +1790,39 @@
         if (!u) return true;
         if (String(u.bio || '').trim() === SOFT_DELETE_BIO_MARKER) return true;
         if (String(u.password_hash || '').trim() === SOFT_DELETE_HASH_MARKER) return true;
+        const cleanEmail = String(u.email || '').trim().toLowerCase();
+        if (cleanEmail.startsWith('deleted_')) return true;
         const deletedIds = new Set(getDeletedUserIds());
         const deletedEmails = new Set(getDeletedUserEmails());
         if (u.id !== undefined && deletedIds.has(String(u.id))) return true;
-        const cleanEmail = String(u.email || '').trim().toLowerCase();
         if (cleanEmail && deletedEmails.has(cleanEmail)) return true;
         return false;
+    }
+
+    function purgeInquiriesByEmailLocal(email, userId) {
+        const clean = String(email || '').trim().toLowerCase();
+        const strId = String(userId || '').trim();
+        const keys = ['inquiries', 'cached_live_inquiries', 'urbanScopeInquiries'];
+        keys.forEach(k => {
+            try {
+                const raw = localStorage.getItem(k);
+                if (raw) {
+                    const list = JSON.parse(raw);
+                    if (Array.isArray(list)) {
+                        const filtered = list.filter(item => {
+                            if (!item) return false;
+                            const itemEmail = String(item.client_email || '').trim().toLowerCase();
+                            const itemClientId = String(item.client_id || '').trim();
+                            if (clean && itemEmail === clean) return false;
+                            if (strId && itemClientId === strId) return false;
+                            if (itemEmail.startsWith('deleted_')) return false;
+                            return true;
+                        });
+                        localStorage.setItem(k, JSON.stringify(filtered));
+                    }
+                }
+            } catch (_) {}
+        });
     }
 
     function formatUserRecord(u) {
@@ -2365,7 +2403,7 @@
         if (cleanEmail === 'urbanscope.cvsu@gmail.com') {
             return { success: false, error: 'Cannot delete root Superadmin account.' };
         }
-        if (cleanEmail === 'admin.realestate@gmail.com' || cleanEmail === 'miriamalobren@gmail.com') {
+        if (cleanEmail === 'admin.realestate@gmail.com' || cleanEmail === 'miriamalobren@gmail.com' || cleanEmail === 'miriam@gmail.com') {
             return { success: false, error: 'Cannot delete primary Realty Admin account.' };
         }
 
@@ -2390,15 +2428,73 @@
             }
         }
 
-        // 2. Delete from Supabase Cloud (with cross-device soft-delete fallback if RLS DELETE policy is not yet pushed)
+        // 2. Call hosted Vercel serverless Superadmin endpoint if available
+        try {
+            const hostedRes = await fetch('/api/superadmin/users', {
+                method: 'POST',
+                credentials: 'include',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    action: 'delete',
+                    user_id: userId,
+                    payload: { email: cleanEmail }
+                })
+            });
+            if (hostedRes.ok) {
+                const hostedData = await hostedRes.json().catch(() => ({}));
+                if (hostedData.success) {
+                    localHandled = true;
+                }
+            }
+        } catch (_) {}
+
+        // 3. Delete inquiries directly from Supabase Cloud
+        if (cleanEmail) {
+            try {
+                await fetch(`${REST_BASE}/inquiries?client_email=ilike.${encodeURIComponent(cleanEmail)}`, {
+                    method: 'DELETE',
+                    headers: getHeaders()
+                });
+            } catch (_) {}
+        }
+        if (userId && /^\d+$/.test(String(userId))) {
+            try {
+                await fetch(`${REST_BASE}/inquiries?client_id=eq.${encodeURIComponent(userId)}`, {
+                    method: 'DELETE',
+                    headers: getHeaders()
+                });
+            } catch (_) {}
+            try {
+                await fetch(`${REST_BASE}/notifications?user_id=eq.${encodeURIComponent(userId)}`, {
+                    method: 'DELETE',
+                    headers: getHeaders()
+                });
+            } catch (_) {}
+            try {
+                await fetch(`${REST_BASE}/saved_properties?user_id=eq.${encodeURIComponent(userId)}`, {
+                    method: 'DELETE',
+                    headers: getHeaders()
+                });
+            } catch (_) {}
+            try {
+                await fetch(`${REST_BASE}/appointments?user_id=eq.${encodeURIComponent(userId)}`, {
+                    method: 'DELETE',
+                    headers: getHeaders()
+                });
+            } catch (_) {}
+        }
+
+        // 4. Delete user record from Supabase Cloud (with email scramble fallback)
         try {
             let deletedRows = [];
-            const delById = await fetch(`${REST_BASE}/users?id=eq.${encodeURIComponent(userId)}`, {
-                method: 'DELETE',
-                headers: getHeaders()
-            });
-            if (delById.ok) {
-                deletedRows = await delById.json().catch(() => []);
+            if (userId && /^\d+$/.test(String(userId))) {
+                const delById = await fetch(`${REST_BASE}/users?id=eq.${encodeURIComponent(userId)}`, {
+                    method: 'DELETE',
+                    headers: getHeaders()
+                });
+                if (delById.ok) {
+                    deletedRows = await delById.json().catch(() => []);
+                }
             }
 
             if ((!Array.isArray(deletedRows) || deletedRows.length === 0) && cleanEmail) {
@@ -2412,10 +2508,10 @@
             }
 
             if (!Array.isArray(deletedRows) || deletedRows.length === 0) {
-                // Fallback when remote RLS DELETE policy has not yet been pushed: deactivate across all devices via UPDATE
+                const scrambledEmail = `deleted_${Date.now()}_${cleanEmail || userId}`;
                 const softDeleteBody = {
+                    email: scrambledEmail,
                     bio: SOFT_DELETE_BIO_MARKER,
-                    password_hash: SOFT_DELETE_HASH_MARKER,
                     google_id: null,
                     role: 'user',
                     updated_at: new Date().toISOString()
@@ -2428,9 +2524,6 @@
                     headers: getHeaders(),
                     body: JSON.stringify(softDeleteBody)
                 }).catch(() => {});
-                markUserDeletedLocal(userId, cleanEmail);
-            } else {
-                clearUserDeletedLocal(userId, cleanEmail);
             }
         } catch (cloudErr) {
             if (!localHandled) {
@@ -2438,9 +2531,22 @@
             }
         }
 
+        // 5. Update local tracking of deleted accounts
+        markUserDeletedLocal(userId, cleanEmail);
+
+        // 6. Purge deleted inquiries from local caches
+        purgeInquiriesByEmailLocal(cleanEmail, userId);
+
+        // 7. Dispatch events so all open admin and inquiry tabs re-render immediately
+        try {
+            window.dispatchEvent(new CustomEvent('inquiriesUpdated', { detail: { email: cleanEmail, status: 'Deleted' } }));
+            window.dispatchEvent(new CustomEvent('inquiryListChanged', { detail: { email: cleanEmail } }));
+            window.dispatchEvent(new CustomEvent('usersUpdated', { detail: { id: userId, email: cleanEmail, deleted: true } }));
+        } catch (_) {}
+
         return {
             success: true,
-            message: `User account ${cleanEmail || '#' + userId} deleted successfully.`
+            message: `User account ${cleanEmail || '#' + userId} and associated inquiry history deleted successfully.`
         };
     }
 
@@ -4011,13 +4117,20 @@
         if (!userObj || !userObj.email) return null;
         try {
             const cleanEmail = userObj.email.trim().toLowerCase();
+            if (cleanEmail.startsWith('deleted_') || getDeletedUserEmails().includes(cleanEmail)) {
+                return null;
+            }
             const checkRes = await fetch(
-                `${REST_BASE}/users?email=ilike.${encodeURIComponent(cleanEmail)}&select=id,google_id,avatar_url,role`,
+                `${REST_BASE}/users?email=ilike.${encodeURIComponent(cleanEmail)}&select=id,google_id,avatar_url,role,bio,password_hash`,
                 { method: 'GET', headers: getHeaders() }
             );
             if (!checkRes.ok) return null;
             const rows = await checkRes.json().catch(() => []);
             const existing = Array.isArray(rows) && rows.length > 0 ? rows[0] : null;
+
+            if (existing && isUserRecordDeleted(existing)) {
+                return null;
+            }
 
             if (existing && existing.id) {
                 const patchBody = {};
@@ -4184,18 +4297,48 @@
                 return { success: false, error: 'Google account email is not verified.' };
             }
 
-            let role = 'user';
-            if (cleanEmail === 'urbanscope.cvsu@gmail.com') role = 'superadmin';
-            else if (cleanEmail === 'admin.realestate@gmail.com' || cleanEmail === 'miriamalobren@gmail.com' || cleanEmail === 'miriam@gmail.com') role = 'admin';
-
             const fullName = (profile.name || cleanEmail.split('@')[0]).trim();
             const avatarUrl = (profile.picture || '').trim();
             const googleSub = (profile.sub || '').trim();
 
+            // Check if user is registered in Supabase Cloud
+            let existingRecord = null;
+            try {
+                const checkRes = await fetch(
+                    `${REST_BASE}/users?email=ilike.${encodeURIComponent(cleanEmail)}&select=id,email,full_name,phone,role,avatar_url,bio,password_hash,google_id`,
+                    { method: 'GET', headers: getHeaders() }
+                );
+                if (checkRes.ok) {
+                    const rows = await checkRes.json().catch(() => []);
+                    if (Array.isArray(rows) && rows.length > 0) {
+                        existingRecord = rows[0];
+                    }
+                }
+            } catch (_) {}
+
+            const isDeleted = !existingRecord || isUserRecordDeleted(existingRecord) || getDeletedUserEmails().includes(cleanEmail) || String(existingRecord.email || '').startsWith('deleted_');
+
+            // If account is not registered or was deleted, require OTP verification + Terms acceptance
+            if (isDeleted) {
+                return {
+                    success: true,
+                    requires_verification: true,
+                    email: cleanEmail,
+                    full_name: fullName,
+                    avatar_url: avatarUrl,
+                    google_id: googleSub,
+                    message: 'Account not yet registered. Please verify your email and accept Terms.'
+                };
+            }
+
+            let role = existingRecord.role || 'user';
+            if (cleanEmail === 'urbanscope.cvsu@gmail.com') role = 'superadmin';
+            else if (cleanEmail === 'admin.realestate@gmail.com' || cleanEmail === 'miriamalobren@gmail.com' || cleanEmail === 'miriam@gmail.com') role = 'admin';
+
             const supaRecord = await syncGoogleUserToSupabase({
                 email: cleanEmail,
                 full_name: fullName,
-                phone: '',
+                phone: existingRecord.phone || '',
                 role: role,
                 avatar_url: avatarUrl,
                 google_id: googleSub
@@ -4204,11 +4347,11 @@
             const resolvedRole = normalizeAccountRole(supaRecord?.role || role, cleanEmail);
 
             const sessionUser = {
-                id: (supaRecord && supaRecord.id) ? supaRecord.id : Date.now(),
+                id: (supaRecord && supaRecord.id) ? supaRecord.id : existingRecord.id,
                 email: cleanEmail,
                 name: fullName,
                 full_name: fullName,
-                phone: '',
+                phone: existingRecord.phone || '',
                 role: resolvedRole,
                 avatar_url: avatarUrl,
                 google_id: googleSub,
@@ -4240,16 +4383,23 @@
 
     async function apiVerifyGoogleRegistration(payload = {}) {
         const localBase = (location.port === '8000') ? '/api' : 'http://127.0.0.1:8000/api';
+        const cleanEmail = (payload.email || '').trim().toLowerCase();
+        const cleanCode = (payload.code || '').trim();
+        const fullName = (payload.full_name || '').trim() || cleanEmail.split('@')[0];
+        const avatarUrl = (payload.avatar_url || '').trim();
+        const googleId = payload.google_id || null;
+        const phone = (payload.phone || '').trim();
+
         const body = {
-            email: (payload.email || '').trim().toLowerCase(),
-            code: (payload.code || '').trim(),
+            email: cleanEmail,
+            code: cleanCode,
             terms_accepted: Boolean(payload.terms_accepted),
             credential: payload.credential || null,
             access_token: payload.access_token || null,
-            full_name: (payload.full_name || '').trim(),
-            avatar_url: (payload.avatar_url || '').trim(),
-            google_id: payload.google_id || null,
-            phone: (payload.phone || '').trim()
+            full_name: fullName,
+            avatar_url: avatarUrl,
+            google_id: googleId,
+            phone: phone
         };
 
         if (isLocalDevHost()) {
@@ -4268,6 +4418,7 @@
                 }
                 if (authRes.user) {
                     const u = authRes.user;
+                    clearUserDeletedLocal(u.id, cleanEmail);
                     const sessionUser = {
                         id: u.id,
                         email: u.email,
@@ -4302,6 +4453,102 @@
                 return { success: false, error: err.message || 'Unable to connect to verification service.' };
             }
         }
+
+        // Hosted / Vercel static registration verification
+        try {
+            let challengeValid = false;
+            try {
+                const raw = sessionStorage.getItem('urbanscope_register_challenge');
+                if (raw) {
+                    const ch = JSON.parse(raw);
+                    if (ch.email === cleanEmail && Date.now() <= ch.expires_at && ch.code === cleanCode) {
+                        challengeValid = true;
+                    }
+                }
+            } catch (_) {}
+
+            if (!challengeValid) {
+                try {
+                    const chRes = await fetch('/api/auth/challenge', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ action: 'consume', email: cleanEmail, purpose: 'register', code: cleanCode })
+                    });
+                    if (chRes.ok) {
+                        const chData = await chRes.json().catch(() => ({}));
+                        if (chData.success) challengeValid = true;
+                    }
+                } catch (_) {}
+            }
+
+            if (!challengeValid) {
+                return {
+                    success: false,
+                    error: 'Invalid or expired verification code. Please check your email or request a new code.'
+                };
+            }
+
+            clearUserDeletedLocal(null, cleanEmail);
+            sessionStorage.removeItem('urbanscope_register_challenge');
+
+            let role = 'user';
+            if (cleanEmail === 'urbanscope.cvsu@gmail.com') role = 'superadmin';
+            else if (['admin.realestate@gmail.com', 'miriamalobren@gmail.com', 'miriam@gmail.com'].includes(cleanEmail)) role = 'admin';
+
+            const insertRes = await fetch(`${REST_BASE}/users`, {
+                method: 'POST',
+                headers: getHeaders({ Prefer: 'return=representation' }),
+                body: JSON.stringify({
+                    email: cleanEmail,
+                    full_name: fullName,
+                    phone: phone,
+                    role: role,
+                    avatar_url: avatarUrl || 'assets/images/agent.jpg',
+                    google_id: googleId,
+                    email_verified_at: new Date().toISOString()
+                })
+            });
+
+            let createdUser = null;
+            if (insertRes.ok) {
+                const rows = await insertRes.json().catch(() => []);
+                createdUser = Array.isArray(rows) && rows.length > 0 ? rows[0] : null;
+            }
+
+            const sessionUser = {
+                id: createdUser?.id || Date.now(),
+                email: cleanEmail,
+                name: fullName,
+                full_name: fullName,
+                phone: phone,
+                role: role,
+                avatar_url: avatarUrl || 'assets/images/agent.jpg',
+                google_id: googleId,
+                user_metadata: { full_name: fullName, avatar_url: avatarUrl }
+            };
+
+            const simulatedToken = 'sb_google_' + sessionUser.id + '_' + Date.now();
+            localStorage.setItem(TOKEN_KEY, simulatedToken);
+            localStorage.setItem(USER_KEY, JSON.stringify(sessionUser));
+            localStorage.setItem(DEMO_KEY, JSON.stringify(sessionUser));
+            if (role === 'admin' || role === 'superadmin') {
+                localStorage.setItem('adminUser', JSON.stringify(sessionUser));
+            } else {
+                localStorage.removeItem('adminUser');
+            }
+
+            const redirectUrl = (role === 'superadmin')
+                ? '/pages/superadmin/dashboard.html'
+                : (role === 'admin' ? '/pages/admin/dashboard.html' : '/index.html');
+
+            return {
+                success: true,
+                data: { session: true, user: sessionUser, token: simulatedToken, redirect_url: redirectUrl }
+            };
+        } catch (err) {
+            return { success: false, error: err.message || 'Registration verification failed.' };
+        }
+    }
         return { success: false, error: 'Registration verification service unavailable.' };
     }
 
