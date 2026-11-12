@@ -1189,6 +1189,25 @@ path when rendering from a page.
     - **Automated Verification**:
       - Executed Chrome DevTools Protocol end-to-end headless browser test on `http://127.0.0.1:8000/pages/auth/login.html`: Verified global export of `apiVerifyGoogleRegistration`, simulated unverified Google user, entered valid OTP challenge, scrolled Terms modal to unlock "I Agree", clicked button, verified zero browser exceptions, confirmed `urbanscope_user` and `urbanscope_jwt_token` populated in `localStorage`, confirmed modal closed, and verified successful frame navigation to `http://localhost:8000/index.html`.
 
+108. **Inline Pre-Check & Error Handling for Email Verification Code Before Terms Acceptance (`backend/auth_otp.py`, `backend/models.py`, `backend/routers/auth.py`, `api/auth/register/check.js`, `frontend/shared/js/supabase.js`, `frontend/shared/js/api.js`, `frontend/pages/auth/auth.js`):**
+    - **Problem**: When a new user registered with Google, entering an incorrect or expired 6-digit code in the "Verify your email" modal (`#emailOtpModal`) would immediately close the OTP modal and advance to the Terms of Service & Privacy Policy modal. The user had to scroll to the very bottom and click "I Agree" only to find out the code was incorrect.
+    - **Resolution**:
+      - `backend/auth_otp.py`: Added `check_local_challenge(email, purpose, supplied_hash)` to validate challenges without consuming or deleting them, while tracking invalid attempt counts.
+      - `backend/models.py`: Added `OtpCodeCheckRequest` model validating 6-digit email OTP checks.
+      - `backend/routers/auth.py`: Added endpoint `POST /api/auth/register/check-code` which validates the 6-digit code and returns HTTP 200 on match or HTTP 400 with a descriptive error message on mismatch/expiry.
+      - `api/auth/register/check.js`: Added hosted Vercel function for code check validation.
+      - `frontend/shared/js/supabase.js` and `api.js`: Implemented `apiValidateGoogleOtp(email, code)` checking both local backend `/auth/register/check-code` and hosted active challenge in `sessionStorage` (`urbanscope_register_challenge`). Exported `window.apiValidateGoogleOtp`.
+      - `frontend/pages/auth/auth.js`: Updated `#emailOtpForm` submit listener:
+        - When the user clicks "Verify & Continue", the button transitions to `disabled` with "Verifying code...".
+        - Checks the code via `apiValidateGoogleOtp`.
+        - If incorrect or expired: restores the button, displays the error message in `#emailOtpMessage` (`.is-error`), focuses the input, and keeps `#emailOtpModal` open without opening the Terms & Policy modal.
+        - If valid: closes `#emailOtpModal` and advances to `#termsModalOverlay`.
+    - **Automated Verification**:
+      - Created automated test in `scratch/test_otp_precheck.cjs`:
+        - Test 1: Submitting incorrect code (`634524`): Verified error message displayed in `#emailOtpMessage`, `#emailOtpModal` remained open, and `#termsModalOverlay` was NOT opened.
+        - Test 2: Submitting correct code (`889900`): Verified error cleared, `#emailOtpModal` closed, `#termsModalOverlay` opened.
+        - Test 3: Scrolled terms to bottom and clicked "I Agree": Verified successful registration, `urbanscope_user` stored in `localStorage`, and redirect to `index.html`.
+
 ---
 
 ## Safety Rules

@@ -131,6 +131,39 @@ def consume_local_challenge(email: str, purpose: str, supplied_hash: str) -> boo
         conn.close()
 
 
+def check_local_challenge(email: str, purpose: str, supplied_hash: str) -> bool:
+    """Check a challenge validity without deleting it, incrementing attempts on an invalid code."""
+    now = int(time.time())
+    conn = get_db_connection()
+    try:
+        conn.execute("BEGIN IMMEDIATE")
+        row = conn.execute(
+            "SELECT code_hash, expires_at, attempts FROM auth_email_challenges WHERE email = ? AND purpose = ?",
+            (email, purpose)
+        ).fetchone()
+        if not row:
+            conn.rollback()
+            return False
+        if int(row["expires_at"]) <= now or int(row["attempts"]) >= OTP_MAX_ATTEMPTS:
+            conn.execute("DELETE FROM auth_email_challenges WHERE email = ? AND purpose = ?", (email, purpose))
+            conn.commit()
+            return False
+        if hmac.compare_digest(str(row["code_hash"]), supplied_hash):
+            conn.commit()
+            return True
+        conn.execute(
+            "UPDATE auth_email_challenges SET attempts = attempts + 1 WHERE email = ? AND purpose = ?",
+            (email, purpose)
+        )
+        conn.commit()
+        return False
+    except Exception:
+        conn.rollback()
+        raise
+    finally:
+        conn.close()
+
+
 def clear_local_challenge(email: str, purpose: str) -> None:
     """Remove a challenge if delivery fails."""
     conn = get_db_connection()

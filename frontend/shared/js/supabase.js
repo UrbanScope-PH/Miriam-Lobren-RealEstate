@@ -4569,6 +4569,76 @@
         }
     }
 
+    async function apiValidateGoogleOtp(email, code) {
+        const cleanEmail = String(email || '').trim().toLowerCase();
+        const cleanCode = String(code || '').trim();
+
+        if (!cleanEmail || !cleanEmail.includes('@')) {
+            return { success: false, error: 'Please enter a valid email address.' };
+        }
+        if (!cleanCode || !/^[0-9]{6}$/.test(cleanCode)) {
+            return { success: false, error: 'Please enter a valid 6-digit verification code.' };
+        }
+
+        const localBase = (location.port === '8000') ? '/api' : 'http://127.0.0.1:8000/api';
+
+        if (isLocalDevHost()) {
+            try {
+                const res = await fetch(`${localBase}/auth/register/check-code`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email: cleanEmail, code: cleanCode, purpose: 'register' })
+                });
+                const data = await res.json().catch(() => ({}));
+                if (!res.ok || !data.success) {
+                    return {
+                        success: false,
+                        error: data.detail || data.error || data.message || 'The verification code is incorrect or has expired. Please check your email or request a new code.'
+                    };
+                }
+                return { success: true, message: 'Verification code is valid.' };
+            } catch (err) {
+                return { success: false, error: err.message || 'Unable to connect to verification service.' };
+            }
+        }
+
+        // Hosted / Vercel client verification
+        try {
+            const raw = sessionStorage.getItem('urbanscope_register_challenge');
+            if (raw) {
+                const ch = JSON.parse(raw);
+                if (ch.email === cleanEmail) {
+                    if (Date.now() > ch.expires_at) {
+                        return { success: false, error: 'Verification code has expired. Please request a new code.' };
+                    }
+                    if (ch.code !== cleanCode) {
+                        return { success: false, error: 'The verification code is incorrect. Please check your email.' };
+                    }
+                    return { success: true, message: 'Verification code is valid.' };
+                }
+            }
+        } catch (_) {}
+
+        // Fallback: server check endpoint on hosted environment
+        try {
+            const res = await fetch('/api/auth/register/check', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email: cleanEmail, code: cleanCode })
+            });
+            if (res.ok) {
+                const data = await res.json().catch(() => ({}));
+                if (data.success) return { success: true, message: 'Verification code is valid.' };
+                return { success: false, error: data.error || 'The verification code is incorrect or has expired.' };
+            }
+        } catch (_) {}
+
+        return {
+            success: false,
+            error: 'The verification code is incorrect or has expired. Please check your email or request a new code.'
+        };
+    }
+
     async function apiCreateHostedAdminSession(credentials = {}) {
         if (isLocalDevHost()) return { success: true, local: true };
         try {
@@ -4803,6 +4873,7 @@
     window.apiSignIn = apiSignIn;
     window.apiGetGoogleConfig = apiGetGoogleConfig;
     window.apiSignInWithGoogle = apiSignInWithGoogle;
+    window.apiValidateGoogleOtp = apiValidateGoogleOtp;
     window.apiVerifyGoogleRegistration = apiVerifyGoogleRegistration;
     window.apiCreateHostedAdminSession = apiCreateHostedAdminSession;
     window.apiGetHostedAdminSession = apiGetHostedAdminSession;

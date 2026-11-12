@@ -28,6 +28,7 @@ from backend.auth import (
     verify_password,
 )
 from backend.auth_otp import (
+    check_local_challenge,
     clear_local_challenge,
     consume_local_challenge,
     create_otp,
@@ -45,6 +46,7 @@ from backend.models import (
     EmailOtpStartRequest,
     GoogleAuthRequest,
     GoogleRegistrationComplete,
+    OtpCodeCheckRequest,
     PasswordChangeRequest,
     PasswordResetComplete,
     PasswordResetRequest,
@@ -414,6 +416,28 @@ def start_email_registration(payload: EmailOtpStartRequest, request: Request):
     if not local_user and not _cloud_user_by_email(clean_email):
         _issue_otp_for_local_request(clean_email, "register", request)
     return {"success": True, "message": OTP_GENERIC_REGISTER_MESSAGE}
+
+
+@router.post("/api/auth/register/check-code", tags=["Auth"])
+def check_registration_code_endpoint(payload: OtpCodeCheckRequest, request: Request):
+    """
+    Validates whether the entered 6-digit email OTP is correct and active
+    without consuming it, allowing client UI to guard subsequent steps (e.g. Terms & Policy).
+    """
+    clean_email = payload.email.strip().lower()
+    code = payload.code.strip()
+    if not _email_is_valid(clean_email) or not re.fullmatch(r"[0-9]{6}", code):
+        raise HTTPException(status_code=400, detail="Please enter a valid 6-digit verification code.")
+
+    _require_otp_configuration()
+    purpose = payload.purpose or "register"
+    supplied_hash = otp_digest(clean_email, purpose, code)
+    if not check_local_challenge(clean_email, purpose, supplied_hash):
+        raise HTTPException(
+            status_code=400,
+            detail="The verification code is incorrect or has expired. Please check your email or request a new code."
+        )
+    return {"success": True, "message": "Verification code is valid."}
 
 
 @router.post("/api/auth/register/verify", response_model=AuthResponse, tags=["Auth"])
