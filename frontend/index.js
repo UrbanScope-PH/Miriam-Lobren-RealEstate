@@ -666,6 +666,10 @@ function initSearchSelect(selectEl) {
     function closeDropdown() {
         wrap.classList.remove('is-open');
         trigger.setAttribute('aria-expanded', 'false');
+        const searchBar = wrap.closest('.search-bar');
+        if (searchBar) searchBar.classList.remove('has-open-dropdown');
+        const heroSection = wrap.closest('.hero');
+        if (heroSection) heroSection.classList.remove('has-open-dropdown');
         if (dropdownEl) {
             dropdownEl.remove();
             dropdownEl = null;
@@ -674,11 +678,16 @@ function initSearchSelect(selectEl) {
 
     function openDropdown() {
         // Close any other open dropdowns across the page
-        document.querySelectorAll('.search-select-wrap.is-open').forEach(w => w.classList.remove('is-open'));
-        document.querySelectorAll('.search-select-dropdown').forEach(d => d.remove());
+        document.querySelectorAll('.search-select-wrap.is-open, .sort-select-wrap.is-open').forEach(w => w.classList.remove('is-open'));
+        document.querySelectorAll('.search-select-dropdown, .sort-select-dropdown').forEach(d => d.remove());
+        document.querySelectorAll('.search-bar.has-open-dropdown, .hero.has-open-dropdown, .featured-header-row.has-open-dropdown, .home-sort-control.has-open-dropdown').forEach(el => el.classList.remove('has-open-dropdown'));
 
         wrap.classList.add('is-open');
         trigger.setAttribute('aria-expanded', 'true');
+        const searchBar = wrap.closest('.search-bar');
+        if (searchBar) searchBar.classList.add('has-open-dropdown');
+        const heroSection = wrap.closest('.hero');
+        if (heroSection) heroSection.classList.add('has-open-dropdown');
 
         dropdownEl = document.createElement('div');
         dropdownEl.className = 'search-select-dropdown';
@@ -693,10 +702,25 @@ function initSearchSelect(selectEl) {
             optDiv.setAttribute('data-value', opt.value);
 
             const iconSvg = getOptionIcon(opt.value, opt.text);
+            let optionTextHtml = '';
+            if (opt.text.includes('Trece Martires') || (opt.text.includes(',') && opt.text.length > 20)) {
+                const commaIdx = opt.text.indexOf(',');
+                const main = opt.text.slice(0, commaIdx).trim() + ',';
+                const sub = opt.text.slice(commaIdx + 1).trim();
+                optionTextHtml = `
+                    <div class="search-select-option-text search-select-option-stacked">
+                        <span class="search-select-option-main">${main}</span>
+                        <span class="search-select-option-sub">${sub}</span>
+                    </div>
+                `;
+            } else {
+                optionTextHtml = `<span class="search-select-option-text">${opt.text}</span>`;
+            }
+
             optDiv.innerHTML = `
                 <div class="search-select-option-content">
                     <span class="search-select-option-icon">${iconSvg}</span>
-                    <span class="search-select-option-text">${opt.text}</span>
+                    ${optionTextHtml}
                 </div>
                 <span class="search-select-check" aria-hidden="true">
                     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
