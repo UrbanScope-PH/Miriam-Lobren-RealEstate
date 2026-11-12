@@ -4155,7 +4155,7 @@
                     : (userObj.role === 'admin' ? 'admin' : 'user');
                 const insertRes = await fetch(`${REST_BASE}/users`, {
                     method: 'POST',
-                    headers: getHeaders(),
+                    headers: getHeaders({ Prefer: 'return=representation' }),
                     body: JSON.stringify({
                         email: cleanEmail,
                         full_name: userObj.full_name || userObj.name || cleanEmail.split('@')[0],
@@ -4495,24 +4495,41 @@
             if (cleanEmail === 'urbanscope.cvsu@gmail.com') role = 'superadmin';
             else if (['admin.realestate@gmail.com', 'miriamalobren@gmail.com', 'miriam@gmail.com'].includes(cleanEmail)) role = 'admin';
 
-            const insertRes = await fetch(`${REST_BASE}/users`, {
-                method: 'POST',
-                headers: getHeaders({ Prefer: 'return=representation' }),
-                body: JSON.stringify({
+            let createdUser = null;
+            try {
+                createdUser = await syncGoogleUserToSupabase({
                     email: cleanEmail,
                     full_name: fullName,
                     phone: phone,
                     role: role,
                     avatar_url: avatarUrl || 'assets/images/agent.jpg',
-                    google_id: googleId,
-                    email_verified_at: new Date().toISOString()
-                })
-            });
+                    google_id: googleId
+                });
+            } catch (_) {}
 
-            let createdUser = null;
-            if (insertRes.ok) {
-                const rows = await insertRes.json().catch(() => []);
-                createdUser = Array.isArray(rows) && rows.length > 0 ? rows[0] : null;
+            if (!createdUser) {
+                try {
+                    const insertRes = await fetch(`${REST_BASE}/users`, {
+                        method: 'POST',
+                        headers: getHeaders({ Prefer: 'return=representation' }),
+                        body: JSON.stringify({
+                            email: cleanEmail,
+                            full_name: fullName,
+                            phone: phone,
+                            role: role,
+                            avatar_url: avatarUrl || 'assets/images/agent.jpg',
+                            google_id: googleId
+                        })
+                    });
+                    if (insertRes.ok) {
+                        const rows = await insertRes.json().catch(() => []);
+                        createdUser = Array.isArray(rows) && rows.length > 0 ? rows[0] : null;
+                    }
+                } catch (_) {}
+            }
+
+            if (createdUser && createdUser.id) {
+                clearUserDeletedLocal(createdUser.id, cleanEmail);
             }
 
             const sessionUser = {
