@@ -1170,7 +1170,17 @@ html.dark-mode .property-status-badge.badge-rfo {
 }
 
 .cta-subtext {
-    margin-bottom: 34px !important;
+    margin-bottom: 22px !important;
+}
+
+.cta-question {
+    font-size: 13.5px !important;
+    font-style: italic;
+    color: rgba(220, 235, 225, 0.78) !important;
+    margin-top: 0 !important;
+    margin-bottom: 9px !important;
+    letter-spacing: 0.15px;
+    text-shadow: 0 1px 4px rgba(0, 0, 0, 0.45);
 }
 
 .cta-consult-btn {
@@ -1412,6 +1422,11 @@ html.dark-mode .property-status-badge.badge-rfo {
 
     .cta-content p {
         font-size: 14.5px;
+    }
+
+    .cta-content p.cta-question {
+        font-size: 12.5px !important;
+        margin-bottom: 8px !important;
     }
 
     .cta-consult-btn {
