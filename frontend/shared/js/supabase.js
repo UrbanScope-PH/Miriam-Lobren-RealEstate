@@ -917,7 +917,7 @@
 
     async function apiGetClientNotifications(email) {
         const cleanEmail = (email || '').trim().toLowerCase();
-        if (!cleanEmail) return [];
+        if (!cleanEmail || getDeletedUserEmails().includes(cleanEmail)) return [];
 
         const mapByKey = new Map();
 
@@ -1028,8 +1028,9 @@
         } catch (_) {}
 
         // 4. Derive from client's live inquiries with 'Approved' status
+        let myInquiries = [];
         try {
-            const myInquiries = await apiGetMyInquiries(cleanEmail);
+            myInquiries = await apiGetMyInquiries(cleanEmail);
             if (Array.isArray(myInquiries)) {
                 let localRead = [];
                 let localToasted = [];
@@ -1074,6 +1075,48 @@
                 });
             }
         } catch (_) {}
+
+        // 5. Enforce referential integrity: any inquiry notification MUST belong to a live active inquiry
+        const validInquiryIds = new Set();
+        if (Array.isArray(myInquiries)) {
+            myInquiries.forEach(inq => {
+                if (inq && inq.id != null) validInquiryIds.add(String(inq.id));
+                if (inq && inq.inquiry_id != null) validInquiryIds.add(String(inq.inquiry_id));
+            });
+        }
+
+        const ghostKeys = [];
+        mapByKey.forEach((notif, k) => {
+            const isInquiryNotif = notif.inquiryId != null || notif.type === 'approved' || k.startsWith('approved_');
+            if (isInquiryNotif) {
+                const rawId = String(notif.inquiryId != null ? notif.inquiryId : k.replace(/^approved_/, ''));
+                if (!validInquiryIds.has(rawId)) {
+                    ghostKeys.push(k);
+                }
+            }
+        });
+
+        if (ghostKeys.length > 0) {
+            ghostKeys.forEach(k => mapByKey.delete(k));
+            try {
+                const rawLocal = localStorage.getItem(CLIENT_NOTIFS_KEY);
+                if (rawLocal) {
+                    const parsed = JSON.parse(rawLocal);
+                    if (Array.isArray(parsed)) {
+                        const cleaned = parsed.filter(n => {
+                            if (!n) return false;
+                            const nEmail = String(n.client_email || '').trim().toLowerCase();
+                            if (nEmail === cleanEmail) {
+                                const rawId = String(n.inquiryId != null ? n.inquiryId : n.id || '').replace(/^approved_/, '');
+                                if (!validInquiryIds.has(rawId)) return false;
+                            }
+                            return true;
+                        });
+                        localStorage.setItem(CLIENT_NOTIFS_KEY, JSON.stringify(cleaned));
+                    }
+                }
+            } catch (_) {}
+        }
 
         const result = Array.from(mapByKey.values());
         result.sort((a, b) => (b.time || 0) - (a.time || 0));
@@ -1471,6 +1514,7 @@
     async function apiGetMyInquiries(email) {
         let list = [];
         const cleanEmail = (email || '').trim().toLowerCase();
+        if (!cleanEmail || getDeletedUserEmails().includes(cleanEmail)) return [];
         const token = localStorage.getItem(TOKEN_KEY) ||
                       localStorage.getItem('urbanscope_jwt_token') ||
                       localStorage.getItem('access_token') ||
@@ -1522,7 +1566,12 @@
             try {
                 const cached = JSON.parse(localStorage.getItem('inquiries') || '[]');
                 if (Array.isArray(cached) && cached.length > 0) {
-                    list = cached.filter(i => (i.client_email || i.clientEmail || '').trim().toLowerCase() === cleanEmail);
+                    list = cached.filter(i => {
+                        if (!i) return false;
+                        const itemEmail = (i.client_email || i.clientEmail || '').trim().toLowerCase();
+                        if (itemEmail.startsWith('deleted_')) return false;
+                        return itemEmail === cleanEmail;
+                    });
                 }
             } catch (_) {}
         }
@@ -1804,8 +1853,8 @@
     function purgeInquiriesByEmailLocal(email, userId) {
         const clean = String(email || '').trim().toLowerCase();
         const strId = String(userId || '').trim();
-        const keys = ['inquiries', 'cached_live_inquiries', 'urbanScopeInquiries'];
-        keys.forEach(k => {
+        const inqKeys = ['inquiries', 'cached_live_inquiries', 'urbanScopeInquiries'];
+        inqKeys.forEach(k => {
             try {
                 const raw = localStorage.getItem(k);
                 if (raw) {
@@ -1813,8 +1862,8 @@
                     if (Array.isArray(list)) {
                         const filtered = list.filter(item => {
                             if (!item) return false;
-                            const itemEmail = String(item.client_email || '').trim().toLowerCase();
-                            const itemClientId = String(item.client_id || '').trim();
+                            const itemEmail = String(item.client_email || item.clientEmail || '').trim().toLowerCase();
+                            const itemClientId = String(item.client_id || item.clientId || '').trim();
                             if (clean && itemEmail === clean) return false;
                             if (strId && itemClientId === strId) return false;
                             if (itemEmail.startsWith('deleted_')) return false;
@@ -1825,6 +1874,42 @@
                 }
             } catch (_) {}
         });
+
+        // Purge client notifications from localStorage
+        try {
+            const rawNotifs = localStorage.getItem(CLIENT_NOTIFS_KEY);
+            if (rawNotifs) {
+                const nList = JSON.parse(rawNotifs);
+                if (Array.isArray(nList)) {
+                    const filteredNotifs = nList.filter(n => {
+                        if (!n) return false;
+                        const nEmail = String(n.client_email || '').trim().toLowerCase();
+                        if (clean && nEmail === clean) return false;
+                        if (nEmail.startsWith('deleted_')) return false;
+                        return true;
+                    });
+                    localStorage.setItem(CLIENT_NOTIFS_KEY, JSON.stringify(filteredNotifs));
+                }
+            }
+        } catch (_) {}
+
+        // Remove per-user read/toasted tracking keys
+        if (clean) {
+            try {
+                localStorage.removeItem('client_notifs_read_ids_' + clean);
+                localStorage.removeItem('client_notifs_toasted_' + clean);
+                localStorage.removeItem('client_notifs_unread_' + clean);
+                localStorage.removeItem('client_notifications_' + clean);
+                localStorage.removeItem('urbanscope_client_notifications_' + clean);
+                localStorage.removeItem('urbanscope_inquiry_overrides_' + clean);
+            } catch (_) {}
+        }
+
+        try {
+            window.dispatchEvent(new CustomEvent('clientNotificationsUpdated', { detail: { email: clean } }));
+            window.dispatchEvent(new CustomEvent('inquiriesUpdated', { detail: { email: clean, purged: true } }));
+            window.dispatchEvent(new CustomEvent('inquiryListChanged', { detail: { email: clean } }));
+        } catch (_) {}
     }
 
     function formatUserRecord(u) {
@@ -2450,7 +2535,23 @@
             }
         } catch (_) {}
 
-        // 3. Delete inquiries directly from Supabase Cloud
+        // 3. Delete inquiries & notifications directly from Supabase Cloud
+        const matchingCloudIds = new Set();
+        if (userId && /^\d+$/.test(String(userId))) matchingCloudIds.add(String(userId));
+        if (cleanEmail) {
+            try {
+                const uRes = await fetch(`${REST_BASE}/users?or=(email.ilike.${encodeURIComponent(cleanEmail)},email.ilike.deleted_*_${encodeURIComponent(cleanEmail)})&select=id`, {
+                    headers: getHeaders()
+                });
+                if (uRes.ok) {
+                    const uRows = await uRes.json().catch(() => []);
+                    if (Array.isArray(uRows)) {
+                        uRows.forEach(u => { if (u && u.id) matchingCloudIds.add(String(u.id)); });
+                    }
+                }
+            } catch (_) {}
+        }
+
         if (cleanEmail) {
             try {
                 await fetch(`${REST_BASE}/inquiries?client_email=ilike.${encodeURIComponent(cleanEmail)}`, {
@@ -2459,27 +2560,28 @@
                 });
             } catch (_) {}
         }
-        if (userId && /^\d+$/.test(String(userId))) {
+
+        for (const uid of matchingCloudIds) {
             try {
-                await fetch(`${REST_BASE}/inquiries?client_id=eq.${encodeURIComponent(userId)}`, {
+                await fetch(`${REST_BASE}/inquiries?client_id=eq.${encodeURIComponent(uid)}`, {
                     method: 'DELETE',
                     headers: getHeaders()
                 });
             } catch (_) {}
             try {
-                await fetch(`${REST_BASE}/notifications?user_id=eq.${encodeURIComponent(userId)}`, {
+                await fetch(`${REST_BASE}/notifications?user_id=eq.${encodeURIComponent(uid)}`, {
                     method: 'DELETE',
                     headers: getHeaders()
                 });
             } catch (_) {}
             try {
-                await fetch(`${REST_BASE}/saved_properties?user_id=eq.${encodeURIComponent(userId)}`, {
+                await fetch(`${REST_BASE}/saved_properties?user_id=eq.${encodeURIComponent(uid)}`, {
                     method: 'DELETE',
                     headers: getHeaders()
                 });
             } catch (_) {}
             try {
-                await fetch(`${REST_BASE}/appointments?user_id=eq.${encodeURIComponent(userId)}`, {
+                await fetch(`${REST_BASE}/appointments?user_id=eq.${encodeURIComponent(uid)}`, {
                     method: 'DELETE',
                     headers: getHeaders()
                 });
@@ -3448,6 +3550,7 @@
 
         // 3. Code verified! Remove challenge and complete user registration via apiSignUp
         sessionStorage.removeItem('urbanscope_register_challenge');
+        purgeInquiriesByEmailLocal(cleanEmail);
         return await apiSignUp(cleanEmail, password, cleanName, cleanPhone);
     }
 
@@ -3725,6 +3828,12 @@
                                 localStorage.setItem('adminUser', JSON.stringify(sessionUser));
                             }
                             clearUserDeletedLocal(u.id, cleanEmail);
+                            purgeInquiriesByEmailLocal(cleanEmail, u.id);
+                            if (cleanEmail) {
+                                try {
+                                    fetch(`${REST_BASE}/inquiries?client_email=ilike.${encodeURIComponent(cleanEmail)}`, { method: 'DELETE', headers: getHeaders() }).catch(() => {});
+                                } catch (_) {}
+                            }
 
                             return {
                                 success: true,
@@ -3780,6 +3889,12 @@
                             const patched = await patchRes.json().catch(() => []);
                             const row = Array.isArray(patched) ? patched[0] : patched;
                             if (row && row.id) createdId = row.id;
+                            try {
+                                fetch(`${REST_BASE}/inquiries?client_email=ilike.${encodeURIComponent(cleanEmail)}`, { method: 'DELETE', headers: getHeaders() }).catch(() => {});
+                                if (existing && existing.id) {
+                                    fetch(`${REST_BASE}/notifications?user_id=eq.${encodeURIComponent(existing.id)}`, { method: 'DELETE', headers: getHeaders() }).catch(() => {});
+                                }
+                            } catch (_) {}
                         }
                     } else if (!existing.password_hash) {
                         // User previously signed in via Google and is setting a password
@@ -3828,6 +3943,7 @@
             }
 
             clearUserDeletedLocal(createdId, cleanEmail);
+            purgeInquiriesByEmailLocal(cleanEmail, createdId);
 
             const sessionUser = {
                 id: createdId,
@@ -4421,6 +4537,12 @@
                 if (authRes.user) {
                     const u = authRes.user;
                     clearUserDeletedLocal(u.id, cleanEmail);
+                    purgeInquiriesByEmailLocal(cleanEmail, u.id);
+                    if (cleanEmail) {
+                        try {
+                            fetch(`${REST_BASE}/inquiries?client_email=ilike.${encodeURIComponent(cleanEmail)}`, { method: 'DELETE', headers: getHeaders() }).catch(() => {});
+                        } catch (_) {}
+                    }
                     const sessionUser = {
                         id: u.id,
                         email: u.email,
@@ -4532,6 +4654,24 @@
 
             if (createdUser && createdUser.id) {
                 clearUserDeletedLocal(createdUser.id, cleanEmail);
+            }
+            purgeInquiriesByEmailLocal(cleanEmail, createdUser?.id);
+            if (cleanEmail) {
+                try {
+                    fetch(`${REST_BASE}/inquiries?client_email=ilike.${encodeURIComponent(cleanEmail)}`, { method: 'DELETE', headers: getHeaders() }).catch(() => {});
+                    fetch(`${REST_BASE}/users?email=ilike.deleted_*_${encodeURIComponent(cleanEmail)}&select=id`, { headers: getHeaders() })
+                        .then(r => r.json())
+                        .then(oldRows => {
+                            if (Array.isArray(oldRows)) {
+                                oldRows.forEach(oldU => {
+                                    if (oldU && oldU.id) {
+                                        fetch(`${REST_BASE}/notifications?user_id=eq.${encodeURIComponent(oldU.id)}`, { method: 'DELETE', headers: getHeaders() }).catch(() => {});
+                                        fetch(`${REST_BASE}/inquiries?client_id=eq.${encodeURIComponent(oldU.id)}`, { method: 'DELETE', headers: getHeaders() }).catch(() => {});
+                                    }
+                                });
+                            }
+                        }).catch(() => {});
+                } catch (_) {}
             }
 
             const sessionUser = {

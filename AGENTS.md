@@ -1207,6 +1207,22 @@ path when rendering from a page.
         - Test 1: Submitting incorrect code (`634524`): Verified error message displayed in `#emailOtpMessage`, `#emailOtpModal` remained open, and `#termsModalOverlay` was NOT opened.
         - Test 2: Submitting correct code (`889900`): Verified error cleared, `#emailOtpModal` closed, `#termsModalOverlay` opened.
         - Test 3: Scrolled terms to bottom and clicked "I Agree": Verified successful registration, `urbanscope_user` stored in `localStorage`, and redirect to `index.html`.
+109. **Comprehensive Inquiry History and Notification Purge on Superadmin Account Deletion and Re-Registration (`backend/routers/superadmin.py`, `backend/routers/auth.py`, `lib/email-auth.js`, `frontend/shared/js/supabase.js`, `frontend/shared/js/api.js`, `frontend/shared/js/session.js`):**
+    - **Problem**: When Superadmin deleted a user account and that user later re-registered (e.g. via Google OAuth or OTP), lingering inquiry notifications (such as `INQ-2026-0057 Approved!`, `INQ-2026-0036 Approved!`, `INQ-2026-0037 Approved!`) persisted in the navbar notification bell dropdown. This occurred because:
+      1) `notifications` in Supabase Cloud under historical user IDs and SQLite `notifications` were not completely pruned across all associated IDs.
+      2) `purgeInquiriesByEmailLocal` only purged inquiry arrays, leaving `urbanscope_client_notifications` and per-user read/toasted keys in client `localStorage`.
+      3) `apiGetClientNotifications` lacked a referential integrity check, allowing ghost notifications to be rendered from stale caches even when the client had 0 live inquiries.
+      4) Re-registration flows (`apiVerifyGoogleRegistration`, `apiCompleteRegistrationOtp`, `apiSignUp`) did not purge historical inquiries/notifications for the re-registered email.
+    - **Resolution**:
+      - `backend/routers/superadmin.py`: Updated `delete_user_account` to delete notifications where `LOWER(recipient_email) = target_email` OR `inquiry_id IN (SELECT id FROM inquiries WHERE LOWER(client_email) = target_email)`. In `_sync_delete_user_to_supabase`, queries all matching user IDs (including historical `deleted_*_email`) and deletes all rows from `notifications`, `inquiries`, `appointments`, and `saved_properties` for each matching ID.
+      - `lib/email-auth.js`: Updated `deleteCloudUserAndAssociatedData` to resolve all matching IDs for the email and delete `notifications`, `inquiries`, `appointments`, and `saved_properties` for all matching IDs.
+      - `frontend/shared/js/supabase.js` and `api.js`:
+        - Upgraded `purgeInquiriesByEmailLocal(email, userId)` to filter and purge `CLIENT_NOTIFS_KEY` (`urbanscope_client_notifications`), remove all per-user tracking keys (`client_notifs_read_ids_*`, `client_notifs_toasted_*`, `client_notifs_unread_*`, `client_notifications_*`, `urbanscope_inquiry_overrides_*`), and dispatch `clientNotificationsUpdated`.
+        - In `apiSuperadminDeleteUser`: Resolves all matching cloud IDs in Supabase and deletes associated `notifications`, `inquiries`, `appointments`, and `saved_properties`, then calls the upgraded local purge.
+        - In `apiGetClientNotifications(email)`: Added referential integrity validation. Checks all notifications against the client's live inquiries from `apiGetMyInquiries(cleanEmail)`. Any notification referencing a deleted or non-existent inquiry is identified as a ghost notification, removed from the active notification map, and cleaned out of `CLIENT_NOTIFS_KEY` in `localStorage`.
+        - In `apiVerifyGoogleRegistration`, `apiCompleteRegistrationOtp`, and `apiSignUp`: Calls `purgeInquiriesByEmailLocal` and cleans any residual remote inquiries/notifications upon registration so a re-registered account starts 100% clean with 0 unread notifications and 0 stale inquiries.
+      - `backend/routers/auth.py`: In `complete_google_registration`, purges any residual notifications and inquiries for the email upon new account registration in SQLite.
+      - `frontend/shared/js/session.js`: Added `clientNotificationsUpdated` event listener to reload notifications and update navbar bell UI immediately.
 
 ---
 

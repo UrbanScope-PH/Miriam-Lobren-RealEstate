@@ -230,9 +230,31 @@ def _sync_delete_user_to_supabase(target_email: str, user_id: int = None) -> Non
         except Exception:
             pass
 
+        # Query all user IDs matching target email (including historical deleted)
+        matching_ids = set()
         if user_id:
+            matching_ids.add(str(user_id))
+        try:
+            users_query_url = f"{SUPABASE_URL}/rest/v1/users?or=(email.ilike.{encoded_email},email.ilike.deleted_*_{encoded_email})&select=id"
+            req_users = urllib.request.Request(
+                users_query_url,
+                headers={
+                    "apikey": SUPABASE_SERVICE_ROLE_KEY,
+                    "Authorization": f"Bearer {SUPABASE_SERVICE_ROLE_KEY}",
+                }
+            )
+            with urllib.request.urlopen(req_users, timeout=3.0) as resp:
+                u_rows = json.loads(resp.read().decode("utf-8"))
+                if isinstance(u_rows, list):
+                    for u in u_rows:
+                        if u and u.get("id"):
+                            matching_ids.add(str(u["id"]))
+        except Exception:
+            pass
+
+        for uid in matching_ids:
             try:
-                inq_id_url = f"{SUPABASE_URL}/rest/v1/inquiries?client_id=eq.{user_id}"
+                inq_id_url = f"{SUPABASE_URL}/rest/v1/inquiries?client_id=eq.{uid}"
                 req_inq_id = urllib.request.Request(
                     inq_id_url,
                     headers={
@@ -242,6 +264,48 @@ def _sync_delete_user_to_supabase(target_email: str, user_id: int = None) -> Non
                     method="DELETE"
                 )
                 with urllib.request.urlopen(req_inq_id, timeout=3.0):
+                    pass
+            except Exception:
+                pass
+            try:
+                notif_url = f"{SUPABASE_URL}/rest/v1/notifications?user_id=eq.{uid}"
+                req_notif = urllib.request.Request(
+                    notif_url,
+                    headers={
+                        "apikey": SUPABASE_SERVICE_ROLE_KEY,
+                        "Authorization": f"Bearer {SUPABASE_SERVICE_ROLE_KEY}",
+                    },
+                    method="DELETE"
+                )
+                with urllib.request.urlopen(req_notif, timeout=3.0):
+                    pass
+            except Exception:
+                pass
+            try:
+                appt_url = f"{SUPABASE_URL}/rest/v1/appointments?user_id=eq.{uid}"
+                req_appt = urllib.request.Request(
+                    appt_url,
+                    headers={
+                        "apikey": SUPABASE_SERVICE_ROLE_KEY,
+                        "Authorization": f"Bearer {SUPABASE_SERVICE_ROLE_KEY}",
+                    },
+                    method="DELETE"
+                )
+                with urllib.request.urlopen(req_appt, timeout=3.0):
+                    pass
+            except Exception:
+                pass
+            try:
+                saved_url = f"{SUPABASE_URL}/rest/v1/saved_properties?user_id=eq.{uid}"
+                req_saved = urllib.request.Request(
+                    saved_url,
+                    headers={
+                        "apikey": SUPABASE_SERVICE_ROLE_KEY,
+                        "Authorization": f"Bearer {SUPABASE_SERVICE_ROLE_KEY}",
+                    },
+                    method="DELETE"
+                )
+                with urllib.request.urlopen(req_saved, timeout=3.0):
                     pass
             except Exception:
                 pass
@@ -584,14 +648,17 @@ def delete_user_account(user_id: int, current_superadmin: dict = Depends(require
         conn.close()
         raise HTTPException(status_code=400, detail="Cannot delete primary Realty Admin account.")
 
-    # 1. Delete associated inquiries from inquiries table
-    cursor.execute("DELETE FROM inquiries WHERE LOWER(client_email) = ?", (target_email,))
-
-    # 2. Delete associated notifications
+    # 1. Delete associated notifications
     try:
-        cursor.execute("DELETE FROM notifications WHERE LOWER(recipient_email) = ?", (target_email,))
+        cursor.execute(
+            "DELETE FROM notifications WHERE LOWER(recipient_email) = ? OR inquiry_id IN (SELECT id FROM inquiries WHERE LOWER(client_email) = ?)",
+            (target_email, target_email)
+        )
     except Exception:
         pass
+
+    # 2. Delete associated inquiries from inquiries table
+    cursor.execute("DELETE FROM inquiries WHERE LOWER(client_email) = ?", (target_email,))
 
     # 3. Delete associated appointments & saved properties if tables exist
     try:
