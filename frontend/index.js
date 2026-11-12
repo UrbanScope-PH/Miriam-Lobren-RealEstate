@@ -1137,9 +1137,9 @@ function initConsultationIntentModal() {
         document.body.style.overflow = '';
     }
 
-    // Capture clicks on all consultation triggers (CTA button, FAQs link, footer consultation)
+    // Capture clicks on CTA consultation triggers (CTA button, footer consultation)
     document.addEventListener('click', (e) => {
-        const trigger = e.target.closest('#ctaConsultBtn, .cta-consult-btn, .faqs-contact-link, a[href="pages/inquiry/inquiry.html"]');
+        const trigger = e.target.closest('#ctaConsultBtn, .cta-consult-btn, a[href="pages/inquiry/inquiry.html"]');
         if (trigger && !trigger.closest('#consultationIntentModal')) {
             openModal(e);
         }
@@ -1217,8 +1217,6 @@ function renderHomepageAgentDetails(profile) {
     if (faqName) faqName.textContent = cleanName;
     const faqPhone = document.getElementById('faqAgentPhone');
     if (faqPhone) faqPhone.textContent = phone;
-    const faqBtn = document.getElementById('faqContactBtnText');
-    if (faqBtn) faqBtn.textContent = `Speak with ${cleanName}`;
 
     // 4. CTA Banner
     const ctaName = document.getElementById('ctaAgentName');
