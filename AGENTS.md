@@ -1263,6 +1263,32 @@ path when rendering from a page.
         - Verified clean return to `0px` upon closing (`height: 0, active: false`).
         - Captured visual verification frames in light (`faq_anim_open.png`) and dark mode (`faq_anim_dark.png`).
 
+113. **Chat FAB Wiggle & Pulse Callout Animation on Website Open (`frontend/shared/css/session.css`, `frontend/shared/js/session.js`):**
+    - **Problem / Goal**: Visitors may not immediately notice the floating contact and inquiry chat action button (`#fabMainBtn` in `.contact-fab`) positioned in the lower-right corner. The user specified that it should wiggle every time they open the website, but only once (not looping indefinitely and not annoying the user on every internal link click).
+    - **Resolution**:
+      - `frontend/shared/css/session.css`:
+        - Implemented `@keyframes fabWiggle`: A dual-wave wobble animation oscillating smoothly between -13deg and +13deg with subtle scaling up to 1.12 over 2.8s.
+        - Implemented `@keyframes fabPulseLight` and `@keyframes fabPulseDark`: Synchronized radial ripple ring glows expanding up to 14px in emerald/forest green brand tones.
+        - Applied animations to `.contact-fab.fab-wiggle .fab-main-btn` with `transform-origin: center center`.
+        - Added dark mode support (`fabPulseDark`), immediate cancellation when hovered or opened (`.contact-fab.fab-wiggle .fab-main-btn:hover`, `.contact-fab.open .fab-main-btn { animation: none !important; }`), and motion-sensitivity protection under `@media (prefers-reduced-motion: reduce)`.
+      - `frontend/shared/js/session.js`:
+        - In `initContactFab()`:
+          - Cleans up legacy permanent `localStorage.removeItem('urbanscope_chat_fab_seen')` so previous visitors are not permanently blocked from seeing the callout.
+          - Uses `sessionStorage.getItem('urbanscope_chat_fab_session_wiggled')` to ensure it wiggles once per visit/session.
+          - Detects page reload (`performance.getEntriesByType('navigation')[0].type === 'reload'` or `performance.navigation.type === 1`) and direct outside arrival (`!document.referrer` or external origin) so that refreshing or opening the site triggers the wiggle.
+          - Splash screen awareness: Detects if the welcome splash overlay (`#splash` or `.splash-pending`) is running. If so, polls until the splash screen is fully dismissed before waiting an additional 1200ms to trigger the wiggle, ensuring 100% visibility. If no splash is present, triggers 1400ms after load.
+          - Interacting with the button (`mouseenter`, `touchstart`, `click`, or toggling the menu) immediately cancels the wiggle and marks it wiggled in `sessionStorage`.
+          - When navigating internally between pages within the same session (e.g. from Homepage to property listings), the wiggle does not re-trigger, ensuring a smooth, non-intrusive browsing experience.
+          - Provided `window.triggerChatFabWiggle()` and `?wiggle_chat=1` URL query parameter support for quick manual/automated QA testing.
+    - **Automated Verification**:
+      - Executed Chrome DevTools Protocol headless browser test (`scratch/test_fab_everytime.cjs` and `scratch/test_link_nav.cjs`):
+        - Verified `fab-wiggle` class triggers upon opening the website and applies both `fabWiggle` and `fabPulseLight` animations.
+        - Verified animation settles and removes `fab-wiggle` class after 3.2s.
+        - Verified page reload (F5) re-triggers the wiggle.
+        - Verified clicking internal links (`casasuerte.html`) does not trigger the wiggle again in the same session (`hasWiggleOnSubpage: false`).
+        - Verified immediate cancellation upon hover or click (`duringWiggle: true, afterHover: false`).
+        - Verified legacy `localStorage` key is cleaned up (`localCleared: null`).
+
 ---
 
 ## Safety Rules
