@@ -1130,6 +1130,22 @@ path when rendering from a page.
       - Added a soft hover feedback state on inactive tabs (`background: rgba(134, 239, 172, 0.08); color: #e7f0e9;`).
       - Verified across tabs ("All", "Townhouses", etc.) and ensured light-mode styles remained completely unaffected.
 
+105. **Unregistered Google Sign-In Verification Code & Scroll-to-Accept Terms Flow (`backend/routers/auth.py`, `backend/models.py`, `frontend/pages/auth/login.html`, `frontend/pages/auth/auth.js`, `frontend/shared/js/supabase.js`, `frontend/shared/js/api.js`):**
+    - **Requirement**: When users click "Continue with Google" (or "Sign up with Google") and their Gmail is not yet registered in UrbanScope, they must input a 6-digit email verification code sent to their Gmail, and then scroll and agree to the Terms of Service & Privacy Policy before their account is created. Existing registered users continue to sign in instantly with zero friction.
+    - **Backend Architecture**:
+      - `backend/models.py`: Added `GoogleRegistrationComplete` schema (`email`, `code`, `terms_accepted: bool`, `access_token`, `credential`, `full_name`, `avatar_url`, `google_id`, `phone`). Updated `AuthResponse` with optional fields: `requires_verification`, `email`, `full_name`, `avatar_url`, `google_id`.
+      - `backend/routers/auth.py` (`POST /api/auth/google`): For existing users, verifies and signs in directly. For unregistered Gmail addresses, generates a 6-digit OTP challenge via `_issue_otp_for_local_request(clean_email, "register", request)` and returns `AuthResponse(success=True, requires_verification=True, email=clean_email, ...)`.
+      - `backend/routers/auth.py` (`POST /api/auth/google/verify`): Validates that `terms_accepted == True` (HTTP 400 otherwise), consumes the 6-digit OTP challenge via `consume_local_challenge`, creates the user in SQLite (`role = 'user'`, `email_verified_at = now()`, `google_id`, `full_name`, `avatar_url`), syncs to Supabase Cloud, and issues an authenticated session cookie and JWT token.
+    - **Frontend Architecture & UX**:
+      - `frontend/shared/js/supabase.js` and `api.js`: Added `apiVerifyGoogleRegistration(payload)` and updated `apiSignInWithGoogle` to return `requires_verification` payload.
+      - `frontend/pages/auth/login.html`: Added `#emailOtpModal` (OTP dialog card) and `#termsModalOverlay` (scroll-to-accept Terms of Service & Privacy Policy modal) markup matching `register.html`.
+      - `frontend/pages/auth/auth.js`: Added `promptGoogleVerificationAndTerms(googleData, triggerBtn)` and `initGoogleVerificationModals()`. When an unregistered Google user response arrives, opens `#emailOtpModal` targeting the Gmail with a 60-second resend countdown timer. Upon 6-digit code entry, transitions directly to `#termsModalOverlay` with the "I Agree" button locked. The user scrolls to the bottom of the document to unlock the "I Agree" button, which then submits the verification and logs the user in.
+      - Error recovery: If an incorrect verification code is submitted, `#termsModalOverlay` automatically closes and re-opens `#emailOtpModal` with an error message and code input focus.
+      - Guarded `register.js` so standard email/password registration and Google OAuth registration operate in complete isolation.
+    - **Automated Verification**:
+      - Backend automated test suite (`scratch/test_google_flow.py`) passing 5/5 assertions: (1) `POST /api/auth/google` triggers `requires_verification: True` and issues OTP challenge; (2) `POST /api/auth/google/verify` fails without terms acceptance; (3) fails with wrong OTP code; (4) completes successfully with valid code & terms; (5) subsequent Google sign-ins log in directly without OTP or terms prompt.
+      - Browser headless Chrome CDP test (`scratch/test_ui_google_modals.js`) verifying DOM presence, modal open state, 60s countdown, code entry submission, terms modal scroll progress to 100%, button unlock, and full light & dark mode rendering.
+
 ---
 
 ## Safety Rules

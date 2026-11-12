@@ -3785,6 +3785,17 @@
 
                     if (res.ok) {
                         const authRes = await res.json();
+                        if (authRes.requires_verification) {
+                            return {
+                                success: true,
+                                requires_verification: true,
+                                email: authRes.email,
+                                full_name: authRes.full_name,
+                                avatar_url: authRes.avatar_url,
+                                google_id: authRes.google_id,
+                                message: authRes.message
+                            };
+                        }
                         if (authRes.success && authRes.user) {
                             const u = authRes.user;
                             const sessionUser = {
@@ -4073,6 +4084,17 @@
 
                     if (res.ok) {
                         const authRes = await res.json();
+                        if (authRes.requires_verification) {
+                            return {
+                                success: true,
+                                requires_verification: true,
+                                email: authRes.email,
+                                full_name: authRes.full_name,
+                                avatar_url: authRes.avatar_url,
+                                google_id: authRes.google_id,
+                                message: authRes.message
+                            };
+                        }
                         if (authRes.success && authRes.user) {
                             const u = authRes.user;
                             const sessionUser = {
@@ -4216,6 +4238,73 @@
         } catch (err) {
             return { success: false, error: err.message || 'Google authentication failed.' };
         }
+    }
+
+    async function apiVerifyGoogleRegistration(payload = {}) {
+        const localBase = (location.port === '8000') ? '/api' : 'http://127.0.0.1:8000/api';
+        const body = {
+            email: (payload.email || '').trim().toLowerCase(),
+            code: (payload.code || '').trim(),
+            terms_accepted: Boolean(payload.terms_accepted),
+            credential: payload.credential || null,
+            access_token: payload.access_token || null,
+            full_name: (payload.full_name || '').trim(),
+            avatar_url: (payload.avatar_url || '').trim(),
+            google_id: payload.google_id || null,
+            phone: (payload.phone || '').trim()
+        };
+
+        if (isLocalDevHost()) {
+            try {
+                const res = await fetch(`${localBase}/auth/google/verify`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(body)
+                });
+                const authRes = await res.json().catch(() => ({}));
+                if (!res.ok || !authRes.success) {
+                    return {
+                        success: false,
+                        error: authRes.detail || authRes.message || 'Verification failed. Please check your code.'
+                    };
+                }
+                if (authRes.user) {
+                    const u = authRes.user;
+                    const sessionUser = {
+                        id: u.id,
+                        email: u.email,
+                        name: u.full_name,
+                        full_name: u.full_name,
+                        phone: u.phone || '',
+                        role: u.role || 'user',
+                        avatar_url: u.avatar_url || '',
+                        google_id: u.google_id || null,
+                        user_metadata: {
+                            full_name: u.full_name,
+                            phone: u.phone || '',
+                            avatar_url: u.avatar_url || ''
+                        }
+                    };
+                    localStorage.setItem(TOKEN_KEY, authRes.token);
+                    localStorage.setItem(USER_KEY, JSON.stringify(sessionUser));
+                    localStorage.setItem(DEMO_KEY, JSON.stringify(sessionUser));
+                    syncGoogleUserToSupabase(u).catch(() => {});
+                    return {
+                        success: true,
+                        data: {
+                            session: true,
+                            user: sessionUser,
+                            token: authRes.token,
+                            redirect_url: authRes.redirect_url
+                        }
+                    };
+                }
+                return { success: true, data: authRes };
+            } catch (err) {
+                return { success: false, error: err.message || 'Unable to connect to verification service.' };
+            }
+        }
+        return { success: false, error: 'Registration verification service unavailable.' };
     }
 
     async function apiCreateHostedAdminSession(credentials = {}) {

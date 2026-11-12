@@ -559,6 +559,303 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 
+    let googleVerificationState = null;
+    let googleResendTimer = null;
+
+    function promptGoogleVerificationAndTerms(googleData, triggerBtn) {
+        googleVerificationState = {
+            email: googleData.email,
+            full_name: googleData.full_name,
+            avatar_url: googleData.avatar_url,
+            google_id: googleData.google_id,
+            access_token: googleData.access_token,
+            credential: googleData.credential,
+            code: "",
+            triggerBtn: triggerBtn
+        };
+        window.__activeGooglePending = googleVerificationState;
+
+        const otpModal = document.getElementById("emailOtpModal");
+        if (!otpModal) {
+            renderGoogleBanner(triggerBtn, "Verification dialog not found. Please refresh and try again.", "error");
+            return;
+        }
+
+        const otpTarget = document.getElementById("otpTargetEmail");
+        const otpInput = document.getElementById("emailOtpCode");
+        const otpMessage = document.getElementById("emailOtpMessage");
+        const resendBtn = document.getElementById("resendEmailOtpBtn");
+        const resendStatus = document.getElementById("otpResendStatus");
+
+        if (otpTarget) otpTarget.textContent = googleData.email;
+        if (otpInput) otpInput.value = "";
+        if (otpMessage) {
+            otpMessage.textContent = "";
+            otpMessage.className = "otp-form-message";
+        }
+
+        otpModal.classList.add("open");
+        otpModal.setAttribute("aria-hidden", "false");
+        document.body.classList.add("otp-modal-open");
+        window.setTimeout(() => { if (otpInput) otpInput.focus(); }, 120);
+
+        function startGoogleOtpCountdown() {
+            if (googleResendTimer) clearInterval(googleResendTimer);
+            let remaining = 60;
+            if (resendBtn) resendBtn.disabled = true;
+            if (resendStatus) resendStatus.textContent = "You can request another code in " + remaining + " seconds.";
+            googleResendTimer = setInterval(() => {
+                remaining--;
+                if (remaining <= 0) {
+                    clearInterval(googleResendTimer);
+                    googleResendTimer = null;
+                    if (resendBtn) resendBtn.disabled = false;
+                    if (resendStatus) resendStatus.textContent = "Didn't receive the code?";
+                } else {
+                    if (resendStatus) resendStatus.textContent = "You can request another code in " + remaining + " seconds.";
+                }
+            }, 1000);
+        }
+        startGoogleOtpCountdown();
+
+        if (resendBtn && !resendBtn.dataset.googleResendBound) {
+            resendBtn.dataset.googleResendBound = "true";
+            resendBtn.addEventListener("click", async () => {
+                if (!window.__activeGooglePending) return;
+                resendBtn.disabled = true;
+                if (resendStatus) resendStatus.textContent = "Requesting a new code...";
+                if (typeof apiStartRegistrationOtp === "function") {
+                    const res = await apiStartRegistrationOtp(window.__activeGooglePending.email);
+                    if (res && res.success) {
+                        if (otpMessage) {
+                            otpMessage.textContent = "A new 6-digit verification code has been sent to your Gmail.";
+                            otpMessage.className = "otp-form-message is-success";
+                        }
+                        startGoogleOtpCountdown();
+                    } else {
+                        if (otpMessage) {
+                            otpMessage.textContent = (res && res.error) || "Could not request a new code. Please try again.";
+                            otpMessage.className = "otp-form-message is-error";
+                        }
+                        resendBtn.disabled = false;
+                    }
+                }
+            });
+        }
+    }
+
+    function initGoogleVerificationModals() {
+        const otpModal = document.getElementById("emailOtpModal");
+        const otpForm = document.getElementById("emailOtpForm");
+        const otpInput = document.getElementById("emailOtpCode");
+        const otpMessage = document.getElementById("emailOtpMessage");
+        const closeOtpBtn = document.getElementById("closeEmailOtpModal");
+
+        const termsModal = document.getElementById("termsModalOverlay");
+        const termsBody = document.getElementById("termsModalBody");
+        const termsScrollBar = document.getElementById("termsScrollBar");
+        const acceptTermsBtn = document.getElementById("acceptTermsBtn");
+        const declineTermsBtn = document.getElementById("declineTermsBtn");
+        const closeTermsBtn = document.getElementById("closeTermsModalBtn");
+        const termsScrollHintText = document.getElementById("termsScrollHintText");
+
+        function closeOtpDialog() {
+            if (!otpModal) return;
+            otpModal.classList.remove("open");
+            otpModal.setAttribute("aria-hidden", "true");
+            document.body.classList.remove("otp-modal-open");
+            if (googleResendTimer) {
+                clearInterval(googleResendTimer);
+                googleResendTimer = null;
+            }
+        }
+
+        function closeTermsDialog() {
+            if (!termsModal) return;
+            termsModal.classList.remove("open");
+            termsModal.setAttribute("aria-hidden", "true");
+            document.body.classList.remove("terms-modal-open");
+        }
+
+        if (closeOtpBtn && !closeOtpBtn.dataset.googleBound) {
+            closeOtpBtn.dataset.googleBound = "true";
+            closeOtpBtn.addEventListener("click", () => {
+                closeOtpDialog();
+                window.__activeGooglePending = null;
+            });
+        }
+
+        if (otpModal && !otpModal.dataset.googleBound) {
+            otpModal.dataset.googleBound = "true";
+            otpModal.addEventListener("click", (e) => {
+                if (e.target === otpModal) {
+                    closeOtpDialog();
+                    window.__activeGooglePending = null;
+                }
+            });
+        }
+
+        if (closeTermsBtn && !closeTermsBtn.dataset.googleBound) {
+            closeTermsBtn.dataset.googleBound = "true";
+            closeTermsBtn.addEventListener("click", () => {
+                closeTermsDialog();
+                window.__activeGooglePending = null;
+            });
+        }
+
+        if (declineTermsBtn && !declineTermsBtn.dataset.googleBound) {
+            declineTermsBtn.dataset.googleBound = "true";
+            declineTermsBtn.addEventListener("click", () => {
+                closeTermsDialog();
+                window.__activeGooglePending = null;
+            });
+        }
+
+        if (termsModal && !termsModal.dataset.googleBound) {
+            termsModal.dataset.googleBound = "true";
+            termsModal.addEventListener("click", (e) => {
+                if (e.target === termsModal) {
+                    closeTermsDialog();
+                    window.__activeGooglePending = null;
+                }
+            });
+        }
+
+        document.addEventListener("keydown", (e) => {
+            if (e.key === "Escape") {
+                if (otpModal && otpModal.classList.contains("open")) {
+                    closeOtpDialog();
+                    window.__activeGooglePending = null;
+                }
+                if (termsModal && termsModal.classList.contains("open")) {
+                    closeTermsDialog();
+                    window.__activeGooglePending = null;
+                }
+            }
+        });
+
+        if (otpForm && !otpForm.dataset.googleBound) {
+            otpForm.dataset.googleBound = "true";
+            otpForm.addEventListener("submit", (e) => {
+                if (!window.__activeGooglePending) return;
+                e.preventDefault();
+                e.stopPropagation();
+
+                const code = (otpInput?.value || "").trim();
+                if (!/^[0-9]{6}$/.test(code)) {
+                    if (otpMessage) {
+                        otpMessage.textContent = "Please enter the 6-digit verification code sent to your Gmail.";
+                        otpMessage.className = "otp-form-message is-error";
+                    }
+                    if (otpInput) otpInput.focus();
+                    return;
+                }
+
+                window.__activeGooglePending.code = code;
+                closeOtpDialog();
+
+                // Open Terms Modal
+                if (!termsModal || !termsBody) return;
+                termsModal.classList.add("open");
+                termsModal.setAttribute("aria-hidden", "false");
+                document.body.classList.add("terms-modal-open");
+                termsBody.scrollTop = 0;
+                if (termsScrollBar) termsScrollBar.style.width = "0%";
+                if (acceptTermsBtn) acceptTermsBtn.disabled = true;
+                if (termsScrollHintText) {
+                    termsScrollHintText.textContent = "Scroll down to read the entire agreement to enable “I Agree”";
+                }
+                window.setTimeout(() => { termsBody.focus({ preventScroll: true }); }, 120);
+            }, true);
+        }
+
+        function onTermsScroll() {
+            if (!window.__activeGooglePending || !termsBody) return;
+            const remaining = termsBody.scrollHeight - (termsBody.scrollTop + termsBody.clientHeight);
+            const totalScrollable = termsBody.scrollHeight - termsBody.clientHeight;
+            const progress = totalScrollable > 0 ? Math.min(100, Math.max(0, (termsBody.scrollTop / totalScrollable) * 100)) : 100;
+            if (termsScrollBar) termsScrollBar.style.width = progress + "%";
+            if (remaining <= 35 || progress >= 98) {
+                if (acceptTermsBtn) acceptTermsBtn.disabled = false;
+                if (termsScrollHintText) {
+                    termsScrollHintText.textContent = "✓ You have read the entire agreement. Click “I Agree” to complete registration.";
+                }
+            }
+        }
+
+        if (termsBody && !termsBody.dataset.googleBound) {
+            termsBody.dataset.googleBound = "true";
+            termsBody.addEventListener("scroll", onTermsScroll, { passive: true });
+        }
+
+        if (acceptTermsBtn && !acceptTermsBtn.dataset.googleBound) {
+            acceptTermsBtn.dataset.googleBound = "true";
+            acceptTermsBtn.addEventListener("click", async (e) => {
+                if (!window.__activeGooglePending) return;
+                e.preventDefault();
+                e.stopPropagation();
+
+                if (acceptTermsBtn.disabled) return;
+
+                const origHtml = acceptTermsBtn.innerHTML;
+                acceptTermsBtn.disabled = true;
+                const span = acceptTermsBtn.querySelector("span");
+                if (span) span.textContent = "Completing registration...";
+
+                const pending = window.__activeGooglePending;
+                const verifyRes = await apiVerifyGoogleRegistration({
+                    email: pending.email,
+                    code: pending.code,
+                    terms_accepted: true,
+                    access_token: pending.access_token,
+                    credential: pending.credential,
+                    full_name: pending.full_name,
+                    avatar_url: pending.avatar_url,
+                    google_id: pending.google_id
+                });
+
+                if (verifyRes && verifyRes.success) {
+                    closeTermsDialog();
+                    window.__activeGooglePending = null;
+
+                    const user = verifyRes.data?.user || {};
+                    const role = String(user.role || '').toLowerCase();
+                    const email = String(user.email || '').toLowerCase().trim();
+                    const isAuthorizedStaffEmail = [
+                        'admin.realestate@gmail.com',
+                        'miriam@gmail.com',
+                        'miriamalobren@gmail.com',
+                        'urbanscope.cvsu@gmail.com'
+                    ].includes(email);
+                    if (role === 'admin' || role === 'superadmin' || isAuthorizedStaffEmail) {
+                        if (typeof apiCreateHostedAdminSession === 'function') {
+                            await apiCreateHostedAdminSession({ access_token: pending.access_token });
+                        }
+                    }
+                    redirectAuthenticatedGoogleUser(verifyRes);
+                } else {
+                    acceptTermsBtn.disabled = false;
+                    acceptTermsBtn.innerHTML = origHtml;
+                    closeTermsDialog();
+
+                    if (otpModal) {
+                        otpModal.classList.add("open");
+                        otpModal.setAttribute("aria-hidden", "false");
+                        document.body.classList.add("otp-modal-open");
+                    }
+                    if (otpMessage) {
+                        otpMessage.textContent = (verifyRes && verifyRes.error) || "The verification code is incorrect or has expired. Please check your email.";
+                        otpMessage.className = "otp-form-message is-error";
+                    }
+                    if (otpInput) {
+                        otpInput.value = "";
+                        otpInput.focus();
+                    }
+                }
+            }, true);
+        }
+    }
+
     function attachGoogleButton(btn) {
         if (!btn || btn.dataset.googleBound === "true") return;
         btn.dataset.googleBound = "true";
@@ -598,6 +895,18 @@ document.addEventListener("DOMContentLoaded", () => {
 
                     setLoadingState(true, "Verifying Google Account...");
                     const res = await apiSignInWithGoogle({ access_token: tokenResponse.access_token });
+                    if (res && res.requires_verification) {
+                        setLoadingState(false);
+                        promptGoogleVerificationAndTerms({
+                            email: res.email,
+                            full_name: res.full_name,
+                            avatar_url: res.avatar_url,
+                            google_id: res.google_id,
+                            access_token: tokenResponse.access_token,
+                            credential: tokenResponse.credential || null
+                        }, btn);
+                        return;
+                    }
                     if (res && res.success) {
                         const user = res.data?.user || {};
                         const role = String(user.role || '').toLowerCase();
@@ -648,23 +957,6 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         btn.addEventListener("click", async () => {
-            // On the Registration page, require Terms of Service & Privacy Policy approval before Google OAuth
-            const isRegisterGoogleBtn = btn.id === "googleSignup" || Boolean(document.getElementById("registerForm"));
-            if (isRegisterGoogleBtn) {
-                if (typeof window.urbanscopeCheckRegisterTermsForGoogle === "function") {
-                    if (!window.urbanscopeCheckRegisterTermsForGoogle()) {
-                        return;
-                    }
-                } else {
-                    const termsBox = document.getElementById("terms");
-                    if (termsBox && !termsBox.checked) {
-                        const termsLabelEl = document.getElementById("termsLabel");
-                        if (termsLabelEl) termsLabelEl.click();
-                        return;
-                    }
-                }
-            }
-
             renderGoogleBanner(btn, "");
             setLoadingState(true, "Connecting to Google...");
 
@@ -714,6 +1006,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
     function setup() {
         prefetchGoogleConfig();
+        initGoogleVerificationModals();
+        window.promptGoogleVerificationAndTerms = promptGoogleVerificationAndTerms;
         document.querySelectorAll(".btn-google").forEach(attachGoogleButton);
     }
 

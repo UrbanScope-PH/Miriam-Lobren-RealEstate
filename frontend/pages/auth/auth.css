@@ -2342,6 +2342,10 @@ html.dark-mode .terms-end-callout {
     border-color: #2d4534;
 }
 
+html.dark-mode .terms-end-callout p {
+    color: #d6e6da;
+}
+
 html.dark-mode .terms-doc-section {
     border-bottom-color: #243629;
 }
