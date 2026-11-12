@@ -206,12 +206,47 @@ def _sync_update_user_to_supabase(match_email: str, patch_fields: dict) -> None:
         pass
 
 
-def _sync_delete_user_to_supabase(target_email: str) -> None:
-    """Deletes an account from Supabase Cloud, falling back to soft-delete if DELETE RLS is not yet pushed."""
+def _sync_delete_user_to_supabase(target_email: str, user_id: int = None) -> None:
+    """Deletes an account and its inquiries from Supabase Cloud, falling back to email scramble if DELETE RLS is blocked."""
     if not _cloud_sync_enabled() or not SUPABASE_SERVICE_ROLE_KEY or not target_email:
         return
     try:
-        encoded_email = urllib.parse.quote(target_email.strip().lower())
+        clean_email = target_email.strip().lower()
+        encoded_email = urllib.parse.quote(clean_email)
+
+        # 1. Delete associated inquiries from Supabase Cloud
+        try:
+            inq_url = f"{SUPABASE_URL}/rest/v1/inquiries?client_email=ilike.{encoded_email}"
+            req_inq = urllib.request.Request(
+                inq_url,
+                headers={
+                    "apikey": SUPABASE_SERVICE_ROLE_KEY,
+                    "Authorization": f"Bearer {SUPABASE_SERVICE_ROLE_KEY}",
+                },
+                method="DELETE"
+            )
+            with urllib.request.urlopen(req_inq, timeout=3.0):
+                pass
+        except Exception:
+            pass
+
+        if user_id:
+            try:
+                inq_id_url = f"{SUPABASE_URL}/rest/v1/inquiries?client_id=eq.{user_id}"
+                req_inq_id = urllib.request.Request(
+                    inq_id_url,
+                    headers={
+                        "apikey": SUPABASE_SERVICE_ROLE_KEY,
+                        "Authorization": f"Bearer {SUPABASE_SERVICE_ROLE_KEY}",
+                    },
+                    method="DELETE"
+                )
+                with urllib.request.urlopen(req_inq_id, timeout=3.0):
+                    pass
+            except Exception:
+                pass
+
+        # 2. Delete user from Supabase Cloud
         del_url = f"{SUPABASE_URL}/rest/v1/users?email=ilike.{encoded_email}"
         req_del = urllib.request.Request(
             del_url,
@@ -222,15 +257,18 @@ def _sync_delete_user_to_supabase(target_email: str) -> None:
             },
             method="DELETE"
         )
-        with urllib.request.urlopen(req_del, timeout=2.5) as resp:
+        with urllib.request.urlopen(req_del, timeout=3.0) as resp:
             deleted = json.loads(resp.read().decode("utf-8"))
             if isinstance(deleted, list) and len(deleted) > 0:
                 return
 
-        # Fallback soft-delete if Supabase RLS blocked physical DELETE
+        # 3. Fallback: scramble email and mark soft-delete if physical DELETE was blocked by RLS
+        timestamp = int(datetime.now(timezone.utc).timestamp() * 1000)
+        scrambled_email = f"deleted_{timestamp}_{clean_email}"
         soft_body = json.dumps({
+            "email": scrambled_email,
             "bio": "__URBANSCOPE_DELETED__",
-            "password_hash": "__DELETED_ACCOUNT__",
+            "google_id": None,
             "role": "user",
             "updated_at": datetime.now(timezone.utc).isoformat()
         }).encode("utf-8")
@@ -244,7 +282,7 @@ def _sync_delete_user_to_supabase(target_email: str) -> None:
             },
             method="PATCH"
         )
-        with urllib.request.urlopen(req_soft, timeout=2.5):
+        with urllib.request.urlopen(req_soft, timeout=3.0):
             return
     except Exception:
         pass
@@ -526,7 +564,7 @@ def superadmin_create_user(payload: SuperadminCreateUser, current_superadmin: di
 
 @router.delete("/api/superadmin/users/{user_id}", tags=["Superadmin"])
 def delete_user_account(user_id: int, current_superadmin: dict = Depends(require_superadmin)):
-    """Deletes a user account. Root superadmin and primary admin accounts are protected."""
+    """Deletes a user account and all associated inquiry history. Root superadmin and primary admin accounts are protected."""
     conn = get_db_connection()
     cursor = conn.cursor()
 
@@ -542,17 +580,40 @@ def delete_user_account(user_id: int, current_superadmin: dict = Depends(require
         conn.close()
         raise HTTPException(status_code=400, detail="Cannot delete root Superadmin account.")
 
-    if target_email in ("admin.realestate@gmail.com", "miriamalobren@gmail.com"):
+    if target_email in ("admin.realestate@gmail.com", "miriamalobren@gmail.com", "miriam@gmail.com"):
         conn.close()
         raise HTTPException(status_code=400, detail="Cannot delete primary Realty Admin account.")
 
+    # 1. Delete associated inquiries from inquiries table
+    cursor.execute("DELETE FROM inquiries WHERE LOWER(client_email) = ?", (target_email,))
+
+    # 2. Delete associated notifications
+    try:
+        cursor.execute("DELETE FROM notifications WHERE LOWER(recipient_email) = ?", (target_email,))
+    except Exception:
+        pass
+
+    # 3. Delete associated appointments & saved properties if tables exist
+    try:
+        cursor.execute("DELETE FROM appointments WHERE user_id = ?", (user_id,))
+    except Exception:
+        pass
+    try:
+        cursor.execute("DELETE FROM saved_properties WHERE user_id = ?", (user_id,))
+    except Exception:
+        pass
+
+    # 4. Delete user record
     cursor.execute("DELETE FROM users WHERE id = ?", (user_id,))
     conn.commit()
     conn.close()
 
-    _sync_delete_user_to_supabase(target_email)
+    _sync_delete_user_to_supabase(target_email, user_id)
 
-    return {"success": True, "message": f"User account {target_email} deleted successfully."}
+    return {
+        "success": True,
+        "message": f"User account {target_email} and associated inquiry history deleted successfully."
+    }
 
 
 @router.get("/api/superadmin/integrity", tags=["Superadmin"])

@@ -341,7 +341,7 @@ python -c "import sqlite3; c=sqlite3.connect('backend/urbanscope.db'); print(c.e
 - Via API: `GET /api/superadmin/integrity` (Requires Superadmin Bearer token)
 - Via Swagger UI: `http://127.0.0.1:8000/docs`
 
-The superadmin console also provides account and role governance. Property listing and inquiry workflows belong to the Agent Admin portal.
+The superadmin console also provides account and role governance. When a user account is deleted, all associated inquiry records (`inquiries`), notifications, and appointments for that client are automatically deleted across SQLite and Supabase Cloud, preventing orphaned inquiries on Admin pages. Property listing and inquiry workflows belong to the Agent Admin portal.
 
 ---
 

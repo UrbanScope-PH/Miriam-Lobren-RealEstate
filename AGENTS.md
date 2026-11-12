@@ -1146,6 +1146,28 @@ path when rendering from a page.
       - Backend automated test suite (`scratch/test_google_flow.py`) passing 5/5 assertions: (1) `POST /api/auth/google` triggers `requires_verification: True` and issues OTP challenge; (2) `POST /api/auth/google/verify` fails without terms acceptance; (3) fails with wrong OTP code; (4) completes successfully with valid code & terms; (5) subsequent Google sign-ins log in directly without OTP or terms prompt.
       - Browser headless Chrome CDP test (`scratch/test_ui_google_modals.js`) verifying DOM presence, modal open state, 60s countdown, code entry submission, terms modal scroll progress to 100%, button unlock, and full light & dark mode rendering.
 
+106. **Permanent Superadmin Account Deletion, Inquiry History Purge, and Post-Deletion Sign-In Prevention (`backend/routers/superadmin.py`, `api/superadmin/users.js`, `lib/email-auth.js`, `frontend/shared/js/supabase.js`, `frontend/shared/js/api.js`, `frontend/pages/superadmin/dashboard.js`):**
+    - **Problem**: When an account was deleted from the Superadmin dashboard (`pages/superadmin/dashboard.html`), the deleted user could still sign in via Google OAuth because Supabase Cloud rejected physical DELETE under anon RLS without scrambling the email. Furthermore, all client inquiry history submitted under that Gmail remained stranded in the database and continued to clutter the Admin Inquiries and Clients pages.
+    - **Resolution**:
+      - `backend/routers/superadmin.py` (`DELETE /api/superadmin/users/{user_id}`):
+        - Automatically deletes all inquiries associated with the deleted account from the `inquiries` table (`WHERE LOWER(client_email) = ?`).
+        - Automatically deletes associated notifications (`WHERE LOWER(recipient_email) = ?`), appointments, and saved properties.
+        - Deletes the user record from `users`.
+        - Calls `_sync_delete_user_to_supabase(target_email, user_id)` to execute DELETE on `inquiries` and `users` in Supabase Cloud, with fallback to email scrambling (`deleted_{timestamp}_{clean_email}`) and soft-delete marker (`__URBANSCOPE_DELETED__`) if physical DELETE is blocked by RLS.
+        - Protects root superadmin (`urbanscope.cvsu@gmail.com`) and primary realty admins (`admin.realestate@gmail.com`, `miriamalobren@gmail.com`, `miriam@gmail.com`).
+      - `lib/email-auth.js`: Added `deleteCloudUserAndAssociatedData(id, email)` performing cascading cloud deletion of inquiries, appointments, notifications, saved properties, and users table row with email scramble fallback.
+      - `api/superadmin/users.js`: Added `action === 'delete'` handler executing `deleteCloudUserAndAssociatedData` after verifying superadmin session and protected account checks.
+      - `frontend/shared/js/supabase.js` and `api.js`:
+        - In `apiSuperadminDeleteUser(userId, email)`: Calls local FastAPI backend, invokes `/api/superadmin/users`, executes DELETE on `${REST_BASE}/inquiries?client_email=ilike.${email}`, deletes/scrambles user row in `${REST_BASE}/users`, marks user deleted locally (`markUserDeletedLocal`), purges inquiries from `localStorage` caches via `purgeInquiriesByEmailLocal`, and dispatches `inquiriesUpdated`, `inquiryListChanged`, and `usersUpdated` events.
+        - In `applyLocalInquiryState(list)`: Filters out inquiries belonging to deleted emails (`getDeletedUserEmails()`) or starting with `deleted_`.
+        - In `isUserRecordDeleted(u)`: Returns `true` if `u.email` starts with `deleted_` or is in `getDeletedUserEmails()`.
+        - In `syncGoogleUserToSupabase(userObj)`: Skips deleted accounts so they are not revived.
+        - In `apiSignInWithGoogle`: Checks whether the account exists and is not deleted in Supabase Cloud. For deleted or unregistered accounts, returns `requires_verification: true`, requiring the 6-digit email OTP and Terms of Service agreement before any new account can be created.
+        - In `apiVerifyGoogleRegistration`: Added hosted fallback verifying challenge, clearing local deleted markers, and inserting a clean user record.
+      - `frontend/pages/superadmin/dashboard.js`: Passed `u.email` into `saDeleteUserPrompt('${safeIdAttr}', '${escapeHtml(u.email || '')}')`, updated confirmation text to clearly indicate inquiry removal, and updated success toast.
+    - **Automated Verification**:
+      - Verified full lifecycle via Python automated test: created user, inserted inquiries, confirmed presence in admin list, deleted user via superadmin endpoint, verified user is removed from `users`, verified password login returns 401, and verified all associated inquiries were permanently removed from the admin inquiry list. Verified protected accounts cannot be deleted.
+
 ---
 
 ## Safety Rules

@@ -1,5 +1,6 @@
 import {
     createPasswordHash,
+    deleteCloudUserAndAssociatedData,
     getCloudUser,
     getCloudUserById,
     insertCloudUser,
@@ -45,12 +46,11 @@ export default async function handler(request) {
     const role = String(payload.role || 'user').trim().toLowerCase();
     const password = String(payload.password || '');
 
-    if (!['user', 'admin', 'superadmin'].includes(role)) {
-        return jsonResponse({ success: false, error: 'Invalid role.' }, 400);
-    }
-
     try {
         if (action === 'create') {
+            if (!['user', 'admin', 'superadmin'].includes(role)) {
+                return jsonResponse({ success: false, error: 'Invalid role.' }, 400);
+            }
             if (!isValidEmail(email) || fullName.length < 2 || fullName.length > 120 || password.length < 6 || password.length > 128) {
                 return jsonResponse({ success: false, error: 'Enter a valid email, name, and password of at least 6 characters.' }, 400);
             }
@@ -68,7 +68,7 @@ export default async function handler(request) {
                 updated_at: now
             };
             const user = existing
-                ? (existing.bio === '__URBANSCOPE_DELETED__' || existing.password_hash === '__DELETED_ACCOUNT__'
+                ? (existing.bio === '__URBANSCOPE_DELETED__' || existing.password_hash === '__DELETED_ACCOUNT__' || String(existing.email || '').startsWith('deleted_')
                     ? await updateCloudUserById(existing.id, fields)
                     : null)
                 : await insertCloudUser(fields);
@@ -77,6 +77,9 @@ export default async function handler(request) {
         }
 
         if (action === 'update') {
+            if (payload.role !== undefined && !['user', 'admin', 'superadmin'].includes(role)) {
+                return jsonResponse({ success: false, error: 'Invalid role.' }, 400);
+            }
             const id = String(body.user_id || '').trim();
             if (!/^\d+$/.test(id)) return jsonResponse({ success: false, error: 'Invalid account ID.' }, 400);
             const target = await getCloudUserById(id);
@@ -109,9 +112,36 @@ export default async function handler(request) {
                 ? jsonResponse({ success: true, message: 'User account updated successfully.', user: publicUser(updated) })
                 : jsonResponse({ success: false, error: 'Unable to update the account.' }, 503);
         }
+
+        if (action === 'delete') {
+            const id = String(body.user_id || '').trim();
+            let target = null;
+            if (/^\d+$/.test(id)) {
+                target = await getCloudUserById(id).catch(() => null);
+            }
+            if (!target && email) {
+                target = await getCloudUser(email).catch(() => null);
+            }
+            const targetEmail = target ? normalizeEmail(target.email) : email;
+            const targetId = target ? target.id : id;
+
+            if (targetEmail === SUPERADMIN_EMAIL || targetEmail === 'urbanscope.cvsu@gmail.com') {
+                return jsonResponse({ success: false, error: 'Cannot delete root Superadmin account.' }, 400);
+            }
+            if (['admin.realestate@gmail.com', 'miriamalobren@gmail.com', 'miriam@gmail.com'].includes(targetEmail)) {
+                return jsonResponse({ success: false, error: 'Cannot delete primary Realty Admin account.' }, 400);
+            }
+
+            await deleteCloudUserAndAssociatedData(targetId, targetEmail);
+            return jsonResponse({
+                success: true,
+                message: `Account ${targetEmail || '#' + targetId} and associated inquiry history deleted successfully.`
+            });
+        }
+
         return jsonResponse({ success: false, error: 'Unsupported account action.' }, 400);
     } catch (error) {
-        console.error('Superadmin account update failed:', error?.message || 'unknown error');
-        return jsonResponse({ success: false, error: 'Unable to update the account right now.' }, 503);
+        console.error('Superadmin account operation failed:', error?.message || 'unknown error');
+        return jsonResponse({ success: false, error: 'Unable to complete the account operation right now.' }, 503);
     }
 }

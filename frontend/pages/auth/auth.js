@@ -599,6 +599,10 @@ document.addEventListener("DOMContentLoaded", () => {
         document.body.classList.add("otp-modal-open");
         window.setTimeout(() => { if (otpInput) otpInput.focus(); }, 120);
 
+        if (typeof apiStartRegistrationOtp === "function") {
+            apiStartRegistrationOtp(googleData.email).catch(() => {});
+        }
+
         function startGoogleOtpCountdown() {
             if (googleResendTimer) clearInterval(googleResendTimer);
             let remaining = 60;
