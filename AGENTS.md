@@ -1112,6 +1112,16 @@ path when rendering from a page.
     - **Full Dark Mode Support**: Custom tokens for dark theme (`#142219` background, `#2a4030` border, `#86efac` active text/checkmark, `#233829` hover state).
     - **Automated Verification**: Verified using headless Chrome DevTools protocol (`test_sort_select.js`, dark mode test, and element hit-testing) confirming opening, complete front-stack visibility over category tabs and cards, option selection, instant DOM card re-ordering (Low to High and High to Low), and screenshot capture.
 
+103. **Elimination of Invisible FAB Click-Interception Area (`session.css`, `common.css`):**
+    - **Problem**: When the floating contact action button (`#fabMainBtn` / `.contact-fab`) was closed, hovering or clicking in the transparent area 20px–100px directly above it unexpectedly showed a pointer cursor and intercepted mouse clicks.
+    - **Root Cause**: In `frontend/shared/css/session.css`, `.fab-action-btn` had `pointer-events: auto;` declared unconditionally. In CSS, a child with `pointer-events: auto` overrides an ancestor's `pointer-events: none`. Although parent `.fab-menu` had `opacity: 0; pointer-events: none;`, the invisible `.fab-action-btn` child links (Messenger, Text SMS, Call Now) and their text labels remained fully interactive to mouse/pointer hit-testing. Additionally, `.fab-menu` lacked `visibility: hidden;`.
+    - **Resolution**:
+      - Updated `.fab-menu` to set `visibility: hidden; pointer-events: none;` when closed, and `visibility: visible; pointer-events: auto;` when `.contact-fab.open`.
+      - Used transition delay coordination (`visibility 0s linear 0.24s;` on close, `visibility 0s linear 0s;` on open) to keep smooth opacity/transform transitions while cutting off pointer events immediately on close.
+      - Changed base `.fab-action-btn` to `pointer-events: none;` and added `.contact-fab.open .fab-action-btn { pointer-events: auto; }` so action buttons are only interactive when the menu is actively expanded.
+      - Added defensive `visibility: hidden;` and `visibility: visible;` rules to `.back-to-top-btn` when inactive vs `.is-active` in `frontend/shared/css/common.css`.
+    - **Automated Verification**: Verified via Chrome DevTools Protocol (`scratch/test_fab_hit_test.js` and `scratch/test_fab_dark.js`) using `document.elementFromPoint` at 25px, 50px, 80px, 120px, and 160px above `#fabMainBtn`. Confirmed `isFabRelated: false` across all points when closed (hits pass directly to underlying page background without interception), confirmed buttons become properly interactive and hittable when open, and confirmed immediate deactivation upon close in both light and dark mode.
+
 ---
 
 ## Safety Rules
