@@ -1232,6 +1232,19 @@ path when rendering from a page.
       - Swapped the button order so the secondary action (`Submit Another` / `Back to Home`) appears on the left, and the primary CTA (`View in Inquiry History` / `Create Account to Track Inquiry`) appears on the right.
       - In mobile responsive query (`@media (max-width: 600px)`), updated `.success-modal-footer .modal-action-group` to `flex-direction: column; align-items: stretch; gap: 10px;` ensuring seamless full-width stacked button presentation on small screens.
 
+111. **Homepage FAQ Repetitive Consultation Box Removal (`frontend/index.html`, `frontend/index.js`, `frontend/index.css`, `frontend/shared/css/session.css`):**
+    - **Problem**: At the bottom of the homepage (`index.html`), a dashed box (`.faqs-more-help`) with "Still have more questions or need a personalized computation? Speak with Miriam Lobren ->" was placed directly above the large CTA banner ("Ready to Find Your Dream Property? Book a Free Consultation"). This caused repetitive, adjacent consultation prompts right next to each other at the bottom of the page.
+    - **Resolution**:
+      - `frontend/index.html`: Completely removed the `.faqs-more-help` container and its inner `Speak with Miriam Lobren` button. The FAQ section now flows cleanly from the FAQ accordion directly into the CTA banner.
+      - `frontend/index.js`: Cleaned up `initConsultationIntentModal()` click interceptor and removed obsolete `faqContactBtnText` binding from `renderHomepageAgentDetails()`.
+      - `frontend/index.css` & `frontend/shared/css/session.css`: Removed all unused light and dark mode styles for `.faqs-more-help` and `.faqs-contact-link`.
+      - The CTA banner ("Book a Free Consultation", `#ctaConsultBtn`) remains the single, elegant entry point that triggers the "How Can We Help You?" consultation intent modal (`#consultationIntentModal`).
+    - **Automated Verification**:
+      - Executed Chrome DevTools Protocol end-to-end headless browser test:
+        - Confirmed zero elements matching `.faqs-more-help`, `.faqs-contact-link`, or `#faqContactBtnText` exist on the page.
+        - Verified seamless visual layout transition from the final FAQ item ("Can I purchase a house if I am legally married but separated?") to the CTA banner in both light and dark modes (`faq_removed_light.png` and `faq_removed_dark.png`).
+        - Verified that clicking `#ctaConsultBtn` in the CTA banner opens `#consultationIntentModal` without console errors.
+
 ---
 
 ## Safety Rules

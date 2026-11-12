@@ -845,8 +845,7 @@ html.dark-mode .faq-question {
 html.dark-mode .card-loc,
 html.dark-mode .about-text p,
 html.dark-mode .testimonial-quote,
-html.dark-mode .faq-answer-inner,
-html.dark-mode .faqs-more-help p {
+html.dark-mode .faq-answer-inner {
     color: #c2d4c6;
 }
 

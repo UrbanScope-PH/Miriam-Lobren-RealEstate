@@ -1103,42 +1103,6 @@ html.dark-mode .property-status-badge.badge-rfo {
     color: var(--text-dark);
 }
 
-.faqs-more-help {
-    text-align: center;
-    margin-top: 40px;
-    padding: 24px;
-    background: #ffffff;
-    border-radius: 14px;
-    border: 1px dashed #cde0d2;
-}
-
-.faqs-more-help p {
-    font-size: 15px;
-    color: var(--text-muted);
-    margin-bottom: 12px;
-}
-
-.faqs-contact-link {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    padding: 10px 22px;
-    background: var(--green);
-    color: #ffffff;
-    border-radius: 999px;
-    font-weight: 700;
-    font-size: 14px;
-    text-decoration: none;
-    transition: all 0.2s ease;
-    box-shadow: 0 4px 14px rgba(45, 92, 57, 0.25);
-}
-
-.faqs-contact-link:hover {
-    background: var(--dark-green);
-    transform: translateY(-2px);
-    box-shadow: 0 6px 18px rgba(45, 92, 57, 0.35);
-}
-
 @media (max-width: 768px) {
     .faqs-section {
         padding: 60px 5%;
@@ -2271,21 +2235,6 @@ html.dark-mode .faq-disclaimer-note {
     color: #c2d4c6;
 }
 
-html.dark-mode .faqs-more-help {
-    background: #16231b;
-    border-color: #2f4736;
-}
-
-html.dark-mode .faqs-more-help p {
-    color: #c2d4c6;
-}
-
-html.dark-mode .faqs-contact-link {
-    background: #2d6a3e;
-    color: #ffffff;
-}
-
-html.dark-mode .faqs-contact-link:hover,
 html.dark-mode .search-submit:hover,
 html.dark-mode .learn-more-btn:hover {
     background: #3ea35d;
