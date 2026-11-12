@@ -740,7 +740,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         if (otpForm && !otpForm.dataset.googleBound) {
             otpForm.dataset.googleBound = "true";
-            otpForm.addEventListener("submit", (e) => {
+            otpForm.addEventListener("submit", async (e) => {
                 if (!window.__activeGooglePending) return;
                 e.preventDefault();
                 e.stopPropagation();
@@ -752,6 +752,51 @@ document.addEventListener("DOMContentLoaded", () => {
                         otpMessage.className = "otp-form-message is-error";
                     }
                     if (otpInput) otpInput.focus();
+                    return;
+                }
+
+                const submitBtn = otpForm.querySelector('button[type="submit"]') || document.getElementById("verifyEmailOtpBtn");
+                const origBtnHtml = submitBtn ? submitBtn.innerHTML : "Verify &amp; Continue";
+                if (submitBtn) {
+                    submitBtn.disabled = true;
+                    submitBtn.textContent = "Verifying code...";
+                }
+                if (otpMessage) {
+                    otpMessage.textContent = "";
+                    otpMessage.className = "otp-form-message";
+                }
+
+                const email = window.__activeGooglePending.email;
+                let checkRes = null;
+                try {
+                    const validateFn = typeof apiValidateGoogleOtp === "function"
+                        ? apiValidateGoogleOtp
+                        : (typeof window.apiValidateGoogleOtp === "function" ? window.apiValidateGoogleOtp : null);
+
+                    if (validateFn) {
+                        checkRes = await validateFn(email, code);
+                    } else {
+                        checkRes = { success: true };
+                    }
+                } catch (err) {
+                    console.error("Code validation error:", err);
+                    checkRes = { success: false, error: err.message || "Unable to verify code. Please try again." };
+                }
+
+                if (submitBtn) {
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = origBtnHtml;
+                }
+
+                if (!checkRes || !checkRes.success) {
+                    if (otpMessage) {
+                        otpMessage.textContent = (checkRes && checkRes.error) || "The verification code is incorrect or has expired. Please check your email.";
+                        otpMessage.className = "otp-form-message is-error";
+                    }
+                    if (otpInput) {
+                        otpInput.select();
+                        otpInput.focus();
+                    }
                     return;
                 }
 

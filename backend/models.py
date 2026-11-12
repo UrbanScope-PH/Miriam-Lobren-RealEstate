@@ -31,6 +31,12 @@ class EmailOtpRegistrationComplete(BaseModel):
     phone: Optional[str] = Field(default="", max_length=40)
 
 
+class OtpCodeCheckRequest(BaseModel):
+    email: str = Field(..., min_length=3, max_length=254, description="Email address being verified")
+    code: str = Field(..., min_length=6, max_length=6, description="6-digit verification code")
+    purpose: Optional[str] = Field(default="register", description="OTP challenge purpose ('register' or 'password_reset')")
+
+
 class PasswordResetRequest(BaseModel):
     email: str = Field(..., min_length=3, max_length=254)
 
