@@ -807,16 +807,30 @@ document.addEventListener("DOMContentLoaded", () => {
                 if (span) span.textContent = "Completing registration...";
 
                 const pending = window.__activeGooglePending;
-                const verifyRes = await apiVerifyGoogleRegistration({
-                    email: pending.email,
-                    code: pending.code,
-                    terms_accepted: true,
-                    access_token: pending.access_token,
-                    credential: pending.credential,
-                    full_name: pending.full_name,
-                    avatar_url: pending.avatar_url,
-                    google_id: pending.google_id
-                });
+                let verifyRes = null;
+                try {
+                    const verifyFn = typeof apiVerifyGoogleRegistration === 'function'
+                        ? apiVerifyGoogleRegistration
+                        : (typeof window.apiVerifyGoogleRegistration === 'function' ? window.apiVerifyGoogleRegistration : null);
+
+                    if (!verifyFn) {
+                        throw new Error('Registration verification service is temporarily unavailable. Please try again.');
+                    }
+
+                    verifyRes = await verifyFn({
+                        email: pending.email,
+                        code: pending.code,
+                        terms_accepted: true,
+                        access_token: pending.access_token,
+                        credential: pending.credential,
+                        full_name: pending.full_name,
+                        avatar_url: pending.avatar_url,
+                        google_id: pending.google_id
+                    });
+                } catch (err) {
+                    console.error('Google registration verification error:', err);
+                    verifyRes = { success: false, error: err.message || 'Registration verification failed. Please try again.' };
+                }
 
                 if (verifyRes && verifyRes.success) {
                     closeTermsDialog();
@@ -832,11 +846,23 @@ document.addEventListener("DOMContentLoaded", () => {
                         'urbanscope.cvsu@gmail.com'
                     ].includes(email);
                     if (role === 'admin' || role === 'superadmin' || isAuthorizedStaffEmail) {
-                        if (typeof apiCreateHostedAdminSession === 'function') {
-                            await apiCreateHostedAdminSession({ access_token: pending.access_token });
+                        const adminSessionFn = typeof apiCreateHostedAdminSession === 'function'
+                            ? apiCreateHostedAdminSession
+                            : (typeof window.apiCreateHostedAdminSession === 'function' ? window.apiCreateHostedAdminSession : null);
+                        if (adminSessionFn) {
+                            try {
+                                await adminSessionFn({ access_token: pending.access_token });
+                            } catch (adminErr) {
+                                console.warn('Hosted admin session notice:', adminErr);
+                            }
                         }
                     }
-                    redirectAuthenticatedGoogleUser(verifyRes);
+                    try {
+                        redirectAuthenticatedGoogleUser(verifyRes);
+                    } catch (navErr) {
+                        console.error('Redirect failed, falling back to window.location.href:', navErr);
+                        window.location.href = verifyRes.data?.redirect_url || '../../index.html';
+                    }
                 } else {
                     acceptTermsBtn.disabled = false;
                     acceptTermsBtn.innerHTML = origHtml;

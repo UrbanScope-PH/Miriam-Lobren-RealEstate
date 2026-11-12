@@ -1168,6 +1168,27 @@ path when rendering from a page.
     - **Automated Verification**:
       - Verified full lifecycle via Python automated test: created user, inserted inquiries, confirmed presence in admin list, deleted user via superadmin endpoint, verified user is removed from `users`, verified password login returns 401, and verified all associated inquiries were permanently removed from the admin inquiry list. Verified protected accounts cannot be deleted.
 
+107. **Unfreezing Google Registration Completion & Terms Acceptance (`frontend/shared/js/supabase.js`, `frontend/shared/js/api.js`, `frontend/pages/auth/auth.js`):**
+    - **Problem**: When a new user tried to register with Google, entered their 6-digit OTP verification code, and clicked "I Agree" in the Terms of Service & Privacy Policy scroll-to-accept modal, the button remained permanently stuck on `[ Completing registration... ]` with a lock icon. Registration never finished and the modal never closed.
+    - **Root Cause**:
+      - `ReferenceError: apiVerifyGoogleRegistration is not defined at HTMLButtonElement.<anonymous> (auth.js:810:35)`: `apiVerifyGoogleRegistration` was implemented in `frontend/shared/js/supabase.js` inside the closure, but was omitted from the `window` exports object at the bottom of the file (`window.apiVerifyGoogleRegistration = apiVerifyGoogleRegistration;` was missing).
+      - In `auth.js`, the click listener on `#acceptTermsBtn` had no `try ... catch` block, so any runtime exception immediately froze the button with `disabled = true` and `span.textContent = "Completing registration..."`.
+      - In `apiVerifyGoogleRegistration` (hosted branch), sending `email_verified_at` to `${REST_BASE}/users` triggered HTTP 400 (`PGRST204: Could not find the 'email_verified_at' column of 'users' in the schema cache`).
+    - **Resolution**:
+      - `frontend/shared/js/supabase.js`:
+        - Exported `window.apiVerifyGoogleRegistration = apiVerifyGoogleRegistration;`.
+        - In `apiVerifyGoogleRegistration`: Routed user creation through `syncGoogleUserToSupabase` and cleaned fallback `POST ${REST_BASE}/users` payload without unsupported `email_verified_at`.
+        - Added `{ Prefer: 'return=representation' }` to headers in `syncGoogleUserToSupabase` user insert.
+      - `frontend/shared/js/api.js`:
+        - Aligned `apiVerifyGoogleRegistration` implementation and user sync payload without `email_verified_at`.
+      - `frontend/pages/auth/auth.js`:
+        - Wrapped `#acceptTermsBtn` click listener in a comprehensive `try ... catch (err)` block with fallback button recovery (`acceptTermsBtn.disabled = false`, `acceptTermsBtn.innerHTML = origHtml`).
+        - Checked for `typeof apiVerifyGoogleRegistration === 'function' ? apiVerifyGoogleRegistration : window.apiVerifyGoogleRegistration`.
+        - On failure or exception, safely recovers button state, closes terms modal, and re-opens `#emailOtpModal` with the descriptive error message instead of hanging indefinitely.
+        - On success, wraps hosted admin session creation and redirection in try/catch to guarantee seamless transition to `index.html`.
+    - **Automated Verification**:
+      - Executed Chrome DevTools Protocol end-to-end headless browser test on `http://127.0.0.1:8000/pages/auth/login.html`: Verified global export of `apiVerifyGoogleRegistration`, simulated unverified Google user, entered valid OTP challenge, scrolled Terms modal to unlock "I Agree", clicked button, verified zero browser exceptions, confirmed `urbanscope_user` and `urbanscope_jwt_token` populated in `localStorage`, confirmed modal closed, and verified successful frame navigation to `http://localhost:8000/index.html`.
+
 ---
 
 ## Safety Rules
