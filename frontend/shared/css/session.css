@@ -1491,3 +1491,118 @@ html.dark-mode .fab-action-btn.fab-call {
 html.dark-mode .fab-action-btn.fab-call:hover {
     background: #06392c;
 }
+
+/* ========================================================
+   First-Time Visitor Chat FAB Wiggle Animation
+   ======================================================== */
+@keyframes fabWiggle {
+    0% {
+        transform: rotate(0deg) scale(1);
+    }
+    4% {
+        transform: rotate(-13deg) scale(1.12);
+    }
+    8% {
+        transform: rotate(13deg) scale(1.12);
+    }
+    12% {
+        transform: rotate(-9deg) scale(1.1);
+    }
+    16% {
+        transform: rotate(9deg) scale(1.1);
+    }
+    20% {
+        transform: rotate(-5deg) scale(1.06);
+    }
+    24% {
+        transform: rotate(5deg) scale(1.04);
+    }
+    28% {
+        transform: rotate(0deg) scale(1);
+    }
+    /* Brief pause between waves */
+    42% {
+        transform: rotate(0deg) scale(1);
+    }
+    /* Second wave */
+    46% {
+        transform: rotate(-13deg) scale(1.12);
+    }
+    50% {
+        transform: rotate(13deg) scale(1.12);
+    }
+    54% {
+        transform: rotate(-9deg) scale(1.1);
+    }
+    58% {
+        transform: rotate(9deg) scale(1.1);
+    }
+    62% {
+        transform: rotate(-5deg) scale(1.06);
+    }
+    66% {
+        transform: rotate(5deg) scale(1.04);
+    }
+    70%, 100% {
+        transform: rotate(0deg) scale(1);
+    }
+}
+
+@keyframes fabPulseLight {
+    0% {
+        box-shadow: 0 10px 28px rgba(29, 66, 38, 0.42), 0 0 0 0 rgba(45, 92, 57, 0.65);
+    }
+    18% {
+        box-shadow: 0 12px 32px rgba(29, 66, 38, 0.5), 0 0 0 14px rgba(45, 92, 57, 0);
+    }
+    42% {
+        box-shadow: 0 10px 28px rgba(29, 66, 38, 0.42), 0 0 0 0 rgba(45, 92, 57, 0.65);
+    }
+    60% {
+        box-shadow: 0 12px 32px rgba(29, 66, 38, 0.5), 0 0 0 14px rgba(45, 92, 57, 0);
+    }
+    72%, 100% {
+        box-shadow: 0 10px 28px rgba(29, 66, 38, 0.42), 0 0 0 0 rgba(45, 92, 57, 0);
+    }
+}
+
+@keyframes fabPulseDark {
+    0% {
+        box-shadow: 0 10px 28px rgba(0, 0, 0, 0.6), 0 0 0 0 rgba(62, 163, 93, 0.7);
+    }
+    18% {
+        box-shadow: 0 12px 32px rgba(0, 0, 0, 0.7), 0 0 0 14px rgba(62, 163, 93, 0);
+    }
+    42% {
+        box-shadow: 0 10px 28px rgba(0, 0, 0, 0.6), 0 0 0 0 rgba(62, 163, 93, 0.7);
+    }
+    60% {
+        box-shadow: 0 12px 32px rgba(0, 0, 0, 0.7), 0 0 0 14px rgba(62, 163, 93, 0);
+    }
+    72%, 100% {
+        box-shadow: 0 10px 28px rgba(0, 0, 0, 0.6), 0 0 0 0 rgba(62, 163, 93, 0);
+    }
+}
+
+.contact-fab.fab-wiggle .fab-main-btn {
+    animation: fabWiggle 2.8s cubic-bezier(0.36, 0.07, 0.19, 0.97) both,
+               fabPulseLight 2.8s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+    transform-origin: center center;
+    z-index: 2;
+}
+
+html.dark-mode .contact-fab.fab-wiggle .fab-main-btn {
+    animation: fabWiggle 2.8s cubic-bezier(0.36, 0.07, 0.19, 0.97) both,
+               fabPulseDark 2.8s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+}
+
+.contact-fab.fab-wiggle .fab-main-btn:hover,
+.contact-fab.open .fab-main-btn {
+    animation: none !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .contact-fab.fab-wiggle .fab-main-btn {
+        animation: none !important;
+    }
+}

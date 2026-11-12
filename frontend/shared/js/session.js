@@ -1032,7 +1032,92 @@
         var mainBtn = fabWrap.querySelector('#fabMainBtn');
         var menu = fabWrap.querySelector('#fabMenu');
 
+        // Visitor callout: wiggle chat button everytime they open the website, but only once per visit/session
+        // Clean up legacy permanent flag so returning visitors see the wiggle when opening the site
+        try {
+            localStorage.removeItem('urbanscope_chat_fab_seen');
+        } catch (_) {}
+
+        var SESSION_WIGGLED_KEY = 'urbanscope_chat_fab_session_wiggled';
+        var hasWiggledThisSession = false;
+        try {
+            hasWiggledThisSession = Boolean(sessionStorage.getItem(SESSION_WIGGLED_KEY));
+        } catch (_) {}
+
+        // Detect page reload (F5 / Ctrl+R / browser reload)
+        var isReload = false;
+        try {
+            var navEntries = performance.getEntriesByType('navigation');
+            if (navEntries && navEntries.length > 0) {
+                isReload = navEntries[0].type === 'reload';
+            } else if (window.performance && window.performance.navigation) {
+                isReload = window.performance.navigation.type === 1;
+            }
+        } catch (_) {}
+
+        // Detect arrival from outside the website (empty referrer or external origin)
+        var isExternalOpen = false;
+        try {
+            if (!document.referrer || document.referrer.indexOf(window.location.host) === -1) {
+                isExternalOpen = true;
+            }
+        } catch (_) {}
+
+        function stopWiggle() {
+            if (fabWrap.classList.contains('fab-wiggle')) {
+                fabWrap.classList.remove('fab-wiggle');
+            }
+            try {
+                sessionStorage.setItem(SESSION_WIGGLED_KEY, '1');
+            } catch (_) {}
+        }
+
+        function triggerWiggle() {
+            if (fabWrap.classList.contains('open')) {
+                stopWiggle();
+                return;
+            }
+            fabWrap.classList.add('fab-wiggle');
+            try {
+                sessionStorage.setItem(SESSION_WIGGLED_KEY, '1');
+            } catch (_) {}
+            setTimeout(function () {
+                fabWrap.classList.remove('fab-wiggle');
+            }, 3200);
+        }
+
+        // Expose helper for programmatic trigger & verification
+        window.triggerChatFabWiggle = triggerWiggle;
+
+        // Trigger everytime they open the website (each visit/session, external open, or reload), but only once
+        var shouldWiggle = !hasWiggledThisSession || isReload || isExternalOpen || window.location.search.includes('wiggle_chat=1');
+
+        if (shouldWiggle) {
+            var splashEl = document.getElementById('splash');
+            var isSplashPending = document.documentElement.classList.contains('splash-pending');
+            if (splashEl || isSplashPending) {
+                var checkSplashInterval = setInterval(function () {
+                    var splashNow = document.getElementById('splash');
+                    var pendingNow = document.documentElement.classList.contains('splash-pending');
+                    if (!splashNow && !pendingNow) {
+                        clearInterval(checkSplashInterval);
+                        setTimeout(triggerWiggle, 1200);
+                    }
+                }, 200);
+                setTimeout(function () {
+                    clearInterval(checkSplashInterval);
+                    triggerWiggle();
+                }, 5000);
+            } else {
+                setTimeout(triggerWiggle, 1400);
+            }
+        }
+
+        mainBtn.addEventListener('mouseenter', stopWiggle);
+        mainBtn.addEventListener('touchstart', stopWiggle, { passive: true });
+
         function toggleFab() {
+            stopWiggle();
             var open = fabWrap.classList.toggle('open');
             mainBtn.setAttribute('aria-expanded', String(open));
             menu.setAttribute('aria-hidden', String(!open));
