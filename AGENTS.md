@@ -1246,6 +1246,23 @@ path when rendering from a page.
         - Verified seamless visual layout transition from the final FAQ item to the CTA banner, with `.cta-question` positioned directly above the consultation button in both light and dark modes (`faq_removed_light.png` and `faq_removed_dark.png`), and tested responsiveness on mobile viewports (375x812, `cta_mobile.png`).
         - Verified that clicking `#ctaConsultBtn` in the CTA banner opens `#consultationIntentModal` without console errors.
 
+112. **Smooth GPU-Accelerated FAQ Accordion Expansion & Collapse Animations (`frontend/index.css`):**
+    - **Problem**: Opening and closing items in the homepage FAQ accordion relied on `max-height: 0` to `max-height: 1200px`. Because actual question answer heights are only ~150-300px, expanding overshot within milliseconds and closing suffered from a ~300ms delay before suddenly snapping shut, resulting in a jerky and unnatural user experience.
+    - **Resolution**:
+      - `frontend/index.css`: Replaced `max-height` with modern CSS Grid row interpolation (`grid-template-rows: 0fr` to `grid-template-rows: 1fr`) on `.faq-answer` with a cubic-bezier easing curve (`0.38s cubic-bezier(0.16, 1, 0.3, 1)`).
+      - Transitioned `.faq-answer-inner` with synchronized padding (`padding: 0 24px` to `16px 24px 24px`), content fade (`opacity: 0` to `1`), and subtle upward slide (`transform: translateY(-8px)` to `translateY(0)`).
+      - Replaced `border-top` on `.faq-answer-inner` with non-layout-shifting `box-shadow: inset 0 1px 0 #f1f6f2` (and `#243629` in dark mode) ensuring collapsed height is exactly `0px` without subpixel border leakage.
+      - Synchronized plus-to-close toggle icon rotation (`.faq-icon`) with `transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1)` for fluid 45-degree rotation matching accordion track motion.
+      - Added responsive mobile adjustments ensuring clean 0px to full-height expansion on smaller screens.
+    - **Automated Verification**:
+      - Executed Chrome DevTools Protocol end-to-end headless browser test (`scratch/test_faq_animation.cjs`):
+        - Verified initial collapsed height is strictly `0px` (`active: false, height: 0, computedH: '0px'`).
+        - Verified mid-expansion interpolation at ~150ms (`height: ~289px`).
+        - Verified full expansion at ~500ms (`height: ~332px, scrollHeight: 266px, iconTransform: 45deg rotation matrix`).
+        - Verified mid-collapse interpolation at ~150ms (`height: ~33px`).
+        - Verified clean return to `0px` upon closing (`height: 0, active: false`).
+        - Captured visual verification frames in light (`faq_anim_open.png`) and dark mode (`faq_anim_dark.png`).
+
 ---
 
 ## Safety Rules
