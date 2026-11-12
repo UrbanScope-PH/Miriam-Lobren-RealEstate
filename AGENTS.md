@@ -1229,6 +1229,7 @@ path when rendering from a page.
       - Updated `.modal-footer.success-modal-footer` to `justify-content: center`.
       - Updated `.success-modal-footer .modal-action-group` to `justify-content: center; gap: 12px; width: 100%`.
       - Styled `.success-modal-footer .btn-success-primary` and `.btn-secondary` with `flex: 1 1 0; justify-content: center; text-align: center; white-space: nowrap;` so both buttons expand to identical, evenly balanced widths across the modal footer with centered icons and labels.
+      - Swapped the button order so the secondary action (`Submit Another` / `Back to Home`) appears on the left, and the primary CTA (`View in Inquiry History` / `Create Account to Track Inquiry`) appears on the right.
       - In mobile responsive query (`@media (max-width: 600px)`), updated `.success-modal-footer .modal-action-group` to `flex-direction: column; align-items: stretch; gap: 10px;` ensuring seamless full-width stacked button presentation on small screens.
 
 ---
