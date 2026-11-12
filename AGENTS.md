@@ -1223,6 +1223,13 @@ path when rendering from a page.
         - In `apiVerifyGoogleRegistration`, `apiCompleteRegistrationOtp`, and `apiSignUp`: Calls `purgeInquiriesByEmailLocal` and cleans any residual remote inquiries/notifications upon registration so a re-registered account starts 100% clean with 0 unread notifications and 0 stale inquiries.
       - `backend/routers/auth.py`: In `complete_google_registration`, purges any residual notifications and inquiries for the email upon new account registration in SQLite.
       - `frontend/shared/js/session.js`: Added `clientNotificationsUpdated` event listener to reload notifications and update navbar bell UI immediately.
+110. **Inquiry Success Modal Symmetrical & Even Centering for Action Buttons (`frontend/pages/inquiry/inquiry.css`, `frontend/pages/inquiry/inquiry.html`):**
+    - **Problem**: In the post-submission inquiry success modal (`#inquirySuccessModal`), action buttons (`View in Inquiry History` and `Submit Another`) in `.modal-footer.success-modal-footer` were left-aligned with uneven button widths inside `.modal-action-group`, leaving a large empty space on the right side of the card.
+    - **Resolution**:
+      - Updated `.modal-footer.success-modal-footer` to `justify-content: center`.
+      - Updated `.success-modal-footer .modal-action-group` to `justify-content: center; gap: 12px; width: 100%`.
+      - Styled `.success-modal-footer .btn-success-primary` and `.btn-secondary` with `flex: 1 1 0; justify-content: center; text-align: center; white-space: nowrap;` so both buttons expand to identical, evenly balanced widths across the modal footer with centered icons and labels.
+      - In mobile responsive query (`@media (max-width: 600px)`), updated `.success-modal-footer .modal-action-group` to `flex-direction: column; align-items: stretch; gap: 10px;` ensuring seamless full-width stacked button presentation on small screens.
 
 ---
 
