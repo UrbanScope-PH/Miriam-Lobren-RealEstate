@@ -1122,6 +1122,14 @@ path when rendering from a page.
       - Added defensive `visibility: hidden;` and `visibility: visible;` rules to `.back-to-top-btn` when inactive vs `.is-active` in `frontend/shared/css/common.css`.
     - **Automated Verification**: Verified via Chrome DevTools Protocol (`scratch/test_fab_hit_test.js` and `scratch/test_fab_dark.js`) using `document.elementFromPoint` at 25px, 50px, 80px, 120px, and 160px above `#fabMainBtn`. Confirmed `isFabRelated: false` across all points when closed (hits pass directly to underlying page background without interception), confirmed buttons become properly interactive and hittable when open, and confirmed immediate deactivation upon close in both light and dark mode.
 
+104. **Homepage Category Tabs Dark Mode Theme Fix (`frontend/index.css`):**
+    - **Problem**: In dark mode, active category filter tabs (`.cat-tab.active`, e.g. the "All" tab) displayed with a blinding pale mint/white background (`#e8f5ec`) and washed-out light green text (`#86efac`), creating harsh visual glare against the dark container.
+    - **Root Cause**: `html.dark-mode .cat-tab.active` in `frontend/index.css` previously only specified `color: #86efac;` and omitted a `background` override, causing it to fall back to the light-mode rule `background: #e8f5ec`.
+    - **Resolution**:
+      - Updated `html.dark-mode .cat-tab.active, html[data-theme="dark"] .cat-tab.active` to use a dark forest background (`#233b2b`), a subtle emerald inset border (`box-shadow: inset 0 0 0 1px #3ea35d, 0 2px 8px rgba(0, 0, 0, 0.3)`), and crisp high-contrast emerald text (`color: #86efac`).
+      - Added a soft hover feedback state on inactive tabs (`background: rgba(134, 239, 172, 0.08); color: #e7f0e9;`).
+      - Verified across tabs ("All", "Townhouses", etc.) and ensured light-mode styles remained completely unaffected.
+
 ---
 
 ## Safety Rules
