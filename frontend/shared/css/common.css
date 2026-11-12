@@ -838,13 +838,15 @@ img, video, canvas, svg {
     justify-content: center;
     padding: 0;
     opacity: 0;
+    visibility: hidden;
     pointer-events: none;
     transform: translateY(12px) scale(0.9);
-    transition: opacity 0.3s ease, transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s ease, background 0.25s ease;
+    transition: opacity 0.3s ease, transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s ease, background 0.25s ease, visibility 0.3s ease;
 }
 
 .back-to-top-btn.is-active {
     opacity: 1;
+    visibility: visible;
     pointer-events: auto !important;
     cursor: pointer;
     transform: translateY(0) scale(1);
