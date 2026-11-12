@@ -154,6 +154,25 @@
                         <button type="submit" class="btn-submit">Log in</button>
                     </form>
 
+                    <div class="otp-modal-overlay" id="emailOtpModal" aria-hidden="true">
+                        <section class="otp-modal-card" role="dialog" aria-modal="true" aria-labelledby="emailOtpTitle">
+                            <button type="button" class="otp-modal-close" id="closeEmailOtpModal" aria-label="Close verification dialog">&times;</button>
+                            <div class="otp-modal-icon" aria-hidden="true">@</div>
+                            <h2 id="emailOtpTitle">Verify your email</h2>
+                            <p class="otp-modal-copy">We sent a 6-digit verification code to <strong id="otpTargetEmail"></strong>. Check your inbox and spam folder, then enter the code below to complete your registration. Codes expire in 10 minutes.</p>
+                            <form id="emailOtpForm" class="otp-form">
+                                <label for="emailOtpCode">Email verification code</label>
+                                <input id="emailOtpCode" name="code" type="text" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6}" maxlength="6" placeholder="000000" required>
+                                <p class="otp-form-message" id="emailOtpMessage" role="status" aria-live="polite"></p>
+                                <button type="submit" class="btn-submit" id="verifyEmailOtpBtn">Verify &amp; Continue</button>
+                            </form>
+                            <div class="otp-modal-resend">
+                                <span id="otpResendStatus">You can request another code in 60 seconds.</span>
+                                <button type="button" id="resendEmailOtpBtn" disabled>Resend code</button>
+                            </div>
+                        </section>
+                    </div>
+
                     <div class="divider">
                         <span>Or</span>
                     </div>
@@ -189,6 +208,160 @@
             </div>
         </div>
 
+    </div>
+
+    <!-- TERMS OF SERVICE & PRIVACY POLICY SCROLL-TO-ACCEPT MODAL -->
+    <div class="terms-modal-overlay" id="termsModalOverlay" role="dialog" aria-modal="true" aria-labelledby="termsModalTitle" aria-hidden="true">
+        <div class="terms-modal-card">
+            <div class="terms-modal-header">
+                <div class="terms-modal-header-main">
+                    <div class="terms-modal-badge-icon" aria-hidden="true">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                            <polyline points="14 2 14 8 20 8"></polyline>
+                            <line x1="16" y1="13" x2="8" y2="13"></line>
+                            <line x1="16" y1="17" x2="8" y2="17"></line>
+                            <polyline points="10 9 9 9 8 9"></polyline>
+                        </svg>
+                    </div>
+                    <div class="terms-modal-heading">
+                        <h2 id="termsModalTitle">Terms of Service &amp; Privacy Policy</h2>
+                        <p class="terms-modal-subtitle">UrbanScope &bull; Miriam Lobren Real Estate &bull; Please read to the end to continue</p>
+                    </div>
+                    <button type="button" class="terms-modal-close" id="closeTermsModalBtn" aria-label="Close Terms of Service">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="18" y1="6" x2="6" y2="18"></line>
+                            <line x1="6" y1="6" x2="18" y2="18"></line>
+                        </svg>
+                    </button>
+                </div>
+                <div class="terms-scroll-progress" aria-hidden="true">
+                    <div class="terms-scroll-bar" id="termsScrollBar"></div>
+                </div>
+            </div>
+
+            <div class="terms-modal-body" id="termsModalBody" tabindex="0" aria-label="Terms of Service and Privacy Policy document">
+                <div class="terms-part-banner" id="modalTermsPart">
+                    <span class="terms-part-pill">Part I &bull; Terms of Service</span>
+                    <span class="terms-part-meta">RA No. 9646 (RESA) Compliant</span>
+                </div>
+
+                <section class="terms-doc-section">
+                    <h3>1. Acceptance of Terms &amp; Scope</h3>
+                    <p>Welcome to <strong>UrbanScope</strong>, the official real estate catalog, consultation scheduling, and property inquiry portal representing <strong>Miriam Lobren</strong>, an accredited real estate professional serving Las Piñas City, Cavite, and neighboring provinces.</p>
+                    <p>By registering a client account, booking site viewings, or submitting inquiries through this platform, you acknowledge that you have read, understood, and agreed to be bound by these Terms of Service and our Data Privacy Policy.</p>
+                </section>
+
+                <section class="terms-doc-section">
+                    <h3>2. Real Estate Representation &amp; Regulatory Compliance</h3>
+                    <p>All real estate advisory, property showcasing, brokerage facilitation, and buyer assistance conducted through UrbanScope are performed in accordance with the <strong>Real Estate Service Act of the Philippines (Republic Act No. 9646 or RESA)</strong> and regulations set forth by the <strong>Professional Regulation Commission (PRC)</strong> and the <strong>Department of Human Settlements and Urban Development (DHSUD)</strong>.</p>
+                </section>
+
+                <section class="terms-doc-section">
+                    <h3>3. Property Listings, Pricing &amp; Computations</h3>
+                    <ul>
+                        <li><strong>Pricing Disclaimer:</strong> Property prices, available discounts, and promotional payment terms shown in Philippine Pesos (₱) are based on the latest developer price lists and are subject to change without prior notice by the developer.</li>
+                        <li><strong>Sample Computations:</strong> Estimated monthly amortization, down payment schedules, and bank or Pag-IBIG Fund loan amounts are sample calculations only and do not constitute a formal financing contract.</li>
+                        <li><strong>No Binding Contract of Sale:</strong> Information on this website serves as an invitation to inquire. A binding purchase of real estate is finalized solely through official developer Reservation Agreements, Contract to Sell (CTS), and Deed of Absolute Sale (DOAS).</li>
+                    </ul>
+                </section>
+
+                <section class="terms-doc-section">
+                    <h3>4. Free Site Viewing (Tripping) &amp; Consultations</h3>
+                    <ul>
+                        <li>Appointments should be booked at least 24 to 48 hours in advance to coordinate subdivision gate passes and model unit clearance.</li>
+                        <li>Site viewing schedules remain subject to weather conditions, developer model unit visiting hours, and subdivision safety guidelines.</li>
+                        <li>Miriam Lobren Real Estate does not charge prospective buyers any fees for scheduling site viewings or consulting on Pag-IBIG and bank loan pre-qualifications.</li>
+                    </ul>
+                </section>
+
+                <section class="terms-doc-section">
+                    <h3>5. Client Accounts &amp; User Responsibilities</h3>
+                    <p>When creating your UrbanScope client account, you agree to:</p>
+                    <ul>
+                        <li>Provide true, accurate, and current information, including a valid Philippine mobile number (<code>+63</code> / <code>09</code>) and active email address.</li>
+                        <li>Maintain the confidentiality of your account password and accept responsibility for activities conducted under your credentials.</li>
+                        <li>Refrain from submitting fraudulent, automated, spam, or misleading property inquiries.</li>
+                    </ul>
+                </section>
+
+                <section class="terms-doc-section">
+                    <h3>6. Reservations, Down Payments &amp; Financing</h3>
+                    <ul>
+                        <li><strong>Direct Developer Payments:</strong> All unit reservation fees are paid directly to the accredited developer's authorized bank accounts or cashier desks. UrbanScope does not collect personal cash payments for reservations.</li>
+                        <li><strong>Non-Refundability:</strong> Developer reservation fees are generally non-refundable and non-transferable pursuant to developer policy.</li>
+                        <li><strong>Loan Approvals:</strong> Final housing loan approval rests under the sole credit evaluation of Pag-IBIG Fund or the partner commercial bank.</li>
+                    </ul>
+                </section>
+
+                <section class="terms-doc-section">
+                    <h3>7. Intellectual Property, Liability &amp; Governing Law</h3>
+                    <p>All platform designs, branding, architectural renders, and written descriptions on UrbanScope are protected under Philippine intellectual property laws. UrbanScope shall not be liable for developer construction schedule changes, lender credit decisions, or temporary maintenance interruptions.</p>
+                    <p>These Terms are governed by the laws of the <strong>Republic of the Philippines</strong>, with exclusive venue jurisdiction in the competent courts of <strong>Las Piñas City</strong> or <strong>Cavite</strong>.</p>
+                </section>
+
+                <div class="terms-part-banner privacy-banner" id="modalPrivacyPart">
+                    <span class="terms-part-pill">Part II &bull; Privacy Policy</span>
+                    <span class="terms-part-meta">RA No. 10173 (DPA) Compliant</span>
+                </div>
+
+                <section class="terms-doc-section">
+                    <h3>8. Commitment to Data Privacy (RA No. 10173)</h3>
+                    <p>UrbanScope safeguards your personal data in strict compliance with the <strong>Philippine Data Privacy Act of 2012 (Republic Act No. 10173)</strong>, its Implementing Rules and Regulations (IRR), and issuances of the <strong>National Privacy Commission (NPC)</strong>.</p>
+                </section>
+
+                <section class="terms-doc-section">
+                    <h3>9. Information We Collect &amp; Purpose of Processing</h3>
+                    <ul>
+                        <li><strong>Identity &amp; Contact Data:</strong> Full name, email address, Philippine mobile number, and cryptographically hashed password (PBKDF2) to create and secure your client account.</li>
+                        <li><strong>Inquiry &amp; Consultation Details:</strong> Selected property listings, preferred viewing dates, financing preferences, and messages so Miriam Lobren can coordinate site tours and prepare accurate sample computations.</li>
+                    </ul>
+                </section>
+
+                <section class="terms-doc-section">
+                    <h3>10. Strict No-Sale Policy, Security &amp; Your Rights</h3>
+                    <ul>
+                        <li><strong>We Never Sell Your Data:</strong> Your contact details are never sold, rented, or traded to third-party telemarketers or advertisers. Data is shared only with accredited property developers or partner banks/Pag-IBIG Fund upon your explicit authorization.</li>
+                        <li><strong>Security &amp; Retention:</strong> Passwords are protected with salted PBKDF2 hashing, role-based access control (RBAC), and encrypted transport. General inquiries are retained for up to 24 months unless earlier erasure is requested.</li>
+                        <li><strong>Data Subject Rights:</strong> Under RA 10173, you hold the right to be informed, access, rectify, object, or request erasure of your personal data by contacting <strong id="termsAgentEmail">miriamalobren@gmail.com</strong> or <strong id="termsAgentPhone">+63 918 964 5434</strong>.</li>
+                    </ul>
+                </section>
+
+                <div class="terms-end-callout">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                        <polyline points="9 12 11 14 15 10"></polyline>
+                    </svg>
+                    <p>By clicking <strong>&ldquo;I Agree&rdquo;</strong> below, you confirm that you have read, understood, and accepted the UrbanScope Terms of Service and Privacy Policy.</p>
+                </div>
+            </div>
+
+            <div class="terms-modal-footer">
+                <div class="terms-scroll-hint" id="termsScrollHint" aria-live="polite">
+                    <svg class="hint-icon-scroll" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <line x1="12" y1="5" x2="12" y2="19"></line>
+                        <polyline points="19 12 12 19 5 12"></polyline>
+                    </svg>
+                    <svg class="hint-icon-ready" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <polyline points="20 6 9 17 4 12"></polyline>
+                    </svg>
+                    <span id="termsScrollHintText">Scroll down to read the entire agreement to enable &ldquo;I Agree&rdquo;</span>
+                </div>
+                <div class="terms-modal-actions">
+                    <button type="button" class="btn-terms-decline" id="declineTermsBtn">Cancel</button>
+                    <button type="button" class="btn-terms-accept" id="acceptTermsBtn" disabled>
+                        <svg class="btn-icon-lock" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                            <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                        </svg>
+                        <svg class="btn-icon-check" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <polyline points="20 6 9 17 4 12"></polyline>
+                        </svg>
+                        <span>I Agree</span>
+                    </button>
+                </div>
+            </div>
+        </div>
     </div>
 
     <script src="login.js"></script>

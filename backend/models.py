@@ -78,6 +78,18 @@ class AdminProfileUpdate(BaseModel):
     avatar_url: Optional[str] = None
 
 
+class GoogleRegistrationComplete(BaseModel):
+    email: str = Field(..., description="Google account email address")
+    code: str = Field(..., pattern=r"^[0-9]{6}$", description="6-digit email verification code")
+    terms_accepted: bool = Field(..., description="Must be true to agree to Terms of Service and Privacy Policy")
+    credential: Optional[str] = Field(default=None, description="Google OAuth2 ID token")
+    access_token: Optional[str] = Field(default=None, description="Google OAuth2 access token")
+    full_name: Optional[str] = Field(default=None, description="Google account display name")
+    avatar_url: Optional[str] = Field(default=None, description="Google account avatar URL")
+    google_id: Optional[str] = Field(default=None, description="Google subject ID")
+    phone: Optional[str] = Field(default="", description="Contact phone number")
+
+
 class PasswordChangeRequest(BaseModel):
     current_password: str = Field(..., min_length=1, description="Current account password")
     new_password: str = Field(..., min_length=6, description="New password (minimum 6 characters)")
@@ -90,6 +102,11 @@ class AuthResponse(BaseModel):
     user: Optional[UserResponse] = None
     redirect_url: Optional[str] = None
     message: Optional[str] = None
+    requires_verification: Optional[bool] = None
+    email: Optional[str] = None
+    full_name: Optional[str] = None
+    avatar_url: Optional[str] = None
+    google_id: Optional[str] = None
 
 
 # ==========================================================

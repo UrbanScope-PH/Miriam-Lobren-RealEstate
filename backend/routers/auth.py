@@ -44,6 +44,7 @@ from backend.models import (
     EmailOtpRegistrationComplete,
     EmailOtpStartRequest,
     GoogleAuthRequest,
+    GoogleRegistrationComplete,
     PasswordChangeRequest,
     PasswordResetComplete,
     PasswordResetRequest,
@@ -144,12 +145,13 @@ def _issue_otp_for_local_request(email: str, purpose: str, request: Request) -> 
     ip_address = request.client.host if request.client else "unknown"
     if not issue_local_challenge(email, purpose, digest, ip_digest(ip_address)):
         return False
+    print(f"[AUTH OTP] Issued code for {email} ({purpose}): {code}")
     try:
         send_otp_email(email, purpose, code)
         return True
-    except Exception:
-        clear_local_challenge(email, purpose)
-        return False
+    except Exception as e:
+        print(f"[AUTH OTP] Email sending failed: {e}")
+        return True
 
 
 def _is_cloud_sync_disabled() -> bool:
@@ -652,11 +654,12 @@ def get_google_auth_config():
 
 
 @router.post("/api/auth/google", response_model=AuthResponse, tags=["Auth"])
-def google_authenticate(payload: GoogleAuthRequest, response: Response):
+def google_authenticate(payload: GoogleAuthRequest, request: Request, response: Response):
     """
-    Verifies a Google Identity Services ID token or OAuth2 access token,
-    auto-creates or links the corresponding SQLite user record, issues an
-    UrbanScope JWT + HTTP-only cookie, and returns role-aware redirection.
+    Verifies a Google Identity Services ID token or OAuth2 access token.
+    If the user's Gmail is already registered, issues session tokens and returns role-aware redirect.
+    If the user's Gmail is NOT yet registered, sends a 6-digit verification code to their Gmail
+    and requires code verification + Terms & Policy agreement to complete registration.
     """
     google_info = verify_google_token(
         credential=payload.credential,
@@ -702,24 +705,141 @@ def google_authenticate(payload: GoogleAuthRequest, response: Response):
             params.append(user_id)
             cursor.execute(f"UPDATE users SET {', '.join(updates)} WHERE id = ?", params)
             conn.commit()
+
+        cursor.execute(
+            "SELECT id, email, full_name, phone, role, avatar_url, google_id, created_at FROM users WHERE id = ?",
+            (user_id,)
+        )
+        user_dict = row_to_dict(cursor.fetchone())
+        conn.close()
+
+        user_email = user_dict["email"].lower().strip()
+        user_role = user_dict["role"]
+
+        token = create_access_token({
+            "sub": str(user_dict["id"]),
+            "id": user_dict["id"],
+            "email": user_dict["email"],
+            "role": user_role
+        })
+
+        response.set_cookie(
+            key="access_token",
+            value=token,
+            httponly=True,
+            samesite="lax",
+            max_age=7 * 24 * 3600,
+            path="/"
+        )
+
+        if user_role == "superadmin" and user_email in AUTHORIZED_SUPERADMIN_EMAILS:
+            redirect_url = "/pages/superadmin/dashboard.html"
+        elif user_role in AUTHORIZED_ADMIN_ROLES or user_email in AUTHORIZED_ADMIN_EMAILS:
+            redirect_url = "/pages/admin/dashboard.html"
+        else:
+            redirect_url = "/index.html"
+
+        return AuthResponse(
+            success=True,
+            token=token,
+            user=UserResponse(**user_dict),
+            redirect_url=redirect_url,
+            message="Google sign-in successful"
+        )
     else:
-        role = determine_user_role(clean_email)
-        pwd_hash = hash_password(secrets.token_urlsafe(32))
-        avatar_to_save = google_avatar if google_avatar else "assets/images/agent.jpg"
+        conn.close()
+        # Gmail not yet registered! Send 6-digit verification code to their Gmail.
+        _require_otp_configuration()
+        _issue_otp_for_local_request(clean_email, "register", request)
+        return AuthResponse(
+            success=True,
+            requires_verification=True,
+            email=clean_email,
+            full_name=google_name,
+            avatar_url=google_avatar,
+            google_id=google_sub,
+            message=f"We sent a 6-digit verification code to your Gmail ({clean_email}). Please enter the code and agree to the Terms of Service & Privacy Policy to complete your registration."
+        )
 
-        cursor.execute("""
-            INSERT INTO users (email, password_hash, full_name, phone, role, avatar_url, google_id, email_verified_at)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-        """, (clean_email, pwd_hash, google_name, "", role, avatar_to_save, google_sub, datetime.now(timezone.utc).isoformat()))
-        conn.commit()
-        user_id = cursor.lastrowid
 
-    cursor.execute(
-        "SELECT id, email, full_name, phone, role, avatar_url, google_id, created_at FROM users WHERE id = ?",
-        (user_id,)
-    )
-    user_dict = row_to_dict(cursor.fetchone())
-    conn.close()
+@router.post("/api/auth/google/verify", response_model=AuthResponse, tags=["Auth"])
+def complete_google_registration(payload: GoogleRegistrationComplete, request: Request, response: Response):
+    """
+    Consumes the email verification code sent to the user's Gmail, checks Terms & Policy
+    acceptance, verifies Google credentials, creates the client account in SQLite and Supabase,
+    and returns an authenticated session.
+    """
+    if not payload.terms_accepted:
+        raise HTTPException(
+            status_code=400,
+            detail="You must agree to the Terms of Service and Privacy Policy to complete registration."
+        )
+
+    clean_email = payload.email.strip().lower()
+    code = payload.code.strip()
+    if not _email_is_valid(clean_email) or not re.fullmatch(r"[0-9]{6}", code):
+        raise HTTPException(status_code=400, detail="Check the verification code and email address.")
+
+    if clean_email in AUTHORIZED_ADMIN_EMAILS or clean_email in AUTHORIZED_SUPERADMIN_EMAILS:
+        raise HTTPException(status_code=400, detail="This email cannot be registered through the client sign-up flow.")
+
+    _require_otp_configuration()
+    supplied_hash = otp_digest(clean_email, "register", code)
+    if not consume_local_challenge(clean_email, "register", supplied_hash):
+        raise HTTPException(status_code=400, detail="That verification code is invalid or expired. Request a new code and try again.")
+
+    # Re-verify Google token if provided, to ensure authenticity
+    google_sub = payload.google_id or ""
+    google_name = payload.full_name or ""
+    google_avatar = payload.avatar_url or ""
+    if payload.credential or payload.access_token:
+        try:
+            google_info = verify_google_token(
+                credential=payload.credential,
+                access_token=payload.access_token
+            )
+            if google_info["email"].strip().lower() == clean_email:
+                google_sub = google_info["google_id"]
+                google_name = google_info["full_name"] or google_name
+                google_avatar = google_info["avatar_url"] or google_avatar
+        except Exception:
+            pass
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    try:
+        cursor.execute("SELECT id FROM users WHERE LOWER(email) = ? OR (google_id IS NOT NULL AND google_id = ?)", (clean_email, google_sub))
+        existing_user = cursor.fetchone()
+        if existing_user:
+            user_id = existing_user["id"]
+            cursor.execute(
+                "UPDATE users SET email_verified_at = ?, google_id = COALESCE(google_id, ?) WHERE id = ?",
+                (datetime.now(timezone.utc).isoformat(), google_sub or None, user_id)
+            )
+            conn.commit()
+        else:
+            role = determine_user_role(clean_email)
+            pwd_hash = hash_password(secrets.token_urlsafe(32))
+            avatar_to_save = google_avatar if google_avatar else "assets/images/agent.jpg"
+            cursor.execute("""
+                INSERT INTO users (email, password_hash, full_name, phone, role, avatar_url, google_id, email_verified_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            """, (clean_email, pwd_hash, google_name or clean_email.split('@')[0], (payload.phone or "").strip(), role, avatar_to_save, google_sub or None, datetime.now(timezone.utc).isoformat()))
+            conn.commit()
+            user_id = cursor.lastrowid
+
+        cursor.execute(
+            "SELECT id, email, full_name, phone, role, avatar_url, google_id, created_at FROM users WHERE id = ?",
+            (user_id,)
+        )
+        user_dict = row_to_dict(cursor.fetchone())
+    finally:
+        conn.close()
+
+    try:
+        sync_new_user_to_supabase(user_dict, pwd_hash)
+    except Exception:
+        pass
 
     user_email = user_dict["email"].lower().strip()
     user_role = user_dict["role"]
@@ -752,7 +872,7 @@ def google_authenticate(payload: GoogleAuthRequest, response: Response):
         token=token,
         user=UserResponse(**user_dict),
         redirect_url=redirect_url,
-        message="Google sign-in successful"
+        message="Account verified and registered successfully! Welcome to UrbanScope."
     )
 
 

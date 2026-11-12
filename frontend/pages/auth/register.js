@@ -269,6 +269,7 @@
 
     if (acceptTermsBtn) {
         acceptTermsBtn.addEventListener('click', function () {
+            if (window.__activeGooglePending) return;
             if (!hasScrolledToBottom) {
                 pulseScrollHint();
                 return;
@@ -339,28 +340,16 @@
         }
     });
 
-    // Enforce Terms of Service & Privacy Policy approval before Google OAuth sign-up
+    // For Google OAuth, new users will verify code and accept terms post-OAuth
     function ensureTermsAcceptedForGoogleSignup() {
-        if (hasAcceptedTerms && termsCheckbox && termsCheckbox.checked) {
-            return true;
-        }
-        pendingGoogleSignup = true;
-        saveRegisterDraft();
-        if (termsCheckbox) {
-            termsCheckbox.checked = false;
-        }
-        openTermsModal('terms', true, 'google');
-        return false;
+        return true;
     }
 
     window.urbanscopeCheckRegisterTermsForGoogle = ensureTermsAcceptedForGoogleSignup;
 
     if (googleSignupBtn) {
         googleSignupBtn.addEventListener('click', function (e) {
-            if (!ensureTermsAcceptedForGoogleSignup()) {
-                e.preventDefault();
-                e.stopImmediatePropagation();
-            }
+            // Let Google OAuth trigger directly; verification and terms acceptance occur after Google sign-in
         }, true);
     }
 
@@ -423,6 +412,7 @@
 
     if (resendEmailOtpBtn) {
         resendEmailOtpBtn.addEventListener('click', async function () {
+            if (window.__activeGooglePending) return;
             if (!pendingOtpEmail || typeof apiStartRegistrationOtp !== 'function') return;
             resendEmailOtpBtn.disabled = true;
             if (otpResendStatus) otpResendStatus.textContent = 'Requesting a new code…';
@@ -514,6 +504,7 @@
 
     if (emailOtpForm) {
         emailOtpForm.addEventListener('submit', async function (event) {
+            if (window.__activeGooglePending) return;
             event.preventDefault();
             const button = document.getElementById('verifyEmailOtpBtn');
             const originalText = button ? button.textContent : '';
