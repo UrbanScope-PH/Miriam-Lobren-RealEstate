@@ -851,6 +851,15 @@ def complete_google_registration(payload: GoogleRegistrationComplete, request: R
             """, (clean_email, pwd_hash, google_name or clean_email.split('@')[0], (payload.phone or "").strip(), role, avatar_to_save, google_sub or None, datetime.now(timezone.utc).isoformat()))
             conn.commit()
             user_id = cursor.lastrowid
+            try:
+                cursor.execute(
+                    "DELETE FROM notifications WHERE LOWER(recipient_email) = ? OR inquiry_id IN (SELECT id FROM inquiries WHERE LOWER(client_email) = ?)",
+                    (clean_email, clean_email)
+                )
+                cursor.execute("DELETE FROM inquiries WHERE LOWER(client_email) = ?", (clean_email,))
+                conn.commit()
+            except Exception:
+                pass
 
         cursor.execute(
             "SELECT id, email, full_name, phone, role, avatar_url, google_id, created_at FROM users WHERE id = ?",

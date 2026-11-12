@@ -934,6 +934,10 @@
         loadClientNotifications();
     });
 
+    window.addEventListener('clientNotificationsUpdated', function () {
+        loadClientNotifications();
+    });
+
     window.addEventListener('focus', function () {
         syncGlobalFooterContact();
         loadClientNotifications();
