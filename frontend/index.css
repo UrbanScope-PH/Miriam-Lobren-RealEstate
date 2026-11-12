@@ -2086,20 +2086,27 @@ html.dark-mode .cat-arrow:hover {
     color: #ffffff;
 }
 
-html.dark-mode .cat-tab {
+html.dark-mode .cat-tab,
+html[data-theme="dark"] .cat-tab {
     color: #a5b9aa;
 }
 
-html.dark-mode .cat-tab:hover {
+html.dark-mode .cat-tab:hover,
+html[data-theme="dark"] .cat-tab:hover {
     color: #e7f0e9;
+    background: rgba(134, 239, 172, 0.08);
 }
 
-html.dark-mode .cat-tab.active {
+html.dark-mode .cat-tab.active,
+html[data-theme="dark"] .cat-tab.active {
     color: #86efac;
+    background: #233b2b;
+    box-shadow: inset 0 0 0 1px #3ea35d, 0 2px 8px rgba(0, 0, 0, 0.3);
 }
 
-html.dark-mode .cat-tab.active::after {
-    background-color: #4ade80;
+html.dark-mode .cat-tab.active::after,
+html[data-theme="dark"] .cat-tab.active::after {
+    display: none;
 }
 
 html.dark-mode .property-card {
