@@ -1137,6 +1137,22 @@
     white-space: nowrap;
 }
 
+#managedPropertiesPanel td:nth-child(1),
+#managedPropertiesPanel td:nth-child(2) {
+    white-space: normal;
+}
+
+#managedPropertiesPanel td:nth-child(2) {
+    min-width: 150px;
+    max-width: 220px;
+    line-height: 1.45;
+}
+
+#managedPropertiesPanel th,
+#managedPropertiesPanel td {
+    padding: 14px 12px;
+}
+
 .table-panel tbody tr {
     background: #ffffff;
     transition: background 0.2s ease;
@@ -1249,6 +1265,125 @@
 .table-panel .action-view-btn:hover svg,
 .action-view-btn:hover svg {
     transform: scale(1.08);
+}
+
+/* MANAGED PROPERTIES TABLE BADGES & ROW ACTIONS */
+.status-badge-table {
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    white-space: nowrap;
+}
+
+.status-badge-available {
+    background: #dcfce7;
+    color: #15803d;
+    border: 1px solid #bbf7d0;
+}
+
+.status-badge-sold {
+    background: #fee2e2;
+    color: #b91c1c;
+    border: 1px solid #fecaca;
+}
+
+.status-badge-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    display: inline-block;
+    flex-shrink: 0;
+}
+
+.status-badge-available .status-badge-dot {
+    background: #22c55e;
+}
+
+.status-badge-sold .status-badge-dot {
+    background: #ef4444;
+}
+
+.dash-prop-actions {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: nowrap;
+    white-space: nowrap;
+}
+
+.prop-action-btn {
+    padding: 5px 10px;
+    border-radius: 6px;
+    font-family: inherit;
+    font-size: 0.78rem;
+    font-weight: 600;
+    line-height: 1.25;
+    text-decoration: none;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    white-space: nowrap;
+    transition: all 0.15s ease;
+}
+
+.prop-action-view {
+    background: #f0f7f2;
+    color: #1e5c33;
+    border: 1px solid #cbe0d1;
+}
+
+.prop-action-view:hover {
+    background: #dcfce7;
+    border-color: #86efac;
+}
+
+.prop-action-edit {
+    background: #eff6ff;
+    color: #1d4ed8;
+    border: 1px solid #bfdbfe;
+}
+
+.prop-action-edit:hover {
+    background: #dbeafe;
+    border-color: #93c5fd;
+}
+
+.prop-action-available {
+    background: #ecfdf5;
+    color: #047857;
+    border: 1px solid #a7f3d0;
+}
+
+.prop-action-available:hover {
+    background: #d1fae5;
+    border-color: #6ee7b7;
+}
+
+.prop-action-sold {
+    background: #fff7ed;
+    color: #c2410c;
+    border: 1px solid #fed7aa;
+}
+
+.prop-action-sold:hover {
+    background: #ffedd5;
+    border-color: #fdba74;
+}
+
+.prop-action-delete {
+    background: #fef2f2;
+    color: #b91c1c;
+    border: 1px solid #fecaca;
+}
+
+.prop-action-delete:hover {
+    background: #fee2e2;
+    border-color: #fca5a5;
 }
 
 /* EMPTY TABLE MESSAGE */
@@ -2039,6 +2174,20 @@
     cursor: default;
     transform: none;
     box-shadow: none;
+}
+
+.btn-modal-cancelled {
+    background: #fee2e2;
+    color: #b91c1c;
+    border: 1px solid #fecaca;
+    font-weight: 700;
+    font-size: 0.88rem;
+    padding: 9px 18px;
+    border-radius: 10px;
+    cursor: not-allowed;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
 }
 
 @media (max-width: 600px) {

@@ -70,9 +70,14 @@
     width: 100%;
     border: none;
     outline: none;
+    background: transparent;
     font-size: 13.5px;
     color: var(--text-dark);
     font-family: inherit;
+}
+
+.search-input-card input::placeholder {
+    color: var(--text-muted);
 }
 
 .status-select-card {

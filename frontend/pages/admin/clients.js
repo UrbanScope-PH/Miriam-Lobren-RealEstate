@@ -224,7 +224,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                         <small>${escapeHtml(email)}</small>
                     </td>
                     <td>
-                        <span style="font-weight: 500; color: #334155;">${escapeHtml(phone)}</span>
+                        <span class="client-phone-text">${escapeHtml(phone)}</span>
                     </td>
                     <td>
                         <span style="font-weight: 600; color: var(--green);">${escapeHtml(propTitle)}</span>
@@ -313,21 +313,21 @@ document.addEventListener('DOMContentLoaded', async () => {
         let actionButtonHtml = '';
         if (normStatus === 'Approved') {
             actionButtonHtml = `
-                <button type="button" class="action-btn btn-modal-approve approved" disabled style="background: #e2f4e8; color: #166534; padding: 9px 18px; font-size: 0.9rem; border-radius: 8px; border: 1px solid #86efac; font-weight: 600; display: inline-flex; align-items: center; gap: 6px;">
+                <button type="button" class="action-btn btn-modal-approve approved" disabled style="padding: 9px 18px; font-size: 0.9rem; border-radius: 8px;">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
                     Approved
                 </button>
             `;
         } else if (normStatus === 'Cancelled') {
             actionButtonHtml = `
-                <button type="button" class="action-btn status-badge cancelled" disabled style="background: #fee2e2; color: #b91c1c; padding: 9px 18px; font-size: 0.9rem; border-radius: 8px; border: 1px solid #fecaca; font-weight: 600; display: inline-flex; align-items: center; gap: 6px;">
+                <button type="button" class="action-btn btn-modal-cancelled" disabled style="padding: 9px 18px; font-size: 0.9rem; border-radius: 8px;">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"></circle><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"></line></svg>
                     Cancelled by Client
                 </button>
             `;
         } else {
             actionButtonHtml = `
-                <button type="button" id="modalApproveInqBtn" class="action-btn" style="background: var(--green); color: white; padding: 9px 18px; font-size: 0.9rem; border-radius: 8px; border: none; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; font-weight: 600;">
+                <button type="button" id="modalApproveInqBtn" class="action-btn btn-modal-approve" style="padding: 9px 18px; font-size: 0.9rem; border-radius: 8px;">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
                     Approve Inquiry
                 </button>
@@ -387,7 +387,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 const select = document.querySelector(`.status-select-inline[data-id="${inquiryId}"]`);
                 if (select) select.value = 'Approved';
                 modalApproveBtn.outerHTML = `
-                    <button type="button" class="action-btn btn-modal-approve approved" disabled style="background: #e2f4e8; color: #166534; padding: 9px 18px; font-size: 0.9rem; border-radius: 8px; border: 1px solid #86efac; font-weight: 600; display: inline-flex; align-items: center; gap: 6px;">
+                    <button type="button" class="action-btn btn-modal-approve approved" disabled style="padding: 9px 18px; font-size: 0.9rem; border-radius: 8px;">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
                         Approved
                     </button>
