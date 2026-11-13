@@ -169,10 +169,12 @@
     gap: 2px;
 }
 
-.calc-pill:hover {
-    background: #e6f4ec;
-    border-color: var(--green, #2d5c39);
-    transform: translateY(-1px);
+@media (hover: hover) and (pointer: fine) {
+    .calc-pill:hover {
+        background: #e6f4ec;
+        border-color: var(--green, #2d5c39);
+        transform: translateY(-1px);
+    }
 }
 
 .calc-pill.active {
@@ -227,9 +229,11 @@
     transition: transform 0.15s ease, background-color 0.15s ease;
 }
 
-.calc-slider::-webkit-slider-thumb:hover {
-    transform: scale(1.15);
-    background: var(--dark-green, #1a3b23);
+@media (hover: hover) and (pointer: fine) {
+    .calc-slider::-webkit-slider-thumb:hover {
+        transform: scale(1.15);
+        background: var(--dark-green, #1a3b23);
+    }
 }
 
 .calc-slider::-moz-range-thumb {
@@ -373,10 +377,12 @@
     transition: all 0.2s ease;
 }
 
-.calc-inquire-btn:hover {
-    background: #234c2d;
-    transform: translateY(-2px);
-    box-shadow: 0 6px 18px rgba(45, 92, 57, 0.38);
+@media (hover: hover) and (pointer: fine) {
+    .calc-inquire-btn:hover {
+        background: #234c2d;
+        transform: translateY(-2px);
+        box-shadow: 0 6px 18px rgba(45, 92, 57, 0.38);
+    }
 }
 
 .calc-footer-note {
@@ -455,7 +461,7 @@
 
 @media (max-width: 960px) {
     .budget-matcher-box {
-        grid-template-columns: 1fr;
+        grid-template-columns: minmax(0, 1fr);
         padding: 24px;
         gap: 28px;
     }
@@ -466,6 +472,7 @@
     display: flex;
     flex-direction: column;
     gap: 20px;
+    min-width: 0;
 }
 
 .budget-salary-display {
@@ -571,10 +578,12 @@
     box-shadow: 0 4px 14px rgba(26, 59, 35, 0.22);
 }
 
-.bm-cta-btn:hover {
-    background: var(--green, #2d5c39);
-    transform: translateY(-2px);
-    box-shadow: 0 6px 18px rgba(26, 59, 35, 0.32);
+@media (hover: hover) and (pointer: fine) {
+    .bm-cta-btn:hover {
+        background: var(--green, #2d5c39);
+        transform: translateY(-2px);
+        box-shadow: 0 6px 18px rgba(26, 59, 35, 0.32);
+    }
 }
 
 /* Matching Projects Column */
@@ -639,8 +648,10 @@
     transition: background 0.2s ease;
 }
 
-.bm-projects-list::-webkit-scrollbar-thumb:hover {
-    background: var(--green, #2d5c39);
+@media (hover: hover) and (pointer: fine) {
+    .bm-projects-list::-webkit-scrollbar-thumb:hover {
+        background: var(--green, #2d5c39);
+    }
 }
 
 .bm-project-item {
@@ -758,11 +769,18 @@
     transition: all 0.15s ease;
 }
 
-.bm-view-btn:hover,
 .bm-view-btn.btn-highlight {
     background: var(--green, #2d5c39);
     color: #ffffff;
     border-color: var(--green, #2d5c39);
+}
+
+@media (hover: hover) and (pointer: fine) {
+    .bm-view-btn:hover {
+        background: var(--green, #2d5c39);
+        color: #ffffff;
+        border-color: var(--green, #2d5c39);
+    }
 }
 
 /* ==========================================================================
@@ -810,11 +828,13 @@ html[data-theme="dark"] .calc-pill {
     color: #e2ede5;
 }
 
-html.dark-mode .calc-pill:hover,
-html[data-theme="dark"] .calc-pill:hover {
-    background: #23382c;
-    border-color: #4ade80;
-    color: #86efac;
+@media (hover: hover) and (pointer: fine) {
+    html.dark-mode .calc-pill:hover,
+    html[data-theme="dark"] .calc-pill:hover {
+        background: #23382c;
+        border-color: #4ade80;
+        color: #86efac;
+    }
 }
 
 html.dark-mode .calc-pill.active,
@@ -895,10 +915,12 @@ html[data-theme="dark"] .calc-inquire-btn {
     box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
 }
 
-html.dark-mode .calc-inquire-btn:hover,
-html[data-theme="dark"] .calc-inquire-btn:hover {
-    background: #348e50;
-    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.45);
+@media (hover: hover) and (pointer: fine) {
+    html.dark-mode .calc-inquire-btn:hover,
+    html[data-theme="dark"] .calc-inquire-btn:hover {
+        background: #348e50;
+        box-shadow: 0 6px 18px rgba(0, 0, 0, 0.45);
+    }
 }
 
 html.dark-mode .calc-footer-note,
@@ -994,9 +1016,11 @@ html[data-theme="dark"] .bm-cta-btn {
     box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
 }
 
-html.dark-mode .bm-cta-btn:hover,
-html[data-theme="dark"] .bm-cta-btn:hover {
-    background: #348e50;
+@media (hover: hover) and (pointer: fine) {
+    html.dark-mode .bm-cta-btn:hover,
+    html[data-theme="dark"] .bm-cta-btn:hover {
+        background: #348e50;
+    }
 }
 
 html.dark-mode .budget-results-title,
@@ -1054,13 +1078,20 @@ html[data-theme="dark"] .bm-view-btn {
     color: #86efac;
 }
 
-html.dark-mode .bm-view-btn:hover,
-html[data-theme="dark"] .bm-view-btn:hover,
 html.dark-mode .bm-view-btn.btn-highlight,
 html[data-theme="dark"] .bm-view-btn.btn-highlight {
     background: #3ea35d;
     border-color: #3ea35d;
     color: #ffffff;
+}
+
+@media (hover: hover) and (pointer: fine) {
+    html.dark-mode .bm-view-btn:hover,
+    html[data-theme="dark"] .bm-view-btn:hover {
+        background: #3ea35d;
+        border-color: #3ea35d;
+        color: #ffffff;
+    }
 }
 
 html.dark-mode .bm-projects-list,
@@ -1078,9 +1109,11 @@ html[data-theme="dark"] .bm-projects-list::-webkit-scrollbar-thumb {
     background: #2b4533;
 }
 
-html.dark-mode .bm-projects-list::-webkit-scrollbar-thumb:hover,
-html[data-theme="dark"] .bm-projects-list::-webkit-scrollbar-thumb:hover {
-    background: #4ade80;
+@media (hover: hover) and (pointer: fine) {
+    html.dark-mode .bm-projects-list::-webkit-scrollbar-thumb:hover,
+    html[data-theme="dark"] .bm-projects-list::-webkit-scrollbar-thumb:hover {
+        background: #4ade80;
+    }
 }
 
 /* ==========================================================================

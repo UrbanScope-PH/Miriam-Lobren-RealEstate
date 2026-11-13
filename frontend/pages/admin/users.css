@@ -152,8 +152,10 @@ td {
     font-size: 0.9rem;
     vertical-align: middle;
 }
-tr:hover td {
-    background: #fafdfa;
+@media (hover: hover) and (pointer: fine) {
+    tr:hover td {
+        background: #fafdfa;
+    }
 }
 
 .user-profile-cell {

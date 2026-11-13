@@ -2,7 +2,10 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
+    <meta name="color-scheme" content="light dark">
+    <meta name="theme-color" media="(prefers-color-scheme: light)" content="#ffffff">
+    <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#0e1611">
     <title>Submit Inquiry | Miriam Lobren · CD Miranda Realty</title>
     <meta name="description" content="Submit a free property inquiry or consultation request with Miriam Lobren, CD Miranda Realty. No account required.">
     <link rel="canonical" href="https://miriam-lobren-real-estate.vercel.app/pages/inquiry/inquiry.html">
@@ -206,15 +209,15 @@
                 <div class="user-info-row">
                     <div class="input-field">
                         <label for="clientName">Full Name*</label>
-                        <input type="text" id="clientName" placeholder="Juan Dela Cruz" required>
+                        <input type="text" id="clientName" placeholder="Juan Dela Cruz" required autocomplete="name" autocapitalize="words">
                     </div>
                     <div class="input-field">
                         <label for="clientEmail">Email Address*</label>
-                        <input type="email" id="clientEmail" placeholder="juan@example.com" required>
+                        <input type="email" id="clientEmail" placeholder="juan@example.com" required inputmode="email" autocomplete="email" autocapitalize="none" autocorrect="off" spellcheck="false">
                     </div>
                     <div class="input-field">
                         <label for="clientPhone">Mobile Number*</label>
-                        <input type="tel" id="clientPhone" placeholder="0917 123 4567" inputmode="tel" required>
+                        <input type="tel" id="clientPhone" placeholder="0917 123 4567" inputmode="tel" required autocomplete="tel">
                         <small class="field-hint" style="display: block; margin-top: 4px; font-size: 11px; color: var(--text-muted, #9ab09f);">Philippine mobile (e.g. 09171234567 or +639171234567)</small>
                     </div>
                 </div>

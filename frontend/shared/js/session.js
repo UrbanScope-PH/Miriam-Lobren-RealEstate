@@ -736,6 +736,15 @@
                 var baseName = String(window.name || '').replace(/\s*__urbanscope_theme=(?:dark|light)/g, '').trim();
                 window.name = (baseName ? baseName + ' ' : '') + '__urbanscope_theme=' + cleanMode;
             } catch (e) { }
+            try {
+                var p = String(location.pathname || '').toLowerCase().replace(/\\/g, '/');
+                var darkColor = (p.includes('/pages/admin/') || p.includes('/pages/superadmin/')) ? '#131f17' : '#0e1611';
+                var lightColor = p.includes('/pages/auth/') ? '#f6faf6' : '#ffffff';
+                var targetColor = isDark ? darkColor : lightColor;
+                document.querySelectorAll('meta[name="theme-color"]').forEach(function (meta) {
+                    meta.setAttribute('content', targetColor);
+                });
+            } catch (e) { }
             updateThemeToggleButtons(isDark);
         };
 

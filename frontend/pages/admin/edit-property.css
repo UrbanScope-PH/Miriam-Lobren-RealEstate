@@ -80,9 +80,11 @@
         background 0.2s ease;
 }
 
-.back-btn:hover {
-    border-color: var(--green-600);
-    background: var(--green-50);
+@media (hover: hover) and (pointer: fine) {
+    .back-btn:hover {
+        border-color: var(--green-600);
+        background: var(--green-50);
+    }
 }
 
 .back-btn span {
@@ -412,8 +414,10 @@
         transform 0.2s ease;
 }
 
-.upload-btn:hover {
-    background: var(--green-950);
+@media (hover: hover) and (pointer: fine) {
+    .upload-btn:hover {
+        background: var(--green-950);
+    }
 }
 
 .upload-area input[type="file"]:focus-visible + .upload-btn {
@@ -478,9 +482,11 @@
     color: #536258;
 }
 
-.cancel-btn:hover {
-    border-color: #aab9ad;
-    background: #f8faf8;
+@media (hover: hover) and (pointer: fine) {
+    .cancel-btn:hover {
+        border-color: #aab9ad;
+        background: #f8faf8;
+    }
 }
 
 .save-btn {
@@ -489,9 +495,11 @@
     color: #fff;
 }
 
-.save-btn:hover:not(:disabled) {
-    border-color: var(--green-950);
-    background: var(--green-950);
+@media (hover: hover) and (pointer: fine) {
+    .save-btn:hover:not(:disabled) {
+        border-color: var(--green-950);
+        background: var(--green-950);
+    }
 }
 
 .save-btn:active:not(:disabled),
@@ -917,9 +925,11 @@ body.sidebar-is-open {
     transition: transform 0.18s ease, box-shadow 0.18s ease !important;
 }
 
-.save-btn:hover {
-    transform: translateY(-2px) !important;
-    box-shadow: 0 6px 18px rgba(31, 73, 40, 0.38) !important;
+@media (hover: hover) and (pointer: fine) {
+    .save-btn:hover {
+        transform: translateY(-2px) !important;
+        box-shadow: 0 6px 18px rgba(31, 73, 40, 0.38) !important;
+    }
 }
 
 .save-btn:active {

@@ -2,7 +2,10 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
+    <meta name="color-scheme" content="light dark">
+    <meta name="theme-color" media="(prefers-color-scheme: light)" content="#ffffff">
+    <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#131f17">
     <meta name="robots" content="noindex, nofollow">
     <title>Profile & Security Settings - UrbanScope Admin | Miriam Lobren</title>
     <link rel="icon" href="../../assets/images/favicon.jpg" type="image/x-icon">
@@ -220,12 +223,12 @@
 
                         <div class="form-group">
                             <label for="adminEmail">Email Address *</label>
-                            <input type="email" id="adminEmail" required placeholder="urbanscope.cvsu@gmail.com">
+                            <input type="email" id="adminEmail" required placeholder="urbanscope.cvsu@gmail.com" inputmode="email" autocomplete="email" autocapitalize="none" autocorrect="off" spellcheck="false">
                         </div>
 
                         <div class="form-group">
                             <label for="adminPhone">Contact Phone Number</label>
-                            <input type="tel" id="adminPhone" placeholder="+63 918 964 5434">
+                            <input type="tel" id="adminPhone" placeholder="+63 918 964 5434" inputmode="tel" autocomplete="tel">
                         </div>
 
                         <div class="form-group">

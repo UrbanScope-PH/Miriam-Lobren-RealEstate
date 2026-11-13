@@ -2,7 +2,10 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
+    <meta name="color-scheme" content="light dark">
+    <meta name="theme-color" media="(prefers-color-scheme: light)" content="#ffffff">
+    <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#131f17">
     <title>Users Directory (Info Only) - UrbanScope Admin | Miriam Lobren</title>
     <link rel="icon" href="../../assets/images/favicon.jpg" type="image/x-icon">
     <link rel="stylesheet" href="users.css">
@@ -240,7 +243,7 @@
                     <circle cx="11" cy="11" r="8"></circle>
                     <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
                 </svg>
-                <input type="text" id="userSearchInput" placeholder="Search user by name, email, or phone...">
+                <input type="search" id="userSearchInput" placeholder="Search user by name, email, or phone..." inputmode="search" enterkeyhint="search" autocapitalize="none" autocorrect="off" spellcheck="false">
             </div>
 
             <div class="badge-info-only">

@@ -105,10 +105,12 @@ body {
     transition: all 0.2s ease;
 }
 
-.history-pill-link:hover {
-    background: #f0f7f2;
-    border-color: #a8ceb2;
-    transform: translateY(-1px);
+@media (hover: hover) and (pointer: fine) {
+    .history-pill-link:hover {
+        background: #f0f7f2;
+        border-color: #a8ceb2;
+        transform: translateY(-1px);
+    }
 }
 
 /* INQUIRY MODE SELECTOR TABS */
@@ -141,9 +143,11 @@ body {
     white-space: nowrap;
 }
 
-.mode-tab:hover {
-    color: #1a3b23;
-    background: rgba(255, 255, 255, 0.6);
+@media (hover: hover) and (pointer: fine) {
+    .mode-tab:hover {
+        color: #1a3b23;
+        background: rgba(255, 255, 255, 0.6);
+    }
 }
 
 .mode-tab.active {
@@ -368,8 +372,10 @@ body {
     transition: all 0.2s;
 }
 
-.cancel-btn:hover {
-    background-color: #d1e2d5;
+@media (hover: hover) and (pointer: fine) {
+    .cancel-btn:hover {
+        background-color: #d1e2d5;
+    }
 }
 
 .submit-btn {
@@ -390,10 +396,12 @@ body {
     transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s ease, background 0.2s ease;
 }
 
-.submit-btn:hover {
-    background: linear-gradient(135deg, #164826 0%, #166534 100%);
-    transform: translateY(-2px);
-    box-shadow: 0 8px 22px rgba(21, 128, 61, 0.42);
+@media (hover: hover) and (pointer: fine) {
+    .submit-btn:hover {
+        background: linear-gradient(135deg, #164826 0%, #166534 100%);
+        transform: translateY(-2px);
+        box-shadow: 0 8px 22px rgba(21, 128, 61, 0.42);
+    }
 }
 
 .submit-btn:active {
@@ -401,12 +409,20 @@ body {
     box-shadow: 0 2px 6px rgba(21, 128, 61, 0.25);
 }
 
-.submit-btn:disabled,
-.submit-btn:disabled:hover {
+.submit-btn:disabled {
     background: #94a3b8;
     box-shadow: none;
     cursor: not-allowed;
     transform: none;
+}
+
+@media (hover: hover) and (pointer: fine) {
+    .submit-btn:disabled:hover {
+        background: #94a3b8;
+        box-shadow: none;
+        cursor: not-allowed;
+        transform: none;
+    }
 }
 
 .inquiry-cooldown-notice {
@@ -620,10 +636,12 @@ body {
     text-decoration: none;
 }
 
-.modal-back-btn:hover {
-    background: #e2ede5;
-    color: var(--dark-green);
-    transform: translateX(-2px);
+@media (hover: hover) and (pointer: fine) {
+    .modal-back-btn:hover {
+        background: #e2ede5;
+        color: var(--dark-green);
+        transform: translateX(-2px);
+    }
 }
 
 .modal-close-btn {
@@ -644,10 +662,12 @@ body {
     z-index: 2;
 }
 
-.modal-close-btn:hover {
-    background: #e2ede5;
-    color: var(--dark-green);
-    transform: rotate(90deg);
+@media (hover: hover) and (pointer: fine) {
+    .modal-close-btn:hover {
+        background: #e2ede5;
+        color: var(--dark-green);
+        transform: rotate(90deg);
+    }
 }
 
 .success-modal-hero {
@@ -883,10 +903,12 @@ body {
     transition: all 0.2s ease;
 }
 
-.btn-success-primary:hover {
-    background-color: var(--dark-green);
-    box-shadow: 0 4px 14px rgba(45, 92, 57, 0.25);
-    transform: translateY(-1px);
+@media (hover: hover) and (pointer: fine) {
+    .btn-success-primary:hover {
+        background-color: var(--dark-green);
+        box-shadow: 0 4px 14px rgba(45, 92, 57, 0.25);
+        transform: translateY(-1px);
+    }
 }
 
 .btn-secondary {
@@ -906,19 +928,31 @@ body {
     text-decoration: none;
 }
 
-.btn-secondary:hover {
-    background-color: #e2ede5;
-    color: var(--dark-green);
+@media (hover: hover) and (pointer: fine) {
+    .btn-secondary:hover {
+        background-color: #e2ede5;
+        color: var(--dark-green);
+    }
 }
 
-.btn-secondary:disabled,
-.btn-secondary:disabled:hover {
+.btn-secondary:disabled {
     background-color: #f0f7f2;
     color: var(--text-muted);
     border-color: #dce8df;
     cursor: not-allowed;
     transform: none;
     box-shadow: none;
+}
+
+@media (hover: hover) and (pointer: fine) {
+    .btn-secondary:disabled:hover {
+        background-color: #f0f7f2;
+        color: var(--text-muted);
+        border-color: #dce8df;
+        cursor: not-allowed;
+        transform: none;
+        box-shadow: none;
+    }
 }
 
 .btn-return-home {
@@ -931,8 +965,10 @@ body {
     transition: color 0.18s ease;
 }
 
-.btn-return-home:hover {
-    color: var(--dark-green);
+@media (hover: hover) and (pointer: fine) {
+    .btn-return-home:hover {
+        color: var(--dark-green);
+    }
 }
 
 /* BUTTON LOADING SPINNER */
@@ -1057,10 +1093,12 @@ html.dark-mode .history-pill-link {
     color: #86efac;
 }
 
-html.dark-mode .history-pill-link:hover {
-    background: #213628;
-    border-color: #4ade80;
-    color: #bbf7d0;
+@media (hover: hover) and (pointer: fine) {
+    html.dark-mode .history-pill-link:hover {
+        background: #213628;
+        border-color: #4ade80;
+        color: #bbf7d0;
+    }
 }
 
 html.dark-mode .inquiry-mode-selector {
@@ -1073,9 +1111,11 @@ html.dark-mode .mode-tab {
     color: #a8bdb0;
 }
 
-html.dark-mode .mode-tab:hover {
-    background: rgba(134, 239, 172, 0.08);
-    color: #e7f0e9;
+@media (hover: hover) and (pointer: fine) {
+    html.dark-mode .mode-tab:hover {
+        background: rgba(134, 239, 172, 0.08);
+        color: #e7f0e9;
+    }
 }
 
 html.dark-mode .mode-tab.active {
@@ -1128,10 +1168,12 @@ html.dark-mode .cancel-btn {
     color: #e7f0e9;
 }
 
-html.dark-mode .cancel-btn:hover {
-    background-color: #263d2e;
-    border-color: #4ade80;
-    color: #86efac;
+@media (hover: hover) and (pointer: fine) {
+    html.dark-mode .cancel-btn:hover {
+        background-color: #263d2e;
+        border-color: #4ade80;
+        color: #86efac;
+    }
 }
 
 html.dark-mode .submit-btn {
@@ -1139,9 +1181,11 @@ html.dark-mode .submit-btn {
     color: #ffffff;
 }
 
-html.dark-mode .submit-btn:hover {
-    background-color: #2f8548;
-    color: #ffffff;
+@media (hover: hover) and (pointer: fine) {
+    html.dark-mode .submit-btn:hover {
+        background-color: #2f8548;
+        color: #ffffff;
+    }
 }
 
 html.dark-mode .modal-box {
@@ -1157,10 +1201,12 @@ html.dark-mode .modal-close-btn {
     color: #e7f0e9;
 }
 
-html.dark-mode .modal-back-btn:hover,
-html.dark-mode .modal-close-btn:hover {
-    background: #2d5c39;
-    color: #ffffff;
+@media (hover: hover) and (pointer: fine) {
+    html.dark-mode .modal-back-btn:hover,
+    html.dark-mode .modal-close-btn:hover {
+        background: #2d5c39;
+        color: #ffffff;
+    }
 }
 
 html.dark-mode .success-modal-hero {
@@ -1227,9 +1273,11 @@ html.dark-mode .btn-success-primary {
     color: #ffffff;
 }
 
-html.dark-mode .btn-success-primary:hover {
-    background-color: #2f8548;
-    color: #ffffff;
+@media (hover: hover) and (pointer: fine) {
+    html.dark-mode .btn-success-primary:hover {
+        background-color: #2f8548;
+        color: #ffffff;
+    }
 }
 
 html.dark-mode .btn-secondary {
@@ -1238,10 +1286,12 @@ html.dark-mode .btn-secondary {
     color: #e7f0e9;
 }
 
-html.dark-mode .btn-secondary:hover {
-    background-color: #263d2e;
-    border-color: #4ade80;
-    color: #86efac;
+@media (hover: hover) and (pointer: fine) {
+    html.dark-mode .btn-secondary:hover {
+        background-color: #263d2e;
+        border-color: #4ade80;
+        color: #86efac;
+    }
 }
 
 html.dark-mode .guest-inquiry-banner {
@@ -1279,8 +1329,10 @@ html.dark-mode .guest-inquiry-banner a {
     font-weight: 400;
 }
 
-.custom-datepicker-wrap:hover .custom-datepicker-input {
-    border-color: rgba(45, 92, 57, 0.4);
+@media (hover: hover) and (pointer: fine) {
+    .custom-datepicker-wrap:hover .custom-datepicker-input {
+        border-color: rgba(45, 92, 57, 0.4);
+    }
 }
 
 .datepicker-trigger-btn {
@@ -1302,9 +1354,11 @@ html.dark-mode .guest-inquiry-banner a {
     transition: background 0.15s ease, color 0.15s ease, transform 0.15s ease;
 }
 
-.datepicker-trigger-btn:hover {
-    background: rgba(45, 92, 57, 0.08);
-    transform: translateY(-50%) scale(1.06);
+@media (hover: hover) and (pointer: fine) {
+    .datepicker-trigger-btn:hover {
+        background: rgba(45, 92, 57, 0.08);
+        transform: translateY(-50%) scale(1.06);
+    }
 }
 
 .urban-datepicker-popup {
@@ -1366,10 +1420,12 @@ html.dark-mode .guest-inquiry-banner a {
     padding: 0;
 }
 
-.datepicker-nav-btn:hover:not(:disabled) {
-    background: var(--light-green);
-    border-color: var(--green);
-    color: var(--green);
+@media (hover: hover) and (pointer: fine) {
+    .datepicker-nav-btn:hover:not(:disabled) {
+        background: var(--light-green);
+        border-color: var(--green);
+        color: var(--green);
+    }
 }
 
 .datepicker-nav-btn:disabled {
@@ -1427,10 +1483,12 @@ html.dark-mode .guest-inquiry-banner a {
     width: 100%;
 }
 
-.datepicker-day-cell:hover:not(.is-disabled) {
-    background: var(--light-green);
-    color: var(--green);
-    font-weight: 600;
+@media (hover: hover) and (pointer: fine) {
+    .datepicker-day-cell:hover:not(.is-disabled) {
+        background: var(--light-green);
+        color: var(--green);
+        font-weight: 600;
+    }
 }
 
 .datepicker-day-cell.is-today {
@@ -1484,9 +1542,11 @@ html.dark-mode .guest-inquiry-banner a {
     color: var(--text-muted);
 }
 
-.datepicker-action-clear:hover {
-    color: #ef4444;
-    background: rgba(239, 68, 68, 0.08);
+@media (hover: hover) and (pointer: fine) {
+    .datepicker-action-clear:hover {
+        color: #ef4444;
+        background: rgba(239, 68, 68, 0.08);
+    }
 }
 
 .datepicker-action-today {
@@ -1494,8 +1554,10 @@ html.dark-mode .guest-inquiry-banner a {
     font-weight: 700;
 }
 
-.datepicker-action-today:hover {
-    background: var(--light-green);
+@media (hover: hover) and (pointer: fine) {
+    .datepicker-action-today:hover {
+        background: var(--light-green);
+    }
 }
 
 /* Dark Mode Styles */
@@ -1510,16 +1572,20 @@ html.dark-mode .custom-datepicker-input::placeholder {
     opacity: 0.7;
 }
 
-html.dark-mode .custom-datepicker-wrap:hover .custom-datepicker-input {
-    border-color: #48bb78;
+@media (hover: hover) and (pointer: fine) {
+    html.dark-mode .custom-datepicker-wrap:hover .custom-datepicker-input {
+        border-color: #48bb78;
+    }
 }
 
 html.dark-mode .datepicker-trigger-btn {
     color: #48bb78;
 }
 
-html.dark-mode .datepicker-trigger-btn:hover {
-    background: rgba(72, 187, 120, 0.15);
+@media (hover: hover) and (pointer: fine) {
+    html.dark-mode .datepicker-trigger-btn:hover {
+        background: rgba(72, 187, 120, 0.15);
+    }
 }
 
 html.dark-mode .urban-datepicker-popup {
@@ -1538,10 +1604,12 @@ html.dark-mode .datepicker-nav-btn {
     color: #e7f0e9;
 }
 
-html.dark-mode .datepicker-nav-btn:hover:not(:disabled) {
-    background: #233b2b;
-    border-color: #48bb78;
-    color: #48bb78;
+@media (hover: hover) and (pointer: fine) {
+    html.dark-mode .datepicker-nav-btn:hover:not(:disabled) {
+        background: #233b2b;
+        border-color: #48bb78;
+        color: #48bb78;
+    }
 }
 
 html.dark-mode .datepicker-nav-btn:disabled {
@@ -1557,9 +1625,11 @@ html.dark-mode .datepicker-day-cell {
     color: #e7f0e9;
 }
 
-html.dark-mode .datepicker-day-cell:hover:not(.is-disabled) {
-    background: rgba(72, 187, 120, 0.18);
-    color: #86efac;
+@media (hover: hover) and (pointer: fine) {
+    html.dark-mode .datepicker-day-cell:hover:not(.is-disabled) {
+        background: rgba(72, 187, 120, 0.18);
+        color: #86efac;
+    }
 }
 
 html.dark-mode .datepicker-day-cell.is-today {
@@ -1593,17 +1663,21 @@ html.dark-mode .datepicker-action-clear {
     color: #8da495;
 }
 
-html.dark-mode .datepicker-action-clear:hover {
-    color: #f87171;
-    background: rgba(248, 113, 113, 0.12);
+@media (hover: hover) and (pointer: fine) {
+    html.dark-mode .datepicker-action-clear:hover {
+        color: #f87171;
+        background: rgba(248, 113, 113, 0.12);
+    }
 }
 
 html.dark-mode .datepicker-action-today {
     color: #48bb78;
 }
 
-html.dark-mode .datepicker-action-today:hover {
-    background: rgba(72, 187, 120, 0.15);
+@media (hover: hover) and (pointer: fine) {
+    html.dark-mode .datepicker-action-today:hover {
+        background: rgba(72, 187, 120, 0.15);
+    }
 }
 
 /* ============================================================
@@ -1648,8 +1722,10 @@ html.dark-mode .datepicker-action-today:hover {
     text-align: left;
 }
 
-.custom-select-wrap:hover .custom-select-trigger {
-    border-color: rgba(45, 92, 57, 0.4);
+@media (hover: hover) and (pointer: fine) {
+    .custom-select-wrap:hover .custom-select-trigger {
+        border-color: rgba(45, 92, 57, 0.4);
+    }
 }
 
 .custom-select-wrap.is-open .custom-select-trigger {
@@ -1738,9 +1814,11 @@ html.dark-mode .datepicker-action-today:hover {
     user-select: none;
 }
 
-.custom-select-option:hover {
-    background: var(--light-green);
-    color: var(--green);
+@media (hover: hover) and (pointer: fine) {
+    .custom-select-option:hover {
+        background: var(--light-green);
+        color: var(--green);
+    }
 }
 
 .custom-select-option.is-selected {
@@ -1789,8 +1867,10 @@ html.dark-mode .custom-select-trigger {
     color: #e7f0e9;
 }
 
-html.dark-mode .custom-select-wrap:hover .custom-select-trigger {
-    border-color: #48bb78;
+@media (hover: hover) and (pointer: fine) {
+    html.dark-mode .custom-select-wrap:hover .custom-select-trigger {
+        border-color: #48bb78;
+    }
 }
 
 html.dark-mode .custom-select-wrap.is-open .custom-select-trigger {
@@ -1822,9 +1902,11 @@ html.dark-mode .custom-select-option {
     color: #e7f0e9;
 }
 
-html.dark-mode .custom-select-option:hover {
-    background: rgba(72, 187, 120, 0.16);
-    color: #86efac;
+@media (hover: hover) and (pointer: fine) {
+    html.dark-mode .custom-select-option:hover {
+        background: rgba(72, 187, 120, 0.16);
+        color: #86efac;
+    }
 }
 
 html.dark-mode .custom-select-option.is-selected {

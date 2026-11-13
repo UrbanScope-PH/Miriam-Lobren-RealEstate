@@ -3,7 +3,10 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
+    <meta name="color-scheme" content="light dark">
+    <meta name="theme-color" media="(prefers-color-scheme: light)" content="#ffffff">
+    <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#131f17">
     <meta name="robots" content="noindex, nofollow">
     <title>Superadmin Console - UrbanScope Real Estate</title>
 
@@ -443,7 +446,7 @@
                             <circle cx="11" cy="11" r="8"></circle>
                             <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
                         </svg>
-                        <input type="text" id="userFilterInput" placeholder="Filter users by email, name, or phone...">
+                        <input type="search" id="userFilterInput" placeholder="Filter users by email, name, or phone..." inputmode="search" enterkeyhint="search" autocapitalize="none" autocorrect="off" spellcheck="false">
                     </div>
 
                     <div class="toolbar-filters">
@@ -697,11 +700,11 @@
                     </div>
                     <div class="sa-form-group">
                         <label for="newEmail">Email Address *</label>
-                        <input type="email" id="newEmail" required placeholder="name@gmail.com">
+                        <input type="email" id="newEmail" required placeholder="name@gmail.com" inputmode="email" autocapitalize="none" autocorrect="off" spellcheck="false">
                     </div>
                     <div class="sa-form-group">
                         <label for="newPhone">Contact Phone</label>
-                        <input type="text" id="newPhone" placeholder="+63 912 345 6789">
+                        <input type="tel" id="newPhone" placeholder="+63 912 345 6789" inputmode="tel" autocomplete="tel">
                     </div>
                     <div class="sa-form-group">
                         <label for="newPassword">Password * (min. 6 chars)</label>
@@ -743,11 +746,11 @@
                     </div>
                     <div class="sa-form-group">
                         <label for="editEmail">Email Address *</label>
-                        <input type="email" id="editEmail" required placeholder="name@email.com">
+                        <input type="email" id="editEmail" required placeholder="name@email.com" inputmode="email" autocapitalize="none" autocorrect="off" spellcheck="false">
                     </div>
                     <div class="sa-form-group">
                         <label for="editPhone">Contact Phone</label>
-                        <input type="text" id="editPhone" placeholder="+63 912 345 6789">
+                        <input type="tel" id="editPhone" placeholder="+63 912 345 6789" inputmode="tel" autocomplete="tel">
                     </div>
                     <div class="sa-form-group">
                         <label for="editRole">Account Role *</label>

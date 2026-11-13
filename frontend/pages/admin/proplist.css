@@ -35,9 +35,11 @@
     transition: all 0.2s;
 }
 
-.add-property-btn:hover {
-    background-color: var(--dark-green);
-    transform: translateY(-1px);
+@media (hover: hover) and (pointer: fine) {
+    .add-property-btn:hover {
+        background-color: var(--dark-green);
+        transform: translateY(-1px);
+    }
 }
 
 /* CONTROLS ROW */
@@ -198,9 +200,11 @@
     transition: background 0.15s ease;
 }
 
-.data-table tbody tr:hover td,
-#propertiesTable tbody tr:hover td {
-    background: #fafdfa;
+@media (hover: hover) and (pointer: fine) {
+    .data-table tbody tr:hover td,
+    #propertiesTable tbody tr:hover td {
+        background: #fafdfa;
+    }
 }
 
 /* SPECIFIC COLUMN WIDTHS & ALIGNMENT */
@@ -274,9 +278,11 @@
     color: #166534;
     border: 1px solid #bbf7d0;
 }
-#propertiesTable .view-btn:hover {
-    background: #dcfce7;
-    border-color: #86efac;
+@media (hover: hover) and (pointer: fine) {
+    #propertiesTable .view-btn:hover {
+        background: #dcfce7;
+        border-color: #86efac;
+    }
 }
 
 #propertiesTable .edit-btn {
@@ -284,9 +290,11 @@
     color: #334155;
     border: 1px solid #cbd5e1;
 }
-#propertiesTable .edit-btn:hover {
-    background: #e2e8f0;
-    border-color: #94a3b8;
+@media (hover: hover) and (pointer: fine) {
+    #propertiesTable .edit-btn:hover {
+        background: #e2e8f0;
+        border-color: #94a3b8;
+    }
 }
 
 #propertiesTable .status-toggle-btn.btn-make-sold {
@@ -294,9 +302,11 @@
     color: #c2410c;
     border: 1px solid #fed7aa;
 }
-#propertiesTable .status-toggle-btn.btn-make-sold:hover {
-    background: #ffedd5;
-    border-color: #fdba74;
+@media (hover: hover) and (pointer: fine) {
+    #propertiesTable .status-toggle-btn.btn-make-sold:hover {
+        background: #ffedd5;
+        border-color: #fdba74;
+    }
 }
 
 #propertiesTable .status-toggle-btn.btn-make-available {
@@ -304,9 +314,11 @@
     color: #166534;
     border: 1px solid #bbf7d0;
 }
-#propertiesTable .status-toggle-btn.btn-make-available:hover {
-    background: #dcfce7;
-    border-color: #86efac;
+@media (hover: hover) and (pointer: fine) {
+    #propertiesTable .status-toggle-btn.btn-make-available:hover {
+        background: #dcfce7;
+        border-color: #86efac;
+    }
 }
 
 #propertiesTable .delete-btn {
@@ -314,9 +326,11 @@
     color: #dc2626;
     border: 1px solid #fecaca;
 }
-#propertiesTable .delete-btn:hover {
-    background: #fee2e2;
-    border-color: #fca5a5;
+@media (hover: hover) and (pointer: fine) {
+    #propertiesTable .delete-btn:hover {
+        background: #fee2e2;
+        border-color: #fca5a5;
+    }
 }
 
 /* MODAL */

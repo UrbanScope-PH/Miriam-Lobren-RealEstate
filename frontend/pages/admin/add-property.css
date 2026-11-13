@@ -8,6 +8,7 @@
     width: 100%;
     min-width: 0;
     min-height: calc(100vh - 80px);
+    min-height: calc(100dvh - 80px);
     margin-left: 0;
 }
 
@@ -75,9 +76,11 @@
                 border-color 0.2s ease;
 }
 
-.back-btn:hover {
-    background: #f0f5f0;
-    border-color: #b9cbbb;
+@media (hover: hover) and (pointer: fine) {
+    .back-btn:hover {
+        background: #f0f5f0;
+        border-color: #b9cbbb;
+    }
 }
 
 
@@ -329,9 +332,11 @@
                 background 0.2s ease;
 }
 
-.upload-area:hover {
-    border-color: var(--accent-green);
-    background: #f7faf7;
+@media (hover: hover) and (pointer: fine) {
+    .upload-area:hover {
+        border-color: var(--accent-green);
+        background: #f7faf7;
+    }
 }
 
 .upload-icon {
@@ -389,8 +394,10 @@
     transition: background 0.2s ease;
 }
 
-.upload-btn:hover {
-    background: var(--green);
+@media (hover: hover) and (pointer: fine) {
+    .upload-btn:hover {
+        background: var(--green);
+    }
 }
 
 .upload-area small {
@@ -482,8 +489,10 @@
     color: #596159;
 }
 
-.cancel-btn:hover {
-    background: #f3f5f3;
+@media (hover: hover) and (pointer: fine) {
+    .cancel-btn:hover {
+        background: #f3f5f3;
+    }
 }
 
 .save-btn {
@@ -492,9 +501,11 @@
     color: var(--white);
 }
 
-.save-btn:hover {
-    border-color: var(--green);
-    background: var(--green);
+@media (hover: hover) and (pointer: fine) {
+    .save-btn:hover {
+        border-color: var(--green);
+        background: var(--green);
+    }
 }
 
 
@@ -916,10 +927,12 @@
     transition: transform 0.18s ease, box-shadow 0.18s ease !important;
 }
 
-.save-property-btn:hover,
-.btn-publish:hover {
-    transform: translateY(-2px) !important;
-    box-shadow: 0 6px 18px rgba(31, 73, 40, 0.38) !important;
+@media (hover: hover) and (pointer: fine) {
+    .save-property-btn:hover,
+    .btn-publish:hover {
+        transform: translateY(-2px) !important;
+        box-shadow: 0 6px 18px rgba(31, 73, 40, 0.38) !important;
+    }
 }
 
 .save-property-btn:active,

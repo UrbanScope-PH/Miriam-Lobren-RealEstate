@@ -2,7 +2,10 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
+    <meta name="color-scheme" content="light dark">
+    <meta name="theme-color" media="(prefers-color-scheme: light)" content="#ffffff">
+    <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#131f17">
     <meta name="robots" content="noindex, nofollow">
 
     <title>Edit Property - UrbanScope Admin | Miriam Lobren</title>
@@ -272,7 +275,7 @@
                                         min="0"
                                         step="0.01"
                                         placeholder="Enter property price"
-                                        required
+                                        required inputmode="decimal"
                                     >
                                 </div>
                             </div>
@@ -315,7 +318,7 @@
                                         name="lot-area"
                                         min="0"
                                         step="0.01"
-                                        placeholder="e.g. 50"
+                                        placeholder="e.g. 50" inputmode="decimal"
                                     >
                                     <span class="input-suffix">sqm</span>
                                 </div>
@@ -330,7 +333,7 @@
                                         name="floor-area"
                                         min="0"
                                         step="0.01"
-                                        placeholder="e.g. 44"
+                                        placeholder="e.g. 44" inputmode="decimal"
                                     >
                                     <span class="input-suffix">sqm</span>
                                 </div>

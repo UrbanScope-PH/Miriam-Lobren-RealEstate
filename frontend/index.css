@@ -168,9 +168,14 @@
     transition: color 0.15s ease;
 }
 
-.search-select-wrap:hover .search-select-trigger,
 .search-select-wrap.is-open .search-select-trigger {
     color: var(--green, #2d5c39);
+}
+
+@media (hover: hover) and (pointer: fine) {
+    .search-select-wrap:hover .search-select-trigger {
+        color: var(--green, #2d5c39);
+    }
 }
 
 .search-select-value {
@@ -248,9 +253,11 @@
     user-select: none;
 }
 
-.search-select-option:hover {
-    background: #edf6f0;
-    color: #1e5c33;
+@media (hover: hover) and (pointer: fine) {
+    .search-select-option:hover {
+        background: #edf6f0;
+        color: #1e5c33;
+    }
 }
 
 .search-select-option.is-selected {
@@ -352,10 +359,12 @@ html.dark-mode .search-select-option.is-selected .search-select-option-sub {
     white-space: nowrap;
 }
 
-.search-submit:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 22px rgba(21, 128, 61, 0.42);
-    background: linear-gradient(135deg, #164826 0%, #166534 100%);
+@media (hover: hover) and (pointer: fine) {
+    .search-submit:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 22px rgba(21, 128, 61, 0.42);
+        background: linear-gradient(135deg, #164826 0%, #166534 100%);
+    }
 }
 
 .search-submit:active {
@@ -414,9 +423,11 @@ html.dark-mode .search-select-option.is-selected .search-select-option-sub {
     transition: all 0.2s;
 }
 
-.cat-arrow:hover {
-    background: var(--light-green);
-    border-color: var(--green);
+@media (hover: hover) and (pointer: fine) {
+    .cat-arrow:hover {
+        background: var(--light-green);
+        border-color: var(--green);
+    }
 }
 
 .category-tabs {
@@ -448,9 +459,11 @@ html.dark-mode .search-select-option.is-selected .search-select-option-sub {
     transition: all 0.2s ease;
 }
 
-.cat-tab:hover {
-    color: var(--green);
-    background: rgba(45, 92, 57, 0.05);
+@media (hover: hover) and (pointer: fine) {
+    .cat-tab:hover {
+        color: var(--green);
+        background: rgba(45, 92, 57, 0.05);
+    }
 }
 
 .cat-tab.active {
@@ -482,10 +495,12 @@ html.dark-mode .search-select-option.is-selected .search-select-option-sub {
     flex-direction: column;
 }
 
-.property-card:hover {
-    transform: translateY(-6px);
-    box-shadow: 0 16px 36px rgba(26, 59, 35, 0.13);
-    border-color: rgba(45, 92, 57, 0.25);
+@media (hover: hover) and (pointer: fine) {
+    .property-card:hover {
+        transform: translateY(-6px);
+        box-shadow: 0 16px 36px rgba(26, 59, 35, 0.13);
+        border-color: rgba(45, 92, 57, 0.25);
+    }
 }
 
 /* Enlarge Main Feature (Rule 7) */
@@ -504,8 +519,10 @@ html.dark-mode .search-select-option.is-selected .search-select-option-sub {
     transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.property-card:hover .property-image img {
-    transform: scale(1.04);
+@media (hover: hover) and (pointer: fine) {
+    .property-card:hover .property-image img {
+        transform: scale(1.04);
+    }
 }
 
 .card-actions {
@@ -582,10 +599,12 @@ html.dark-mode .search-select-option.is-selected .search-select-option-sub {
     color: #94a3b8;
 }
 
-.property-card.card-sold:hover {
-    opacity: 0.96;
-    transform: translateY(-4px);
-    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.08);
+@media (hover: hover) and (pointer: fine) {
+    .property-card.card-sold:hover {
+        opacity: 0.96;
+        transform: translateY(-4px);
+        box-shadow: 0 10px 24px rgba(0, 0, 0, 0.08);
+    }
 }
 
 .card-icon-btn {
@@ -604,9 +623,11 @@ html.dark-mode .search-select-option.is-selected .search-select-option-sub {
     transition: background 0.2s, transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.card-icon-btn:hover {
-    background: rgba(15, 23, 42, 0.8);
-    transform: scale(1.08);
+@media (hover: hover) and (pointer: fine) {
+    .card-icon-btn:hover {
+        background: rgba(15, 23, 42, 0.8);
+        transform: scale(1.08);
+    }
 }
 
 /* Grouping with Spacing (Rule 8) */
@@ -781,10 +802,12 @@ html.dark-mode .property-status-badge.badge-rfo {
     transition: all 0.2s ease;
 }
 
-.view-all-pill:hover {
-    border-color: var(--green);
-    background: var(--light-green);
-    color: var(--green);
+@media (hover: hover) and (pointer: fine) {
+    .view-all-pill:hover {
+        border-color: var(--green);
+        background: var(--light-green);
+        color: var(--green);
+    }
 }
 
 /* ABOUT ME SECTION */
@@ -833,8 +856,10 @@ html.dark-mode .property-status-badge.badge-rfo {
     transition: background 0.2s ease;
 }
 
-.learn-more-btn:hover {
-    background-color: var(--dark-green);
+@media (hover: hover) and (pointer: fine) {
+    .learn-more-btn:hover {
+        background-color: var(--dark-green);
+    }
 }
 
 .about-image-card {
@@ -982,9 +1007,11 @@ html.dark-mode .property-status-badge.badge-rfo {
     display: none !important;
 }
 
-.faq-item:hover {
-    border-color: #cde0d2;
-    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.06);
+@media (hover: hover) and (pointer: fine) {
+    .faq-item:hover {
+        border-color: #cde0d2;
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.06);
+    }
 }
 
 .faq-item.active {
@@ -1010,8 +1037,10 @@ html.dark-mode .property-status-badge.badge-rfo {
     transition: color 0.2s ease;
 }
 
-.faq-question:hover {
-    color: var(--green);
+@media (hover: hover) and (pointer: fine) {
+    .faq-question:hover {
+        color: var(--green);
+    }
 }
 
 .faq-item.active .faq-question {
@@ -1214,12 +1243,14 @@ html.dark-mode .property-status-badge.badge-rfo {
     transition: all 0.25s ease;
 }
 
-.cta-consult-btn:hover {
-    background: #ffffff;
-    color: var(--dark-green);
-    border-color: #ffffff;
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35);
+@media (hover: hover) and (pointer: fine) {
+    .cta-consult-btn:hover {
+        background: #ffffff;
+        color: var(--dark-green);
+        border-color: #ffffff;
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35);
+    }
 }
 
 /* RESPONSIVE DESIGN FOR HOMEPAGE */
@@ -1547,9 +1578,11 @@ html.dark-mode .property-status-badge.badge-rfo {
     box-sizing: border-box;
 }
 
-.sort-select-wrap:hover .sort-select-trigger {
-    border-color: var(--green, #2d5c39);
-    box-shadow: 0 2px 8px rgba(45, 92, 57, 0.08);
+@media (hover: hover) and (pointer: fine) {
+    .sort-select-wrap:hover .sort-select-trigger {
+        border-color: var(--green, #2d5c39);
+        box-shadow: 0 2px 8px rgba(45, 92, 57, 0.08);
+    }
 }
 
 .sort-select-wrap.is-open .sort-select-trigger {
@@ -1632,9 +1665,11 @@ html.dark-mode .property-status-badge.badge-rfo {
     user-select: none;
 }
 
-.sort-select-option:hover {
-    background: #edf6f0;
-    color: #1e5c33;
+@media (hover: hover) and (pointer: fine) {
+    .sort-select-option:hover {
+        background: #edf6f0;
+        color: #1e5c33;
+    }
 }
 
 .sort-select-option.is-selected {
@@ -1848,16 +1883,20 @@ html.dark-mode .property-status-badge.badge-rfo {
     transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.modal-close:hover {
-    background: #fee2e2;
-    border-color: #fca5a5;
-    color: #dc2626;
-    transform: scale(1.06);
-    box-shadow: 0 4px 12px rgba(220, 38, 38, 0.16);
+@media (hover: hover) and (pointer: fine) {
+    .modal-close:hover {
+        background: #fee2e2;
+        border-color: #fca5a5;
+        color: #dc2626;
+        transform: scale(1.06);
+        box-shadow: 0 4px 12px rgba(220, 38, 38, 0.16);
+    }
 }
 
-.modal-close:hover svg {
-    transform: rotate(90deg);
+@media (hover: hover) and (pointer: fine) {
+    .modal-close:hover svg {
+        transform: rotate(90deg);
+    }
 }
 
 .modal-close:active {
@@ -1911,11 +1950,13 @@ html.dark-mode .property-status-badge.badge-rfo {
     box-sizing: border-box;
 }
 
-.intent-card:hover {
-    transform: translateY(-4px);
-    border-color: #2e7d32;
-    box-shadow: 0 12px 28px rgba(30, 92, 51, 0.12);
-    background: #ffffff;
+@media (hover: hover) and (pointer: fine) {
+    .intent-card:hover {
+        transform: translateY(-4px);
+        border-color: #2e7d32;
+        box-shadow: 0 12px 28px rgba(30, 92, 51, 0.12);
+        background: #ffffff;
+    }
 }
 
 .intent-card-badge {
@@ -1950,8 +1991,10 @@ html.dark-mode .property-status-badge.badge-rfo {
     transition: transform 0.2s ease;
 }
 
-.intent-card:hover .intent-icon-wrap {
-    transform: scale(1.06);
+@media (hover: hover) and (pointer: fine) {
+    .intent-card:hover .intent-icon-wrap {
+        transform: scale(1.06);
+    }
 }
 
 .icon-general {
@@ -1992,13 +2035,17 @@ html.dark-mode .property-status-badge.badge-rfo {
     margin-top: auto;
 }
 
-.intent-card:hover .intent-link-text {
-    color: #1a3b23;
+@media (hover: hover) and (pointer: fine) {
+    .intent-card:hover .intent-link-text {
+        color: #1a3b23;
+    }
 }
 
-.intent-card:hover .intent-link-text svg {
-    transform: translateX(3px);
-    transition: transform 0.18s ease;
+@media (hover: hover) and (pointer: fine) {
+    .intent-card:hover .intent-link-text svg {
+        transform: translateX(3px);
+        transition: transform 0.18s ease;
+    }
 }
 
 @media (max-width: 640px) {
@@ -2056,10 +2103,16 @@ html.dark-mode .home-sort-control select {
     color: #e7f0e9;
 }
 
-html.dark-mode .home-sort-control select:hover,
 html.dark-mode .home-sort-control select:focus {
     border-color: #4ade80;
     box-shadow: 0 0 0 3px rgba(74, 222, 128, 0.16);
+}
+
+@media (hover: hover) and (pointer: fine) {
+    html.dark-mode .home-sort-control select:hover {
+        border-color: #4ade80;
+        box-shadow: 0 0 0 3px rgba(74, 222, 128, 0.16);
+    }
 }
 
 html.dark-mode .category-tabs-container {
@@ -2074,10 +2127,12 @@ html.dark-mode .cat-arrow {
     color: #86efac;
 }
 
-html.dark-mode .cat-arrow:hover {
-    background: #3ea35d;
-    border-color: #3ea35d;
-    color: #ffffff;
+@media (hover: hover) and (pointer: fine) {
+    html.dark-mode .cat-arrow:hover {
+        background: #3ea35d;
+        border-color: #3ea35d;
+        color: #ffffff;
+    }
 }
 
 html.dark-mode .cat-tab,
@@ -2085,10 +2140,12 @@ html[data-theme="dark"] .cat-tab {
     color: #a5b9aa;
 }
 
-html.dark-mode .cat-tab:hover,
-html[data-theme="dark"] .cat-tab:hover {
-    color: #e7f0e9;
-    background: rgba(134, 239, 172, 0.08);
+@media (hover: hover) and (pointer: fine) {
+    html.dark-mode .cat-tab:hover,
+    html[data-theme="dark"] .cat-tab:hover {
+        color: #e7f0e9;
+        background: rgba(134, 239, 172, 0.08);
+    }
 }
 
 html.dark-mode .cat-tab.active,
@@ -2109,9 +2166,11 @@ html.dark-mode .property-card {
     box-shadow: 0 12px 30px rgba(0, 0, 0, 0.42);
 }
 
-html.dark-mode .property-card:hover {
-    border-color: #3ea35d;
-    box-shadow: 0 18px 38px rgba(0, 0, 0, 0.55);
+@media (hover: hover) and (pointer: fine) {
+    html.dark-mode .property-card:hover {
+        border-color: #3ea35d;
+        box-shadow: 0 18px 38px rgba(0, 0, 0, 0.55);
+    }
 }
 
 html.dark-mode .property-image {
@@ -2123,8 +2182,10 @@ html.dark-mode .property-image img {
     transition: transform 0.35s ease;
 }
 
-html.dark-mode .property-card:hover .property-image img {
-    filter: none;
+@media (hover: hover) and (pointer: fine) {
+    html.dark-mode .property-card:hover .property-image img {
+        filter: none;
+    }
 }
 
 html.dark-mode .property-image::after {
@@ -2183,10 +2244,12 @@ html.dark-mode .view-all-pill {
     color: #e7f0e9;
 }
 
-html.dark-mode .view-all-pill:hover {
-    background: #22372a;
-    border-color: #4ade80;
-    color: #86efac;
+@media (hover: hover) and (pointer: fine) {
+    html.dark-mode .view-all-pill:hover {
+        background: #22372a;
+        border-color: #4ade80;
+        color: #86efac;
+    }
 }
 
 html.dark-mode .about-text p {
@@ -2199,8 +2262,10 @@ html.dark-mode .testimonial-card {
     box-shadow: 0 10px 28px rgba(0, 0, 0, 0.4);
 }
 
-html.dark-mode .testimonial-card:hover {
-    border-color: #3ea35d;
+@media (hover: hover) and (pointer: fine) {
+    html.dark-mode .testimonial-card:hover {
+        border-color: #3ea35d;
+    }
 }
 
 html.dark-mode .testimonial-quote {
@@ -2226,10 +2291,16 @@ html.dark-mode .faq-item {
     border-color: #26392c;
 }
 
-html.dark-mode .faq-item:hover,
 html.dark-mode .faq-item.active {
     border-color: #3ea35d;
     box-shadow: 0 10px 28px rgba(0, 0, 0, 0.45);
+}
+
+@media (hover: hover) and (pointer: fine) {
+    html.dark-mode .faq-item:hover {
+        border-color: #3ea35d;
+        box-shadow: 0 10px 28px rgba(0, 0, 0, 0.45);
+    }
 }
 
 html.dark-mode .faq-question {
@@ -2268,10 +2339,12 @@ html.dark-mode .faq-disclaimer-note {
     color: #c2d4c6;
 }
 
-html.dark-mode .search-submit:hover,
-html.dark-mode .learn-more-btn:hover {
-    background: #3ea35d;
-    color: #ffffff;
+@media (hover: hover) and (pointer: fine) {
+    html.dark-mode .search-submit:hover,
+    html.dark-mode .learn-more-btn:hover {
+        background: #3ea35d;
+        color: #ffffff;
+    }
 }
 
 /* CTA Banner to Footer Seamless Transition in Dark Mode */
@@ -2294,10 +2367,12 @@ html.dark-mode .cta-overlay {
     );
 }
 
-html.dark-mode .cta-consult-btn:hover {
-    background: #3ea35d;
-    border-color: #4ade80;
-    color: #ffffff;
+@media (hover: hover) and (pointer: fine) {
+    html.dark-mode .cta-consult-btn:hover {
+        background: #3ea35d;
+        border-color: #4ade80;
+        color: #ffffff;
+    }
 }
 
 html.dark-mode .footer {
@@ -2345,10 +2420,12 @@ html.dark-mode .card-icon-btn {
     color: #eef6f0;
 }
 
-html.dark-mode .card-icon-btn:hover {
-    background: #2d5c39;
-    border-color: #86efac;
-    color: #ffffff;
+@media (hover: hover) and (pointer: fine) {
+    html.dark-mode .card-icon-btn:hover {
+        background: #2d5c39;
+        border-color: #86efac;
+        color: #ffffff;
+    }
 }
 
 html.dark-mode .property-card.card-sold {
@@ -2389,9 +2466,11 @@ html.dark-mode .modal-close {
     color: #c2d4c6;
 }
 
-html.dark-mode .modal-close:hover {
-    background: #283f30;
-    color: #ffffff;
+@media (hover: hover) and (pointer: fine) {
+    html.dark-mode .modal-close:hover {
+        background: #283f30;
+        color: #ffffff;
+    }
 }
 
 html.dark-mode .intent-card {
@@ -2399,9 +2478,11 @@ html.dark-mode .intent-card {
     border-color: #2d4534;
 }
 
-html.dark-mode .intent-card:hover {
-    background: #203327;
-    border-color: #4ade80;
+@media (hover: hover) and (pointer: fine) {
+    html.dark-mode .intent-card:hover {
+        background: #203327;
+        border-color: #4ade80;
+    }
 }
 
 html.dark-mode .intent-card-badge,
@@ -2419,9 +2500,14 @@ html.dark-mode .intent-info p {
     color: #b4c8b9;
 }
 
-html.dark-mode .intent-link-text,
-html.dark-mode .intent-card:hover .intent-link-text {
+html.dark-mode .intent-link-text {
     color: #86efac;
+}
+
+@media (hover: hover) and (pointer: fine) {
+    html.dark-mode .intent-card:hover .intent-link-text {
+        color: #86efac;
+    }
 }
 
 /* ==========================================================================
@@ -2459,9 +2545,14 @@ html.dark-mode .search-select-trigger {
     color: #e7f0e9;
 }
 
-html.dark-mode .search-select-wrap:hover .search-select-trigger,
 html.dark-mode .search-select-wrap.is-open .search-select-trigger {
     color: #86efac;
+}
+
+@media (hover: hover) and (pointer: fine) {
+    html.dark-mode .search-select-wrap:hover .search-select-trigger {
+        color: #86efac;
+    }
 }
 
 html.dark-mode .search-select-icon,
@@ -2488,9 +2579,11 @@ html.dark-mode .search-select-option {
     color: #e7f0e9;
 }
 
-html.dark-mode .search-select-option:hover {
-    background: rgba(72, 187, 120, 0.15);
-    color: #86efac;
+@media (hover: hover) and (pointer: fine) {
+    html.dark-mode .search-select-option:hover {
+        background: rgba(72, 187, 120, 0.15);
+        color: #86efac;
+    }
 }
 
 html.dark-mode .search-select-option.is-selected {
@@ -2513,10 +2606,16 @@ html.dark-mode .sort-select-trigger {
     color: #e7f0e9;
 }
 
-html.dark-mode .sort-select-wrap:hover .sort-select-trigger,
 html.dark-mode .sort-select-wrap.is-open .sort-select-trigger {
     border-color: #4ade80;
     box-shadow: 0 0 0 3px rgba(74, 222, 128, 0.16);
+}
+
+@media (hover: hover) and (pointer: fine) {
+    html.dark-mode .sort-select-wrap:hover .sort-select-trigger {
+        border-color: #4ade80;
+        box-shadow: 0 0 0 3px rgba(74, 222, 128, 0.16);
+    }
 }
 
 html.dark-mode .sort-select-icon,
@@ -2543,9 +2642,11 @@ html.dark-mode .sort-select-option {
     color: #e7f0e9;
 }
 
-html.dark-mode .sort-select-option:hover {
-    background: rgba(72, 187, 120, 0.15);
-    color: #86efac;
+@media (hover: hover) and (pointer: fine) {
+    html.dark-mode .sort-select-option:hover {
+        background: rgba(72, 187, 120, 0.15);
+        color: #86efac;
+    }
 }
 
 html.dark-mode .sort-select-option.is-selected {

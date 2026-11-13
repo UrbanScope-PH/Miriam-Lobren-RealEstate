@@ -17,10 +17,16 @@
     -webkit-tap-highlight-color: transparent;
 }
 
-.mobile-nav-toggle:hover,
 .mobile-nav-toggle.active {
     background: var(--light-green, #eef5ef);
     border-color: rgba(45, 92, 57, 0.2);
+}
+
+@media (hover: hover) and (pointer: fine) {
+    .mobile-nav-toggle:hover {
+        background: var(--light-green, #eef5ef);
+        border-color: rgba(45, 92, 57, 0.2);
+    }
 }
 
 .hamburger-line {
@@ -79,10 +85,16 @@
     white-space: nowrap;
 }
 
-.app-topbar #mainNav > a:hover,
 .app-topbar #mainNav > a.active {
     background: var(--light-green, #eef5ef);
     color: var(--green, #2d5c39);
+}
+
+@media (hover: hover) and (pointer: fine) {
+    .app-topbar #mainNav > a:hover {
+        background: var(--light-green, #eef5ef);
+        color: var(--green, #2d5c39);
+    }
 }
 
 @media (max-width: 960px) {
@@ -294,11 +306,18 @@
         text-decoration: none;
     }
 
-    .app-topbar #mainNav > a:hover,
     .app-topbar #mainNav > a.active {
         border-left-color: var(--green, #2d5c39);
         background: var(--light-green, #eef5ef);
         color: var(--green, #2d5c39);
+    }
+
+    @media (hover: hover) and (pointer: fine) {
+        .app-topbar #mainNav > a:hover {
+                border-left-color: var(--green, #2d5c39);
+                background: var(--light-green, #eef5ef);
+                color: var(--green, #2d5c39);
+            }
     }
 
     .mobile-drawer-auth {
@@ -505,5 +524,374 @@
     .sidebar-backdrop,
     .sa-backdrop {
         transition-duration: 0.01ms !important;
+    }
+}
+
+
+/* ==========================================================================
+   MOBILE-NATIVE PLATFORM BASELINE & RESPONSIVE FIXES
+   ========================================================================== */
+
+/* Prevent WebKit/Chromium tap highlight box and landscape font-size inflation */
+html {
+    -webkit-tap-highlight-color: transparent;
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+}
+
+/* App-shell workspaces prevent document bounce without blocking scrolling pull-to-refresh on public pages */
+html:has(.admin-topbar, .sa-topbar),
+body.admin-body,
+body.superadmin-body {
+    overscroll-behavior-y: none;
+}
+
+/* Prevent scroll chaining inside drawers, modals, dropdowns, and scrollable lists */
+.mobile-drawer,
+.navbar nav,
+.admin-sidebar,
+.sa-sidebar,
+.modal-body,
+.terms-modal-body,
+.bm-projects-list,
+.notif-dropdown-list,
+.custom-select-dropdown,
+.search-select-dropdown,
+.sort-select-dropdown,
+.status-dropdown-menu,
+#statusFloatingMenu,
+.table-wrapper,
+.table-container {
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+}
+
+body.modal-open,
+body.sidebar-open {
+    overscroll-behavior: none;
+}
+
+/* Eliminate 300ms legacy double-tap delay on interactive elements */
+button,
+a,
+[role="button"],
+input[type="button"],
+input[type="submit"],
+input[type="reset"],
+label,
+summary,
+select,
+.cat-tab,
+.filter-tab,
+.nav-item,
+.profile-chip,
+.theme-toggle-btn,
+.notif-btn,
+.client-notif-btn,
+.calendar-day {
+    touch-action: manipulation;
+}
+
+/* Lock vertical pan on horizontal swipeable carousels so swipes never fight vertical page scroll */
+.main-carousel,
+.showcase-panel {
+    touch-action: pan-y;
+}
+
+.category-tabs,
+.filter-tabs,
+.thumbnails-row {
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-x: contain;
+}
+
+/* Control-scoped selection suppression (never on body so copyable articles/addresses stay selectable) */
+button,
+[role="button"],
+.btn,
+.btn-submit,
+.btn-google,
+.btn-outline,
+.btn-primary,
+.btn-secondary,
+.cat-tab,
+.cat-arrow,
+.filter-tab,
+.nav-item,
+.profile-chip,
+.theme-toggle-btn,
+.notif-btn,
+.client-notif-btn,
+.action-view-btn,
+.dot,
+.search-select-trigger,
+.sort-select-trigger,
+.custom-select-trigger,
+.fab-main-btn,
+.fab-action-btn,
+.back-to-top-btn,
+.legal-back-btn,
+.go-back-btn,
+.carousel-arrow,
+.carousel-zoom-btn {
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-touch-callout: none;
+}
+
+/* Safe-area awareness (effective with viewport-fit=cover on notched phones) */
+.navbar,
+.admin-topbar,
+.sa-topbar,
+.inquiry-topbar,
+.history-topbar {
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-left: max(16px, env(safe-area-inset-left, 0px));
+    padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+
+.contact-fab {
+    bottom: max(16px, env(safe-area-inset-bottom, 0px));
+    right: max(16px, env(safe-area-inset-right, 0px));
+}
+
+.back-to-top-btn {
+    bottom: calc(82px + env(safe-area-inset-bottom, 0px));
+    right: max(16px, env(safe-area-inset-right, 0px));
+}
+
+#urbanFeedbackToast,
+.urban-feedback-toast,
+.toast-notice,
+.toast-notification {
+    bottom: calc(20px + env(safe-area-inset-bottom, 0px)) !important;
+    max-width: calc(100vw - 32px - env(safe-area-inset-left, 0px) - env(safe-area-inset-right, 0px));
+}
+
+.footer,
+.footer-bottom {
+    padding-bottom: max(20px, env(safe-area-inset-bottom, 0px));
+}
+
+.modal-card,
+.modal-content,
+.terms-modal-card,
+.otp-modal-card,
+.inquiry-modal-card {
+    max-height: calc(100dvh - 32px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
+}
+
+/* Coarse-pointer rules (covers phones, large foldables, and tablets regardless of viewport width) */
+@media (pointer: coarse) {
+    input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]):not([type="range"]):not([type="file"]),
+    select,
+    textarea {
+        font-size: 16px !important;
+    }
+
+    button:not(:disabled):active,
+    a.btn:active,
+    [role="button"]:active,
+    .btn-submit:active,
+    .btn-google:active,
+    .action-view-btn:active,
+    .cat-tab:active,
+    .filter-tab:active,
+    .nav-item:active,
+    .profile-chip:active,
+    .theme-toggle-btn:active,
+    .notif-btn:active,
+    .client-notif-btn:active,
+    .fab-main-btn:active,
+    .back-to-top-btn:active {
+        transform: scale(0.97);
+        opacity: 0.9;
+        transition: transform 0.12s ease-out, opacity 0.12s ease-out;
+    }
+
+    .cat-arrow {
+        width: 40px;
+        height: 40px;
+        min-width: 40px;
+        min-height: 40px;
+    }
+
+    .cat-tab,
+    .filter-tab {
+        min-height: 40px;
+        display: inline-flex;
+        align-items: center;
+    }
+
+    .carousel-arrow {
+        width: 42px;
+        height: 42px;
+    }
+
+    .carousel-zoom-btn {
+        min-height: 40px;
+        padding: 8px 14px;
+    }
+
+    .toggle-pw,
+    .password-toggle-btn,
+    .calendar-nav-btn,
+    .datepicker-trigger-btn {
+        min-width: 40px;
+        min-height: 40px;
+    }
+
+    .theme-toggle-btn,
+    .notif-btn,
+    .client-notif-btn {
+        min-width: 42px;
+        min-height: 42px;
+    }
+
+    .search-select-trigger,
+    .sort-select-trigger {
+        min-height: 40px;
+    }
+
+    .legal-back-btn,
+    .go-back-btn,
+    .back-home-link {
+        min-height: 40px;
+        display: inline-flex;
+        align-items: center;
+    }
+
+    .card-icon-btn {
+        min-width: 40px;
+        min-height: 40px;
+    }
+
+    .prop-action-btn,
+    .tcp-doc-btn,
+    .text-button,
+    .action-view-btn,
+    .btn-change-avatar,
+    .btn-reset-avatar {
+        min-height: 40px;
+        display: inline-flex;
+        align-items: center;
+    }
+
+    .status-select-pill {
+        min-height: 38px;
+        height: auto;
+        padding: 6px 12px;
+    }
+
+    .action-btn {
+        min-height: 38px;
+        padding: 8px 14px;
+    }
+
+    #propertiesTable .actions button {
+        min-height: 36px;
+        min-width: 44px;
+        padding: 7px 11px;
+    }
+
+    .admin-toast-close {
+        min-width: 36px;
+        min-height: 36px;
+        padding: 6px !important;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        border-radius: 8px;
+    }
+}
+
+/* Budget Matcher Grid & Narrow Mobile Overflow Containment */
+@media (max-width: 960px) {
+    .budget-matcher-box {
+        grid-template-columns: minmax(0, 1fr) !important;
+        padding: 20px;
+    }
+
+    .budget-input-col,
+    .budget-results-col,
+    .budget-salary-display,
+    .budget-slider-wrap,
+    .budget-metrics-row,
+    .budget-metric-card,
+    .bm-projects-list,
+    .bm-project-item {
+        min-width: 0;
+        max-width: 100%;
+    }
+}
+
+@media (max-width: 520px) {
+    .budget-matcher-box {
+        padding: 16px;
+        gap: 20px;
+    }
+
+    .budget-salary-display {
+        padding: 14px;
+    }
+
+    .budget-slider-labels {
+        font-size: 11px;
+        gap: 4px;
+        flex-wrap: wrap;
+    }
+
+    .bm-project-item {
+        flex-wrap: wrap;
+        gap: 10px;
+        padding: 12px;
+    }
+
+    .bm-item-info {
+        min-width: 0;
+        flex: 1 1 160px;
+    }
+
+    .bm-item-act {
+        width: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+    }
+}
+
+/* Narrow phone layout polish for long custom-select labels & floating actions */
+@media (max-width: 480px) {
+    .custom-select-value {
+        white-space: normal;
+        line-height: 1.35;
+        overflow: visible;
+    }
+
+    .contact-fab {
+        bottom: max(14px, env(safe-area-inset-bottom, 0px));
+        right: max(14px, env(safe-area-inset-right, 0px));
+    }
+
+    .fab-main-btn {
+        width: 48px;
+        height: 48px;
+    }
+
+    .back-to-top-btn {
+        bottom: calc(74px + env(safe-area-inset-bottom, 0px));
+        right: max(14px, env(safe-area-inset-right, 0px));
+        width: 44px;
+        height: 44px;
+    }
+
+    .inquiry-page-container {
+        padding-bottom: 84px;
+    }
+
+    .form-panel {
+        padding-bottom: max(28px, env(safe-area-inset-bottom, 0px));
     }
 }
