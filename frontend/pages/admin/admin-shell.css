@@ -1456,6 +1456,286 @@ html.dark-mode .filter-toolbar {
     background-color: transparent;
 }
 
+/* Admin Inputs, Select Dropdowns, Search Fields & Placeholders */
+html.dark-mode .search-input-card input,
+html.dark-mode .search-field input,
+html.dark-mode .status-select-card select,
+html.dark-mode .status-select-inline {
+    background-color: transparent !important;
+    color: #e7f0e9 !important;
+}
+
+html.dark-mode .status-select-inline {
+    background-color: #121d16 !important;
+}
+
+html.dark-mode .search-input-card input::placeholder,
+html.dark-mode .search-field input::placeholder,
+html.dark-mode .topbar-search input::placeholder,
+html.dark-mode .form-group input::placeholder,
+html.dark-mode .form-group textarea::placeholder {
+    color: #7c9684 !important;
+}
+
+html.dark-mode .search-input-card:focus-within,
+html.dark-mode .status-select-card:focus-within,
+html.dark-mode .search-field:focus-within {
+    border-color: #4ade80 !important;
+    box-shadow: 0 0 0 3px rgba(74, 222, 128, 0.14);
+}
+
+html.dark-mode select option {
+    background-color: #16231b;
+    color: #e7f0e9;
+}
+
+/* Admin Page Headings, Eyebrows & Table Panel Headers */
+html.dark-mode .eyebrow {
+    color: #86efac;
+}
+
+html.dark-mode .page-header h1,
+html.dark-mode .page-header-lead h1,
+html.dark-mode .form-card-header h2,
+html.dark-mode .table-card .card-header h3,
+html.dark-mode .table-panel .panel-heading h2 {
+    color: #eef6f0;
+}
+
+html.dark-mode .page-header p,
+html.dark-mode .page-header-lead p,
+html.dark-mode .form-card-header p,
+html.dark-mode .table-card .card-header p,
+html.dark-mode .table-panel .panel-heading p {
+    color: #9ab09f;
+}
+
+html.dark-mode .table-card .card-header {
+    background-color: transparent !important;
+    border-bottom-color: #26392c !important;
+}
+
+html.dark-mode .table-panel .text-button {
+    color: #86efac;
+}
+
+html.dark-mode .table-panel .text-button:hover {
+    color: #bbf7d0;
+}
+
+html.dark-mode .table-panel .table-scroll {
+    border-color: #26392c;
+    scrollbar-color: #365640 #121d16;
+}
+
+html.dark-mode .table-panel .table-scroll::-webkit-scrollbar-track {
+    background: #121d16;
+}
+
+html.dark-mode .table-panel td:first-child {
+    color: #86efac;
+}
+
+/* Dashboard Quick Actions & Daily Reminder */
+html.dark-mode .quick-action-icon {
+    background: #1f3326;
+    color: #86efac;
+}
+
+html.dark-mode .quick-action-item strong,
+html.dark-mode .daily-reminder strong {
+    color: #eef6f0;
+}
+
+html.dark-mode .quick-action-arrow {
+    color: #86efac;
+}
+
+html.dark-mode .quick-action-item:hover .quick-action-arrow {
+    color: #bbf7d0;
+}
+
+html.dark-mode .daily-reminder p {
+    color: #9ab09f;
+}
+
+/* Dashboard Property Viewing Calendar & Agenda */
+html.dark-mode .calendar-weekdays span {
+    color: #9ab09f;
+}
+
+html.dark-mode .calendar-day.is-today {
+    border-color: #4ade80;
+    color: #86efac;
+}
+
+html.dark-mode .agenda-date-heading {
+    border-bottom-color: #293e2f;
+}
+
+html.dark-mode .agenda-empty strong,
+html.dark-mode .agenda-event strong {
+    color: #eef6f0;
+}
+
+html.dark-mode .agenda-empty p,
+html.dark-mode .agenda-event p {
+    color: #9ab09f;
+}
+
+html.dark-mode .agenda-event-time {
+    color: #86efac;
+}
+
+html.dark-mode .agenda-note {
+    border-top-color: #293e2f;
+    color: #9ab09f;
+}
+
+/* Dashboard Property Table Action Buttons */
+html.dark-mode .prop-action-view,
+html.dark-mode .prop-action-available {
+    background: rgba(34, 197, 94, 0.16);
+    color: #86efac;
+    border-color: rgba(74, 222, 128, 0.35);
+}
+
+html.dark-mode .prop-action-view:hover,
+html.dark-mode .prop-action-available:hover {
+    background: rgba(34, 197, 94, 0.25);
+    border-color: rgba(134, 239, 172, 0.55);
+}
+
+html.dark-mode .prop-action-edit {
+    background: #1c2d22;
+    color: #e7f0e9;
+    border-color: #2f4736;
+}
+
+html.dark-mode .prop-action-edit:hover {
+    background: #284231;
+    border-color: #4ade80;
+    color: #86efac;
+}
+
+html.dark-mode .prop-action-sold {
+    background: rgba(245, 158, 11, 0.16);
+    color: #fde68a;
+    border-color: rgba(251, 191, 36, 0.35);
+}
+
+html.dark-mode .prop-action-sold:hover {
+    background: rgba(245, 158, 11, 0.26);
+    border-color: rgba(251, 191, 36, 0.55);
+}
+
+html.dark-mode .prop-action-delete {
+    background: rgba(239, 68, 68, 0.16);
+    color: #fca5a5;
+    border-color: rgba(248, 113, 113, 0.35);
+}
+
+html.dark-mode .prop-action-delete:hover {
+    background: rgba(239, 68, 68, 0.26);
+    border-color: rgba(248, 113, 113, 0.55);
+}
+
+/* Admin Inquiry Modals & Client Table Cells */
+html.dark-mode .modal-header h3,
+html.dark-mode .inquiry-client-name,
+html.dark-mode .client-name-cell strong {
+    color: #eef6f0;
+}
+
+html.dark-mode .client-phone-text,
+html.dark-mode .modal-body,
+html.dark-mode .inquiry-message-box {
+    color: #e7f0e9;
+}
+
+html.dark-mode .inquiry-submitted-date {
+    color: #9ab09f;
+}
+
+html.dark-mode .inquiry-id-tag {
+    background: #24382b;
+    border-color: #334e3c;
+    color: #c2dec9;
+}
+
+html.dark-mode .inquiry-avatar-pill,
+html.dark-mode .btn-modal-primary {
+    background: #2e7d32;
+    color: #ffffff;
+}
+
+html.dark-mode .btn-modal-primary:hover {
+    background: #3ea35d;
+    color: #ffffff;
+}
+
+html.dark-mode .btn-modal-cancelled {
+    background: rgba(239, 68, 68, 0.16);
+    color: #fca5a5;
+    border-color: rgba(248, 113, 113, 0.35);
+}
+
+/* Admin Add/Edit Property Forms & Profile Controls */
+html.dark-mode .upload-area h3 {
+    color: #eef6f0;
+}
+
+html.dark-mode .upload-area p,
+html.dark-mode .upload-area small {
+    color: #9ab09f;
+}
+
+html.dark-mode .upload-area:hover {
+    background: #203327 !important;
+    border-color: #4ade80 !important;
+}
+
+html.dark-mode .upload-symbol,
+html.dark-mode .section-icon {
+    background: #1f3326 !important;
+    color: #86efac !important;
+}
+
+html.dark-mode .image-status {
+    background: rgba(34, 197, 94, 0.16);
+    color: #86efac;
+    border: 1px solid rgba(74, 222, 128, 0.35);
+}
+
+html.dark-mode .upload-btn,
+html.dark-mode .save-btn {
+    background: #2e7d32;
+    border-color: #2e7d32;
+    color: #ffffff !important;
+}
+
+html.dark-mode .upload-btn:hover,
+html.dark-mode .save-btn:hover:not(:disabled) {
+    background: #3ea35d;
+    border-color: #3ea35d;
+}
+
+html.dark-mode .input-with-prefix > span {
+    color: #b4c8b9;
+}
+
+html.dark-mode .btn-change-avatar {
+    background: #1f3326;
+    border-color: #2f523a;
+    color: #86efac;
+}
+
+html.dark-mode .btn-change-avatar:hover {
+    background: #284231;
+    border-color: #4ade80;
+    color: #bbf7d0;
+}
+
 /* ============================================================
    ADMIN SHELL 20 UI/UX DESIGN SYSTEM POLISHES
    ============================================================ */
@@ -1517,7 +1797,7 @@ html.dark-mode .filter-toolbar {
 /* Emphasize Primary Admin CTA (Rule 10) */
 .btn-primary,
 .action-btn-primary,
-.btn-modal-approve,
+.btn-modal-approve:not(.approved):not(:disabled),
 .btn-save-profile,
 .btn-add-property {
     background: linear-gradient(135deg, var(--green, #1f4928) 0%, var(--forest, #2e7d32) 100%) !important;
@@ -1535,7 +1815,7 @@ html.dark-mode .filter-toolbar {
 
 .btn-primary:hover,
 .action-btn-primary:hover,
-.btn-modal-approve:hover,
+.btn-modal-approve:not(.approved):not(:disabled):hover,
 .btn-save-profile:hover,
 .btn-add-property:hover {
     transform: translateY(-2px) !important;
@@ -1544,7 +1824,7 @@ html.dark-mode .filter-toolbar {
 
 .btn-primary:active,
 .action-btn-primary:active,
-.btn-modal-approve:active,
+.btn-modal-approve:not(.approved):not(:disabled):active,
 .btn-save-profile:active,
 .btn-add-property:active {
     transform: translateY(0) !important;

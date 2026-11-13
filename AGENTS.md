@@ -1307,6 +1307,12 @@ path when rendering from a page.
       - Removed the corresponding `location` sort branch from `sortPropertyList()` and `location` icon branch from `getSortOptionIcon()` inside `frontend/index.js`.
 117. **Homepage Budget Matcher Badge Removal (`frontend/shared/js/calculator.js`):**
       - Removed the `.budget-badge-pill` (`Home Affordability Finder`) header pill from `initHomepageBudgetMatcher()` in `frontend/shared/js/calculator.js` so the section begins cleanly with the `Find Cavite & Las Piñas Homes Within Your Budget` heading.
+118. **Admin Dark Mode UI Fixes (`dashboard.html`, `propertylist.html`, `clients.html`, `add-property.html`, `edit-property.html`, `profile.html`):**
+      - Fixed unreadable dark text headings and labels in Dark Mode across `frontend/pages/admin/admin-shell.css` and `frontend/pages/admin/dashboard.css`:
+        - Added `html.dark-mode` styles for `.table-panel .panel-heading h2`/`p`, `.table-panel .text-button`, `.table-panel .table-scroll` borders/scrollbars, `.quick-action-item strong`, `.quick-action-arrow`, `.daily-reminder strong`/`p`, `.calendar-weekdays span`, `.calendar-day.is-today`, `.agenda-date-heading`, `.agenda-empty strong`/`p`, `.agenda-event strong`/`p`, `.agenda-event-time`, and `.agenda-note`.
+        - Fixed dark-mode `--white` and `--dark-green` variable collisions on `.upload-btn`, `.save-btn`, `.btn-modal-primary`, `.inquiry-avatar-pill`, `.image-status` (`"Saved listing images"`), `.btn-change-avatar`, and `.eyebrow`, plus `.client-phone-text`, `.modal-header h3`, `.inquiry-id-tag`, and modal close/cancelled buttons.
+      - Removed inline light-mode styles from property action buttons (`View`, `Edit`, `Mark Sold` / `Mark Available`, `Delete`) and status badges in `renderDashboardProperties()` (`frontend/pages/admin/dashboard.js`) and client inquiry modal action buttons (`frontend/pages/admin/dashboard.js`, `frontend/pages/admin/clients.js`), moving them to semantic classes in `dashboard.css`, `clients.css`, and `admin-shell.css`. Tightened `#managedPropertiesPanel` cell padding and allowed property/location wrapping so all four action buttons fit cleanly on a single row.
+      - Added `background: transparent` and placeholder styling to `.search-input-card input` (`frontend/pages/admin/proplist.css` and `admin-shell.css`) so the search box on `propertylist.html` no longer renders an inner gray browser-default input background box in Dark Mode.
 
 ---
 

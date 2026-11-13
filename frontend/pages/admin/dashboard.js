@@ -796,7 +796,7 @@ function openInquiryModal(data) {
                     Close
                 </button>
                 ${isCancelled ? `
-                    <button type="button" class="btn-modal-approve" disabled style="background:#fee2e2;color:#b91c1c;border:1px solid #fecaca;cursor:not-allowed;">
+                    <button type="button" class="btn-modal-cancelled" disabled>
                         <span>Cancelled by Client</span>
                     </button>
                 ` : !isApproved ? `
@@ -1187,25 +1187,25 @@ function renderDashboardProperties(list) {
             <td><span style="padding:4px 9px; border-radius:4px; background:var(--light-green, #eef5ef); color:var(--dark-green, #1a3b23); font-size:0.8rem; font-weight:600;">${type}</span></td>
             <td style="font-weight:700; color:var(--text-dark, #1b2e21);">${price}</td>
             <td>
-                <span class="status-badge-table ${isSold ? 'status-badge-sold' : 'status-badge-available'}" style="padding:4px 10px; border-radius:12px; font-size:0.8rem; font-weight:600; display:inline-flex; align-items:center; gap:5px; ${isSold ? 'background:#fee2e2; color:#b91c1c; border:1px solid #fecaca;' : 'background:#dcfce7; color:#15803d; border:1px solid #bbf7d0;'}">
-                    <span style="width:6px; height:6px; border-radius:50%; background:${isSold ? '#ef4444' : '#22c55e'}; display:inline-block;"></span>
+                <span class="status-badge-table ${isSold ? 'status-badge-sold' : 'status-badge-available'}">
+                    <span class="status-badge-dot"></span>
                     ${displayStatus}
                 </span>
             </td>
             <td>
-                <div style="display:flex; gap:6px; align-items:center; flex-wrap:wrap;">
-                    <a href="../properties/property-detail.html?id=${p.id}" target="_blank" style="padding:5px 11px; border-radius:6px; background:#f0f7f2; color:#1e5c33; border:1px solid #cbe0d1; text-decoration:none; font-size:0.8rem; font-weight:600; display:inline-flex; align-items:center; gap:4px; transition:all 0.15s;">
+                <div class="dash-prop-actions">
+                    <a href="../properties/property-detail.html?id=${p.id}" target="_blank" class="prop-action-btn prop-action-view">
                         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
                         View
                     </a>
-                    <a href="edit-property.html?id=${p.id}" style="padding:5px 11px; border-radius:6px; background:#eff6ff; color:#1d4ed8; border:1px solid #bfdbfe; text-decoration:none; font-size:0.8rem; font-weight:600; display:inline-flex; align-items:center; gap:4px; transition:all 0.15s;">
+                    <a href="edit-property.html?id=${p.id}" class="prop-action-btn prop-action-edit">
                         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
                         Edit
                     </a>
-                    <button type="button" onclick="togglePropertyStatus(${p.id}, '${displayStatus}')" style="padding:5px 11px; border-radius:6px; cursor:pointer; font-size:0.8rem; font-weight:600; transition:all 0.15s; ${isSold ? 'background:#ecfdf5; color:#047857; border:1px solid #a7f3d0;' : 'background:#fff7ed; color:#c2410c; border:1px solid #fed7aa;'}">
+                    <button type="button" onclick="togglePropertyStatus(${p.id}, '${displayStatus}')" class="prop-action-btn ${isSold ? 'prop-action-available' : 'prop-action-sold'}">
                         ${isSold ? 'Mark Available' : 'Mark Sold'}
                     </button>
-                    <button type="button" onclick="deletePropertyListing(${p.id}, '${title.replace(/'/g, "\\'")}')" style="padding:5px 11px; border-radius:6px; cursor:pointer; font-size:0.8rem; font-weight:600; transition:all 0.15s; background:#fef2f2; color:#b91c1c; border:1px solid #fecaca; display:inline-flex; align-items:center; gap:4px;">
+                    <button type="button" onclick="deletePropertyListing(${p.id}, '${title.replace(/'/g, "\\'")}')" class="prop-action-btn prop-action-delete">
                         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
                         Delete
                     </button>
