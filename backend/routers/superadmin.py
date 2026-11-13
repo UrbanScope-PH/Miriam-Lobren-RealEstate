@@ -214,21 +214,22 @@ def _sync_delete_user_to_supabase(target_email: str, user_id: int = None) -> Non
         clean_email = target_email.strip().lower()
         encoded_email = urllib.parse.quote(clean_email)
 
-        # 1. Delete associated inquiries from Supabase Cloud
-        try:
-            inq_url = f"{SUPABASE_URL}/rest/v1/inquiries?client_email=ilike.{encoded_email}"
-            req_inq = urllib.request.Request(
-                inq_url,
-                headers={
-                    "apikey": SUPABASE_SERVICE_ROLE_KEY,
-                    "Authorization": f"Bearer {SUPABASE_SERVICE_ROLE_KEY}",
-                },
-                method="DELETE"
-            )
-            with urllib.request.urlopen(req_inq, timeout=3.0):
+        # 1. Delete associated inquiries and appointments from Supabase Cloud
+        for email_table in ("inquiries", "appointments"):
+            try:
+                email_cleanup_url = f"{SUPABASE_URL}/rest/v1/{email_table}?client_email=ilike.{encoded_email}"
+                req_cleanup = urllib.request.Request(
+                    email_cleanup_url,
+                    headers={
+                        "apikey": SUPABASE_SERVICE_ROLE_KEY,
+                        "Authorization": f"Bearer {SUPABASE_SERVICE_ROLE_KEY}",
+                    },
+                    method="DELETE"
+                )
+                with urllib.request.urlopen(req_cleanup, timeout=3.0):
+                    pass
+            except Exception:
                 pass
-        except Exception:
-            pass
 
         # Query all user IDs matching target email (including historical deleted)
         matching_ids = set()
@@ -282,7 +283,7 @@ def _sync_delete_user_to_supabase(target_email: str, user_id: int = None) -> Non
             except Exception:
                 pass
             try:
-                appt_url = f"{SUPABASE_URL}/rest/v1/appointments?user_id=eq.{uid}"
+                appt_url = f"{SUPABASE_URL}/rest/v1/appointments?client_id=eq.{uid}"
                 req_appt = urllib.request.Request(
                     appt_url,
                     headers={
@@ -333,7 +334,6 @@ def _sync_delete_user_to_supabase(target_email: str, user_id: int = None) -> Non
             "email": scrambled_email,
             "bio": "__URBANSCOPE_DELETED__",
             "google_id": None,
-            "role": "user",
             "updated_at": datetime.now(timezone.utc).isoformat()
         }).encode("utf-8")
         req_soft = urllib.request.Request(

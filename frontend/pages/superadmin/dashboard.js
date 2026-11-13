@@ -120,6 +120,8 @@
     let currentSuperadmin = null;
     let allUsers = [];
     let pendingRoleChange = null;
+    let pendingDeleteUser = null;
+    let isDeletingUser = false;
 
     // DOM Elements
     const elements = {
@@ -172,6 +174,11 @@
         btnCloseRoleModal: document.getElementById('btnCloseRoleModal'),
         btnCancelRoleChange: document.getElementById('btnCancelRoleChange'),
         btnConfirmRoleChange: document.getElementById('btnConfirmRoleChange'),
+        deleteUserModal: document.getElementById('deleteUserModal'),
+        deleteUserMessage: document.getElementById('deleteUserMessage'),
+        btnCloseDeleteModal: document.getElementById('btnCloseDeleteModal'),
+        btnCancelDeleteUser: document.getElementById('btnCancelDeleteUser'),
+        btnConfirmDeleteUser: document.getElementById('btnConfirmDeleteUser'),
 
         // Actions
         btnRefreshStats: document.getElementById('btnRefreshStats'),
@@ -235,6 +242,7 @@
     function showToast(message, isError = false) {
         if (!elements.toastContainer) return;
         const toast = document.createElement('div');
+        toast.className = isError ? 'sa-toast error' : 'sa-toast';
         const iconSvg = isError
             ? '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>'
             : '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>';
@@ -556,7 +564,7 @@
                         <button type="button" class="btn-table-action" onclick="window.saRoleChangePrompt('${safeIdAttr}', '${nextRole}')">
                             ${nextRoleLabel}
                         </button>
-                        <button type="button" class="btn-table-action danger" onclick="window.saDeleteUserPrompt('${safeIdAttr}', '${escapeHtml(u.email || '')}')">
+                        <button type="button" class="btn-table-action danger" onclick="window.saDeleteUserPrompt('${safeIdAttr}')">
                             Delete
                         </button>
                     </div>
@@ -602,39 +610,88 @@
         }
     };
 
-    window.saDeleteUserPrompt = async function (userId, maybeEmail) {
+    function closeDeleteUserModal(force = false) {
+        if (isDeletingUser && !force) return;
+        if (elements.deleteUserModal) elements.deleteUserModal.hidden = true;
+        pendingDeleteUser = null;
+    }
+
+    window.saDeleteUserPrompt = function (userId, maybeEmail) {
+        if (isDeletingUser) return;
         const matched = allUsers.find(u => String(u.id) === String(userId));
-        const email = maybeEmail || (matched ? matched.email : `#${userId}`);
+        const email = (matched && matched.email) || maybeEmail || `#${userId}`;
 
-        if (!confirm(`Are you sure you want to permanently delete the account for ${email}? All associated inquiries and client history will also be removed. This action cannot be undone.`)) {
-            return;
+        pendingDeleteUser = { userId, email };
+        if (elements.deleteUserMessage) {
+            elements.deleteUserMessage.innerHTML = `Are you sure you want to permanently delete the account for <strong>${escapeHtml(email)}</strong>? All associated inquiries and client history will also be removed. This action cannot be undone.`;
         }
-
-        try {
-            let result = null;
-            if (typeof apiSuperadminDeleteUser === 'function') {
-                result = await apiSuperadminDeleteUser(userId, email);
-            } else if (isLocalDevBackend()) {
-                const res = await fetch(`${getApiBase()}/superadmin/users/${encodeURIComponent(userId)}`, {
-                    method: 'DELETE',
-                    headers: getAuthHeaders(),
-                    credentials: 'include'
-                });
-                const data = await res.json().catch(() => ({}));
-                result = { success: res.ok && data.success, error: data.detail };
-            }
-
-            if (result && result.success) {
-                showToast(`Account ${email} and associated inquiry history deleted successfully.`);
-                await loadUsers();
-                await loadOverview();
-            } else {
-                showToast((result && result.error) || 'Failed to delete account.', true);
-            }
-        } catch (err) {
-            showToast('Delete error: ' + err.message, true);
+        if (elements.btnConfirmDeleteUser) {
+            elements.btnConfirmDeleteUser.disabled = false;
+            elements.btnConfirmDeleteUser.textContent = 'Delete Account';
+        }
+        if (elements.btnCancelDeleteUser) {
+            elements.btnCancelDeleteUser.disabled = false;
+        }
+        if (elements.deleteUserModal) {
+            elements.deleteUserModal.hidden = false;
         }
     };
+
+    if (elements.btnCloseDeleteModal) {
+        elements.btnCloseDeleteModal.addEventListener('click', () => closeDeleteUserModal());
+    }
+    if (elements.btnCancelDeleteUser) {
+        elements.btnCancelDeleteUser.addEventListener('click', () => closeDeleteUserModal());
+    }
+
+    if (elements.btnConfirmDeleteUser) {
+        elements.btnConfirmDeleteUser.addEventListener('click', async () => {
+            if (!pendingDeleteUser || isDeletingUser) return;
+            const { userId, email } = pendingDeleteUser;
+            const btn = elements.btnConfirmDeleteUser;
+            isDeletingUser = true;
+            btn.disabled = true;
+            btn.textContent = 'Deleting...';
+            if (elements.btnCancelDeleteUser) elements.btnCancelDeleteUser.disabled = true;
+
+            try {
+                let result = null;
+                if (typeof apiSuperadminDeleteUser === 'function') {
+                    result = await apiSuperadminDeleteUser(userId, email);
+                } else if (isLocalDevBackend()) {
+                    const res = await fetch(`${getApiBase()}/superadmin/users/${encodeURIComponent(userId)}`, {
+                        method: 'DELETE',
+                        headers: getAuthHeaders(),
+                        credentials: 'include'
+                    });
+                    const data = await res.json().catch(() => ({}));
+                    result = { success: res.ok && data.success, error: data.detail };
+                }
+
+                if (result && result.success) {
+                    closeDeleteUserModal(true);
+                    allUsers = allUsers.filter(u => {
+                        const sameId = String(u.id) === String(userId);
+                        const sameEmail = email && u.email && String(u.email).toLowerCase() === String(email).toLowerCase();
+                        return !sameId && !sameEmail;
+                    });
+                    applyUserFilters();
+                    showToast(`Account ${email} and associated inquiry history deleted successfully.`);
+                    await loadUsers();
+                    await loadOverview();
+                } else {
+                    showToast((result && result.error) || 'Failed to delete account.', true);
+                }
+            } catch (err) {
+                showToast('Delete error: ' + err.message, true);
+            } finally {
+                isDeletingUser = false;
+                btn.disabled = false;
+                btn.textContent = 'Delete Account';
+                if (elements.btnCancelDeleteUser) elements.btnCancelDeleteUser.disabled = false;
+            }
+        });
+    }
 
     // Role change execution
     if (elements.btnConfirmRoleChange) {
@@ -856,10 +913,15 @@
     });
 
     // Backdrop click & Escape key close support for all Superadmin modals
-    [elements.createUserModal, editModalEl, elements.roleChangeModal].forEach(modal => {
+    [elements.createUserModal, editModalEl, elements.roleChangeModal, elements.deleteUserModal].forEach(modal => {
         if (!modal) return;
         modal.addEventListener('click', (e) => {
-            if (e.target === modal) modal.hidden = true;
+            if (e.target !== modal) return;
+            if (modal === elements.deleteUserModal) {
+                closeDeleteUserModal();
+            } else {
+                modal.hidden = true;
+            }
         });
     });
 
@@ -868,6 +930,7 @@
             if (elements.createUserModal && !elements.createUserModal.hidden) elements.createUserModal.hidden = true;
             if (editModalEl && !editModalEl.hidden) editModalEl.hidden = true;
             if (elements.roleChangeModal && !elements.roleChangeModal.hidden) elements.roleChangeModal.hidden = true;
+            if (elements.deleteUserModal && !elements.deleteUserModal.hidden) closeDeleteUserModal();
         }
     });
 
@@ -1050,7 +1113,9 @@
             if (document.visibilityState === 'visible') {
                 const anyModalOpen = (elements.createUserModal && !elements.createUserModal.hidden) ||
                                      (editModalEl && !editModalEl.hidden) ||
-                                     (elements.roleChangeModal && !elements.roleChangeModal.hidden);
+                                     (elements.roleChangeModal && !elements.roleChangeModal.hidden) ||
+                                     (elements.deleteUserModal && !elements.deleteUserModal.hidden) ||
+                                     isDeletingUser;
                 loadOverview();
                 if (!anyModalOpen) {
                     loadUsers();

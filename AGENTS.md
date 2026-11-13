@@ -1288,6 +1288,15 @@ path when rendering from a page.
         - Verified clicking internal links (`casasuerte.html`) does not trigger the wiggle again in the same session (`hasWiggleOnSubpage: false`).
         - Verified immediate cancellation upon hover or click (`duringWiggle: true, afterHover: false`).
         - Verified legacy `localStorage` key is cleaned up (`localCleared: null`).
+114. **Superadmin Account Deletion & Hosted Vercel Serverless Handler Fixes:**
+    - **Vercel Node Endpoint Adapter (`api/superadmin/users.js`):** Converted `handler(request)` to the standard Vercel Node `(req, res)` signature (`parseJsonBody(req)`, `jsonResponse(..., status, res)`, and `export { handler as fetch }`) matching `api/auth/*.js` so `/api/superadmin/users` (`create`, `update`, `delete`) responds immediately instead of timing out waiting for an uncalled Fetch `Response`; validates non-empty `user_id` or `email` when `action === 'delete'`.
+    - **Schema & Trigger-Safe Cloud Cleanup (`lib/email-auth.js`, `backend/routers/superadmin.py`, `frontend/shared/js/supabase.js`, `frontend/shared/js/api.js`):**
+      - Updated `appointments` cleanup filters from non-existent `user_id` to `client_email` / `client_id`.
+      - Removed hardcoded `role: 'user'` from soft-delete `PATCH` fallback payloads so PostgreSQL trigger `trg_protect_user_email_verification` (`supabase/migrations/20261105120000_email_otp_auth.sql`) does not reject fallback soft-deletes on accounts whose `role` is `'client'` or `'admin'`.
+      - Added `fetchWithTimeout` (`AbortController`, 8–10s) to Superadmin API requests (`apiSuperadminCreateUser`, `apiSuperadminUpdateUser`, `apiSuperadminUpdateUserRole`, `apiSuperadminDeleteUser`), skipped redundant direct REST deletes when `/api/superadmin/users` succeeds, and propagated failed deletions (`{ success: false, error }`) instead of silently hiding accounts in `localStorage`.
+    - **Superadmin Confirmation Modal & Toast Styling (`frontend/pages/superadmin/dashboard.html`, `dashboard.css`, `dashboard.js`):**
+      - Replaced native `window.confirm()` in `saDeleteUserPrompt()` with `#deleteUserModal` (`#btnConfirmDeleteUser`, `.sa-btn-danger`), added `Deleting...` busy/disabled states, Escape/backdrop close guards, and paused the 15-second `refreshActiveData` poll while `#deleteUserModal` or `isDeletingUser` is active.
+      - Fixed `showToast()` to apply `sa-toast` / `sa-toast error` class names and added dark-mode `.sa-toast.error` styling.
 
 ---
 

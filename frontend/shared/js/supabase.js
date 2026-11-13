@@ -150,6 +150,26 @@
         };
     }
 
+    async function fetchWithTimeout(url, options = {}, timeoutMs = 10000) {
+        if (typeof AbortController !== 'function') {
+            return fetch(url, options);
+        }
+        const controller = new AbortController();
+        const timerId = setTimeout(() => {
+            try { controller.abort(); } catch (_) {}
+        }, timeoutMs);
+        try {
+            return await fetch(url, { ...options, signal: controller.signal });
+        } catch (err) {
+            if (err && err.name === 'AbortError') {
+                throw new Error('Request timed out while contacting the server.');
+            }
+            throw err;
+        } finally {
+            clearTimeout(timerId);
+        }
+    }
+
     function isBackendConfigured() {
         return true;
     }
@@ -2128,12 +2148,12 @@
 
         if (!isLocalBackendReachableHost()) {
             try {
-                const response = await fetch('/api/superadmin/users', {
+                const response = await fetchWithTimeout('/api/superadmin/users', {
                     method: 'POST',
                     credentials: 'same-origin',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ action: 'create', payload: { full_name: cleanName, email: cleanEmail, phone: cleanPhone, password: plainPassword, role: assignedRole } })
-                });
+                }, 10000);
                 const result = await response.json().catch(() => ({}));
                 if (!response.ok || !result.success) return { success: false, error: result.error || 'Failed to create account.' };
                 clearUserDeletedLocal(result.user && result.user.id, cleanEmail);
@@ -2277,12 +2297,12 @@
 
         if (!isLocalBackendReachableHost()) {
             try {
-                const response = await fetch('/api/superadmin/users', {
+                const response = await fetchWithTimeout('/api/superadmin/users', {
                     method: 'POST',
                     credentials: 'same-origin',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ action: 'update', user_id: userId, payload })
-                });
+                }, 10000);
                 const result = await response.json().catch(() => ({}));
                 if (!response.ok || !result.success) return { success: false, error: result.error || 'Failed to update user account.' };
                 clearUserDeletedLocal(result.user && result.user.id, result.user && result.user.email);
@@ -2405,12 +2425,12 @@
 
         if (!isLocalBackendReachableHost()) {
             try {
-                const response = await fetch('/api/superadmin/users', {
+                const response = await fetchWithTimeout('/api/superadmin/users', {
                     method: 'POST',
                     credentials: 'same-origin',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ action: 'update', user_id: userId, payload: { role: targetRole } })
-                });
+                }, 10000);
                 const result = await response.json().catch(() => ({}));
                 if (!response.ok || !result.success) return { success: false, error: result.error || 'Failed to update role.' };
                 clearUserDeletedLocal(result.user && result.user.id, result.user && result.user.email);
@@ -2486,7 +2506,11 @@
 
     async function apiSuperadminDeleteUser(userId, email = '') {
         const cleanEmail = String(email || '').trim().toLowerCase();
+        const rawUserId = userId !== undefined && userId !== null ? String(userId).trim() : '';
 
+        if (!rawUserId && !cleanEmail) {
+            return { success: false, error: 'User ID or email is required.' };
+        }
         if (cleanEmail === 'urbanscope.cvsu@gmail.com') {
             return { success: false, error: 'Cannot delete root Superadmin account.' };
         }
@@ -2495,19 +2519,24 @@
         }
 
         let localHandled = false;
+        let hostedHandled = false;
+        let cloudHandled = false;
+        let hostedError = '';
+        let cloudError = '';
+        const isLocalBackend = isLocalBackendReachableHost();
 
         // 1. Delete from local FastAPI backend if running on local dev host
-        if (isLocalBackendReachableHost()) {
+        if (isLocalBackend) {
             try {
-                const localRes = await fetch(`${getLocalApiBase()}/superadmin/users/${encodeURIComponent(userId)}`, {
+                const localRes = await fetchWithTimeout(`${getLocalApiBase()}/superadmin/users/${encodeURIComponent(rawUserId || cleanEmail)}`, {
                     method: 'DELETE',
                     headers: getLocalAuthHeaders(),
                     credentials: 'include'
-                });
+                }, 8000);
                 const localData = await localRes.json().catch(() => ({}));
                 if (localRes.ok && localData.success) {
                     localHandled = true;
-                } else if (localRes.status === 400 || localRes.status === 403) {
+                } else if (localRes.status === 400 || localRes.status === 401 || localRes.status === 403) {
                     return { success: false, error: localData.detail || 'Failed to delete account.' };
                 }
             } catch (localErr) {
@@ -2515,124 +2544,180 @@
             }
         }
 
-        // 2. Call hosted Vercel serverless Superadmin endpoint if available
-        try {
-            const hostedRes = await fetch('/api/superadmin/users', {
-                method: 'POST',
-                credentials: 'include',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    action: 'delete',
-                    user_id: userId,
-                    payload: { email: cleanEmail }
-                })
-            });
-            if (hostedRes.ok) {
-                const hostedData = await hostedRes.json().catch(() => ({}));
-                if (hostedData.success) {
-                    localHandled = true;
-                }
-            }
-        } catch (_) {}
-
-        // 3. Delete inquiries & notifications directly from Supabase Cloud
-        const matchingCloudIds = new Set();
-        if (userId && /^\d+$/.test(String(userId))) matchingCloudIds.add(String(userId));
-        if (cleanEmail) {
+        // 2. Call hosted Vercel serverless Superadmin endpoint when not on local dev host
+        if (!isLocalBackend) {
             try {
-                const uRes = await fetch(`${REST_BASE}/users?or=(email.ilike.${encodeURIComponent(cleanEmail)},email.ilike.deleted_*_${encodeURIComponent(cleanEmail)})&select=id`, {
-                    headers: getHeaders()
-                });
-                if (uRes.ok) {
-                    const uRows = await uRes.json().catch(() => []);
-                    if (Array.isArray(uRows)) {
-                        uRows.forEach(u => { if (u && u.id) matchingCloudIds.add(String(u.id)); });
+                const hostedRes = await fetchWithTimeout('/api/superadmin/users', {
+                    method: 'POST',
+                    credentials: 'same-origin',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        action: 'delete',
+                        user_id: userId,
+                        payload: { email: cleanEmail }
+                    })
+                }, 10000);
+                const hostedData = await hostedRes.json().catch(() => ({}));
+                if (hostedRes.ok && hostedData.success) {
+                    hostedHandled = true;
+                    cloudHandled = true;
+                } else if (hostedRes.status === 400 || hostedRes.status === 401 || hostedRes.status === 403) {
+                    return { success: false, error: hostedData.error || 'Failed to delete account.' };
+                } else {
+                    hostedError = hostedData.error || `Server returned status ${hostedRes.status}.`;
+                }
+            } catch (hostedErr) {
+                hostedError = (hostedErr && hostedErr.message) || 'Unable to reach hosted account management.';
+            }
+        }
+
+        // 3. Delete inquiries, appointments & notifications directly from Supabase Cloud if hosted handler did not complete it
+        if (!hostedHandled) {
+            const matchingCloudIds = new Set();
+            const activeCloudIds = new Set();
+
+            try {
+                if (cleanEmail) {
+                    const uRes = await fetchWithTimeout(
+                        `${REST_BASE}/users?or=(email.ilike.${encodeURIComponent(cleanEmail)},email.ilike.deleted_*_${encodeURIComponent(cleanEmail)})&select=id,email`,
+                        { headers: getHeaders() },
+                        8000
+                    );
+                    if (uRes.ok) {
+                        const uRows = await uRes.json().catch(() => []);
+                        if (Array.isArray(uRows)) {
+                            uRows.forEach(u => {
+                                if (!u || u.id === undefined || u.id === null) return;
+                                const uid = String(u.id);
+                                matchingCloudIds.add(uid);
+                                if (!String(u.email || '').toLowerCase().startsWith('deleted_')) {
+                                    activeCloudIds.add(uid);
+                                }
+                            });
+                        }
+                    }
+                } else if (rawUserId && /^\d+$/.test(rawUserId)) {
+                    const uRes = await fetchWithTimeout(
+                        `${REST_BASE}/users?id=eq.${encodeURIComponent(rawUserId)}&select=id,email`,
+                        { headers: getHeaders() },
+                        8000
+                    );
+                    if (uRes.ok) {
+                        const uRows = await uRes.json().catch(() => []);
+                        if (Array.isArray(uRows)) {
+                            uRows.forEach(u => {
+                                if (!u || u.id === undefined || u.id === null) return;
+                                const uid = String(u.id);
+                                matchingCloudIds.add(uid);
+                                activeCloudIds.add(uid);
+                            });
+                        }
                     }
                 }
-            } catch (_) {}
-        }
 
-        if (cleanEmail) {
-            try {
-                await fetch(`${REST_BASE}/inquiries?client_email=ilike.${encodeURIComponent(cleanEmail)}`, {
-                    method: 'DELETE',
-                    headers: getHeaders()
-                });
-            } catch (_) {}
-        }
-
-        for (const uid of matchingCloudIds) {
-            try {
-                await fetch(`${REST_BASE}/inquiries?client_id=eq.${encodeURIComponent(uid)}`, {
-                    method: 'DELETE',
-                    headers: getHeaders()
-                });
-            } catch (_) {}
-            try {
-                await fetch(`${REST_BASE}/notifications?user_id=eq.${encodeURIComponent(uid)}`, {
-                    method: 'DELETE',
-                    headers: getHeaders()
-                });
-            } catch (_) {}
-            try {
-                await fetch(`${REST_BASE}/saved_properties?user_id=eq.${encodeURIComponent(uid)}`, {
-                    method: 'DELETE',
-                    headers: getHeaders()
-                });
-            } catch (_) {}
-            try {
-                await fetch(`${REST_BASE}/appointments?user_id=eq.${encodeURIComponent(uid)}`, {
-                    method: 'DELETE',
-                    headers: getHeaders()
-                });
-            } catch (_) {}
-        }
-
-        // 4. Delete user record from Supabase Cloud (with email scramble fallback)
-        try {
-            let deletedRows = [];
-            if (userId && /^\d+$/.test(String(userId))) {
-                const delById = await fetch(`${REST_BASE}/users?id=eq.${encodeURIComponent(userId)}`, {
-                    method: 'DELETE',
-                    headers: getHeaders()
-                });
-                if (delById.ok) {
-                    deletedRows = await delById.json().catch(() => []);
+                if (!localHandled && rawUserId && /^\d+$/.test(rawUserId)) {
+                    matchingCloudIds.add(rawUserId);
                 }
-            }
 
-            if ((!Array.isArray(deletedRows) || deletedRows.length === 0) && cleanEmail) {
-                const delByEmail = await fetch(`${REST_BASE}/users?email=ilike.${encodeURIComponent(cleanEmail)}`, {
-                    method: 'DELETE',
-                    headers: getHeaders()
-                });
-                if (delByEmail.ok) {
-                    deletedRows = await delByEmail.json().catch(() => []);
+                const cleanupTargets = [];
+                if (cleanEmail) {
+                    cleanupTargets.push(
+                        `${REST_BASE}/inquiries?client_email=ilike.${encodeURIComponent(cleanEmail)}`,
+                        `${REST_BASE}/appointments?client_email=ilike.${encodeURIComponent(cleanEmail)}`
+                    );
                 }
-            }
+                for (const uid of matchingCloudIds) {
+                    cleanupTargets.push(
+                        `${REST_BASE}/inquiries?client_id=eq.${encodeURIComponent(uid)}`,
+                        `${REST_BASE}/notifications?user_id=eq.${encodeURIComponent(uid)}`,
+                        `${REST_BASE}/saved_properties?user_id=eq.${encodeURIComponent(uid)}`,
+                        `${REST_BASE}/appointments?client_id=eq.${encodeURIComponent(uid)}`
+                    );
+                }
+                for (const targetUrl of cleanupTargets) {
+                    try {
+                        await fetchWithTimeout(targetUrl, {
+                            method: 'DELETE',
+                            headers: getHeaders()
+                        }, 8000);
+                    } catch (_) {}
+                }
 
-            if (!Array.isArray(deletedRows) || deletedRows.length === 0) {
-                const scrambledEmail = `deleted_${Date.now()}_${cleanEmail || userId}`;
-                const softDeleteBody = {
-                    email: scrambledEmail,
-                    bio: SOFT_DELETE_BIO_MARKER,
-                    google_id: null,
-                    role: 'user',
-                    updated_at: new Date().toISOString()
-                };
-                const filterParam = cleanEmail
-                    ? `email=ilike.${encodeURIComponent(cleanEmail)}`
-                    : `id=eq.${encodeURIComponent(userId)}`;
-                await fetch(`${REST_BASE}/users?${filterParam}`, {
-                    method: 'PATCH',
-                    headers: getHeaders(),
-                    body: JSON.stringify(softDeleteBody)
-                }).catch(() => {});
+                // 4. Delete user record from Supabase Cloud (with email scramble fallback that preserves role trigger constraints)
+                let deletedRows = [];
+                if (rawUserId && /^\d+$/.test(rawUserId) && (!localHandled || activeCloudIds.has(rawUserId))) {
+                    const delById = await fetchWithTimeout(`${REST_BASE}/users?id=eq.${encodeURIComponent(rawUserId)}`, {
+                        method: 'DELETE',
+                        headers: getHeaders()
+                    }, 8000);
+                    if (delById.ok) {
+                        deletedRows = await delById.json().catch(() => []);
+                    } else {
+                        const errPayload = await delById.json().catch(() => ({}));
+                        cloudError = errPayload.message || errPayload.error || `Supabase delete error (${delById.status}).`;
+                    }
+                }
+
+                if ((!Array.isArray(deletedRows) || deletedRows.length === 0) && cleanEmail) {
+                    const delByEmail = await fetchWithTimeout(`${REST_BASE}/users?email=ilike.${encodeURIComponent(cleanEmail)}`, {
+                        method: 'DELETE',
+                        headers: getHeaders()
+                    }, 8000);
+                    if (delByEmail.ok) {
+                        deletedRows = await delByEmail.json().catch(() => []);
+                    } else if (!cloudError) {
+                        const errPayload = await delByEmail.json().catch(() => ({}));
+                        cloudError = errPayload.message || errPayload.error || `Supabase delete error (${delByEmail.status}).`;
+                    }
+                }
+
+                if (Array.isArray(deletedRows) && deletedRows.length > 0) {
+                    cloudHandled = true;
+                } else {
+                    const filterParam = cleanEmail
+                        ? `email=ilike.${encodeURIComponent(cleanEmail)}`
+                        : `id=eq.${encodeURIComponent(rawUserId)}`;
+                    const checkRes = await fetchWithTimeout(`${REST_BASE}/users?${filterParam}&select=id,email`, {
+                        headers: getHeaders()
+                    }, 8000);
+                    const remainingRows = checkRes.ok ? await checkRes.json().catch(() => null) : null;
+
+                    if (Array.isArray(remainingRows) && remainingRows.length === 0) {
+                        cloudHandled = true;
+                    } else {
+                        const scrambledEmail = `deleted_${Date.now()}_${cleanEmail || rawUserId}`;
+                        const softDeleteBody = {
+                            email: scrambledEmail,
+                            bio: SOFT_DELETE_BIO_MARKER,
+                            google_id: null,
+                            updated_at: new Date().toISOString()
+                        };
+                        const patchRes = await fetchWithTimeout(`${REST_BASE}/users?${filterParam}`, {
+                            method: 'PATCH',
+                            headers: getHeaders(),
+                            body: JSON.stringify(softDeleteBody)
+                        }, 8000);
+                        if (patchRes.ok) {
+                            const patchRows = await patchRes.json().catch(() => []);
+                            if (Array.isArray(patchRows) && patchRows.length > 0) {
+                                cloudHandled = true;
+                            }
+                        } else {
+                            const patchErr = await patchRes.json().catch(() => ({}));
+                            cloudError = patchErr.message || patchErr.error || cloudError || `Supabase soft-delete error (${patchRes.status}).`;
+                        }
+                    }
+                }
+            } catch (cloudErr) {
+                cloudError = (cloudErr && cloudErr.message) || 'Network error while deleting account.';
             }
-        } catch (cloudErr) {
-            if (!localHandled) {
-                return { success: false, error: cloudErr.message || 'Network error while deleting account.' };
-            }
+        }
+
+        if (!localHandled && !hostedHandled && !cloudHandled) {
+            return {
+                success: false,
+                error: cloudError || hostedError || 'Unable to delete account. Please verify your permissions and try again.'
+            };
         }
 
         // 5. Update local tracking of deleted accounts
