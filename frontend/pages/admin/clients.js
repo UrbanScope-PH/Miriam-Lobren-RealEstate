@@ -168,6 +168,24 @@ document.addEventListener('DOMContentLoaded', async () => {
         return `Specific Property Inquiry: ${clean}`;
     }
 
+    function formatInquiryDisplayParts(rawTitle) {
+        const formatted = formatInquiryLabel(rawTitle);
+        const colonIdx = formatted.indexOf(':');
+        if (colonIdx === -1) {
+            return { primary: formatted, secondary: '' };
+        }
+        const primary = formatted.slice(0, colonIdx).trim();
+        const secondary = formatted
+            .slice(colonIdx + 1)
+            .trim()
+            .replace(/^Schedule\s+a\s+Free\s+/i, '')
+            .replace(/\s+Assistance$/i, '');
+        return {
+            primary: primary || formatted,
+            secondary: secondary || ''
+        };
+    }
+
     function renderTable() {
         if (!tableBody) return;
 
@@ -191,6 +209,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
 
         if (filtered.length === 0) {
+            closeStatusMenu(false);
             tableBody.innerHTML = `
                 <tr>
                     <td colspan="6" style="text-align: center; padding: 48px; color: var(--text-muted);">
@@ -206,13 +225,14 @@ document.addEventListener('DOMContentLoaded', async () => {
             return;
         }
 
+        tableBody.querySelectorAll && closeStatusMenu(false);
         tableBody.innerHTML = filtered.map(inq => {
             const id = inq.id;
             const name = inq.client_name || inq.name || 'Anonymous Client';
             const email = inq.email || inq.client_email || 'No email provided';
             const phone = inq.phone || inq.client_phone || inq.contact_number || 'N/A';
             const rawPropTitle = inq.property_title || propertiesMap[inq.property_id] || (inq.property_id ? `Property #${inq.property_id}` : '');
-            const propTitle = formatInquiryLabel(rawPropTitle);
+            const propParts = formatInquiryDisplayParts(rawPropTitle);
             const normStatus = getNormalizedStatus(inq.status);
             const badgeClass = getBadgeClass(normStatus);
             const dateStr = inq.created_at ? new Date(inq.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'Recent';
@@ -226,21 +246,30 @@ document.addEventListener('DOMContentLoaded', async () => {
                     <td>
                         <span class="client-phone-text">${escapeHtml(phone)}</span>
                     </td>
-                    <td>
-                        <span style="font-weight: 600; color: var(--green);">${escapeHtml(propTitle)}</span>
+                    <td class="property-interest-cell">
+                        <strong>${escapeHtml(propParts.primary)}</strong>
+                        ${propParts.secondary ? `<small>${escapeHtml(propParts.secondary)}</small>` : ''}
                     </td>
                     <td>
                         <span style="color: var(--text-muted); font-size: 0.85rem;">${dateStr}</span>
                     </td>
                     <td>
                         <div class="status-cell-wrapper">
-                            <span class="status-badge ${badgeClass}" id="badge-${id}">${normStatus}</span>
-                            <select class="status-select-inline" data-id="${id}" onchange="window.handleStatusChange(event, '${id}')">
-                                <option value="Under Review" ${normStatus === 'Under Review' ? 'selected' : ''}>Under Review</option>
-                                <option value="Approved" ${normStatus === 'Approved' ? 'selected' : ''}>Approved</option>
-                                <option value="Completed" ${normStatus === 'Completed' ? 'selected' : ''}>Completed</option>
-                                <option value="Cancelled" ${normStatus === 'Cancelled' ? 'selected' : ''}>Cancelled</option>
-                            </select>
+                            <button type="button"
+                                    class="status-select-pill ${badgeClass}"
+                                    id="badge-${id}"
+                                    data-id="${id}"
+                                    data-status="${escapeHtml(normStatus)}"
+                                    aria-haspopup="listbox"
+                                    aria-expanded="false"
+                                    aria-label="Change inquiry status for ${escapeHtml(name)} (currently ${escapeHtml(normStatus)})"
+                                    onclick="window.toggleStatusMenu(event, '${id}')">
+                                <span class="status-pill-dot" aria-hidden="true"></span>
+                                <span class="status-pill-label">${escapeHtml(normStatus)}</span>
+                                <svg class="status-select-chevron" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                    <polyline points="6 9 12 15 18 9"></polyline>
+                                </svg>
+                            </button>
                         </div>
                     </td>
                     <td>
@@ -257,13 +286,192 @@ document.addEventListener('DOMContentLoaded', async () => {
         }).join('');
     }
 
+    const STATUS_OPTIONS = [
+        { value: 'Under Review', badgeClass: 'review' },
+        { value: 'Approved', badgeClass: 'approved' },
+        { value: 'Completed', badgeClass: 'completed' },
+        { value: 'Cancelled', badgeClass: 'cancelled' }
+    ];
+
+    let activeMenuId = null;
+    let statusMenuEl = null;
+
+    function ensureStatusMenu() {
+        if (statusMenuEl) return statusMenuEl;
+        statusMenuEl = document.createElement('div');
+        statusMenuEl.id = 'statusFloatingMenu';
+        statusMenuEl.className = 'status-dropdown-menu';
+        statusMenuEl.setAttribute('role', 'listbox');
+        statusMenuEl.setAttribute('aria-label', 'Select inquiry status');
+        statusMenuEl.hidden = true;
+        document.body.appendChild(statusMenuEl);
+
+        statusMenuEl.addEventListener('click', async (e) => {
+            const optionBtn = e.target.closest('.status-dropdown-option');
+            if (!optionBtn || activeMenuId == null) return;
+            const targetId = activeMenuId;
+            const nextStatus = optionBtn.getAttribute('data-value');
+            closeStatusMenu(true);
+            if (nextStatus) {
+                await window.handleStatusChange({ target: { value: nextStatus } }, targetId);
+            }
+        });
+
+        return statusMenuEl;
+    }
+
+    function closeStatusMenu(restoreFocus = false) {
+        const prevOpenTrigger = document.querySelector('.status-select-pill.is-open');
+        if (prevOpenTrigger) {
+            prevOpenTrigger.classList.remove('is-open');
+            prevOpenTrigger.setAttribute('aria-expanded', 'false');
+            if (restoreFocus) {
+                try { prevOpenTrigger.focus(); } catch (_) {}
+            }
+        }
+        if (statusMenuEl) {
+            statusMenuEl.hidden = true;
+            statusMenuEl.classList.remove('open-upward');
+            statusMenuEl.style.visibility = '';
+        }
+        activeMenuId = null;
+    }
+
+    window.toggleStatusMenu = (event, inquiryId) => {
+        if (event) event.stopPropagation();
+        const menu = ensureStatusMenu();
+        const targetId = String(inquiryId);
+        const trigger = document.getElementById(`badge-${targetId}`) || (event && event.currentTarget);
+        if (!trigger) return;
+
+        if (!menu.hidden && activeMenuId === targetId) {
+            closeStatusMenu(false);
+            return;
+        }
+
+        closeStatusMenu(false);
+        activeMenuId = targetId;
+
+        const found = inquiries.find(i => String(i.id) === targetId);
+        const currentStatus = getNormalizedStatus(
+            (found && found.status) || trigger.getAttribute('data-status') || ''
+        );
+
+        trigger.classList.add('is-open');
+        trigger.setAttribute('aria-expanded', 'true');
+
+        menu.innerHTML = `
+            <div class="status-dropdown-header">Update Status</div>
+            ${STATUS_OPTIONS.map(opt => {
+                const selected = opt.value === currentStatus;
+                return `
+                    <button type="button"
+                            class="status-dropdown-option ${opt.badgeClass}${selected ? ' is-selected' : ''}"
+                            role="option"
+                            aria-selected="${selected ? 'true' : 'false'}"
+                            data-value="${opt.value}">
+                        <span class="status-option-left">
+                            <span class="status-menu-dot" aria-hidden="true"></span>
+                            <span class="status-option-text">${opt.value}</span>
+                        </span>
+                        <svg class="status-option-check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <polyline points="20 6 9 17 4 12"></polyline>
+                        </svg>
+                    </button>
+                `;
+            }).join('')}
+        `;
+
+        menu.style.visibility = 'hidden';
+        menu.hidden = false;
+
+        const rect = trigger.getBoundingClientRect();
+        const cssZoom = parseFloat(getComputedStyle(document.documentElement).zoom) || 1;
+        const layoutRatio = trigger.offsetWidth > 0 ? (rect.width / trigger.offsetWidth) : 1;
+        const zoomScale = (cssZoom !== 1 && Math.abs(layoutRatio - cssZoom) < 0.1) ? cssZoom : 1;
+
+        const tLeft = rect.left / zoomScale;
+        const tTop = rect.top / zoomScale;
+        const tBottom = rect.bottom / zoomScale;
+        const tWidth = rect.width / zoomScale;
+        const vpWidth = (document.documentElement.clientWidth || (window.innerWidth / zoomScale));
+        const vpHeight = (window.innerHeight / zoomScale);
+
+        const menuWidth = Math.max(Math.round(tWidth), 184);
+        menu.style.width = `${menuWidth}px`;
+
+        const menuHeight = menu.offsetHeight || 200;
+        const openUpward = (tBottom + 6 + menuHeight > vpHeight - 10) && (tTop > menuHeight + 16);
+        const left = Math.min(Math.max(10, tLeft), vpWidth - menuWidth - 10);
+        const rawTop = openUpward ? (tTop - menuHeight - 6) : (tBottom + 6);
+        const top = Math.max(10, Math.min(rawTop, vpHeight - menuHeight - 10));
+
+        menu.classList.toggle('open-upward', openUpward);
+        menu.style.left = `${left}px`;
+        menu.style.top = `${top}px`;
+        menu.style.visibility = '';
+    };
+
+    document.addEventListener('click', (e) => {
+        if (!statusMenuEl || statusMenuEl.hidden) return;
+        if (e.target.closest('#statusFloatingMenu') || e.target.closest('.status-select-pill')) return;
+        closeStatusMenu(false);
+    });
+
+    document.addEventListener('keydown', (e) => {
+        if (!statusMenuEl || statusMenuEl.hidden) return;
+        if (e.key === 'Escape') {
+            e.preventDefault();
+            closeStatusMenu(true);
+            return;
+        }
+        if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+            e.preventDefault();
+            const opts = Array.from(statusMenuEl.querySelectorAll('.status-dropdown-option'));
+            if (!opts.length) return;
+            const currentIdx = opts.indexOf(document.activeElement);
+            let nextIdx;
+            if (currentIdx === -1) {
+                nextIdx = e.key === 'ArrowDown' ? 0 : opts.length - 1;
+            } else {
+                nextIdx = e.key === 'ArrowDown'
+                    ? (currentIdx + 1) % opts.length
+                    : (currentIdx - 1 + opts.length) % opts.length;
+            }
+            opts[nextIdx].focus();
+        }
+    });
+
+    window.addEventListener('scroll', (e) => {
+        if (!statusMenuEl || statusMenuEl.hidden) return;
+        if (e.target && e.target.id === 'statusFloatingMenu') return;
+        closeStatusMenu(false);
+    }, true);
+
+    window.addEventListener('resize', () => {
+        if (statusMenuEl && !statusMenuEl.hidden) closeStatusMenu(false);
+    });
+
     // Status change handler
     window.handleStatusChange = async (event, inquiryId) => {
-        const newStatus = event.target.value;
+        const newStatus = typeof event === 'string' ? event : (event && event.target ? event.target.value : '');
+        if (!newStatus) return;
         const targetBadge = document.getElementById(`badge-${inquiryId}`);
         if (targetBadge) {
-            targetBadge.textContent = newStatus;
-            targetBadge.className = `status-badge ${getBadgeClass(newStatus)}`;
+            if (targetBadge.classList.contains('status-select-pill')) {
+                const isOpen = targetBadge.classList.contains('is-open');
+                targetBadge.className = `status-select-pill ${getBadgeClass(newStatus)}${isOpen ? ' is-open' : ''}`;
+                targetBadge.setAttribute('data-status', newStatus);
+                const labelEl = targetBadge.querySelector('.status-pill-label');
+                if (labelEl) labelEl.textContent = newStatus;
+                const currentAria = targetBadge.getAttribute('aria-label') || '';
+                if (currentAria.includes('(currently ')) {
+                    targetBadge.setAttribute('aria-label', currentAria.replace(/\(currently [^)]*\)$/, `(currently ${newStatus})`));
+                }
+            } else {
+                targetBadge.textContent = newStatus;
+                targetBadge.className = `status-badge ${getBadgeClass(newStatus)}`;
+            }
         }
 
         // Update local array
@@ -384,8 +592,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 modalApproveBtn.disabled = true;
                 modalApproveBtn.innerHTML = `<span>Approving...</span>`;
                 await window.handleStatusChange({ target: { value: 'Approved' } }, inquiryId);
-                const select = document.querySelector(`.status-select-inline[data-id="${inquiryId}"]`);
-                if (select) select.value = 'Approved';
+                closeStatusMenu(false);
                 modalApproveBtn.outerHTML = `
                     <button type="button" class="action-btn btn-modal-approve approved" disabled style="padding: 9px 18px; font-size: 0.9rem; border-radius: 8px;">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
