@@ -476,11 +476,38 @@
         });
     }
 
-    async function loadNotifications() {
+    let adminNotifPromise = null;
+    let lastAdminNotifAt = 0;
+
+    async function loadNotifications(prefetchedOrOpts = null) {
+        const isPrefetched = Array.isArray(prefetchedOrOpts);
+        const forceRefresh = Boolean(prefetchedOrOpts && !isPrefetched && prefetchedOrOpts.force);
+        const now = Date.now();
+
+        if (!isPrefetched && !forceRefresh && (now - lastAdminNotifAt) < 2000) {
+            return adminNotifPromise || Promise.resolve();
+        }
+        if (!isPrefetched && adminNotifPromise) {
+            return adminNotifPromise;
+        }
+
+        lastAdminNotifAt = now;
+        const p = _loadNotificationsInner(isPrefetched ? prefetchedOrOpts : null).finally(() => {
+            if (adminNotifPromise === p) adminNotifPromise = null;
+        });
+        if (!isPrefetched) {
+            adminNotifPromise = p;
+        }
+        return p;
+    }
+
+    async function _loadNotificationsInner(prefetchedInquiries = null) {
         let inquiries = [];
         let adminEvents = [];
 
-        if (typeof window.apiGetInquiries === "function") {
+        if (Array.isArray(prefetchedInquiries)) {
+            inquiries = prefetchedInquiries;
+        } else if (typeof window.apiGetInquiries === "function") {
             try {
                 const res = await window.apiGetInquiries();
                 if (Array.isArray(res)) inquiries = res;
@@ -592,9 +619,9 @@
                 }
 
                 if (foundNewInquiry) {
-                    window.dispatchEvent(new CustomEvent('inquirySubmitted', { detail: { inquiries } }));
-                    window.dispatchEvent(new CustomEvent('newInquiryReceived', { detail: { inquiries } }));
-                    window.dispatchEvent(new CustomEvent('inquiriesUpdated', { detail: { inquiries } }));
+                    window.dispatchEvent(new CustomEvent('inquirySubmitted', { detail: { inquiries, source: 'admin-shell' } }));
+                    window.dispatchEvent(new CustomEvent('newInquiryReceived', { detail: { inquiries, source: 'admin-shell' } }));
+                    window.dispatchEvent(new CustomEvent('inquiriesUpdated', { detail: { inquiries, source: 'admin-shell' } }));
                 }
             }
         } catch (_) {}
@@ -729,17 +756,21 @@
             if (e.key === "Escape") closeNotif();
         });
 
+        const handleExternalInquiryEvent = (ev) => {
+            if (ev && ev.detail && ev.detail.source === 'admin-shell') return;
+            loadNotifications({ force: true });
+        };
         loadNotifications();
         setInterval(() => {
             if (document.visibilityState === "visible") {
                 loadNotifications();
             }
-        }, 4000);
-        window.addEventListener("inquirySubmitted", () => loadNotifications());
-        window.addEventListener("inquiryCancelled", () => loadNotifications());
-        window.addEventListener("inquiryStatusChanged", () => loadNotifications());
-        window.addEventListener("inquiriesUpdated", () => loadNotifications());
-        window.addEventListener("adminNotificationAdded", () => loadNotifications());
+        }, 30000);
+        window.addEventListener("inquirySubmitted", handleExternalInquiryEvent);
+        window.addEventListener("inquiryCancelled", handleExternalInquiryEvent);
+        window.addEventListener("inquiryStatusChanged", handleExternalInquiryEvent);
+        window.addEventListener("inquiriesUpdated", handleExternalInquiryEvent);
+        window.addEventListener("adminNotificationAdded", () => loadNotifications({ force: true }));
         window.addEventListener("storage", e => {
             if (
                 e.key === "inquiries" ||

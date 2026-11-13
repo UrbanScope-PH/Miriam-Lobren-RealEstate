@@ -1109,27 +1109,40 @@
         }
 
         // Periodic live refresh for account governance and system metrics
-        const refreshActiveData = () => {
-            if (document.visibilityState === 'visible') {
+        let lastSuperadminRefreshAt = Date.now();
+        let superadminRefreshInFlight = false;
+
+        const refreshActiveData = async (force = false) => {
+            if (document.visibilityState !== 'visible') return;
+            const now = Date.now();
+            if (!force && (now - lastSuperadminRefreshAt) < 15000) return;
+            if (superadminRefreshInFlight) return;
+
+            superadminRefreshInFlight = true;
+            lastSuperadminRefreshAt = now;
+            try {
                 const anyModalOpen = (elements.createUserModal && !elements.createUserModal.hidden) ||
                                      (editModalEl && !editModalEl.hidden) ||
                                      (elements.roleChangeModal && !elements.roleChangeModal.hidden) ||
                                      (elements.deleteUserModal && !elements.deleteUserModal.hidden) ||
                                      isDeletingUser;
-                loadOverview();
+                const tasks = [loadOverview()];
                 if (!anyModalOpen) {
-                    loadUsers();
+                    tasks.push(loadUsers());
                 }
+                await Promise.allSettled(tasks);
+            } finally {
+                superadminRefreshInFlight = false;
             }
         };
 
         document.addEventListener('visibilitychange', () => {
             if (document.visibilityState === 'visible') {
-                refreshActiveData();
+                refreshActiveData(false);
             }
         });
 
-        setInterval(refreshActiveData, 15000);
+        setInterval(() => refreshActiveData(true), 60000);
     }
 
     if (document.readyState === 'loading') {

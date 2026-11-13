@@ -7,6 +7,7 @@
 (function () {
     let currentUser = null;
     let allInquiries = [];
+    let isHistoryLoading = false;
     let currentFilter = 'all';
     let searchQuery = '';
     const prevInquiryStatuses = new Map();
@@ -66,8 +67,16 @@
     // ==========================================
     // FETCH INQUIRIES
     // ==========================================
-        async function loadInquiries(silent = false) {
-            if (!currentUser) return;
+    function loadInquiries(silent = false) {
+        if (!currentUser || isHistoryLoading) return Promise.resolve();
+        isHistoryLoading = true;
+        return _loadInquiriesInner(silent).finally(function () {
+            isHistoryLoading = false;
+        });
+    }
+
+    async function _loadInquiriesInner(silent = false) {
+        if (!currentUser) return;
         if (!silent && allInquiries.length === 0) {
             inquiriesListEl.innerHTML = `
                 <div style="text-align:center; padding: 48px; color: var(--text-muted);">
@@ -116,12 +125,12 @@
             }
         }
 
-        checkApprovedInquiryNotifications(email, silent);
+        const foundNewlyApproved = checkApprovedInquiryNotifications(email, silent);
         updateStats();
         renderInquiries();
 
-        if (typeof window.loadClientNotifications === 'function') {
-            window.loadClientNotifications();
+        if ((!silent || foundNewlyApproved) && typeof window.loadClientNotifications === 'function') {
+            window.loadClientNotifications({ force: Boolean(foundNewlyApproved) });
         }
     }
 
@@ -164,8 +173,9 @@
             }
             const propTitle = newlyApproved.property_title || newlyApproved.propertyTitle || 'General Consultation';
             showToast(`✓ Good news! Your inquiry for "${propTitle}" has been approved by Miriam Lobren!`);
-            window.dispatchEvent(new CustomEvent('inquiryStatusChanged', { detail: newlyApproved }));
+            window.dispatchEvent(new CustomEvent('inquiryStatusChanged', { detail: { ...newlyApproved, source: 'history' } }));
         }
+        return Boolean(newlyApproved);
     }
 
     // ==========================================
@@ -620,7 +630,8 @@ window.addEventListener('storage', function (e) {
         }
     });
 
-window.addEventListener('inquiryStatusChanged', function () {
+window.addEventListener('inquiryStatusChanged', function (e) {
+    if (e && e.detail && e.detail.source === 'history') return;
     loadInquiries(true);
 });
 
@@ -639,7 +650,7 @@ setInterval(function () {
     if (document.visibilityState === 'visible' && currentUser) {
         loadInquiries(true);
     }
-}, 4000);
+}, 30000);
 
 // Start initialization
 if (document.readyState === 'loading') {

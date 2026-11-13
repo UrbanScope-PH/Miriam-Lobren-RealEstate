@@ -170,6 +170,28 @@
         }
     }
 
+    const READ_CACHE = {
+        leadProfile: { promise: null, data: null, ts: 0 },
+        inquiries: { promise: null, data: null, ts: 0 },
+        myInquiries: new Map(),
+        superadminUsers: { promise: null, data: null, ts: 0 }
+    };
+
+    function invalidateReadCache(scope = 'all') {
+        if (scope === 'all' || scope === 'inquiries') {
+            READ_CACHE.inquiries = { promise: null, data: null, ts: 0 };
+            READ_CACHE.myInquiries.clear();
+        }
+        if (scope === 'all' || scope === 'users') {
+            READ_CACHE.superadminUsers = { promise: null, data: null, ts: 0 };
+            READ_CACHE.leadProfile = { promise: null, data: null, ts: 0 };
+        }
+        if (scope === 'all' || scope === 'profile') {
+            READ_CACHE.leadProfile = { promise: null, data: null, ts: 0 };
+            try { localStorage.removeItem('urbanscope_admin_profile_ts'); } catch (_) {}
+        }
+    }
+
     function isBackendConfigured() {
         return true;
     }
@@ -261,6 +283,10 @@
             if (filter.search && filter.search.trim()) {
                 const s = encodeURIComponent(filter.search.trim());
                 queryParts.push(`or=(title.ilike.*${s}*,location.ilike.*${s}*,property_type.ilike.*${s}*,description.ilike.*${s}*,amenities.ilike.*${s}*)`);
+            }
+
+            if (filter.columns) {
+                queryParts.push(`select=${filter.columns}`);
             }
 
             queryParts.push('order=id.desc');
@@ -443,24 +469,26 @@
         }
 
         if (liveProperties.length > 0) {
-            try {
-                localStorage.setItem('cached_live_properties', JSON.stringify(liveProperties));
-                ['urbanScopeProperties', 'properties'].forEach(k => {
-                    const raw = localStorage.getItem(k);
-                    if (raw) {
-                        try {
-                            const parsed = JSON.parse(raw);
-                            if (Array.isArray(parsed)) {
-                                const clean = parsed.filter(p => {
-                                    const t = (p.title || p.propertyName || p.name || '').toLowerCase().trim();
-                                    return t.includes('airmen') || t.includes('suerte') || t.includes('kathleen') || t.includes('liora') || t.includes('benecia') || t.includes('amore');
-                                });
-                                localStorage.setItem(k, JSON.stringify(clean));
-                            }
-                        } catch (_) {}
-                    }
-                });
-            } catch (e) {}
+            if (!filter.columns) {
+                try {
+                    localStorage.setItem('cached_live_properties', JSON.stringify(liveProperties));
+                    ['urbanScopeProperties', 'properties'].forEach(k => {
+                        const raw = localStorage.getItem(k);
+                        if (raw) {
+                            try {
+                                const parsed = JSON.parse(raw);
+                                if (Array.isArray(parsed)) {
+                                    const clean = parsed.filter(p => {
+                                        const t = (p.title || p.propertyName || p.name || '').toLowerCase().trim();
+                                        return t.includes('airmen') || t.includes('suerte') || t.includes('kathleen') || t.includes('liora') || t.includes('benecia') || t.includes('amore');
+                                    });
+                                    localStorage.setItem(k, JSON.stringify(clean));
+                                }
+                            } catch (_) {}
+                        }
+                    });
+                } catch (e) {}
+            }
             return liveProperties;
         }
 
@@ -1315,80 +1343,100 @@
             };
             cached.unshift(record);
             localStorage.setItem('inquiries', JSON.stringify(cached));
+            invalidateReadCache('inquiries');
             window.dispatchEvent(new CustomEvent('inquirySubmitted', { detail: record }));
         } catch (_) {}
 
         return result || { success: true, data: payload };
     }
 
-    async function apiGetInquiries() {
-        let list = [];
-
-        // 1. Try Local FastAPI backend first on local dev host
-        if (isLocalDevHost()) {
-            try {
-                const localBase = (location.port === '8000') ? '/api' : 'http://127.0.0.1:8000/api';
-                const token = localStorage.getItem(TOKEN_KEY) || localStorage.getItem('adminToken') || localStorage.getItem('supabase_token') || '';
-                const localRes = await fetch(`${localBase}/inquiries`, {
-                    method: 'GET',
-                    headers: token ? { 'Authorization': `Bearer ${token}` } : {},
-                    credentials: 'same-origin'
-                });
-                if (localRes.ok) {
-                    const localData = await localRes.json();
-                    if (Array.isArray(localData) && localData.length > 0) {
-                        list = localData;
-                    }
-                }
-            } catch (e) {}
+    async function apiGetInquiries(forceRefresh = false) {
+        const now = Date.now();
+        if (!forceRefresh && READ_CACHE.inquiries.data && (now - READ_CACHE.inquiries.ts) < 5000) {
+            return READ_CACHE.inquiries.data;
+        }
+        if (!forceRefresh && READ_CACHE.inquiries.promise) {
+            return READ_CACHE.inquiries.promise;
         }
 
-        // 2. Try Supabase REST
-        try {
-            const res = await fetch(`${REST_BASE}/inquiries?select=*&order=created_at.desc`, {
-                method: 'GET',
-                headers: getHeaders()
-            });
+        const runner = (async () => {
+            let list = [];
 
-            if (res.ok) {
-                const data = await res.json();
-                if (Array.isArray(data) && data.length > 0) {
-                    if (!list.length) {
-                        list = data;
-                    } else {
-                        const existingIds = new Set(list.map(i => String(i.id)));
-                        data.forEach(item => {
-                            if (!existingIds.has(String(item.id))) {
-                                list.push(item);
-                            }
-                        });
+            // 1. Try Local FastAPI backend first on local dev host
+            if (isLocalDevHost()) {
+                try {
+                    const localBase = (location.port === '8000') ? '/api' : 'http://127.0.0.1:8000/api';
+                    const token = localStorage.getItem(TOKEN_KEY) || localStorage.getItem('adminToken') || localStorage.getItem('supabase_token') || '';
+                    const localRes = await fetch(`${localBase}/inquiries`, {
+                        method: 'GET',
+                        headers: token ? { 'Authorization': `Bearer ${token}` } : {},
+                        credentials: 'same-origin'
+                    });
+                    if (localRes.ok) {
+                        const localData = await localRes.json();
+                        if (Array.isArray(localData) && localData.length > 0) {
+                            list = localData;
+                        }
                     }
-                }
+                } catch (e) {}
             }
-        } catch (err) {
-            console.warn('Supabase inquiries fetch notice:', err.message);
-        }
 
-        // 3. Fallback: localStorage
-        if (!list.length) {
+            // 2. Try Supabase REST
             try {
-                const cached = JSON.parse(localStorage.getItem('inquiries') || '[]');
-                if (Array.isArray(cached) && cached.length > 0) {
-                    list = cached;
+                const res = await fetch(`${REST_BASE}/inquiries?select=*&order=created_at.desc`, {
+                    method: 'GET',
+                    headers: getHeaders()
+                });
+
+                if (res.ok) {
+                    const data = await res.json();
+                    if (Array.isArray(data) && data.length > 0) {
+                        if (!list.length) {
+                            list = data;
+                        } else {
+                            const existingIds = new Set(list.map(i => String(i.id)));
+                            data.forEach(item => {
+                                if (!existingIds.has(String(item.id))) {
+                                    list.push(item);
+                                }
+                            });
+                        }
+                    }
                 }
-            } catch (_) {}
-        }
+            } catch (err) {
+                console.warn('Supabase inquiries fetch notice:', err.message);
+            }
 
-        list = applyLocalInquiryState(list);
+            // 3. Fallback: localStorage
+            if (!list.length) {
+                try {
+                    const cached = JSON.parse(localStorage.getItem('inquiries') || '[]');
+                    if (Array.isArray(cached) && cached.length > 0) {
+                        list = cached;
+                    }
+                } catch (_) {}
+            }
 
-        if (list.length >= 0) {
-            try {
-                localStorage.setItem('inquiries', JSON.stringify(list));
-            } catch (_) {}
-            return list;
-        }
+            list = applyLocalInquiryState(list);
 
-        return null;
+            if (list.length >= 0) {
+                try {
+                    localStorage.setItem('inquiries', JSON.stringify(list));
+                } catch (_) {}
+                READ_CACHE.inquiries.data = list;
+                READ_CACHE.inquiries.ts = Date.now();
+                return list;
+            }
+
+            return null;
+        })().finally(() => {
+            if (READ_CACHE.inquiries.promise === runner) {
+                READ_CACHE.inquiries.promise = null;
+            }
+        });
+
+        READ_CACHE.inquiries.promise = runner;
+        return runner;
     }
 
     async function apiUpdateInquiryStatus(id, newStatus) {
@@ -1525,79 +1573,104 @@
             }
         }
 
+        invalidateReadCache('inquiries');
         window.dispatchEvent(new CustomEvent('inquiryStatusChanged', { detail: { id, status: newStatus } }));
         window.dispatchEvent(new CustomEvent('inquiriesUpdated', { detail: { id, status: newStatus } }));
 
         return updated;
     }
 
-    async function apiGetMyInquiries(email) {
-        let list = [];
+    async function apiGetMyInquiries(email, forceRefresh = false) {
         const cleanEmail = (email || '').trim().toLowerCase();
         if (!cleanEmail || getDeletedUserEmails().includes(cleanEmail)) return [];
-        const token = localStorage.getItem(TOKEN_KEY) ||
-                      localStorage.getItem('urbanscope_jwt_token') ||
-                      localStorage.getItem('access_token') ||
-                      localStorage.getItem('adminToken') ||
-                      localStorage.getItem('supabase_token') || '';
 
-        // 1. Try FastAPI backend
-        if (isLocalDevHost()) {
-            try {
-                const localBase = (location.port === '8000') ? '/api' : 'http://127.0.0.1:8000/api';
-                const url = cleanEmail ? `${localBase}/inquiries/my?email=${encodeURIComponent(cleanEmail)}` : `${localBase}/inquiries/my`;
-                const res = await fetch(url, {
-                    method: 'GET',
-                    headers: token ? { 'Authorization': `Bearer ${token}` } : {},
-                    credentials: 'same-origin'
-                });
-                if (res.ok) {
-                    const data = await res.json();
-                    if (Array.isArray(data) && data.length > 0) list = data;
-                }
-            } catch (e) {}
+        const entry = READ_CACHE.myInquiries.get(cleanEmail);
+        const now = Date.now();
+        if (!forceRefresh && entry && entry.data && (now - entry.ts) < 5000) {
+            return entry.data;
+        }
+        if (!forceRefresh && entry && entry.promise) {
+            return entry.promise;
         }
 
-        // 2. Try Supabase Cloud
-        if (cleanEmail) {
-            try {
-                const res = await fetch(`${REST_BASE}/inquiries?client_email=ilike.${encodeURIComponent(cleanEmail)}&order=created_at.desc`, {
-                    method: 'GET',
-                    headers: getHeaders()
-                });
-                if (res.ok) {
-                    const data = await res.json();
-                    if (Array.isArray(data) && data.length > 0) {
-                        if (!list.length) {
-                            list = data;
-                        } else {
-                            const existingIds = new Set(list.map(i => String(i.id)));
-                            data.forEach(item => {
-                                if (!existingIds.has(String(item.id))) list.push(item);
-                            });
+        const runner = (async () => {
+            let list = [];
+            const token = localStorage.getItem(TOKEN_KEY) ||
+                          localStorage.getItem('urbanscope_jwt_token') ||
+                          localStorage.getItem('access_token') ||
+                          localStorage.getItem('adminToken') ||
+                          localStorage.getItem('supabase_token') || '';
+
+            // 1. Try FastAPI backend
+            if (isLocalDevHost()) {
+                try {
+                    const localBase = (location.port === '8000') ? '/api' : 'http://127.0.0.1:8000/api';
+                    const url = cleanEmail ? `${localBase}/inquiries/my?email=${encodeURIComponent(cleanEmail)}` : `${localBase}/inquiries/my`;
+                    const res = await fetch(url, {
+                        method: 'GET',
+                        headers: token ? { 'Authorization': `Bearer ${token}` } : {},
+                        credentials: 'same-origin'
+                    });
+                    if (res.ok) {
+                        const data = await res.json();
+                        if (Array.isArray(data) && data.length > 0) list = data;
+                    }
+                } catch (e) {}
+            }
+
+            // 2. Try Supabase Cloud
+            if (cleanEmail) {
+                try {
+                    const res = await fetch(`${REST_BASE}/inquiries?client_email=ilike.${encodeURIComponent(cleanEmail)}&order=created_at.desc`, {
+                        method: 'GET',
+                        headers: getHeaders()
+                    });
+                    if (res.ok) {
+                        const data = await res.json();
+                        if (Array.isArray(data) && data.length > 0) {
+                            if (!list.length) {
+                                list = data;
+                            } else {
+                                const existingIds = new Set(list.map(i => String(i.id)));
+                                data.forEach(item => {
+                                    if (!existingIds.has(String(item.id))) list.push(item);
+                                });
+                            }
                         }
                     }
-                }
-            } catch (err) {}
-        }
+                } catch (err) {}
+            }
 
-        // 3. Fallback: filter cached inquiries in localStorage
-        if (!list.length && cleanEmail) {
-            try {
-                const cached = JSON.parse(localStorage.getItem('inquiries') || '[]');
-                if (Array.isArray(cached) && cached.length > 0) {
-                    list = cached.filter(i => {
-                        if (!i) return false;
-                        const itemEmail = (i.client_email || i.clientEmail || '').trim().toLowerCase();
-                        if (itemEmail.startsWith('deleted_')) return false;
-                        return itemEmail === cleanEmail;
-                    });
-                }
-            } catch (_) {}
-        }
+            // 3. Fallback: filter cached inquiries in localStorage
+            if (!list.length && cleanEmail) {
+                try {
+                    const cached = JSON.parse(localStorage.getItem('inquiries') || '[]');
+                    if (Array.isArray(cached) && cached.length > 0) {
+                        list = cached.filter(i => {
+                            if (!i) return false;
+                            const itemEmail = (i.client_email || i.clientEmail || '').trim().toLowerCase();
+                            if (itemEmail.startsWith('deleted_')) return false;
+                            return itemEmail === cleanEmail;
+                        });
+                    }
+                } catch (_) {}
+            }
 
-        list = applyLocalInquiryState(list);
-        return list;
+            list = applyLocalInquiryState(list);
+            READ_CACHE.myInquiries.set(cleanEmail, { promise: null, data: list, ts: Date.now() });
+            return list;
+        })().catch((err) => {
+            const cur = READ_CACHE.myInquiries.get(cleanEmail);
+            if (cur && cur.promise === runner) cur.promise = null;
+            throw err;
+        });
+
+        READ_CACHE.myInquiries.set(cleanEmail, {
+            promise: runner,
+            data: entry ? entry.data : null,
+            ts: entry ? entry.ts : 0
+        });
+        return runner;
     }
 
     async function apiUpdateMyInquiry(id, updates, email) {
@@ -1681,6 +1754,7 @@
         } catch (_) {}
 
         saveInquiryOverride(id, { ...updates, updated_at: nowIso });
+        invalidateReadCache('inquiries');
 
         return { success: updated || Boolean(updatedRecord), data: updatedRecord };
     }
@@ -1755,6 +1829,7 @@
             time: Date.now()
         });
 
+        invalidateReadCache('inquiries');
         window.dispatchEvent(new CustomEvent('inquiryCancelled', { detail: { id, clientName, propTitle } }));
         window.dispatchEvent(new CustomEvent('inquiryStatusChanged', { detail: { id, status: 'Cancelled' } }));
         window.dispatchEvent(new CustomEvent('inquiriesUpdated', { detail: { id, status: 'Deleted' } }));
@@ -1793,6 +1868,7 @@
                 time: Date.now()
             });
 
+            invalidateReadCache('inquiries');
             window.dispatchEvent(new CustomEvent('inquiryCancelled', { detail: { id, clientName, propTitle } }));
             window.dispatchEvent(new CustomEvent('inquiryStatusChanged', { detail: { id, status: 'Cancelled' } }));
             window.dispatchEvent(new CustomEvent('inquiriesUpdated', { detail: { id, status: 'Cancelled' } }));
@@ -1942,7 +2018,7 @@
 
     async function apiGetUsers() {
         try {
-            const res = await fetch(`${REST_BASE}/users?select=id,email,full_name,phone,role,created_at,license_number,avatar_url,bio&order=created_at.desc`, {
+            const res = await fetch(`${REST_BASE}/users?select=id,email,full_name,phone,role,created_at,bio&order=created_at.desc`, {
                 method: 'GET',
                 headers: getHeaders()
             });
@@ -1976,73 +2052,92 @@
         return [];
     }
 
-    async function apiGetSuperadminUsers() {
-        let users = null;
+    async function apiGetSuperadminUsers(forceRefresh = false) {
+        const now = Date.now();
+        if (!forceRefresh && READ_CACHE.superadminUsers.data && (now - READ_CACHE.superadminUsers.ts) < 5000) {
+            return READ_CACHE.superadminUsers.data;
+        }
+        if (!forceRefresh && READ_CACHE.superadminUsers.promise) {
+            return READ_CACHE.superadminUsers.promise;
+        }
 
-        // 1. Try local FastAPI backend when running on local dev host (non-HTTPS)
-        if (isLocalBackendReachableHost()) {
-            try {
-                const controller = (typeof AbortController !== 'undefined') ? new AbortController() : null;
-                const timeoutId = controller ? setTimeout(() => controller.abort(), 3500) : null;
-                const localRes = await fetch(`${getLocalApiBase()}/superadmin/users`, {
-                    method: 'GET',
-                    headers: getLocalAuthHeaders(),
-                    credentials: 'include',
-                    signal: controller ? controller.signal : undefined
-                });
-                if (timeoutId) clearTimeout(timeoutId);
-                if (localRes.ok) {
-                    const localData = await localRes.json();
-                    if (Array.isArray(localData) && localData.length > 0) {
-                        users = localData;
+        const runner = (async () => {
+            let users = null;
+
+            // 1. Try local FastAPI backend when running on local dev host (non-HTTPS)
+            if (isLocalBackendReachableHost()) {
+                try {
+                    const controller = (typeof AbortController !== 'undefined') ? new AbortController() : null;
+                    const timeoutId = controller ? setTimeout(() => controller.abort(), 3500) : null;
+                    const localRes = await fetch(`${getLocalApiBase()}/superadmin/users`, {
+                        method: 'GET',
+                        headers: getLocalAuthHeaders(),
+                        credentials: 'include',
+                        signal: controller ? controller.signal : undefined
+                    });
+                    if (timeoutId) clearTimeout(timeoutId);
+                    if (localRes.ok) {
+                        const localData = await localRes.json();
+                        if (Array.isArray(localData) && localData.length > 0) {
+                            users = localData;
+                        }
                     }
+                } catch (localErr) {
+                    console.warn('Local superadmin users fetch notice, using Supabase Cloud:', localErr.message || localErr);
                 }
-            } catch (localErr) {
-                console.warn('Local superadmin users fetch notice, using Supabase Cloud:', localErr.message || localErr);
             }
-        }
 
-        // 2. Fetch from live Supabase Cloud (primary on Vercel/remote, automatic fallback on local)
-        if (!users) {
-            try {
-                const res = await fetch(`${REST_BASE}/users?select=id,email,full_name,phone,role,created_at,license_number,avatar_url,bio&order=id.asc`, {
-                    method: 'GET',
-                    headers: getHeaders()
-                });
-                if (res.ok) {
-                    const cloudData = await res.json();
-                    if (Array.isArray(cloudData)) {
-                        users = cloudData;
+            // 2. Fetch from live Supabase Cloud (primary on Vercel/remote, automatic fallback on local)
+            if (!users) {
+                try {
+                    const res = await fetch(`${REST_BASE}/users?select=id,email,full_name,phone,role,created_at,bio&order=id.asc`, {
+                        method: 'GET',
+                        headers: getHeaders()
+                    });
+                    if (res.ok) {
+                        const cloudData = await res.json();
+                        if (Array.isArray(cloudData)) {
+                            users = cloudData;
+                        }
                     }
+                } catch (cloudErr) {
+                    console.warn('Supabase superadmin users fetch notice:', cloudErr.message || cloudErr);
                 }
-            } catch (cloudErr) {
-                console.warn('Supabase superadmin users fetch notice:', cloudErr.message || cloudErr);
             }
-        }
 
-        // 3. Offline localStorage fallback if both network tiers are unreachable
-        if (!users) {
-            try {
-                const cached = JSON.parse(localStorage.getItem('cached_superadmin_users') || '[]');
-                if (Array.isArray(cached) && cached.length > 0) {
-                    users = cached;
-                }
-            } catch (_) {}
-        }
+            // 3. Offline localStorage fallback if both network tiers are unreachable
+            if (!users) {
+                try {
+                    const cached = JSON.parse(localStorage.getItem('cached_superadmin_users') || '[]');
+                    if (Array.isArray(cached) && cached.length > 0) {
+                        users = cached;
+                    }
+                } catch (_) {}
+            }
 
-        if (Array.isArray(users)) {
-            const cleaned = users
-                .filter(u => !isUserRecordDeleted(u))
-                .map(formatUserRecord)
-                .sort((a, b) => (Number(a.id) || 0) - (Number(b.id) || 0));
+            if (Array.isArray(users)) {
+                const cleaned = users
+                    .filter(u => !isUserRecordDeleted(u))
+                    .map(formatUserRecord)
+                    .sort((a, b) => (Number(a.id) || 0) - (Number(b.id) || 0));
 
-            try {
-                localStorage.setItem('cached_superadmin_users', JSON.stringify(cleaned));
-            } catch (_) {}
-            return cleaned;
-        }
+                try {
+                    localStorage.setItem('cached_superadmin_users', JSON.stringify(cleaned));
+                } catch (_) {}
+                READ_CACHE.superadminUsers.data = cleaned;
+                READ_CACHE.superadminUsers.ts = Date.now();
+                return cleaned;
+            }
 
-        return [];
+            return [];
+        })().finally(() => {
+            if (READ_CACHE.superadminUsers.promise === runner) {
+                READ_CACHE.superadminUsers.promise = null;
+            }
+        });
+
+        READ_CACHE.superadminUsers.promise = runner;
+        return runner;
     }
 
     async function apiGetSuperadminOverview() {
@@ -2067,11 +2162,33 @@
             } catch (_) {}
         }
 
-        // 2. Compute live executive metrics from Supabase Cloud (primary on Vercel/remote)
+        // 2. Compute live executive metrics from Supabase Cloud using minimal column projections
+        const fetchInquirySummary = async () => {
+            if (READ_CACHE.inquiries.data && (Date.now() - READ_CACHE.inquiries.ts) < 5000) {
+                return READ_CACHE.inquiries.data;
+            }
+            try {
+                const res = await fetch(`${REST_BASE}/inquiries?select=id,status`, {
+                    method: 'GET',
+                    headers: getHeaders()
+                });
+                if (res.ok) {
+                    const rows = await res.json().catch(() => []);
+                    if (Array.isArray(rows)) return applyLocalInquiryState(rows);
+                }
+            } catch (_) {}
+            try {
+                const cached = JSON.parse(localStorage.getItem('inquiries') || '[]');
+                return Array.isArray(cached) ? applyLocalInquiryState(cached) : [];
+            } catch (_) {
+                return [];
+            }
+        };
+
         const [usersList, propsList, inqList] = await Promise.all([
             apiGetSuperadminUsers().catch(() => []),
-            apiGetProperties({ type: 'all' }).catch(() => []),
-            apiGetInquiries().catch(() => [])
+            apiGetProperties({ type: 'all', columns: 'id,title,status' }).catch(() => []),
+            fetchInquirySummary().catch(() => [])
         ]);
 
         const users = Array.isArray(usersList) ? usersList : [];
@@ -2157,6 +2274,7 @@
                 const result = await response.json().catch(() => ({}));
                 if (!response.ok || !result.success) return { success: false, error: result.error || 'Failed to create account.' };
                 clearUserDeletedLocal(result.user && result.user.id, cleanEmail);
+                invalidateReadCache('users');
                 return { ...result, user: formatUserRecord(result.user) };
             } catch (error) {
                 return { success: false, error: error.message || 'Unable to reach account management.' };
@@ -2259,6 +2377,7 @@
         }
 
         clearUserDeletedLocal(createdUser && createdUser.id, cleanEmail);
+        invalidateReadCache('users');
 
         return {
             success: true,
@@ -2306,6 +2425,7 @@
                 const result = await response.json().catch(() => ({}));
                 if (!response.ok || !result.success) return { success: false, error: result.error || 'Failed to update user account.' };
                 clearUserDeletedLocal(result.user && result.user.id, result.user && result.user.email);
+                invalidateReadCache('users');
                 return { ...result, user: formatUserRecord(result.user) };
             } catch (error) {
                 return { success: false, error: error.message || 'Unable to reach account management.' };
@@ -2399,6 +2519,8 @@
             }
         }
 
+        invalidateReadCache('users');
+
         return {
             success: true,
             message: 'User account updated successfully.',
@@ -2434,6 +2556,7 @@
                 const result = await response.json().catch(() => ({}));
                 if (!response.ok || !result.success) return { success: false, error: result.error || 'Failed to update role.' };
                 clearUserDeletedLocal(result.user && result.user.id, result.user && result.user.email);
+                invalidateReadCache('users');
                 return { ...result, user: formatUserRecord(result.user) };
             } catch (error) {
                 return { success: false, error: error.message || 'Unable to reach account management.' };
@@ -2496,6 +2619,8 @@
                 return { success: false, error: cloudErr.message || 'Network error while updating role.' };
             }
         }
+
+        invalidateReadCache('users');
 
         return {
             success: true,
@@ -2722,6 +2847,8 @@
 
         // 5. Update local tracking of deleted accounts
         markUserDeletedLocal(userId, cleanEmail);
+        invalidateReadCache('users');
+        invalidateReadCache('inquiries');
 
         // 6. Purge deleted inquiries from local caches
         purgeInquiriesByEmailLocal(cleanEmail, userId);
@@ -3006,10 +3133,8 @@
                 }
             };
 
-            localStorage.setItem(USER_KEY, JSON.stringify(merged));
-            localStorage.setItem(DEMO_KEY, JSON.stringify(merged));
-            localStorage.setItem('adminUser', JSON.stringify(merged));
-            localStorage.setItem('urbanscope_admin_profile', JSON.stringify({
+            invalidateReadCache('profile');
+            const cachedProfile = {
                 name: fullName,
                 full_name: fullName,
                 email: targetEmail,
@@ -3020,7 +3145,14 @@
                 brokerage: brokerage,
                 bio: bio,
                 avatar_url: avatarUrl
-            }));
+            };
+            const profileTs = Date.now();
+            localStorage.setItem(USER_KEY, JSON.stringify(merged));
+            localStorage.setItem(DEMO_KEY, JSON.stringify(merged));
+            localStorage.setItem('adminUser', JSON.stringify(merged));
+            localStorage.setItem('urbanscope_admin_profile', JSON.stringify(cachedProfile));
+            localStorage.setItem('urbanscope_admin_profile_ts', String(profileTs));
+            READ_CACHE.leadProfile = { promise: null, data: cachedProfile, ts: profileTs };
 
             try {
                 window.dispatchEvent(new CustomEvent('urbanscope:profileUpdated', { detail: merged }));
@@ -3032,8 +3164,12 @@
             try {
                 const storedAdmin = JSON.parse(localStorage.getItem('adminUser') || '{}');
                 const merged = { ...storedAdmin, ...(arg1 || {}) };
+                invalidateReadCache('profile');
+                const profileTs = Date.now();
                 localStorage.setItem('adminUser', JSON.stringify(merged));
                 localStorage.setItem('urbanscope_admin_profile', JSON.stringify(merged));
+                localStorage.setItem('urbanscope_admin_profile_ts', String(profileTs));
+                READ_CACHE.leadProfile = { promise: null, data: merged, ts: profileTs };
                 try {
                     window.dispatchEvent(new CustomEvent('urbanscope:profileUpdated', { detail: merged }));
                 } catch (ev) {}
@@ -3043,7 +3179,18 @@
         }
     }
 
-    async function apiGetLeadAgentProfile() {
+    async function apiGetLeadAgentProfile(options = {}) {
+        const forceRefresh = Boolean(options && options.forceRefresh);
+        const LEAD_PROFILE_TTL_MS = 120000;
+        const now = Date.now();
+
+        if (!forceRefresh && READ_CACHE.leadProfile.data && (now - READ_CACHE.leadProfile.ts) < LEAD_PROFILE_TTL_MS) {
+            return READ_CACHE.leadProfile.data;
+        }
+        if (!forceRefresh && READ_CACHE.leadProfile.promise) {
+            return READ_CACHE.leadProfile.promise;
+        }
+
         const isRealAgentEmail = (em) => {
             if (!em) return false;
             const clean = String(em).trim().toLowerCase();
@@ -3054,8 +3201,16 @@
         };
 
         let cached = null;
+        let cachedTs = 0;
         try {
-            cached = JSON.parse(localStorage.getItem('urbanscope_admin_profile') || 'null');
+            const rawStored = localStorage.getItem('urbanscope_admin_profile');
+            cached = JSON.parse(rawStored || 'null');
+            cachedTs = Number(localStorage.getItem('urbanscope_admin_profile_ts') || '0') || 0;
+            if (!forceRefresh && cached && cached.email && cachedTs && (now - cachedTs) < LEAD_PROFILE_TTL_MS) {
+                READ_CACHE.leadProfile.data = cached;
+                READ_CACHE.leadProfile.ts = cachedTs;
+                return cached;
+            }
             if (!cached) {
                 const adminUser = JSON.parse(localStorage.getItem('adminUser') || 'null');
                 if (adminUser && (adminUser.role === 'admin' || isRealAgentEmail(adminUser.email))) {
@@ -3064,131 +3219,136 @@
             }
         } catch (e) {}
 
-        // 1. Query backend if on local dev host
-        if (isLocalDevHost()) {
-            const localBase = (typeof location !== 'undefined' && location.origin && location.port === '8000') ? `${location.origin}/api` : 'http://127.0.0.1:8000/api';
+        const saveCachedProfile = (merged) => {
+            const fetchedAt = Date.now();
             try {
-                const res = await fetch(`${localBase}/agent/profile`);
+                localStorage.setItem('urbanscope_admin_profile', JSON.stringify(merged));
+                localStorage.setItem('urbanscope_admin_profile_ts', String(fetchedAt));
+            } catch (e) {}
+            READ_CACHE.leadProfile.data = merged;
+            READ_CACHE.leadProfile.ts = fetchedAt;
+            return merged;
+        };
+
+        const AGENT_SELECT_FIELDS = 'id,full_name,email,phone,license_number,title,brokerage,bio,avatar_url,role,updated_at';
+
+        const runner = (async () => {
+            // 1. Query backend if on local dev host
+            if (isLocalDevHost()) {
+                const localBase = (typeof location !== 'undefined' && location.origin && location.port === '8000') ? `${location.origin}/api` : 'http://127.0.0.1:8000/api';
+                try {
+                    const res = await fetch(`${localBase}/agent/profile`);
+                    if (res.ok) {
+                        const data = await res.json();
+                        if (data && data.email && isRealAgentEmail(data.email)) {
+                            const cachedTitle = (cached && cached.title && cached.title.trim()) ? cached.title.trim() : null;
+                            const backendTitle = (data.title && data.title.trim()) ? data.title.trim() : null;
+                            const effectiveTitle = backendTitle || cachedTitle || 'Real Estate Salesperson';
+
+                            const merged = {
+                                name: data.full_name || data.name || (cached && cached.name) || 'Miriam Lobren',
+                                full_name: data.full_name || data.name || (cached && cached.full_name) || 'Miriam Lobren',
+                                email: data.email || (cached && cached.email) || 'miriamalobren@gmail.com',
+                                phone: data.phone || (cached && cached.phone) || '+63 918 964 5434',
+                                license: data.license_number || data.license || (cached && cached.license) || '',
+                                license_number: data.license_number || data.license || (cached && cached.license_number) || '',
+                                title: effectiveTitle,
+                                brokerage: data.brokerage || (cached && cached.brokerage) || 'CD Miranda Realty',
+                                bio: data.bio || (cached && cached.bio) || 'Serving Las Piñas, Cavite, and surrounding prime locations with high-integrity real estate solutions.',
+                                avatar_url: data.avatar_url || (cached && cached.avatar_url) || 'assets/images/agent.jpg'
+                            };
+                            return saveCachedProfile(merged);
+                        }
+                    }
+                } catch (err) {
+                    console.warn('Backend get agent profile notice:', err);
+                }
+            }
+
+            // 2. Query Supabase Cloud (explicit safe columns, never select=* with password_hash)
+            try {
+                let res = await fetch(`${REST_BASE}/users?role=in.(admin,superadmin)&select=${AGENT_SELECT_FIELDS}`, { headers: getHeaders() });
+                let users = [];
                 if (res.ok) {
-                    const data = await res.json();
-                    if (data && data.email && isRealAgentEmail(data.email)) {
+                    users = await res.json().catch(() => []);
+                }
+                if (!Array.isArray(users) || users.length === 0) {
+                    const fallbackRes = await fetch(`${REST_BASE}/users?select=${AGENT_SELECT_FIELDS}&limit=10`, { headers: getHeaders() });
+                    if (fallbackRes.ok) {
+                        users = await fallbackRes.json().catch(() => []);
+                    }
+                }
+                if (Array.isArray(users) && users.length > 0) {
+                    let u = null;
+                    const customAdmins = users.filter(x => (x.role === 'admin' || x.role === 'superadmin') && isRealAgentEmail(x.email));
+                    if (customAdmins.length > 0) {
+                        customAdmins.sort((a, b) => {
+                            const dateA = a.updated_at ? new Date(a.updated_at).getTime() : 0;
+                            const dateB = b.updated_at ? new Date(b.updated_at).getTime() : 0;
+                            if (dateB !== dateA) return dateB - dateA;
+                            return (b.id || 0) - (a.id || 0);
+                        });
+                        u = customAdmins[0];
+                    }
+                    if (!u) {
+                        const anyCustom = users.filter(x => isRealAgentEmail(x.email)).sort((a, b) => (b.id || 0) - (a.id || 0));
+                        if (anyCustom.length > 0) {
+                            u = anyCustom[0];
+                        }
+                    }
+                    if (!u) {
+                        u = users.find(x => (x.email || '').trim().toLowerCase() === 'admin.realestate@gmail.com') || users[0];
+                    }
+
+                    if (u) {
                         const cachedTitle = (cached && cached.title && cached.title.trim()) ? cached.title.trim() : null;
-                        const backendTitle = (data.title && data.title.trim()) ? data.title.trim() : null;
-                        const effectiveTitle = backendTitle || cachedTitle || 'Real Estate Salesperson';
+                        const remoteTitle = (u.title && u.title.trim()) ? u.title.trim() : null;
+                        const effectiveTitle = remoteTitle || cachedTitle || 'Real Estate Salesperson';
+
+                        const effectiveEmail = u.email || 'miriamalobren@gmail.com';
+                        const effectivePhone = u.phone || (cached && cached.phone) || '+63 918 964 5434';
 
                         const merged = {
-                            name: data.full_name || data.name || (cached && cached.name) || 'Miriam Lobren',
-                            full_name: data.full_name || data.name || (cached && cached.full_name) || 'Miriam Lobren',
-                            email: data.email || (cached && cached.email) || 'miriamalobren@gmail.com',
-                            phone: data.phone || (cached && cached.phone) || '+63 918 964 5434',
-                            license: data.license_number || data.license || (cached && cached.license) || '',
-                            license_number: data.license_number || data.license || (cached && cached.license_number) || '',
+                            name: u.full_name || (cached && cached.name) || 'Miriam Lobren',
+                            full_name: u.full_name || (cached && cached.full_name) || 'Miriam Lobren',
+                            email: effectiveEmail,
+                            phone: effectivePhone,
+                            license: u.license_number || (cached && cached.license) || '',
+                            license_number: u.license_number || (cached && cached.license_number) || '',
                             title: effectiveTitle,
-                            brokerage: data.brokerage || (cached && cached.brokerage) || 'CD Miranda Realty',
-                            bio: data.bio || (cached && cached.bio) || 'Serving Las Piñas, Cavite, and surrounding prime locations with high-integrity real estate solutions.',
-                            avatar_url: data.avatar_url || (cached && cached.avatar_url) || 'assets/images/agent.jpg'
+                            brokerage: u.brokerage || (cached && cached.brokerage) || 'CD Miranda Realty',
+                            bio: u.bio || (cached && cached.bio) || 'Serving Las Piñas, Cavite, and surrounding prime locations with high-integrity real estate solutions.',
+                            avatar_url: u.avatar_url || (cached && cached.avatar_url) || 'assets/images/agent.jpg'
                         };
-                        try {
-                            localStorage.setItem('urbanscope_admin_profile', JSON.stringify(merged));
-                        } catch (e) {}
-                        try {
-                            window.dispatchEvent(new CustomEvent('urbanscope:profileUpdated', { detail: merged }));
-                        } catch (ev) {}
-                        return merged;
+                        return saveCachedProfile(merged);
                     }
                 }
-            } catch (err) {
-                console.warn('Backend get agent profile notice:', err);
+            } catch (sbErr) {
+                console.warn('Supabase get agent profile notice:', sbErr);
             }
-        }
 
-        // 2. Query Supabase Cloud
-        try {
-            let res = await fetch(`${REST_BASE}/users?role=in.(admin,superadmin)&select=*`, { headers: getHeaders() });
-            let users = [];
-            if (res.ok) {
-                users = await res.json().catch(() => []);
+            if (cached) return cached;
+
+            return {
+                name: 'Miriam Lobren',
+                full_name: 'Miriam Lobren',
+                email: 'miriamalobren@gmail.com',
+                phone: '+63 918 964 5434',
+                license: '',
+                license_number: '',
+                title: 'Real Estate Salesperson',
+                brokerage: 'CD Miranda Realty',
+                bio: 'Serving Las Piñas, Cavite, and surrounding prime locations with high-integrity real estate solutions.',
+                avatar_url: 'assets/images/agent.jpg'
+            };
+        })().finally(() => {
+            if (READ_CACHE.leadProfile.promise === runner) {
+                READ_CACHE.leadProfile.promise = null;
             }
-            if (!Array.isArray(users) || users.length === 0) {
-                const fallbackRes = await fetch(`${REST_BASE}/users?select=*&limit=10`, { headers: getHeaders() });
-                if (fallbackRes.ok) {
-                    users = await fallbackRes.json().catch(() => []);
-                }
-            }
-            if (Array.isArray(users) && users.length > 0) {
-                // Remote lead admin resolution priority:
-                // 1. Remote admin user with a real configured agent email (excluding system accounts), sorted by updated_at DESC, id DESC
-                // 2. Any remote user record with a real configured agent email (sorted by id DESC)
-                // 3. Fallback admin user with admin.realestate@gmail.com
-                // 4. First user record in result set
-                let u = null;
-                const customAdmins = users.filter(x => (x.role === 'admin' || x.role === 'superadmin') && isRealAgentEmail(x.email));
-                if (customAdmins.length > 0) {
-                    customAdmins.sort((a, b) => {
-                        const dateA = a.updated_at ? new Date(a.updated_at).getTime() : 0;
-                        const dateB = b.updated_at ? new Date(b.updated_at).getTime() : 0;
-                        if (dateB !== dateA) return dateB - dateA; // Most recently updated first
-                        return (b.id || 0) - (a.id || 0);          // Highest ID (newest account) first
-                    });
-                    u = customAdmins[0];
-                }
-                if (!u) {
-                    const anyCustom = users.filter(x => isRealAgentEmail(x.email)).sort((a, b) => (b.id || 0) - (a.id || 0));
-                    if (anyCustom.length > 0) {
-                        u = anyCustom[0];
-                    }
-                }
-                if (!u) {
-                    u = users.find(x => (x.email || '').trim().toLowerCase() === 'admin.realestate@gmail.com') || users[0];
-                }
+        });
 
-                if (u) {
-                    const cachedTitle = (cached && cached.title && cached.title.trim()) ? cached.title.trim() : null;
-                    const remoteTitle = (u.title && u.title.trim()) ? u.title.trim() : null;
-                    const effectiveTitle = remoteTitle || cachedTitle || 'Real Estate Salesperson';
-
-                    const effectiveEmail = u.email || 'miriamalobren@gmail.com';
-                    const effectivePhone = u.phone || (cached && cached.phone) || '+63 918 964 5434';
-
-                    const merged = {
-                        name: u.full_name || (cached && cached.name) || 'Miriam Lobren',
-                        full_name: u.full_name || (cached && cached.full_name) || 'Miriam Lobren',
-                        email: effectiveEmail,
-                        phone: effectivePhone,
-                        license: u.license_number || (cached && cached.license) || '',
-                        license_number: u.license_number || (cached && cached.license_number) || '',
-                        title: effectiveTitle,
-                        brokerage: u.brokerage || (cached && cached.brokerage) || 'CD Miranda Realty',
-                        bio: u.bio || (cached && cached.bio) || 'Serving Las Piñas, Cavite, and surrounding prime locations with high-integrity real estate solutions.',
-                        avatar_url: u.avatar_url || (cached && cached.avatar_url) || 'assets/images/agent.jpg'
-                    };
-                    try {
-                        localStorage.setItem('urbanscope_admin_profile', JSON.stringify(merged));
-                    } catch (e) {}
-                    try {
-                        window.dispatchEvent(new CustomEvent('urbanscope:profileUpdated', { detail: merged }));
-                    } catch (ev) {}
-                    return merged;
-                }
-            }
-        } catch (sbErr) {
-            console.warn('Supabase get agent profile notice:', sbErr);
-        }
-
-        if (cached) return cached;
-
-        return {
-            name: (cached && cached.name) || 'Miriam Lobren',
-            full_name: (cached && cached.full_name) || 'Miriam Lobren',
-            email: (cached && cached.email) || 'miriamalobren@gmail.com',
-            phone: (cached && cached.phone) || '+63 918 964 5434',
-            license: (cached && cached.license) || '',
-            license_number: (cached && cached.license_number) || '',
-            title: (cached && cached.title) || 'Real Estate Salesperson',
-            brokerage: (cached && cached.brokerage) || 'CD Miranda Realty',
-            bio: (cached && cached.bio) || 'Serving Las Piñas, Cavite, and surrounding prime locations with high-integrity real estate solutions.',
-            avatar_url: (cached && cached.avatar_url) || 'assets/images/agent.jpg'
-        };
+        READ_CACHE.leadProfile.promise = runner;
+        return runner;
     }
 
     async function verifyPBKDF2(plainPassword, storedHash) {
