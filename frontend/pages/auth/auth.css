@@ -2122,7 +2122,7 @@ body.otp-modal-open {
     position: absolute;
     inset: 0;
     margin: auto;
-    transition: opacity 0.42s cubic-bezier(0.22, 1, 0.36, 1), transform 0.48s cubic-bezier(0.22, 1, 0.36, 1);
+    transition: opacity 0.42s cubic-bezier(0.22, 1, 0.36, 1), transform 0.42s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .theme-icon-moon {
@@ -2150,30 +2150,49 @@ html.dark-mode .theme-icon-sun {
     display: none !important;
 }
 
-::view-transition-old(root),
-::view-transition-new(root) {
+@keyframes urbanScopeThemeFadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+html.theme-vt-snap,
+html.theme-vt-snap *,
+html.theme-vt-snap *::before,
+html.theme-vt-snap *::after {
+    transition: none !important;
+    transition-duration: 0s !important;
+    transition-delay: 0s !important;
+}
+
+::view-transition-group(root) {
     animation-duration: 0.42s;
     animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+::view-transition-old(root) {
+    animation: none;
     mix-blend-mode: normal;
+    z-index: 1;
+}
+
+::view-transition-new(root) {
+    animation: urbanScopeThemeFadeIn 0.42s cubic-bezier(0.22, 1, 0.36, 1) both;
+    mix-blend-mode: normal;
+    z-index: 2;
 }
 
 html.theme-transitioning,
-html.theme-transitioning body,
-html.theme-transitioning div,
-html.theme-transitioning form,
-html.theme-transitioning p,
-html.theme-transitioning h1,
-html.theme-transitioning h2,
-html.theme-transitioning h3,
-html.theme-transitioning span,
-html.theme-transitioning a,
-html.theme-transitioning button,
-html.theme-transitioning input,
-html.theme-transitioning label {
-    transition: background-color 0.48s cubic-bezier(0.22, 1, 0.36, 1),
-                color 0.48s cubic-bezier(0.22, 1, 0.36, 1),
-                border-color 0.48s cubic-bezier(0.22, 1, 0.36, 1),
-                box-shadow 0.48s cubic-bezier(0.22, 1, 0.36, 1) !important;
+html.theme-transitioning *:not(.theme-icon),
+html.theme-transitioning *::before,
+html.theme-transitioning *::after {
+    transition-property: background-color, color, border-color, box-shadow, fill, stroke, filter !important;
+    transition-duration: 0.48s !important;
+    transition-timing-function: cubic-bezier(0.22, 1, 0.36, 1) !important;
+    transition-delay: 0s !important;
 }
 
 html.dark-mode {
