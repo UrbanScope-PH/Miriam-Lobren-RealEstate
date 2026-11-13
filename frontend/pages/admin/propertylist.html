@@ -3,7 +3,10 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
+    <meta name="color-scheme" content="light dark">
+    <meta name="theme-color" media="(prefers-color-scheme: light)" content="#ffffff">
+    <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#131f17">
     <meta name="robots" content="noindex, nofollow">
     <title>Manage Properties - UrbanScope Admin</title>
     <link rel="icon" href="../../assets/images/favicon.jpg" type="image/x-icon">
@@ -165,8 +168,8 @@
                     <circle cx="11" cy="11" r="8"></circle>
                     <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
                 </svg>
-                <input type="text" id="propSearch" placeholder="Search property name or location"
-                    oninput="filterTable()">
+                <input type="search" id="propSearch" placeholder="Search property name or location"
+                    oninput="filterTable()" inputmode="search" enterkeyhint="search" autocapitalize="none" autocorrect="off" spellcheck="false">
             </div>
             <div class="status-select-card">
                 <select id="statusFilter" onchange="filterTable()">

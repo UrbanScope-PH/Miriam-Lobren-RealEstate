@@ -12,6 +12,7 @@
     margin-left: 0;
 
     min-height: 100vh;
+    min-height: 100dvh;
 }
 
 .content {
@@ -81,8 +82,10 @@
     transition: background 0.2s ease;
 }
 
-.add-btn:hover {
-    background: var(--dark-green);
+@media (hover: hover) and (pointer: fine) {
+    .add-btn:hover {
+        background: var(--dark-green);
+    }
 }
 
 
@@ -270,8 +273,10 @@
     transition: background 0.15s ease;
 }
 
-.table-container tbody tr:hover {
-    background: #fbfdfb;
+@media (hover: hover) and (pointer: fine) {
+    .table-container tbody tr:hover {
+        background: #fbfdfb;
+    }
 }
 
 
@@ -393,8 +398,10 @@
     color: var(--green);
 }
 
-.view-btn:hover {
-    background: #dfe9df;
+@media (hover: hover) and (pointer: fine) {
+    .view-btn:hover {
+        background: #dfe9df;
+    }
 }
 
 .edit-btn {
@@ -402,8 +409,10 @@
     color: #596159;
 }
 
-.edit-btn:hover {
-    background: #e5e7e2;
+@media (hover: hover) and (pointer: fine) {
+    .edit-btn:hover {
+        background: #e5e7e2;
+    }
 }
 
 .delete-btn {
@@ -411,8 +420,10 @@
     color: var(--danger);
 }
 
-.delete-btn:hover {
-    background: #f2dddd;
+@media (hover: hover) and (pointer: fine) {
+    .delete-btn:hover {
+        background: #f2dddd;
+    }
 }
 
 
@@ -527,8 +538,10 @@
     color: #596159;
 }
 
-.cancel-delete:hover {
-    background: #e4e8e4;
+@media (hover: hover) and (pointer: fine) {
+    .cancel-delete:hover {
+        background: #e4e8e4;
+    }
 }
 
 .confirm-delete {
@@ -536,8 +549,10 @@
     color: var(--white);
 }
 
-.confirm-delete:hover {
-    background: #963e3e;
+@media (hover: hover) and (pointer: fine) {
+    .confirm-delete:hover {
+        background: #963e3e;
+    }
 }
 
 @keyframes modalAppear {
@@ -1024,9 +1039,11 @@
     transition: transform 0.18s ease, box-shadow 0.18s ease !important;
 }
 
-.add-property-btn:hover {
-    transform: translateY(-2px) !important;
-    box-shadow: 0 6px 18px rgba(31, 73, 40, 0.38) !important;
+@media (hover: hover) and (pointer: fine) {
+    .add-property-btn:hover {
+        transform: translateY(-2px) !important;
+        box-shadow: 0 6px 18px rgba(31, 73, 40, 0.38) !important;
+    }
 }
 
 .add-property-btn:active {

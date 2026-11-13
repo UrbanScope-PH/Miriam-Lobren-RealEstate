@@ -34,9 +34,11 @@
     transition: all 0.2s;
 }
 
-.category-arrow:hover {
-    background-color: var(--light-green);
-    border-color: var(--green);
+@media (hover: hover) and (pointer: fine) {
+    .category-arrow:hover {
+        background-color: var(--light-green);
+        border-color: var(--green);
+    }
 }
 
 .category-scroll {
@@ -66,8 +68,10 @@
     transition: color 0.2s;
 }
 
-.listing-category:hover {
-    color: var(--green);
+@media (hover: hover) and (pointer: fine) {
+    .listing-category:hover {
+        color: var(--green);
+    }
 }
 
 .listing-category.active {
@@ -101,9 +105,11 @@
     transition: background-color 0.2s;
 }
 
-.filter-button:hover {
-    background-color: var(--light-green);
-    color: var(--green);
+@media (hover: hover) and (pointer: fine) {
+    .filter-button:hover {
+        background-color: var(--light-green);
+        color: var(--green);
+    }
 }
 
 .sort-control {
@@ -246,8 +252,10 @@
     transition: background-color 0.2s;
 }
 
-.apply-filters-btn:hover {
-    background-color: var(--dark-green);
+@media (hover: hover) and (pointer: fine) {
+    .apply-filters-btn:hover {
+        background-color: var(--dark-green);
+    }
 }
 
 .clear-all-btn {
@@ -263,9 +271,11 @@
     transition: color 0.2s;
 }
 
-.clear-all-btn:hover {
-    color: var(--green);
-    text-decoration: underline;
+@media (hover: hover) and (pointer: fine) {
+    .clear-all-btn:hover {
+        color: var(--green);
+        text-decoration: underline;
+    }
 }
 
 .drawer-backdrop {
@@ -302,9 +312,11 @@
     flex-direction: column;
 }
 
-.listing-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.14);
+@media (hover: hover) and (pointer: fine) {
+    .listing-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 12px 28px rgba(0, 0, 0, 0.14);
+    }
 }
 
 .listing-image {
@@ -320,8 +332,10 @@
     transition: transform 0.35s ease;
 }
 
-.listing-card:hover .listing-image img {
-    transform: scale(1.05);
+@media (hover: hover) and (pointer: fine) {
+    .listing-card:hover .listing-image img {
+        transform: scale(1.05);
+    }
 }
 
 .listing-info {
@@ -511,14 +525,18 @@
     color: #94a3b8;
 }
 
-.listing-card.card-sold:hover {
-    opacity: 0.96;
-    transform: translateY(-4px);
-    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.08);
+@media (hover: hover) and (pointer: fine) {
+    .listing-card.card-sold:hover {
+        opacity: 0.96;
+        transform: translateY(-4px);
+        box-shadow: 0 10px 24px rgba(0, 0, 0, 0.08);
+    }
 }
 
-.listing-card.card-sold:hover .listing-image img {
-    filter: grayscale(60%) contrast(95%);
+@media (hover: hover) and (pointer: fine) {
+    .listing-card.card-sold:hover .listing-image img {
+        filter: grayscale(60%) contrast(95%);
+    }
 }
 
 /* ============================================================

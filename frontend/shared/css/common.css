@@ -215,10 +215,16 @@ img, video, canvas, svg {
     transition: color 0.2s;
 }
 
-.navbar nav a:hover,
 .navbar nav a.active {
     color: var(--green);
     font-weight: 700;
+}
+
+@media (hover: hover) and (pointer: fine) {
+    .navbar nav a:hover {
+        color: var(--green);
+        font-weight: 700;
+    }
 }
 
 .nav-acts {
@@ -241,10 +247,12 @@ img, video, canvas, svg {
     transition: background-color 0.25s ease, border-color 0.25s ease, color 0.25s ease, transform 0.2s ease;
 }
 
-.s-icon-btn:hover {
-    background-color: var(--light-green);
-    border-color: var(--green);
-    color: var(--green);
+@media (hover: hover) and (pointer: fine) {
+    .s-icon-btn:hover {
+        background-color: var(--light-green);
+        border-color: var(--green);
+        color: var(--green);
+    }
 }
 
 .login-btn {
@@ -265,12 +273,14 @@ img, video, canvas, svg {
     white-space: nowrap;
 }
 
-.login-btn:hover {
-    border-color: var(--green);
-    color: var(--green);
-    background-color: var(--light-green);
-    transform: translateY(-1px);
-    box-shadow: 0 4px 10px rgba(45, 92, 57, 0.12);
+@media (hover: hover) and (pointer: fine) {
+    .login-btn:hover {
+        border-color: var(--green);
+        color: var(--green);
+        background-color: var(--light-green);
+        transform: translateY(-1px);
+        box-shadow: 0 4px 10px rgba(45, 92, 57, 0.12);
+    }
 }
 
 .signup-btn {
@@ -291,11 +301,13 @@ img, video, canvas, svg {
     box-shadow: 0 2px 6px rgba(45, 92, 57, 0.2);
 }
 
-.signup-btn:hover {
-    background-color: var(--dark-green);
-    border-color: var(--dark-green);
-    transform: translateY(-1px);
-    box-shadow: 0 4px 14px rgba(45, 92, 57, 0.3);
+@media (hover: hover) and (pointer: fine) {
+    .signup-btn:hover {
+        background-color: var(--dark-green);
+        border-color: var(--dark-green);
+        transform: translateY(-1px);
+        box-shadow: 0 4px 14px rgba(45, 92, 57, 0.3);
+    }
 }
 
 /* FOOTER */
@@ -340,9 +352,11 @@ img, video, canvas, svg {
     transition: color 0.2s;
 }
 
-.footer-links-column a:hover {
-    color: #ffffff;
-    text-decoration: underline;
+@media (hover: hover) and (pointer: fine) {
+    .footer-links-column a:hover {
+        color: #ffffff;
+        text-decoration: underline;
+    }
 }
 
 .footer-contact {
@@ -400,9 +414,11 @@ img, video, canvas, svg {
     transition: all 0.2s;
 }
 
-.social-icon:hover {
-    background: var(--green);
-    transform: translateY(-2px);
+@media (hover: hover) and (pointer: fine) {
+    .social-icon:hover {
+        background: var(--green);
+        transform: translateY(-2px);
+    }
 }
 
 .legal {
@@ -415,9 +431,11 @@ img, video, canvas, svg {
     text-decoration: none;
 }
 
-.legal a:hover {
-    color: #ffffff;
-    text-decoration: underline;
+@media (hover: hover) and (pointer: fine) {
+    .legal a:hover {
+        color: #ffffff;
+        text-decoration: underline;
+    }
 }
 
 /* MOBILE NAV TOGGLE & DRAWER */
@@ -439,10 +457,16 @@ img, video, canvas, svg {
     -webkit-tap-highlight-color: transparent;
 }
 
-.mobile-nav-toggle:hover,
 .mobile-nav-toggle.active {
     background-color: var(--light-green);
     border-color: rgba(45, 92, 57, 0.2);
+}
+
+@media (hover: hover) and (pointer: fine) {
+    .mobile-nav-toggle:hover {
+        background-color: var(--light-green);
+        border-color: rgba(45, 92, 57, 0.2);
+    }
 }
 
 .hamburger-line {
@@ -628,12 +652,20 @@ img, video, canvas, svg {
         transition: all 0.2s ease;
     }
 
-    .navbar nav a:hover,
     .navbar nav a.active {
         background-color: var(--light-green);
         color: var(--green);
         border-left-color: var(--green);
         padding-left: 20px;
+    }
+
+    @media (hover: hover) and (pointer: fine) {
+        .navbar nav a:hover {
+                background-color: var(--light-green);
+                color: var(--green);
+                border-left-color: var(--green);
+                padding-left: 20px;
+            }
     }
 
     /* Mobile drawer auth section */
@@ -660,10 +692,12 @@ img, video, canvas, svg {
         transition: all 0.2s;
     }
 
-    .mobile-drawer-auth .m-login-btn:hover {
-        border-color: var(--green);
-        color: var(--green);
-        background-color: var(--light-green);
+    @media (hover: hover) and (pointer: fine) {
+        .mobile-drawer-auth .m-login-btn:hover {
+                border-color: var(--green);
+                color: var(--green);
+                background-color: var(--light-green);
+            }
     }
 
     .mobile-drawer-auth .m-signup-btn {
@@ -681,8 +715,10 @@ img, video, canvas, svg {
         transition: background-color 0.2s;
     }
 
-    .mobile-drawer-auth .m-signup-btn:hover {
-        background-color: var(--dark-green);
+    @media (hover: hover) and (pointer: fine) {
+        .mobile-drawer-auth .m-signup-btn:hover {
+                background-color: var(--dark-green);
+            }
     }
 
     /* Mobile drawer user section - removed so mobile menu displays exclusively primary nav links */
@@ -852,9 +888,11 @@ img, video, canvas, svg {
     transform: translateY(0) scale(1);
 }
 
-.back-to-top-btn:hover {
-    transform: translateY(-3px) scale(1.05);
-    box-shadow: 0 10px 24px rgba(45, 92, 57, 0.24);
+@media (hover: hover) and (pointer: fine) {
+    .back-to-top-btn:hover {
+        transform: translateY(-3px) scale(1.05);
+        box-shadow: 0 10px 24px rgba(45, 92, 57, 0.24);
+    }
 }
 
 .btt-progress-ring {
@@ -884,9 +922,11 @@ img, video, canvas, svg {
     transition: transform 0.2s ease, color 0.2s ease;
 }
 
-.back-to-top-btn:hover .btt-icon {
-    transform: translateY(-2px);
-    color: var(--dark-green, #1a3b23);
+@media (hover: hover) and (pointer: fine) {
+    .back-to-top-btn:hover .btt-icon {
+        transform: translateY(-2px);
+        color: var(--dark-green, #1a3b23);
+    }
 }
 
 /* Dark Mode Support */
@@ -912,9 +952,11 @@ html[data-theme="dark"] .btt-icon {
     color: #48bb78;
 }
 
-html.dark-mode .back-to-top-btn:hover .btt-icon,
-html[data-theme="dark"] .back-to-top-btn:hover .btt-icon {
-    color: #68d391;
+@media (hover: hover) and (pointer: fine) {
+    html.dark-mode .back-to-top-btn:hover .btt-icon,
+    html[data-theme="dark"] .back-to-top-btn:hover .btt-icon {
+        color: #68d391;
+    }
 }
 
 @media (max-width: 480px) {
@@ -1034,12 +1076,14 @@ html[data-theme="dark"] .skeleton-shimmer {
     transition: transform 0.18s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.18s ease, filter 0.18s ease;
 }
 
-.btn-cta-emerald:hover,
-.btn-submit-primary:hover,
-.action-btn-primary:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 18px rgba(31, 73, 40, 0.38);
-    filter: brightness(1.05);
+@media (hover: hover) and (pointer: fine) {
+    .btn-cta-emerald:hover,
+    .btn-submit-primary:hover,
+    .action-btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 18px rgba(31, 73, 40, 0.38);
+        filter: brightness(1.05);
+    }
 }
 
 .btn-cta-emerald:active,

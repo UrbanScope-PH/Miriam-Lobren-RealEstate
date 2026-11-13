@@ -41,6 +41,7 @@ body {
     width: 100%;
     height: 100%;
     max-height: 100vh;
+    max-height: 100dvh;
     border-radius: 0;
     box-shadow: none;
     overflow: hidden;
@@ -55,6 +56,7 @@ body {
     width: 40%;
     height: 100%;
     max-height: 100vh;
+    max-height: 100dvh;
     background-color: #17241a;
     display: flex;
     flex-direction: column;
@@ -276,10 +278,12 @@ body {
     box-sizing: border-box !important;
 }
 
-.dots-container .dot:hover,
-.dot:hover {
-    background-color: rgba(255, 255, 255, 0.85);
-    transform: scale(1.15);
+@media (hover: hover) and (pointer: fine) {
+    .dots-container .dot:hover,
+    .dot:hover {
+        background-color: rgba(255, 255, 255, 0.85);
+        transform: scale(1.15);
+    }
 }
 
 .dots-container .dot.active,
@@ -302,6 +306,7 @@ body {
     width: 60%;
     height: 100%;
     max-height: 100vh;
+    max-height: 100dvh;
     background-color: #ffffff;
     display: flex;
     flex-direction: column;
@@ -406,7 +411,9 @@ body {
     text-decoration: none;
     transition: transform 0.2s, color 0.2s;
 }
-.back-home-link:hover { transform: translateX(-3px); color: #1a3b23; }
+@media (hover: hover) and (pointer: fine) {
+    .back-home-link:hover { transform: translateX(-3px); color: #1a3b23; }
+}
 
 /* Form Content Wrapper */
 .form-wrapper {
@@ -440,9 +447,11 @@ body {
     transition: transform 0.2s ease, opacity 0.2s ease;
 }
 
-.form-brand-badge:hover {
-    transform: translateY(-2px);
-    opacity: 0.92;
+@media (hover: hover) and (pointer: fine) {
+    .form-brand-badge:hover {
+        transform: translateY(-2px);
+        opacity: 0.92;
+    }
 }
 
 .form-brand-logo {
@@ -551,9 +560,11 @@ body {
     font-weight: 600;
 }
 
-.forgot-link:hover {
-    text-decoration: underline;
-    color: var(--brand-dark-green);
+@media (hover: hover) and (pointer: fine) {
+    .forgot-link:hover {
+        text-decoration: underline;
+        color: var(--brand-dark-green);
+    }
 }
 
 .btn-submit {
@@ -571,10 +582,12 @@ body {
     box-shadow: 0 4px 12px rgba(45, 92, 57, 0.2);
 }
 
-.btn-submit:hover {
-    background-color: var(--brand-hover-green);
-    transform: translateY(-1px);
-    box-shadow: 0 6px 16px rgba(45, 92, 57, 0.28);
+@media (hover: hover) and (pointer: fine) {
+    .btn-submit:hover {
+        background-color: var(--brand-hover-green);
+        transform: translateY(-1px);
+        box-shadow: 0 6px 16px rgba(45, 92, 57, 0.28);
+    }
 }
 
 .btn-submit:active {
@@ -625,10 +638,12 @@ body {
     transition: background-color 0.2s ease, border-color 0.2s ease, transform 0.15s ease;
 }
 
-.btn-google:hover {
-    background-color: #f6faf6;
-    border-color: #9cb2a1;
-    transform: translateY(-1px);
+@media (hover: hover) and (pointer: fine) {
+    .btn-google:hover {
+        background-color: #f6faf6;
+        border-color: #9cb2a1;
+        transform: translateY(-1px);
+    }
 }
 
 .btn-google:active {
@@ -706,9 +721,11 @@ body {
     margin-left: 5px;
 }
 
-.register-prompt a:hover {
-    text-decoration: underline;
-    color: var(--brand-dark-green);
+@media (hover: hover) and (pointer: fine) {
+    .register-prompt a:hover {
+        text-decoration: underline;
+        color: var(--brand-dark-green);
+    }
 }
 
 /* ==========================================
@@ -1187,9 +1204,11 @@ body {
     transition: color 0.2s, background-color 0.2s;
 }
 
-.toggle-pw:hover {
-    color: var(--brand-primary-green);
-    background-color: rgba(45, 92, 57, 0.08);
+@media (hover: hover) and (pointer: fine) {
+    .toggle-pw:hover {
+        color: var(--brand-primary-green);
+        background-color: rgba(45, 92, 57, 0.08);
+    }
 }
 
 /* Password strength meter */
@@ -1247,8 +1266,10 @@ body {
     user-select: none;
 }
 
-.terms-label:hover {
-    background-color: #f4f9f5;
+@media (hover: hover) and (pointer: fine) {
+    .terms-label:hover {
+        background-color: #f4f9f5;
+    }
 }
 
 .terms-label.is-accepted {
@@ -1269,8 +1290,10 @@ body {
     text-decoration: none;
 }
 
-.inline-link:hover {
-    text-decoration: underline;
+@media (hover: hover) and (pointer: fine) {
+    .inline-link:hover {
+        text-decoration: underline;
+    }
 }
 
 input:user-invalid {
@@ -1413,16 +1436,20 @@ body.terms-modal-open {
     to { opacity: 1; transform: scale(1) rotate(0deg); }
 }
 
-.terms-modal-close:hover {
-    background: #fee2e2;
-    border-color: #fca5a5;
-    color: #dc2626;
-    transform: scale(1.06);
-    box-shadow: 0 3px 10px rgba(220, 38, 38, 0.16);
+@media (hover: hover) and (pointer: fine) {
+    .terms-modal-close:hover {
+        background: #fee2e2;
+        border-color: #fca5a5;
+        color: #dc2626;
+        transform: scale(1.06);
+        box-shadow: 0 3px 10px rgba(220, 38, 38, 0.16);
+    }
 }
 
-.terms-modal-close:hover svg {
-    transform: rotate(90deg);
+@media (hover: hover) and (pointer: fine) {
+    .terms-modal-close:hover svg {
+        transform: rotate(90deg);
+    }
 }
 
 .terms-modal-close:active {
@@ -1474,8 +1501,10 @@ body.terms-modal-open {
     border-radius: 4px;
 }
 
-.terms-modal-body::-webkit-scrollbar-thumb:hover {
-    background-color: rgba(45, 92, 57, 0.6);
+@media (hover: hover) and (pointer: fine) {
+    .terms-modal-body::-webkit-scrollbar-thumb:hover {
+        background-color: rgba(45, 92, 57, 0.6);
+    }
 }
 
 .terms-part-banner {
@@ -1678,10 +1707,12 @@ body.terms-modal-open {
     transition: background-color 0.18s ease, border-color 0.18s ease, color 0.18s ease;
 }
 
-.btn-terms-decline:hover {
-    background: #f2f6f3;
-    border-color: #9cb0a1;
-    color: #172b1d;
+@media (hover: hover) and (pointer: fine) {
+    .btn-terms-decline:hover {
+        background: #f2f6f3;
+        border-color: #9cb0a1;
+        color: #172b1d;
+    }
 }
 
 .btn-terms-accept {
@@ -1731,10 +1762,12 @@ body.terms-modal-open {
     display: none;
 }
 
-.btn-terms-accept:not(:disabled):hover {
-    background: var(--brand-hover-green);
-    transform: translateY(-1px);
-    box-shadow: 0 6px 16px rgba(45, 92, 57, 0.32);
+@media (hover: hover) and (pointer: fine) {
+    .btn-terms-accept:not(:disabled):hover {
+        background: var(--brand-hover-green);
+        transform: translateY(-1px);
+        box-shadow: 0 6px 16px rgba(45, 92, 57, 0.32);
+    }
 }
 
 .btn-terms-accept:not(:disabled):active {
@@ -1873,9 +1906,11 @@ body.terms-modal-open {
     transition: color 0.2s;
 }
 
-.admin-access-link a:hover {
-    color: var(--brand-primary-green);
-    text-decoration: underline;
+@media (hover: hover) and (pointer: fine) {
+    .admin-access-link a:hover {
+        color: var(--brand-primary-green);
+        text-decoration: underline;
+    }
 }
 
 /* ---------- Login notice ---------- */
@@ -2102,11 +2137,13 @@ body.otp-modal-open {
     flex-shrink: 0;
 }
 
-.theme-toggle-btn:hover {
-    background: #eef6f0;
-    border-color: var(--brand-primary-green);
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(45, 92, 57, 0.14);
+@media (hover: hover) and (pointer: fine) {
+    .theme-toggle-btn:hover {
+        background: #eef6f0;
+        border-color: var(--brand-primary-green);
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(45, 92, 57, 0.14);
+    }
 }
 
 .theme-icon-wrap {
@@ -2220,9 +2257,11 @@ html.dark-mode .theme-toggle-btn {
     color: #e7f0e9;
 }
 
-html.dark-mode .theme-toggle-btn:hover {
-    background: #203327;
-    border-color: #4ade80;
+@media (hover: hover) and (pointer: fine) {
+    html.dark-mode .theme-toggle-btn:hover {
+        background: #203327;
+        border-color: #4ade80;
+    }
 }
 
 html.dark-mode .back-home-link,
@@ -2231,11 +2270,16 @@ html.dark-mode .welcome-header h1 {
     color: #eef6f0;
 }
 
-html.dark-mode .back-home-link:hover,
 html.dark-mode .forgot-link,
 html.dark-mode .register-prompt a,
 html.dark-mode .inline-link {
     color: #86efac;
+}
+
+@media (hover: hover) and (pointer: fine) {
+    html.dark-mode .back-home-link:hover {
+        color: #86efac;
+    }
 }
 
 html.dark-mode .form-group label,
@@ -2274,17 +2318,21 @@ html.dark-mode .btn-google {
     color: #e7f0e9;
 }
 
-html.dark-mode .btn-google:hover {
-    background-color: #1f3126;
-    border-color: #4ade80;
+@media (hover: hover) and (pointer: fine) {
+    html.dark-mode .btn-google:hover {
+        background-color: #1f3126;
+        border-color: #4ade80;
+    }
 }
 
 html.dark-mode .form-footer {
     border-top-color: #223327;
 }
 
-html.dark-mode .terms-label:hover {
-    background-color: #16231b;
+@media (hover: hover) and (pointer: fine) {
+    html.dark-mode .terms-label:hover {
+        background-color: #16231b;
+    }
 }
 
 html.dark-mode .terms-label.is-accepted {
@@ -2324,9 +2372,11 @@ html.dark-mode .toggle-pw {
     color: #a8c5b0 !important;
 }
 
-html.dark-mode .toggle-pw:hover {
-    color: #86efac !important;
-    background-color: rgba(134, 239, 172, 0.12) !important;
+@media (hover: hover) and (pointer: fine) {
+    html.dark-mode .toggle-pw:hover {
+        color: #86efac !important;
+        background-color: rgba(134, 239, 172, 0.12) !important;
+    }
 }
 
 html.dark-mode .terms-modal-close,
@@ -2442,10 +2492,12 @@ html.dark-mode .strength-bars span {
     background-color: #24382b;
 }
 
-html.dark-mode .btn-terms-decline:hover {
-    background: #253b2c;
-    border-color: #4ade80;
-    color: #86efac;
+@media (hover: hover) and (pointer: fine) {
+    html.dark-mode .btn-terms-decline:hover {
+        background: #253b2c;
+        border-color: #4ade80;
+        color: #86efac;
+    }
 }
 
 /* ============================================================
@@ -2477,9 +2529,11 @@ html.dark-mode .btn-terms-decline:hover {
     transition: transform 0.18s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.18s ease;
 }
 
-.btn-submit:hover:not(:disabled) {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 18px rgba(31, 73, 40, 0.38);
+@media (hover: hover) and (pointer: fine) {
+    .btn-submit:hover:not(:disabled) {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 18px rgba(31, 73, 40, 0.38);
+    }
 }
 
 .btn-submit:active:not(:disabled) {

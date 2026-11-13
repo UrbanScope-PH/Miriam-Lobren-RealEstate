@@ -37,6 +37,7 @@ html {
 
 body {
     min-height: 100vh;
+    min-height: 100dvh;
     font-family: 'Plus Jakarta Sans', Arial, sans-serif;
     background: var(--bg-main);
     color: var(--text-dark);
@@ -103,8 +104,10 @@ input:focus-visible {
     transition: background 0.15s ease;
 }
 
-.hamburger-btn:hover {
-    background: var(--light-green);
+@media (hover: hover) and (pointer: fine) {
+    .hamburger-btn:hover {
+        background: var(--light-green);
+    }
 }
 
 .brand-badge {
@@ -189,8 +192,10 @@ input:focus-visible {
     transition: background 0.15s ease;
 }
 
-.notif-btn:hover {
-    background: var(--light-green);
+@media (hover: hover) and (pointer: fine) {
+    .notif-btn:hover {
+        background: var(--light-green);
+    }
 }
 
 .notif-badge {
@@ -278,9 +283,11 @@ input:focus-visible {
     transition: color 0.15s ease;
 }
 
-.view-all-link:hover {
-    text-decoration: underline;
-    color: var(--dark-green, #13281c);
+@media (hover: hover) and (pointer: fine) {
+    .view-all-link:hover {
+        text-decoration: underline;
+        color: var(--dark-green, #13281c);
+    }
 }
 
 /* NOTIFICATIONS LIST (Reusable in Topbar Dropdown & Dashboard Card) */
@@ -309,8 +316,10 @@ input:focus-visible {
     border-bottom: none;
 }
 
-.notif-item:hover {
-    background: #f0f7f2;
+@media (hover: hover) and (pointer: fine) {
+    .notif-item:hover {
+        background: #f0f7f2;
+    }
 }
 
 .notif-avatar {
@@ -498,17 +507,21 @@ input:focus-visible {
     transition: background 0.15s ease, color 0.15s ease;
 }
 
-.profile-dropdown a:hover {
-    background: #f2f7f3;
-    color: var(--dark-green);
+@media (hover: hover) and (pointer: fine) {
+    .profile-dropdown a:hover {
+        background: #f2f7f3;
+        color: var(--dark-green);
+    }
 }
 
 .profile-dropdown a.profile-signout {
     color: #b83d4a;
 }
 
-.profile-dropdown a.profile-signout:hover {
-    background: #fff1f2;
+@media (hover: hover) and (pointer: fine) {
+    .profile-dropdown a.profile-signout:hover {
+        background: #fff1f2;
+    }
 }
 
 /* ==========================================================================
@@ -601,9 +614,11 @@ input:focus-visible {
     transition: color 0.15s ease, background 0.15s ease;
 }
 
-.close-sidebar-btn:hover {
-    background: rgba(255, 255, 255, 0.08);
-    color: rgba(255, 255, 255, 0.85);
+@media (hover: hover) and (pointer: fine) {
+    .close-sidebar-btn:hover {
+        background: rgba(255, 255, 255, 0.08);
+        color: rgba(255, 255, 255, 0.85);
+    }
 }
 
 .sidebar-nav {
@@ -632,9 +647,11 @@ input:focus-visible {
     box-sizing: border-box !important;
 }
 
-.nav-item:hover {
-    background: rgba(255, 255, 255, 0.12) !important;
-    color: #ffffff !important;
+@media (hover: hover) and (pointer: fine) {
+    .nav-item:hover {
+        background: rgba(255, 255, 255, 0.12) !important;
+        color: #ffffff !important;
+    }
 }
 
 /* Active Nav Item — Beautiful highlight matching Photo 2 */
@@ -676,8 +693,10 @@ input:focus-visible {
     transition: color 0.2s ease;
 }
 
-.logout-link:hover {
-    color: #fecaca !important;
+@media (hover: hover) and (pointer: fine) {
+    .logout-link:hover {
+        color: #fecaca !important;
+    }
 }
 
 .logout-link svg {
@@ -858,13 +877,15 @@ input:focus-visible {
     transition: all 0.18s ease;
 }
 
-.action-view-btn:hover,
-.table-panel .action-button:hover {
-    background: var(--green);
-    border-color: var(--green);
-    color: #ffffff;
-    transform: translateY(-1px);
-    box-shadow: 0 4px 10px rgba(30, 92, 51, 0.22);
+@media (hover: hover) and (pointer: fine) {
+    .action-view-btn:hover,
+    .table-panel .action-button:hover {
+        background: var(--green);
+        border-color: var(--green);
+        color: #ffffff;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 10px rgba(30, 92, 51, 0.22);
+    }
 }
 
 .action-view-btn:active,
@@ -883,9 +904,11 @@ input:focus-visible {
     transition: transform 0.18s ease;
 }
 
-.action-view-btn:hover svg,
-.table-panel .action-button:hover svg {
-    transform: scale(1.08);
+@media (hover: hover) and (pointer: fine) {
+    .action-view-btn:hover svg,
+    .table-panel .action-button:hover svg {
+        transform: scale(1.08);
+    }
 }
 
 
@@ -954,11 +977,13 @@ input:focus-visible {
     flex-shrink: 0;
 }
 
-.theme-toggle-btn:hover {
-    background: #eef6f0;
-    border-color: var(--green, #2d5c39);
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(45, 92, 57, 0.14);
+@media (hover: hover) and (pointer: fine) {
+    .theme-toggle-btn:hover {
+        background: #eef6f0;
+        border-color: var(--green, #2d5c39);
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(45, 92, 57, 0.14);
+    }
 }
 
 .theme-icon-wrap {
@@ -1106,20 +1131,27 @@ html.dark-mode .notif-btn {
     color: #e7f0e9;
 }
 
-html.dark-mode .theme-toggle-btn:hover,
-html.dark-mode .notif-btn:hover {
-    background: #22372a;
-    border-color: #4ade80;
-    color: #86efac;
+@media (hover: hover) and (pointer: fine) {
+    html.dark-mode .theme-toggle-btn:hover,
+    html.dark-mode .notif-btn:hover {
+        background: #22372a;
+        border-color: #4ade80;
+        color: #86efac;
+    }
 }
 
 html.dark-mode .profile-chevron {
     color: #cfe3d4 !important;
 }
 
-html.dark-mode .admin-profile-badge:hover .profile-chevron,
 html.dark-mode .admin-profile-badge[aria-expanded="true"] .profile-chevron {
     color: #86efac !important;
+}
+
+@media (hover: hover) and (pointer: fine) {
+    html.dark-mode .admin-profile-badge:hover .profile-chevron {
+        color: #86efac !important;
+    }
 }
 
 html.dark-mode .hamburger-btn,
@@ -1130,9 +1162,11 @@ html.dark-mode .password-toggle-btn {
     color: #b4c8b9 !important;
 }
 
-html.dark-mode .password-toggle-btn:hover {
-    color: #86efac !important;
-    background-color: rgba(134, 239, 172, 0.12) !important;
+@media (hover: hover) and (pointer: fine) {
+    html.dark-mode .password-toggle-btn:hover {
+        color: #86efac !important;
+        background-color: rgba(134, 239, 172, 0.12) !important;
+    }
 }
 
 html.dark-mode .kpi-icon,
@@ -1208,9 +1242,11 @@ html.dark-mode .view-all-link {
     color: #86efac;
 }
 
-html.dark-mode .view-all-link:hover {
-    color: #bbf7d0;
-    text-decoration: underline;
+@media (hover: hover) and (pointer: fine) {
+    html.dark-mode .view-all-link:hover {
+        color: #bbf7d0;
+        text-decoration: underline;
+    }
 }
 
 html.dark-mode .profile-dropdown-divider {
@@ -1221,10 +1257,12 @@ html.dark-mode .notif-item {
     border-bottom-color: #223327;
 }
 
-html.dark-mode .notif-item:hover,
-html.dark-mode .profile-dropdown a:hover {
-    background: #203327;
-    color: #86efac;
+@media (hover: hover) and (pointer: fine) {
+    html.dark-mode .notif-item:hover,
+    html.dark-mode .profile-dropdown a:hover {
+        background: #203327;
+        color: #86efac;
+    }
 }
 
 html.dark-mode .profile-dropdown-name strong,
@@ -1236,8 +1274,10 @@ html.dark-mode .profile-dropdown a.profile-signout {
     color: #f87171;
 }
 
-html.dark-mode .profile-dropdown a.profile-signout:hover {
-    background: rgba(239, 68, 68, 0.14);
+@media (hover: hover) and (pointer: fine) {
+    html.dark-mode .profile-dropdown a.profile-signout:hover {
+        background: rgba(239, 68, 68, 0.14);
+    }
 }
 
 /* Admin Dashboard, Property List, Add/Edit Property, Clients, Profile Cards */
@@ -1266,15 +1306,23 @@ html.dark-mode .admin-profile-badge {
     color: #e7f0e9 !important;
 }
 
-html.dark-mode .admin-profile-badge:hover,
 html.dark-mode .admin-profile-badge[aria-expanded="true"] {
     background: #22372a !important;
     border-color: #4ade80 !important;
 }
 
-html.dark-mode .calendar-day:hover {
-    background: #213628 !important;
-    border-color: #3ea35d !important;
+@media (hover: hover) and (pointer: fine) {
+    html.dark-mode .admin-profile-badge:hover {
+        background: #22372a !important;
+        border-color: #4ade80 !important;
+    }
+}
+
+@media (hover: hover) and (pointer: fine) {
+    html.dark-mode .calendar-day:hover {
+        background: #213628 !important;
+        border-color: #3ea35d !important;
+    }
 }
 
 html.dark-mode .table-panel .status.pending,
@@ -1335,12 +1383,14 @@ html.dark-mode .cancel-modal-btn {
     color: #86efac !important;
 }
 
-html.dark-mode .action-view-btn:hover,
-html.dark-mode .action-btn.view:hover,
-html.dark-mode .cancel-modal-btn:hover {
-    background: #253e2d !important;
-    border-color: #4ade80 !important;
-    color: #bbf7d0 !important;
+@media (hover: hover) and (pointer: fine) {
+    html.dark-mode .action-view-btn:hover,
+    html.dark-mode .action-btn.view:hover,
+    html.dark-mode .cancel-modal-btn:hover {
+        background: #253e2d !important;
+        border-color: #4ade80 !important;
+        color: #bbf7d0 !important;
+    }
 }
 
 html.dark-mode .donut-legend,
@@ -1362,9 +1412,11 @@ html.dark-mode .image-placeholder {
     color: #e7f0e9;
 }
 
-html.dark-mode .quick-action-item:hover {
-    background-color: #22372a !important;
-    border-color: #4ade80 !important;
+@media (hover: hover) and (pointer: fine) {
+    html.dark-mode .quick-action-item:hover {
+        background-color: #22372a !important;
+        border-color: #4ade80 !important;
+    }
 }
 
 html.dark-mode .legend-label,
@@ -1389,16 +1441,18 @@ html.dark-mode #propertiesTable .edit-btn {
     color: #e7f0e9;
 }
 
-html.dark-mode .calendar-nav-btn:hover,
-html.dark-mode .back-btn:hover,
-html.dark-mode .cancel-btn:hover,
-html.dark-mode .btn-reset-avatar:hover,
-html.dark-mode .btn-modal-secondary:hover,
-html.dark-mode .status-tab-btn:hover,
-html.dark-mode #propertiesTable .edit-btn:hover {
-    background-color: #284231;
-    border-color: #4ade80;
-    color: #86efac;
+@media (hover: hover) and (pointer: fine) {
+    html.dark-mode .calendar-nav-btn:hover,
+    html.dark-mode .back-btn:hover,
+    html.dark-mode .cancel-btn:hover,
+    html.dark-mode .btn-reset-avatar:hover,
+    html.dark-mode .btn-modal-secondary:hover,
+    html.dark-mode .status-tab-btn:hover,
+    html.dark-mode #propertiesTable .edit-btn:hover {
+        background-color: #284231;
+        border-color: #4ade80;
+        color: #86efac;
+    }
 }
 
 html.dark-mode .status-tab-btn.active {
@@ -1432,10 +1486,12 @@ html.dark-mode .table-panel td {
     border-color: #223327 !important;
 }
 
-html.dark-mode .table-panel tbody tr:hover,
-html.dark-mode #propertiesTable tbody tr:hover td,
-html.dark-mode #clientsTable tbody tr:hover td {
-    background-color: #1d2e24 !important;
+@media (hover: hover) and (pointer: fine) {
+    html.dark-mode .table-panel tbody tr:hover,
+    html.dark-mode #propertiesTable tbody tr:hover td,
+    html.dark-mode #clientsTable tbody tr:hover td {
+        background-color: #1d2e24 !important;
+    }
 }
 
 /* Admin Form Inputs & Filters */
@@ -1476,8 +1532,10 @@ html.dark-mode .status-select-card select {
     color: #e7f0e9 !important;
 }
 
-html.dark-mode .status-select-pill:hover {
-    filter: brightness(1.1);
+@media (hover: hover) and (pointer: fine) {
+    html.dark-mode .status-select-pill:hover {
+        filter: brightness(1.1);
+    }
 }
 
 html.dark-mode .status-select-pill:focus-visible,
@@ -1500,10 +1558,16 @@ html.dark-mode .status-dropdown-option {
     color: #d8ebe0;
 }
 
-html.dark-mode .status-dropdown-option:hover,
 html.dark-mode .status-dropdown-option:focus-visible {
     background: #203427;
     color: #f0fdf4;
+}
+
+@media (hover: hover) and (pointer: fine) {
+    html.dark-mode .status-dropdown-option:hover {
+        background: #203427;
+        color: #f0fdf4;
+    }
 }
 
 html.dark-mode .status-dropdown-option.review .status-menu-dot {
@@ -1592,8 +1656,10 @@ html.dark-mode .table-panel .text-button {
     color: #86efac;
 }
 
-html.dark-mode .table-panel .text-button:hover {
-    color: #bbf7d0;
+@media (hover: hover) and (pointer: fine) {
+    html.dark-mode .table-panel .text-button:hover {
+        color: #bbf7d0;
+    }
 }
 
 html.dark-mode .table-panel .table-scroll {
@@ -1624,8 +1690,10 @@ html.dark-mode .quick-action-arrow {
     color: #86efac;
 }
 
-html.dark-mode .quick-action-item:hover .quick-action-arrow {
-    color: #bbf7d0;
+@media (hover: hover) and (pointer: fine) {
+    html.dark-mode .quick-action-item:hover .quick-action-arrow {
+        color: #bbf7d0;
+    }
 }
 
 html.dark-mode .daily-reminder p {
@@ -1673,10 +1741,12 @@ html.dark-mode .prop-action-available {
     border-color: rgba(74, 222, 128, 0.35);
 }
 
-html.dark-mode .prop-action-view:hover,
-html.dark-mode .prop-action-available:hover {
-    background: rgba(34, 197, 94, 0.25);
-    border-color: rgba(134, 239, 172, 0.55);
+@media (hover: hover) and (pointer: fine) {
+    html.dark-mode .prop-action-view:hover,
+    html.dark-mode .prop-action-available:hover {
+        background: rgba(34, 197, 94, 0.25);
+        border-color: rgba(134, 239, 172, 0.55);
+    }
 }
 
 html.dark-mode .prop-action-edit {
@@ -1685,10 +1755,12 @@ html.dark-mode .prop-action-edit {
     border-color: #2f4736;
 }
 
-html.dark-mode .prop-action-edit:hover {
-    background: #284231;
-    border-color: #4ade80;
-    color: #86efac;
+@media (hover: hover) and (pointer: fine) {
+    html.dark-mode .prop-action-edit:hover {
+        background: #284231;
+        border-color: #4ade80;
+        color: #86efac;
+    }
 }
 
 html.dark-mode .prop-action-sold {
@@ -1697,9 +1769,11 @@ html.dark-mode .prop-action-sold {
     border-color: rgba(251, 191, 36, 0.35);
 }
 
-html.dark-mode .prop-action-sold:hover {
-    background: rgba(245, 158, 11, 0.26);
-    border-color: rgba(251, 191, 36, 0.55);
+@media (hover: hover) and (pointer: fine) {
+    html.dark-mode .prop-action-sold:hover {
+        background: rgba(245, 158, 11, 0.26);
+        border-color: rgba(251, 191, 36, 0.55);
+    }
 }
 
 html.dark-mode .prop-action-delete {
@@ -1708,9 +1782,11 @@ html.dark-mode .prop-action-delete {
     border-color: rgba(248, 113, 113, 0.35);
 }
 
-html.dark-mode .prop-action-delete:hover {
-    background: rgba(239, 68, 68, 0.26);
-    border-color: rgba(248, 113, 113, 0.55);
+@media (hover: hover) and (pointer: fine) {
+    html.dark-mode .prop-action-delete:hover {
+        background: rgba(239, 68, 68, 0.26);
+        border-color: rgba(248, 113, 113, 0.55);
+    }
 }
 
 /* Admin Inquiry Modals & Client Table Cells */
@@ -1742,9 +1818,11 @@ html.dark-mode .btn-modal-primary {
     color: #ffffff;
 }
 
-html.dark-mode .btn-modal-primary:hover {
-    background: #3ea35d;
-    color: #ffffff;
+@media (hover: hover) and (pointer: fine) {
+    html.dark-mode .btn-modal-primary:hover {
+        background: #3ea35d;
+        color: #ffffff;
+    }
 }
 
 html.dark-mode .btn-modal-cancelled {
@@ -1763,9 +1841,11 @@ html.dark-mode .upload-area small {
     color: #9ab09f;
 }
 
-html.dark-mode .upload-area:hover {
-    background: #203327 !important;
-    border-color: #4ade80 !important;
+@media (hover: hover) and (pointer: fine) {
+    html.dark-mode .upload-area:hover {
+        background: #203327 !important;
+        border-color: #4ade80 !important;
+    }
 }
 
 html.dark-mode .upload-symbol,
@@ -1787,10 +1867,12 @@ html.dark-mode .save-btn {
     color: #ffffff !important;
 }
 
-html.dark-mode .upload-btn:hover,
-html.dark-mode .save-btn:hover:not(:disabled) {
-    background: #3ea35d;
-    border-color: #3ea35d;
+@media (hover: hover) and (pointer: fine) {
+    html.dark-mode .upload-btn:hover,
+    html.dark-mode .save-btn:hover:not(:disabled) {
+        background: #3ea35d;
+        border-color: #3ea35d;
+    }
 }
 
 html.dark-mode .input-with-prefix > span {
@@ -1803,10 +1885,12 @@ html.dark-mode .btn-change-avatar {
     color: #86efac;
 }
 
-html.dark-mode .btn-change-avatar:hover {
-    background: #284231;
-    border-color: #4ade80;
-    color: #bbf7d0;
+@media (hover: hover) and (pointer: fine) {
+    html.dark-mode .btn-change-avatar:hover {
+        background: #284231;
+        border-color: #4ade80;
+        color: #bbf7d0;
+    }
 }
 
 /* ============================================================
@@ -1886,13 +1970,15 @@ html.dark-mode .btn-change-avatar:hover {
     transition: transform 0.18s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.18s ease !important;
 }
 
-.btn-primary:hover,
-.action-btn-primary:hover,
-.btn-modal-approve:not(.approved):not(:disabled):hover,
-.btn-save-profile:hover,
-.btn-add-property:hover {
-    transform: translateY(-2px) !important;
-    box-shadow: 0 6px 18px rgba(31, 73, 40, 0.38) !important;
+@media (hover: hover) and (pointer: fine) {
+    .btn-primary:hover,
+    .action-btn-primary:hover,
+    .btn-modal-approve:not(.approved):not(:disabled):hover,
+    .btn-save-profile:hover,
+    .btn-add-property:hover {
+        transform: translateY(-2px) !important;
+        box-shadow: 0 6px 18px rgba(31, 73, 40, 0.38) !important;
+    }
 }
 
 .btn-primary:active,

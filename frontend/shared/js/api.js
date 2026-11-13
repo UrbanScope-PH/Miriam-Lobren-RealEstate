@@ -58,6 +58,18 @@
         } catch (_) {}
     }
 
+    function syncThemeColorMeta(isDark) {
+        try {
+            const p = String(location.pathname || '').toLowerCase().replace(/\\/g, '/');
+            const darkColor = (p.includes('/pages/admin/') || p.includes('/pages/superadmin/')) ? '#131f17' : '#0e1611';
+            const lightColor = p.includes('/pages/auth/') ? '#f6faf6' : '#ffffff';
+            const targetColor = isDark ? darkColor : lightColor;
+            document.querySelectorAll('meta[name="theme-color"]').forEach(function (meta) {
+                meta.setAttribute('content', targetColor);
+            });
+        } catch (_) {}
+    }
+
     function applyUserTheme(mode, animate) {
         const root = document.documentElement;
         const isDark = mode === 'dark';
@@ -69,6 +81,7 @@
             root.classList.toggle('dark-mode', isDark);
             root.setAttribute('data-theme', isDark ? 'dark' : 'light');
             persistUserTheme(isDark ? 'dark' : 'light');
+            syncThemeColorMeta(isDark);
 
             document.querySelectorAll('.theme-toggle-btn').forEach(btn => {
                 btn.setAttribute('aria-pressed', String(isDark));
@@ -131,6 +144,10 @@
 
     window.addEventListener('pageshow', () => {
         applyUserTheme(getSavedUserTheme(), false);
+    });
+
+    document.addEventListener('DOMContentLoaded', () => {
+        syncThemeColorMeta(getSavedUserTheme() === 'dark');
     });
 
     window.addEventListener('storage', (e) => {

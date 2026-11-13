@@ -131,13 +131,20 @@
     cursor: pointer;
 }
 
-.profile-avatar-wrapper:hover .avatar-edit-overlay,
 .profile-avatar-wrapper:focus-within .avatar-edit-overlay {
     opacity: 1;
 }
 
-.profile-avatar-wrapper:hover .profile-avatar-large {
-    transform: scale(1.02);
+@media (hover: hover) and (pointer: fine) {
+    .profile-avatar-wrapper:hover .avatar-edit-overlay {
+        opacity: 1;
+    }
+}
+
+@media (hover: hover) and (pointer: fine) {
+    .profile-avatar-wrapper:hover .profile-avatar-large {
+        transform: scale(1.02);
+    }
 }
 
 .profile-avatar-meta {
@@ -168,11 +175,13 @@
     transition: all 0.18s ease;
 }
 
-.btn-change-avatar:hover {
-    background: #dff0e3;
-    border-color: #9fccaa;
-    color: var(--dark-green);
-    transform: translateY(-1px);
+@media (hover: hover) and (pointer: fine) {
+    .btn-change-avatar:hover {
+        background: #dff0e3;
+        border-color: #9fccaa;
+        color: var(--dark-green);
+        transform: translateY(-1px);
+    }
 }
 
 .btn-reset-avatar {
@@ -189,10 +198,12 @@
     transition: all 0.18s ease;
 }
 
-.btn-reset-avatar:hover {
-    background: #fee2e2;
-    border-color: #fca5a5;
-    color: #dc2626;
+@media (hover: hover) and (pointer: fine) {
+    .btn-reset-avatar:hover {
+        background: #fee2e2;
+        border-color: #fca5a5;
+        color: #dc2626;
+    }
 }
 
 .avatar-size-note {
@@ -290,9 +301,11 @@ textarea {
     z-index: 2;
 }
 
-.password-toggle-btn:hover {
-    color: var(--dark-green, #1a3b23);
-    background-color: rgba(45, 92, 57, 0.08);
+@media (hover: hover) and (pointer: fine) {
+    .password-toggle-btn:hover {
+        color: var(--dark-green, #1a3b23);
+        background-color: rgba(45, 92, 57, 0.08);
+    }
 }
 
 .password-toggle-btn:focus-visible {
@@ -334,8 +347,10 @@ textarea {
     gap: 8px;
     transition: background 0.15s;
 }
-.btn-primary:hover {
-    background: var(--dark-green);
+@media (hover: hover) and (pointer: fine) {
+    .btn-primary:hover {
+        background: var(--dark-green);
+    }
 }
 .btn-primary:disabled {
     opacity: 0.65;
@@ -467,10 +482,12 @@ textarea {
     transition: transform 0.18s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.18s ease !important;
 }
 
-.save-btn:hover,
-.btn-save-profile:hover {
-    transform: translateY(-2px) !important;
-    box-shadow: 0 6px 18px rgba(31, 73, 40, 0.38) !important;
+@media (hover: hover) and (pointer: fine) {
+    .save-btn:hover,
+    .btn-save-profile:hover {
+        transform: translateY(-2px) !important;
+        box-shadow: 0 6px 18px rgba(31, 73, 40, 0.38) !important;
+    }
 }
 
 .save-btn:active,

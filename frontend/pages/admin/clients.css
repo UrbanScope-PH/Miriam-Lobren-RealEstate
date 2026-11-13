@@ -147,11 +147,18 @@
     transition: all 0.18s;
 }
 
-.status-tab-btn.active,
-.status-tab-btn:hover {
+.status-tab-btn.active {
     background: var(--green);
     color: #ffffff;
     border-color: var(--green);
+}
+
+@media (hover: hover) and (pointer: fine) {
+    .status-tab-btn:hover {
+        background: var(--green);
+        color: #ffffff;
+        border-color: var(--green);
+    }
 }
 
 /* CLIENT TABLE */
@@ -216,9 +223,11 @@ tr {
     transition: background 0.15s ease;
 }
 
-#clientsTable tbody tr:hover td,
-tr:hover td {
-    background: #fafdfa;
+@media (hover: hover) and (pointer: fine) {
+    #clientsTable tbody tr:hover td,
+    tr:hover td {
+        background: #fafdfa;
+    }
 }
 
 /* SPECIFIC COLUMN WIDTHS & ALIGNMENT */
@@ -352,8 +361,10 @@ tr:hover td {
     transition: border-color 0.15s ease, box-shadow 0.15s ease, filter 0.15s ease, transform 0.15s ease;
 }
 
-.status-select-pill:hover {
-    filter: brightness(0.97);
+@media (hover: hover) and (pointer: fine) {
+    .status-select-pill:hover {
+        filter: brightness(0.97);
+    }
 }
 
 .status-select-pill:focus-visible,
@@ -492,10 +503,16 @@ tr:hover td {
     outline: none;
 }
 
-.status-dropdown-option:hover,
 .status-dropdown-option:focus-visible {
     background: #eef6f0;
     color: #164e2b;
+}
+
+@media (hover: hover) and (pointer: fine) {
+    .status-dropdown-option:hover {
+        background: #eef6f0;
+        color: #164e2b;
+    }
 }
 
 .status-option-left {
@@ -582,8 +599,10 @@ tr:hover td {
     color: var(--green);
 }
 
-.action-btn.view:hover {
-    background: #d4ebd6;
+@media (hover: hover) and (pointer: fine) {
+    .action-btn.view:hover {
+        background: #d4ebd6;
+    }
 }
 
 .btn-modal-approve.approved {
@@ -673,16 +692,20 @@ tr:hover td {
     transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.modal-close:hover {
-    background: #fee2e2;
-    border-color: #fca5a5;
-    color: #dc2626;
-    transform: scale(1.06);
-    box-shadow: 0 4px 12px rgba(220, 38, 38, 0.16);
+@media (hover: hover) and (pointer: fine) {
+    .modal-close:hover {
+        background: #fee2e2;
+        border-color: #fca5a5;
+        color: #dc2626;
+        transform: scale(1.06);
+        box-shadow: 0 4px 12px rgba(220, 38, 38, 0.16);
+    }
 }
 
-.modal-close:hover svg {
-    transform: rotate(90deg);
+@media (hover: hover) and (pointer: fine) {
+    .modal-close:hover svg {
+        transform: rotate(90deg);
+    }
 }
 
 .modal-close:active {

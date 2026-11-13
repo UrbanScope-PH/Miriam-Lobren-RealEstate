@@ -2,7 +2,10 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
+    <meta name="color-scheme" content="light dark">
+    <meta name="theme-color" media="(prefers-color-scheme: light)" content="#f6faf6">
+    <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#0e1611">
     <title>Create Account – Miriam Lobren · CD Miranda Realty | UrbanScope</title>
     <meta name="description" content="Create your account with Miriam Lobren Real Estate (CD Miranda Realty) to track property inquiries and consultation schedules.">
     <link rel="canonical" href="https://miriam-lobren-real-estate.vercel.app/pages/auth/register.html">
@@ -111,14 +114,14 @@
                             <div class="form-group">
                                 <label for="fullname">Full Name</label>
                                 <div class="input-box">
-                                    <input type="text" id="fullname" name="fullname" placeholder="e.g. Juan Dela Cruz" autocomplete="name" required>
+                                    <input type="text" id="fullname" name="fullname" placeholder="e.g. Juan Dela Cruz" autocomplete="name" required autocapitalize="words" enterkeyhint="next">
                                 </div>
                             </div>
 
                             <div class="form-group">
                                 <label for="phone">Phone Number</label>
                                 <div class="input-box">
-                                    <input type="tel" id="phone" name="phone" placeholder="+639xxxxxxxxx" pattern="^(\+63|0)9\d{9}$" title="Enter a valid PH mobile number, e.g. +639171234567 or 09171234567" autocomplete="tel" required>
+                                    <input type="tel" id="phone" name="phone" placeholder="+639xxxxxxxxx" pattern="^(\+63|0)9\d{9}$" title="Enter a valid PH mobile number, e.g. +639171234567 or 09171234567" autocomplete="tel" required inputmode="tel" enterkeyhint="next">
                                 </div>
                             </div>
                         </div>
@@ -126,7 +129,7 @@
                         <div class="form-group">
                             <label for="email">Email Address</label>
                             <div class="input-box">
-                                <input type="email" id="email" name="email" placeholder="you@gmail.com" autocomplete="email" required>
+                                <input type="email" id="email" name="email" placeholder="you@gmail.com" autocomplete="email" required inputmode="email" autocapitalize="none" autocorrect="off" spellcheck="false" enterkeyhint="next">
                             </div>
                         </div>
 
@@ -134,7 +137,7 @@
                             <div class="form-group">
                                 <label for="password">Password</label>
                                 <div class="input-box has-toggle">
-                                    <input type="password" id="password" name="password" placeholder="Create a Password" minlength="8" autocomplete="new-password" required>
+                                    <input type="password" id="password" name="password" placeholder="Create a Password" minlength="8" autocomplete="new-password" required enterkeyhint="next">
                                     <button type="button" class="toggle-pw" onclick="togglePassword('password', this)" aria-label="Show or hide password">
                                         <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
                                     </button>
@@ -150,7 +153,7 @@
                             <div class="form-group">
                                 <label for="confirm_password">Confirm Password</label>
                                 <div class="input-box has-toggle">
-                                    <input type="password" id="confirm_password" name="confirm_password" placeholder="Re-enter password" autocomplete="new-password" required>
+                                    <input type="password" id="confirm_password" name="confirm_password" placeholder="Re-enter password" autocomplete="new-password" required enterkeyhint="done">
                                     <button type="button" class="toggle-pw" onclick="togglePassword('confirm_password', this)" aria-label="Show or hide confirm password">
                                         <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
                                     </button>
@@ -175,7 +178,7 @@
                             <p class="otp-modal-copy">We sent a 6-digit verification code to <strong id="otpTargetEmail"></strong>. Check your inbox and spam folder, then enter the code below to complete your registration. Codes expire in 10 minutes.</p>
                             <form id="emailOtpForm" class="otp-form">
                                 <label for="emailOtpCode">Email verification code</label>
-                                <input id="emailOtpCode" name="code" type="text" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6}" maxlength="6" placeholder="000000" required>
+                                <input id="emailOtpCode" name="code" type="text" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6}" maxlength="6" placeholder="000000" required enterkeyhint="done">
                                 <p class="otp-form-message" id="emailOtpMessage" role="status" aria-live="polite"></p>
                                 <button type="submit" class="btn-submit" id="verifyEmailOtpBtn">Verify &amp; Create Account</button>
                             </form>

@@ -38,6 +38,7 @@ body {
     color: var(--text-dark);
     line-height: 1.6;
     min-height: 100vh;
+    min-height: 100dvh;
     display: flex;
     flex-direction: column;
 }
@@ -104,10 +105,12 @@ body {
     transition: all 0.2s ease;
 }
 
-.header-action-btn:hover {
-    background: #f4faf6;
-    transform: translateY(-2px);
-    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.18);
+@media (hover: hover) and (pointer: fine) {
+    .header-action-btn:hover {
+        background: #f4faf6;
+        transform: translateY(-2px);
+        box-shadow: 0 6px 18px rgba(0, 0, 0, 0.18);
+    }
 }
 
 /* STATS BAR */
@@ -174,10 +177,12 @@ body {
     transition: all 0.2s ease;
 }
 
-.filter-tab:hover {
-    color: var(--dark-green);
-    border-color: #a8cfb4;
-    background: #f0f7f2;
+@media (hover: hover) and (pointer: fine) {
+    .filter-tab:hover {
+        color: var(--dark-green);
+        border-color: #a8cfb4;
+        background: #f0f7f2;
+    }
 }
 
 .filter-tab.active {
@@ -238,10 +243,12 @@ body {
     position: relative;
 }
 
-.inquiry-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
-    border-color: #c2dbc7;
+@media (hover: hover) and (pointer: fine) {
+    .inquiry-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
+        border-color: #c2dbc7;
+    }
 }
 
 .card-top-row {
@@ -441,10 +448,12 @@ body {
     border-color: #cbe0d1;
     color: #1e5c33;
 }
-.btn-modify:hover {
-    background-color: #e2f0e6;
-    border-color: #b2d4bd;
-    transform: translateY(-1px);
+@media (hover: hover) and (pointer: fine) {
+    .btn-modify:hover {
+        background-color: #e2f0e6;
+        border-color: #b2d4bd;
+        transform: translateY(-1px);
+    }
 }
 
 .btn-cancel {
@@ -452,10 +461,12 @@ body {
     border-color: #fde2b4;
     color: #c05621;
 }
-.btn-cancel:hover {
-    background-color: #feebc8;
-    border-color: #fbd38d;
-    transform: translateY(-1px);
+@media (hover: hover) and (pointer: fine) {
+    .btn-cancel:hover {
+        background-color: #feebc8;
+        border-color: #fbd38d;
+        transform: translateY(-1px);
+    }
 }
 
 .btn-delete {
@@ -463,10 +474,12 @@ body {
     border-color: var(--danger-border);
     color: var(--danger-red);
 }
-.btn-delete:hover {
-    background-color: #fee2e2;
-    border-color: #fca5a5;
-    transform: translateY(-1px);
+@media (hover: hover) and (pointer: fine) {
+    .btn-delete:hover {
+        background-color: #fee2e2;
+        border-color: #fca5a5;
+        transform: translateY(-1px);
+    }
 }
 
 /* EMPTY STATE */
@@ -605,9 +618,11 @@ body {
     transition: all 0.2s ease;
 }
 
-.modal-close-btn:hover {
-    background: #f1f6f2;
-    color: var(--text-dark);
+@media (hover: hover) and (pointer: fine) {
+    .modal-close-btn:hover {
+        background: #f1f6f2;
+        color: var(--text-dark);
+    }
 }
 
 .modal-body {
@@ -674,8 +689,10 @@ body {
     transition: all 0.2s ease;
 }
 
-.btn-secondary:hover {
-    background: #f1f6f2;
+@media (hover: hover) and (pointer: fine) {
+    .btn-secondary:hover {
+        background: #f1f6f2;
+    }
 }
 
 .btn-primary-modal {
@@ -692,9 +709,11 @@ body {
     transition: all 0.2s ease;
 }
 
-.btn-primary-modal:hover {
-    background: var(--dark-green);
-    transform: translateY(-1px);
+@media (hover: hover) and (pointer: fine) {
+    .btn-primary-modal:hover {
+        background: var(--dark-green);
+        transform: translateY(-1px);
+    }
 }
 
 .btn-danger-modal {
@@ -711,9 +730,11 @@ body {
     transition: all 0.2s ease;
 }
 
-.btn-danger-modal:hover {
-    background: #991b1b;
-    transform: translateY(-1px);
+@media (hover: hover) and (pointer: fine) {
+    .btn-danger-modal:hover {
+        background: #991b1b;
+        transform: translateY(-1px);
+    }
 }
 
 .btn-warning-modal {
@@ -730,9 +751,11 @@ body {
     transition: all 0.2s ease;
 }
 
-.btn-warning-modal:hover {
-    background: #b45309;
-    transform: translateY(-1px);
+@media (hover: hover) and (pointer: fine) {
+    .btn-warning-modal:hover {
+        background: #b45309;
+        transform: translateY(-1px);
+    }
 }
 
 /* TOAST NOTIFICATION */
@@ -933,10 +956,12 @@ html.dark-mode .header-action-btn {
     box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3);
 }
 
-html.dark-mode .header-action-btn:hover {
-    background: #2f8548;
-    border-color: #86efac;
-    color: #ffffff;
+@media (hover: hover) and (pointer: fine) {
+    html.dark-mode .header-action-btn:hover {
+        background: #2f8548;
+        border-color: #86efac;
+        color: #ffffff;
+    }
 }
 
 html.dark-mode .history-stats-bar .stat-pill {
@@ -959,10 +984,12 @@ html.dark-mode .filter-tab {
     color: #b4c8b9;
 }
 
-html.dark-mode .filter-tab:hover {
-    background: #1d2f24;
-    border-color: #3ea35d;
-    color: #86efac;
+@media (hover: hover) and (pointer: fine) {
+    html.dark-mode .filter-tab:hover {
+        background: #1d2f24;
+        border-color: #3ea35d;
+        color: #86efac;
+    }
 }
 
 html.dark-mode .filter-tab.active {
@@ -990,9 +1017,11 @@ html.dark-mode .inquiry-card {
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.38);
 }
 
-html.dark-mode .inquiry-card:hover {
-    border-color: #385942;
-    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.48);
+@media (hover: hover) and (pointer: fine) {
+    html.dark-mode .inquiry-card:hover {
+        border-color: #385942;
+        box-shadow: 0 12px 30px rgba(0, 0, 0, 0.48);
+    }
 }
 
 html.dark-mode .topic-icon-badge {
@@ -1024,10 +1053,12 @@ html.dark-mode .btn-modify {
     color: #86efac;
 }
 
-html.dark-mode .btn-modify:hover {
-    background-color: #253d2e;
-    border-color: #4ade80;
-    color: #bbf7d0;
+@media (hover: hover) and (pointer: fine) {
+    html.dark-mode .btn-modify:hover {
+        background-color: #253d2e;
+        border-color: #4ade80;
+        color: #bbf7d0;
+    }
 }
 
 html.dark-mode .btn-cancel {
@@ -1036,14 +1067,18 @@ html.dark-mode .btn-cancel {
     color: #fde68a;
 }
 
-html.dark-mode .btn-cancel:hover {
-    background-color: rgba(245, 158, 11, 0.24);
-    border-color: rgba(251, 191, 36, 0.55);
+@media (hover: hover) and (pointer: fine) {
+    html.dark-mode .btn-cancel:hover {
+        background-color: rgba(245, 158, 11, 0.24);
+        border-color: rgba(251, 191, 36, 0.55);
+    }
 }
 
-html.dark-mode .btn-delete:hover {
-    background-color: rgba(239, 68, 68, 0.26);
-    border-color: rgba(248, 113, 113, 0.55);
+@media (hover: hover) and (pointer: fine) {
+    html.dark-mode .btn-delete:hover {
+        background-color: rgba(239, 68, 68, 0.26);
+        border-color: rgba(248, 113, 113, 0.55);
+    }
 }
 
 html.dark-mode .status-closed {
@@ -1089,9 +1124,11 @@ html.dark-mode .modal-title-group h3 {
     color: #eef6f0;
 }
 
-html.dark-mode .modal-close-btn:hover {
-    background: #23382a;
-    color: #eef6f0;
+@media (hover: hover) and (pointer: fine) {
+    html.dark-mode .modal-close-btn:hover {
+        background: #23382a;
+        color: #eef6f0;
+    }
 }
 
 html.dark-mode .form-group label {
@@ -1116,10 +1153,12 @@ html.dark-mode .btn-secondary {
     color: #e7f0e9;
 }
 
-html.dark-mode .btn-secondary:hover {
-    background: #263d2e;
-    border-color: #4ade80;
-    color: #86efac;
+@media (hover: hover) and (pointer: fine) {
+    html.dark-mode .btn-secondary:hover {
+        background: #263d2e;
+        border-color: #4ade80;
+        color: #86efac;
+    }
 }
 
 html.dark-mode .btn-primary-modal {
@@ -1127,9 +1166,11 @@ html.dark-mode .btn-primary-modal {
     color: #ffffff;
 }
 
-html.dark-mode .btn-primary-modal:hover {
-    background: #2f8548;
-    color: #ffffff;
+@media (hover: hover) and (pointer: fine) {
+    html.dark-mode .btn-primary-modal:hover {
+        background: #2f8548;
+        color: #ffffff;
+    }
 }
 
 html.dark-mode .toast-notice {
