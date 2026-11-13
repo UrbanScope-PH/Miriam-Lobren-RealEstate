@@ -1305,6 +1305,8 @@ path when rendering from a page.
 116. **Homepage Sort Dropdown Simplification (`frontend/index.html`, `frontend/index.js`):**
       - Removed the `Location (A-Z)` (`value="location"`) `<option>` from `#homeSortSelect` on `frontend/index.html`, leaving `Featured`, `Property Type`, `Newest First`, `Price: Low to High`, and `Price: High to Low`.
       - Removed the corresponding `location` sort branch from `sortPropertyList()` and `location` icon branch from `getSortOptionIcon()` inside `frontend/index.js`.
+117. **Homepage Budget Matcher Badge Removal (`frontend/shared/js/calculator.js`):**
+      - Removed the `.budget-badge-pill` (`Home Affordability Finder`) header pill from `initHomepageBudgetMatcher()` in `frontend/shared/js/calculator.js` so the section begins cleanly with the `Find Cavite & Las Piñas Homes Within Your Budget` heading.
 
 ---
 
