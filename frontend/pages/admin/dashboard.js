@@ -1009,15 +1009,38 @@ function hydrateDashboardKPIs() {
     } catch (_) {}
 }
 
-async function loadDashboardData() {
+let dashboardLoadPromise = null;
+let cachedDashboardProperties = null;
+let lastDashboardPropertiesAt = 0;
+let cachedDashboardUsers = null;
+let lastDashboardUsersAt = 0;
+
+async function loadDashboardData(options = {}) {
+    if (dashboardLoadPromise) return dashboardLoadPromise;
+    const run = _loadDashboardDataInner(options).finally(() => {
+        if (dashboardLoadPromise === run) dashboardLoadPromise = null;
+    });
+    dashboardLoadPromise = run;
+    return run;
+}
+
+async function _loadDashboardDataInner(options = {}) {
+    const opts = (typeof options === "boolean") ? { isPoll: options } : (options || {});
+    const isPoll = Boolean(opts.isPoll);
+    const forceProperties = Boolean(opts.forceProperties);
+    const forceUsers = Boolean(opts.forceUsers);
     try {
         hydrateDashboardKPIs();
 
-        const [inquiriesRes, propertiesRes, kpisRes, usersRes] = await Promise.allSettled([
+        const now = Date.now();
+        const shouldFetchProps = forceProperties || !cachedDashboardProperties || (now - lastDashboardPropertiesAt) > 120000;
+
+        const [inquiriesRes, propertiesRes, kpisRes] = await Promise.allSettled([
             (typeof apiGetInquiries === "function") ? apiGetInquiries() : Promise.resolve(null),
-            (typeof apiGetProperties === "function") ? apiGetProperties() : Promise.resolve(null),
-            (typeof apiGetDashboardKPIs === "function") ? apiGetDashboardKPIs() : Promise.resolve(null),
-            (typeof apiGetUsers === "function") ? apiGetUsers() : Promise.resolve(null)
+            shouldFetchProps
+                ? ((typeof apiGetProperties === "function") ? apiGetProperties() : Promise.resolve(null))
+                : Promise.resolve(cachedDashboardProperties),
+            (typeof apiGetDashboardKPIs === "function") ? apiGetDashboardKPIs() : Promise.resolve(null)
         ]);
 
         let inquiries = [];
@@ -1031,6 +1054,10 @@ async function loadDashboardData() {
         let properties = [];
         if (propertiesRes.status === "fulfilled" && Array.isArray(propertiesRes.value)) {
             properties = propertiesRes.value;
+            if (shouldFetchProps) {
+                cachedDashboardProperties = propertiesRes.value;
+                lastDashboardPropertiesAt = Date.now();
+            }
         } else {
             properties = JSON.parse(localStorage.getItem("properties") || localStorage.getItem("cached_live_properties") || "[]");
         }
@@ -1047,9 +1074,18 @@ async function loadDashboardData() {
             kpis = kpisRes.value;
         }
 
-        let users = [];
-        if (usersRes.status === "fulfilled" && Array.isArray(usersRes.value)) {
-            users = usersRes.value;
+        let users = cachedDashboardUsers || [];
+        const hasClientsKpi = Boolean(kpis && kpis.total_clients != null);
+        const shouldFetchUsers = !hasClientsKpi && (forceUsers || !cachedDashboardUsers || (Date.now() - lastDashboardUsersAt) > 120000);
+        if (shouldFetchUsers && typeof apiGetUsers === "function") {
+            try {
+                const fetchedUsers = await apiGetUsers();
+                if (Array.isArray(fetchedUsers)) {
+                    users = fetchedUsers;
+                    cachedDashboardUsers = fetchedUsers;
+                    lastDashboardUsersAt = Date.now();
+                }
+            } catch (_) {}
         }
 
         // Metrics computation
@@ -1106,7 +1142,7 @@ async function loadDashboardData() {
         renderDashboardProperties(properties);
 
         if (typeof window.loadAdminNotifications === "function") {
-            window.loadAdminNotifications();
+            window.loadAdminNotifications(inquiries);
         }
 
     } catch (error) {
@@ -1197,7 +1233,8 @@ window.togglePropertyStatus = async function(id, currentStatus) {
                 }
             });
         }
-        await loadDashboardData();
+        cachedDashboardProperties = null;
+        await loadDashboardData({ forceProperties: true });
         if (typeof window.showFeedbackToast === 'function') {
             window.showFeedbackToast('✓ Property status updated successfully.', 'success');
         }
@@ -1231,7 +1268,8 @@ window.deletePropertyListing = async function(id, title) {
         }
 
         if (success) {
-            await loadDashboardData();
+            cachedDashboardProperties = null;
+        await loadDashboardData({ forceProperties: true });
             if (typeof window.showFeedbackToast === 'function') {
                 window.showFeedbackToast("✓ Property deleted successfully.", "success");
             }
@@ -1283,9 +1321,21 @@ window.addEventListener('storage', (e) => {
 });
 window.addEventListener('inquiryCancelled', () => loadDashboardData());
 window.addEventListener('inquiryStatusChanged', () => loadDashboardData());
-window.addEventListener('inquiriesUpdated', () => loadDashboardData());
-window.addEventListener('inquirySubmitted', () => loadDashboardData());
-window.addEventListener('newInquiryReceived', () => loadDashboardData());
+const onExternalInquiryUpdate = (ev) => {
+    if (ev && ev.detail && ev.detail.source === 'admin-shell') return;
+    loadDashboardData();
+};
+window.addEventListener('inquiriesUpdated', onExternalInquiryUpdate);
+window.addEventListener('inquirySubmitted', onExternalInquiryUpdate);
+window.addEventListener('newInquiryReceived', onExternalInquiryUpdate);
+window.addEventListener('propertiesUpdated', () => {
+    cachedDashboardProperties = null;
+    loadDashboardData({ forceProperties: true });
+});
+window.addEventListener('usersUpdated', () => {
+    cachedDashboardUsers = null;
+    loadDashboardData({ forceUsers: true });
+});
 document.addEventListener('visibilitychange', () => {
     if (!document.hidden) {
         syncCalendarToToday();
@@ -1298,9 +1348,9 @@ window.addEventListener("focus", () => {
     syncCalendarToToday();
 });
 
-// Periodic live polling so admin dashboard automatically reflects new inquiries from other devices without refreshing
+// Periodic live polling so admin dashboard automatically reflects new inquiries without hammering Supabase
 setInterval(() => {
     if (document.visibilityState === 'visible') {
-        loadDashboardData();
+        loadDashboardData({ isPoll: true });
     }
-}, 4000);
+}, 30000);

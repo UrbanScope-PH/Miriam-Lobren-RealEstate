@@ -34,6 +34,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     // 4. State & Elements
     let inquiries = [];
     let propertiesMap = {};
+    let clientsLoadPromise = null;
+    let propertiesLoaded = false;
+    let lastClientsVisibilityAt = 0;
     let activeFilter = 'All';
     let searchQuery = '';
 
@@ -75,14 +78,26 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     // 5. Fetch Properties & Inquiries
-    async function loadData() {
+    function loadData(options = {}) {
+        if (clientsLoadPromise) return clientsLoadPromise;
+        const run = _loadDataInner(options).finally(() => {
+            if (clientsLoadPromise === run) clientsLoadPromise = null;
+        });
+        clientsLoadPromise = run;
+        return run;
+    }
+
+    async function _loadDataInner(options = {}) {
         try {
-            // Load properties for title lookup
-            const props = (typeof apiGetProperties === 'function') ? await apiGetProperties() : [];
-            if (Array.isArray(props)) {
-                props.forEach(p => {
-                    propertiesMap[p.id] = p.title || p.property_name || `Property #${p.id}`;
-                });
+            // Load lightweight property id/title lookup once (or on propertiesUpdated)
+            if ((!propertiesLoaded || (options && options.forceProperties)) && typeof apiGetProperties === 'function') {
+                const props = await apiGetProperties({ columns: 'id,title' });
+                if (Array.isArray(props)) {
+                    props.forEach(p => {
+                        propertiesMap[p.id] = p.title || p.property_name || `Property #${p.id}`;
+                    });
+                    propertiesLoaded = true;
+                }
             }
 
             // Load inquiries
@@ -114,7 +129,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (statApproved) statApproved.textContent = approved;
         if (statCompleted) statCompleted.textContent = completed;
         if (typeof window.loadAdminNotifications === 'function') {
-            window.loadAdminNotifications();
+            window.loadAdminNotifications(inquiries);
         }
     }
 
@@ -453,21 +468,29 @@ document.addEventListener('DOMContentLoaded', async () => {
             loadData();
         }
     });
-    window.addEventListener('inquiryCancelled', () => loadData());
-    window.addEventListener('inquiryStatusChanged', () => loadData());
-    window.addEventListener('inquiriesUpdated', () => loadData());
-    window.addEventListener('inquirySubmitted', () => loadData());
-    window.addEventListener('newInquiryReceived', () => loadData());
+    const handleExternalInquiryEvent = (ev) => {
+        if (ev && ev.detail && ev.detail.source === 'admin-shell') return;
+        loadData();
+    };
+    window.addEventListener('inquiryCancelled', handleExternalInquiryEvent);
+    window.addEventListener('inquiryStatusChanged', handleExternalInquiryEvent);
+    window.addEventListener('inquiriesUpdated', handleExternalInquiryEvent);
+    window.addEventListener('inquirySubmitted', handleExternalInquiryEvent);
+    window.addEventListener('newInquiryReceived', handleExternalInquiryEvent);
+    window.addEventListener('propertiesUpdated', () => loadData({ forceProperties: true }));
     document.addEventListener('visibilitychange', () => {
-        if (!document.hidden) loadData();
+        if (!document.hidden && (Date.now() - lastClientsVisibilityAt) > 10000) {
+            lastClientsVisibilityAt = Date.now();
+            loadData();
+        }
     });
 
-    // Periodic live polling so inquiries table reflects new submissions from other devices without manual refresh
+    // Periodic live polling so inquiries table reflects new submissions without hammering Supabase
     setInterval(() => {
         if (document.visibilityState === 'visible') {
             loadData();
         }
-    }, 4000);
+    }, 30000);
 
     // Initial load
     await loadData();
