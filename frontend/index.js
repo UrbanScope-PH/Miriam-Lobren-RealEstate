@@ -467,12 +467,6 @@ function sortPropertyList(list, sortKey) {
             const typeB = (b.property_type || b.propertyType || '').toLowerCase();
             return typeA.localeCompare(typeB);
         });
-    } else if (sortKey === 'location') {
-        sorted.sort((a, b) => {
-            const locA = (a.location || '').toLowerCase();
-            const locB = (b.location || '').toLowerCase();
-            return locA.localeCompare(locB);
-        });
     } else if (sortKey === 'featured') {
         const order = ['suerte', 'kathleen', 'liora', 'airmen', 'benecia', 'amore'];
         sorted.sort((a, b) => {
@@ -819,9 +813,6 @@ function initSortSelect(selectEl) {
 
         if (v === 'featured' || t.includes('featured')) {
             return `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>`;
-        }
-        if (v === 'location' || t.includes('location')) {
-            return `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>`;
         }
         if (v === 'type' || t.includes('type')) {
             return `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 21h18M3 10l5-4 5 4v11H3V10zm10 0l4-3.2 4 3.2V21h-8"/></svg>`;
