@@ -61,6 +61,10 @@
     function applyUserTheme(mode, animate) {
         const root = document.documentElement;
         const isDark = mode === 'dark';
+        const prefersReduced = typeof window.matchMedia === 'function'
+            && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        const shouldAnimate = Boolean(animate) && !prefersReduced;
+
         const commitThemeDom = () => {
             root.classList.toggle('dark-mode', isDark);
             root.setAttribute('data-theme', isDark ? 'dark' : 'light');
@@ -73,19 +77,50 @@
             });
         };
 
-        if (animate && typeof document.startViewTransition === 'function') {
+        const clearVtSnap = (seq) => {
+            if (seq === undefined || root._urbanVtSeq === seq) {
+                root.classList.remove('theme-vt-snap');
+            }
+            if (root._urbanVtSnapTimer) {
+                clearTimeout(root._urbanVtSnapTimer);
+                root._urbanVtSnapTimer = null;
+            }
+        };
+
+        if (shouldAnimate && typeof document.startViewTransition === 'function') {
             root.classList.remove('theme-transitioning');
+            if (globalThemeTimer) {
+                clearTimeout(globalThemeTimer);
+                globalThemeTimer = null;
+            }
+            const vtSeq = (root._urbanVtSeq = (root._urbanVtSeq || 0) + 1);
+            if (root._urbanVtSnapTimer) {
+                clearTimeout(root._urbanVtSnapTimer);
+                root._urbanVtSnapTimer = null;
+            }
             try {
-                document.startViewTransition(commitThemeDom);
+                const transition = document.startViewTransition(() => {
+                    root.classList.add('theme-vt-snap');
+                    commitThemeDom();
+                    void root.offsetHeight;
+                });
+                if (transition && transition.finished && typeof transition.finished.finally === 'function') {
+                    transition.finished.finally(() => clearVtSnap(vtSeq));
+                }
+                root._urbanVtSnapTimer = setTimeout(() => clearVtSnap(vtSeq), 560);
                 return;
-            } catch (_) {}
+            } catch (_) {
+                clearVtSnap(vtSeq);
+            }
         }
 
-        if (animate) {
+        root.classList.remove('theme-vt-snap');
+        if (shouldAnimate) {
             root.classList.add('theme-transitioning');
             if (globalThemeTimer) clearTimeout(globalThemeTimer);
             globalThemeTimer = setTimeout(() => {
                 root.classList.remove('theme-transitioning');
+                globalThemeTimer = null;
             }, 520);
         }
 
