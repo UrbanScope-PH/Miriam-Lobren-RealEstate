@@ -131,6 +131,16 @@
                     </select>
                 </label>
 
+                <label class="sort-field">
+                    <span class="search-field-label">Sort By</span>
+                    <select id="homeSortSelect" name="sort" aria-label="Sort by">
+                        <option value="featured">Featured</option>
+                        <option value="newest">Newest First</option>
+                        <option value="price-low">Price: Low to High</option>
+                        <option value="price-high">Price: High to Low</option>
+                    </select>
+                </label>
+
                 <label class="keyword">
                     <span class="search-field-label">Search Keywords</span>
                     <input id="keyword" name="keyword" type="search" inputmode="search" enterkeyhint="search" autocapitalize="none" autocorrect="off" autocomplete="off" placeholder="Search subdivisions or locations..."
@@ -154,40 +164,6 @@
                 <div class="section-heading" style="margin-bottom:0;">
                     <h2>Discover Our Featured Properties</h2>
                 </div>
-                <div class="home-sort-control">
-                    <label for="homeSortSelect">Sort by:</label>
-                    <select id="homeSortSelect">
-                        <option value="featured">Featured</option>
-                        <option value="type">Property Type</option>
-                        <option value="newest">Newest First</option>
-                        <option value="price-low">Price: Low to High</option>
-                        <option value="price-high">Price: High to Low</option>
-                    </select>
-                </div>
-            </div>
-
-            <!-- CATEGORY TABS CAROUSEL -->
-            <div class="category-tabs-container reveal-on-scroll reveal-delay-1">
-                <button class="cat-arrow left" type="button" aria-label="Previous categories"
-                    onclick="scrollCategories(-1)">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-                        stroke-linecap="round" stroke-linejoin="round">
-                        <polyline points="15 18 9 12 15 6"></polyline>
-                    </svg>
-                </button>
-                <div class="category-tabs" id="categoryTabs">
-                    <button type="button" data-category="all" class="cat-tab active">All</button>
-                    <button type="button" data-category="townhouses" class="cat-tab">Townhouses</button>
-                    <button type="button" data-category="triplex" class="cat-tab">Triplex</button>
-                    <button type="button" data-category="house-lot" class="cat-tab">House &amp; Lot</button>
-                </div>
-                <button class="cat-arrow right" type="button" aria-label="Next categories"
-                    onclick="scrollCategories(1)">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-                        stroke-linecap="round" stroke-linejoin="round">
-                        <polyline points="9 18 15 12 9 6"></polyline>
-                    </svg>
-                </button>
             </div>
 
             <!-- PROPERTY CARDS GRID -->
