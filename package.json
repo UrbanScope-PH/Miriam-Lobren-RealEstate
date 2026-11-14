@@ -8,7 +8,6 @@
     "node": ">=20"
   },
   "dependencies": {
-    "@vercel/functions": "3.10.6",
-    "nodemailer": "^10.3.1"
+    "@vercel/functions": "3.10.6"
   }
 }

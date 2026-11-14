@@ -5,12 +5,9 @@ import hmac
 import json
 import os
 import secrets
-import smtplib
 import time
 import urllib.error
 import urllib.request
-from email.mime.multipart import MIMEMultipart
-from email.mime.text import MIMEText
 
 from backend.database import get_db_connection
 from backend.auth import _parse_env_file
@@ -189,7 +186,7 @@ def get_valid_from_sender(sender: str) -> str:
 
 
 def send_otp_email(email: str, purpose: str, code: str) -> None:
-    """Send an OTP using Resend API (primary) or optional SMTP fallback."""
+    """Send an OTP using the Resend API."""
     is_registration = purpose == "register"
     subject = "Verify your UrbanScope email" if is_registration else "Your UrbanScope password reset code"
     action = "verify your email address" if is_registration else "reset your password"
@@ -203,68 +200,42 @@ def send_otp_email(email: str, purpose: str, code: str) -> None:
         "<p>If you did not request this, you can ignore this email.</p></div>"
     )
 
-    smtp_user = os.environ.get("SMTP_USER", "").strip()
-    smtp_pass = os.environ.get("SMTP_PASS", "").strip().replace(" ", "")
-
-    # 1. Prioritize Resend API with verified custom domain sender
     api_key = os.environ.get("RESEND_API_KEY", "").strip()
+    if not api_key:
+        raise RuntimeError("RESEND_API_KEY is required to send authentication email.")
+
     sender = get_valid_from_sender(os.environ.get("RESEND_FROM_EMAIL", "") or DEFAULT_RESEND_FROM_EMAIL)
-    if api_key:
-        payload = json.dumps({
-            "from": sender,
-            "to": [email],
-            "subject": subject,
-            "text": text_content,
-            "html": html_content
-        }).encode("utf-8")
-        req = urllib.request.Request(
-            "https://api.resend.com/emails",
-            data=payload,
-            headers={
-                "Authorization": f"Bearer {api_key}",
-                "Content-Type": "application/json",
-                "Accept": "application/json",
-                "User-Agent": "UrbanScope/1.0"
-            },
-            method="POST"
-        )
-        try:
-            with urllib.request.urlopen(req, timeout=10) as response:
-                if 200 <= response.status < 300:
-                    return
+    payload = json.dumps({
+        "from": sender,
+        "to": [email],
+        "subject": subject,
+        "text": text_content,
+        "html": html_content
+    }).encode("utf-8")
+    req = urllib.request.Request(
+        "https://api.resend.com/emails",
+        data=payload,
+        headers={
+            "Authorization": f"Bearer {api_key}",
+            "Content-Type": "application/json",
+            "Accept": "application/json",
+            "User-Agent": "UrbanScope/1.0"
+        },
+        method="POST"
+    )
+    try:
+        with urllib.request.urlopen(req, timeout=10) as response:
+            if response.status < 200 or response.status >= 300:
                 raise RuntimeError("The email provider did not accept the message.")
-        except urllib.error.HTTPError as exc:
-            err_body = ""
-            try:
-                err_raw = exc.read().decode("utf-8", errors="replace")
-                err_json = json.loads(err_raw)
-                err_body = str(err_json.get("message") or err_json.get("error") or err_raw).strip()
-            except Exception:
-                err_body = str(exc)
-            if not (smtp_user and smtp_pass):
-                raise RuntimeError(f"Resend delivery failed ({exc.code}): {err_body}") from exc
-        except (urllib.error.URLError, TimeoutError) as exc:
-            if not (smtp_user and smtp_pass):
-                raise RuntimeError("The email provider could not be reached.") from exc
-
-    # 2. Optional SMTP fallback only if explicitly configured
-    if smtp_user and smtp_pass:
-        msg = MIMEMultipart("alternative")
-        msg["Subject"] = subject
-        msg["From"] = f"UrbanScope <{smtp_user}>"
-        msg["To"] = email
-        msg.attach(MIMEText(text_content, "plain"))
-        msg.attach(MIMEText(html_content, "html"))
+    except urllib.error.HTTPError as exc:
+        err_body = ""
         try:
-            with smtplib.SMTP_SSL("smtp.gmail.com", 465, timeout=20) as server:
-                server.login(smtp_user, smtp_pass)
-                server.sendmail(smtp_user, email, msg.as_string())
+            err_raw = exc.read().decode("utf-8", errors="replace")
+            err_json = json.loads(err_raw)
+            err_body = str(err_json.get("message") or err_json.get("error") or err_raw).strip()
         except Exception:
-            with smtplib.SMTP("smtp.gmail.com", 587, timeout=20) as server:
-                server.starttls()
-                server.login(smtp_user, smtp_pass)
-                server.sendmail(smtp_user, email, msg.as_string())
-        return
-
-    raise RuntimeError("RESEND_API_KEY or SMTP_USER/SMTP_PASS is required to send authentication email.")
+            err_body = str(exc)
+        raise RuntimeError(f"Resend delivery failed ({exc.code}): {err_body}") from exc
+    except (urllib.error.URLError, TimeoutError) as exc:
+        raise RuntimeError("The email provider could not be reached.") from exc
 

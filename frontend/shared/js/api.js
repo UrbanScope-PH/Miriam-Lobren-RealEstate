@@ -3779,7 +3779,7 @@
             }
         } catch (_) {}
 
-        // 2. Dispatch OTP via serverless function (emails code using Gmail SMTP)
+        // 2. Dispatch OTP via serverless function (emails code using Resend)
         let serverRes = null;
         try {
             serverRes = await postAuthFlow('register/start', { email: cleanEmail });
