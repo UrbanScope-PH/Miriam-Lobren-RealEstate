@@ -759,7 +759,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (document.visibilityState === 'visible') {
             loadData();
         }
-    }, 30000);
+    }, 180000);
 
     // Initial load
     await loadData();

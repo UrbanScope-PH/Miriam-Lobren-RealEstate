@@ -374,7 +374,7 @@
         if (!currentUser || !currentUser.email) return Promise.resolve();
         var opts = options || {};
         var now = Date.now();
-        if (!opts.force && (now - lastClientNotifAt) < 10000) {
+        if (!opts.force && (now - lastClientNotifAt) < 30000) {
             return clientNotifPromise || Promise.resolve();
         }
         if (clientNotifPromise) return clientNotifPromise;
@@ -1060,7 +1060,9 @@
             setTheme(e.newValue === 'dark' ? 'dark' : 'light', true);
         }
         if (e.key === 'urbanscope_admin_profile' || e.key === 'adminUser') {
-            syncGlobalFooterContact();
+            var overrideProfile = null;
+            try { overrideProfile = e.newValue ? JSON.parse(e.newValue) : null; } catch (_) { }
+            syncGlobalFooterContact({ skipFetch: true, profileOverride: overrideProfile });
         }
         if (e.key === 'inquiries' ||
             e.key === 'urbanscope_client_notifs' ||
@@ -1103,9 +1105,9 @@
 
     setInterval(function () {
         if (!document.hidden && currentUser) {
-            loadClientNotifications({ force: true });
+            loadClientNotifications({ force: false });
         }
-    }, 45000);
+    }, 180000);
 
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
     else init();
