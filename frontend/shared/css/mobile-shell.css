@@ -959,7 +959,8 @@ button,
     }
 
     .search-select-trigger,
-    .sort-select-trigger {
+    .sort-select-trigger,
+    .search-bar input {
         min-height: 40px;
     }
 
