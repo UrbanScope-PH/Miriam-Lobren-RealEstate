@@ -914,7 +914,10 @@
                 const prev = cacheMap.get(k) || {};
                 cacheMap.set(k, { ...prev, ...item });
             });
-            localStorage.setItem('inquiries', JSON.stringify(Array.from(cacheMap.values())));
+            const nextInqJson = JSON.stringify(Array.from(cacheMap.values()));
+            if (localStorage.getItem('inquiries') !== nextInqJson) {
+                localStorage.setItem('inquiries', nextInqJson);
+            }
         } catch (_) {}
 
         return updatedList;
@@ -1402,7 +1405,7 @@
 
     async function apiGetInquiries(forceRefresh = false) {
         const now = Date.now();
-        if (!forceRefresh && READ_CACHE.inquiries.data && (now - READ_CACHE.inquiries.ts) < 5000) {
+        if (!forceRefresh && READ_CACHE.inquiries.data && (now - READ_CACHE.inquiries.ts) < 30000) {
             return READ_CACHE.inquiries.data;
         }
         if (!forceRefresh && READ_CACHE.inquiries.promise) {
@@ -1471,7 +1474,10 @@
 
             if (list.length >= 0) {
                 try {
-                    localStorage.setItem('inquiries', JSON.stringify(list));
+                    const nextListJson = JSON.stringify(list);
+                    if (localStorage.getItem('inquiries') !== nextListJson) {
+                        localStorage.setItem('inquiries', nextListJson);
+                    }
                 } catch (_) {}
                 READ_CACHE.inquiries.data = list;
                 READ_CACHE.inquiries.ts = Date.now();
@@ -1636,7 +1642,7 @@
 
         const entry = READ_CACHE.myInquiries.get(cleanEmail);
         const now = Date.now();
-        if (!forceRefresh && entry && entry.data && (now - entry.ts) < 5000) {
+        if (!forceRefresh && entry && entry.data && (now - entry.ts) < 30000) {
             return entry.data;
         }
         if (!forceRefresh && entry && entry.promise) {
@@ -3231,7 +3237,7 @@
 
     async function apiGetLeadAgentProfile(options = {}) {
         const forceRefresh = Boolean(options && options.forceRefresh);
-        const LEAD_PROFILE_TTL_MS = 120000;
+        const LEAD_PROFILE_TTL_MS = 300000;
         const now = Date.now();
 
         if (!forceRefresh && READ_CACHE.leadProfile.data && (now - READ_CACHE.leadProfile.ts) < LEAD_PROFILE_TTL_MS) {
@@ -3272,7 +3278,10 @@
         const saveCachedProfile = (merged) => {
             const fetchedAt = Date.now();
             try {
-                localStorage.setItem('urbanscope_admin_profile', JSON.stringify(merged));
+                const nextJson = JSON.stringify(merged);
+                if (localStorage.getItem('urbanscope_admin_profile') !== nextJson) {
+                    localStorage.setItem('urbanscope_admin_profile', nextJson);
+                }
                 localStorage.setItem('urbanscope_admin_profile_ts', String(fetchedAt));
             } catch (e) {}
             READ_CACHE.leadProfile.data = merged;

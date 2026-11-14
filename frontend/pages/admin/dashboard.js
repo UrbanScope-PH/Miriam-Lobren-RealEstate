@@ -1421,4 +1421,4 @@ setInterval(() => {
     if (document.visibilityState === 'visible') {
         loadDashboardData({ isPoll: true });
     }
-}, 30000);
+}, 180000);

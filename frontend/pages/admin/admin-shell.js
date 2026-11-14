@@ -520,7 +520,7 @@
         const forceRefresh = Boolean(prefetchedOrOpts && !isPrefetched && prefetchedOrOpts.force);
         const now = Date.now();
 
-        if (!isPrefetched && !forceRefresh && (now - lastAdminNotifAt) < 2000) {
+        if (!isPrefetched && !forceRefresh && (now - lastAdminNotifAt) < 15000) {
             return adminNotifPromise || Promise.resolve();
         }
         if (!isPrefetched && adminNotifPromise) {
@@ -801,7 +801,7 @@
             if (document.visibilityState === "visible") {
                 loadNotifications();
             }
-        }, 30000);
+        }, 180000);
         window.addEventListener("inquirySubmitted", handleExternalInquiryEvent);
         window.addEventListener("inquiryCancelled", handleExternalInquiryEvent);
         window.addEventListener("inquiryStatusChanged", handleExternalInquiryEvent);

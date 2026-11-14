@@ -1222,7 +1222,11 @@
             }
         });
 
-        setInterval(() => refreshActiveData(true), 60000);
+        setInterval(() => {
+            if (document.visibilityState === 'visible') {
+                refreshActiveData(false);
+            }
+        }, 180000);
     }
 
     if (document.readyState === 'loading') {

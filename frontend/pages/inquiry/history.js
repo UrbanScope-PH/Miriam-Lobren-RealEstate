@@ -648,9 +648,9 @@ document.addEventListener('visibilitychange', function () {
 // Poll periodically for remote backend/Supabase updates while history page is open
 setInterval(function () {
     if (document.visibilityState === 'visible' && currentUser) {
-        loadInquiries(true);
+        loadInquiries(false);
     }
-}, 30000);
+}, 180000);
 
 // Start initialization
 if (document.readyState === 'loading') {
