@@ -183,8 +183,12 @@
     .Cname small,
     .brand-text h2,
     .app-brand small {
+        display: block;
         overflow: hidden;
-        font-size: 9px;
+        font-size: clamp(7.8px, 2.2vw, 9px);
+        letter-spacing: clamp(0.4px, 0.18vw, 1px);
+        line-height: 1.15;
+        margin-top: 2px;
         text-overflow: ellipsis;
         white-space: nowrap;
     }
@@ -685,12 +689,6 @@
 }
 
 @media (max-width: 480px) {
-    .Cname small,
-    .brand-text h2,
-    .app-brand small {
-        display: none !important;
-    }
-
     .app-topbar .go-back-btn span {
         display: none;
     }
@@ -1054,6 +1052,10 @@ button,
         flex-wrap: wrap;
     }
 
+    .budget-results-col .bm-projects-list {
+        max-height: 433px !important;
+    }
+
     .bm-project-item {
         flex-wrap: wrap;
         gap: 10px;
@@ -1205,14 +1207,22 @@ button,
         inset: -18px;
     }
 
-    /* Phase 1: Wrapped Category & Filter Chips (Zero Clipped Edges) */
+    /* Single-row Proportional Category Segmented Tabs & Wrapped Filter Chips (Zero Clipped Edges) */
+    .category-tabs-container {
+        padding: 4px !important;
+        gap: 0 !important;
+    }
+
     #categoryTabs,
     .category-tabs {
-        flex-wrap: wrap !important;
-        justify-content: flex-start !important;
-        overflow-x: visible !important;
-        gap: 8px !important;
-        padding: 4px 2px !important;
+        display: flex !important;
+        flex-wrap: nowrap !important;
+        justify-content: space-between !important;
+        overflow-x: auto !important;
+        gap: 4px !important;
+        padding: 0 !important;
+        width: 100% !important;
+        scrollbar-width: none;
     }
 
     .cat-arrow {
@@ -1220,10 +1230,14 @@ button,
     }
 
     .cat-tab {
-        flex: 0 0 auto;
-        min-height: 42px;
-        padding: 8px 14px !important;
-        font-size: 14px !important;
+        flex: 1 1 auto !important;
+        min-width: 44px;
+        min-height: 44px !important;
+        padding: 8px 6px !important;
+        font-size: clamp(12.5px, 3.4vw, 14px) !important;
+        justify-content: center !important;
+        text-align: center !important;
+        white-space: nowrap !important;
     }
 
     .filter-tabs {
@@ -1360,7 +1374,7 @@ button,
         line-height: 1.3;
     }
 
-    /* Phase 2: Home - Compact Budget Matcher (2-up KPIs + 2 initial homes) */
+    /* Phase 2: Home - Compact Budget Matcher (2-up KPIs + directly scrollable ~2.5 homes) */
     .budget-metrics-row {
         grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
         gap: 10px !important;
@@ -1370,8 +1384,11 @@ button,
         padding: 12px !important;
     }
 
-    .bm-projects-list:not(.mobile-bm-expanded) .bm-project-item.mobile-bm-extra {
-        display: none !important;
+    .bm-projects-list {
+        max-height: 240px !important;
+        overflow-y: auto !important;
+        -webkit-overflow-scrolling: touch;
+        overscroll-behavior-y: contain;
     }
 
     /* Phase 2: Home - Compact About + Inline Avatar + Read More */

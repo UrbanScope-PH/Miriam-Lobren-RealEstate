@@ -890,10 +890,6 @@ body {
 }
 
 @media (max-width: 480px) {
-    .app-brand small {
-        display: none;
-    }
-
     .header-action-btn {
         width: 100%;
         justify-content: center;
