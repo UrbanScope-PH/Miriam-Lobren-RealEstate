@@ -459,6 +459,19 @@
                         <span class="quick-action-arrow">↗</span>
                     </a>
 
+                    <a href="propertylist.html" class="quick-action-item mobile-only-quick-action">
+                        <span class="quick-action-icon property-icon">
+                            <svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="1.8">
+                                <path d="M3 9.5 12 3l9 6.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z" />
+                            </svg>
+                        </span>
+
+                        <strong>Manage Properties</strong>
+                        <span>Edit listings &amp; status</span>
+                        <span class="quick-action-arrow">↗</span>
+                    </a>
+
                 </div>
 
                 <div class="daily-reminder">
@@ -484,7 +497,7 @@
         </section>
 
         <!-- PROPERTY VIEWING CALENDAR -->
-        <section class="calendar-card">
+        <section class="calendar-card mobile-calendar-collapsed" id="dashboardCalendarCard">
 
             <div class="calendar-heading">
                 <div>
@@ -499,9 +512,16 @@
                     </p>
                 </div>
 
-                <div class="calendar-legend">
-                    <span class="legend-dot"></span>
-                    Viewing request or appointment
+                <div class="calendar-heading-actions">
+                    <div class="calendar-legend">
+                        <span class="legend-dot"></span>
+                        Viewing request or appointment
+                    </div>
+                    <button type="button" class="calendar-mobile-toggle" id="mobileCalendarToggleBtn" aria-expanded="false">
+                        <span class="calendar-mobile-summary" id="mobileCalendarSummary">Viewing requests &amp; schedule</span>
+                        <span class="calendar-mobile-toggle-label">Show Calendar</span>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                    </button>
                 </div>
             </div>
 
@@ -604,6 +624,7 @@
                     View All Inquiries &rarr;
                 </button>
             </div>
+            <div class="mobile-cards-list" id="recentInquiriesMobileList" aria-label="Recent inquiries mobile list"></div>
             <div class="table-scroll">
                 <table>
                     <thead>

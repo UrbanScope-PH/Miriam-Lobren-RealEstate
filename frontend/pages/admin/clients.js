@@ -187,6 +187,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     function renderTable() {
+        const mobileList = document.getElementById('clientsMobileList');
         if (!tableBody) return;
 
         let filtered = inquiries.filter(inq => {
@@ -222,20 +223,74 @@ document.addEventListener('DOMContentLoaded', async () => {
                     </td>
                 </tr>
             `;
+            if (mobileList) {
+                mobileList.innerHTML = `<div class="mobile-empty-state">No client inquiries found matching your criteria.</div>`;
+            }
             return;
         }
 
         tableBody.querySelectorAll && closeStatusMenu(false);
+        const mobileCards = [];
+
         tableBody.innerHTML = filtered.map(inq => {
             const id = inq.id;
             const name = inq.client_name || inq.name || 'Anonymous Client';
             const email = inq.email || inq.client_email || 'No email provided';
             const phone = inq.phone || inq.client_phone || inq.contact_number || 'N/A';
+            const cleanTel = phone && phone !== 'N/A' ? String(phone).replace(/[^\d+]/g, '') : '';
             const rawPropTitle = inq.property_title || propertiesMap[inq.property_id] || (inq.property_id ? `Property #${inq.property_id}` : '');
             const propParts = formatInquiryDisplayParts(rawPropTitle);
             const normStatus = getNormalizedStatus(inq.status);
             const badgeClass = getBadgeClass(normStatus);
             const dateStr = inq.created_at ? new Date(inq.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'Recent';
+
+            mobileCards.push(`
+                <article class="mobile-data-card mobile-client-card" data-id="${id}">
+                    <div class="mobile-card-top">
+                        <div class="mobile-card-title-block">
+                            <strong>${escapeHtml(name)}</strong>
+                            <small>${escapeHtml(email)}</small>
+                        </div>
+                        <span class="mobile-card-date">${escapeHtml(dateStr)}</span>
+                    </div>
+                    <div class="mobile-card-detail">
+                        <strong>${escapeHtml(propParts.primary)}</strong>
+                        ${propParts.secondary ? `<small>${escapeHtml(propParts.secondary)}</small>` : ''}
+                    </div>
+                    <div class="mobile-card-phone-row">
+                        ${cleanTel
+                            ? `<a href="tel:${escapeHtml(cleanTel)}" class="mobile-card-phone-link">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+                                <span>${escapeHtml(phone)}</span>
+                               </a>`
+                            : `<span class="mobile-card-phone-muted">No phone provided</span>`}
+                    </div>
+                    <div class="mobile-card-actions-bar">
+                        <button type="button"
+                                class="status-select-pill ${badgeClass}"
+                                id="mobile-badge-${id}"
+                                data-id="${id}"
+                                data-status="${escapeHtml(normStatus)}"
+                                aria-haspopup="listbox"
+                                aria-expanded="false"
+                                aria-label="Change inquiry status for ${escapeHtml(name)} (currently ${escapeHtml(normStatus)})"
+                                onclick="window.toggleStatusMenu(event, '${id}')">
+                            <span class="status-pill-dot" aria-hidden="true"></span>
+                            <span class="status-pill-label">${escapeHtml(normStatus)}</span>
+                            <svg class="status-select-chevron" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <polyline points="6 9 12 15 18 9"></polyline>
+                            </svg>
+                        </button>
+                        <button type="button" class="action-btn view" onclick="window.viewInquiryDetails('${id}')">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                <circle cx="12" cy="12" r="3"></circle>
+                            </svg>
+                            <span>View</span>
+                        </button>
+                    </div>
+                </article>
+            `);
 
             return `
                 <tr data-id="${id}">
@@ -284,6 +339,10 @@ document.addEventListener('DOMContentLoaded', async () => {
                 </tr>
             `;
         }).join('');
+
+        if (mobileList) {
+            mobileList.innerHTML = mobileCards.join('');
+        }
     }
 
     const STATUS_OPTIONS = [
@@ -341,7 +400,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (event) event.stopPropagation();
         const menu = ensureStatusMenu();
         const targetId = String(inquiryId);
-        const trigger = document.getElementById(`badge-${targetId}`) || (event && event.currentTarget);
+        const trigger = (event && event.currentTarget) || document.getElementById(`badge-${targetId}`) || document.getElementById(`mobile-badge-${targetId}`);
         if (!trigger) return;
 
         if (!menu.hidden && activeMenuId === targetId) {
@@ -456,8 +515,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     window.handleStatusChange = async (event, inquiryId) => {
         const newStatus = typeof event === 'string' ? event : (event && event.target ? event.target.value : '');
         if (!newStatus) return;
-        const targetBadge = document.getElementById(`badge-${inquiryId}`);
-        if (targetBadge) {
+        const targets = [
+            document.getElementById(`badge-${inquiryId}`),
+            document.getElementById(`mobile-badge-${inquiryId}`)
+        ].filter(Boolean);
+        targets.forEach(targetBadge => {
             if (targetBadge.classList.contains('status-select-pill')) {
                 const isOpen = targetBadge.classList.contains('is-open');
                 targetBadge.className = `status-select-pill ${getBadgeClass(newStatus)}${isOpen ? ' is-open' : ''}`;
@@ -472,7 +534,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 targetBadge.textContent = newStatus;
                 targetBadge.className = `status-badge ${getBadgeClass(newStatus)}`;
             }
-        }
+        });
 
         // Update local array
         const found = inquiries.find(i => String(i.id) === String(inquiryId));

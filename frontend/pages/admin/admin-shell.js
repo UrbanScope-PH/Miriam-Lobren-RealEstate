@@ -478,9 +478,10 @@
 
         toast.classList.add("show");
         clearTimeout(toast._hideTimer);
+        const toastDuration = window.innerWidth <= 768 ? 4000 : 6000;
         toast._hideTimer = setTimeout(() => {
             toast.classList.remove("show");
-        }, 6000);
+        }, toastDuration);
     }
 
     let currentNotificationItems = [];
@@ -919,6 +920,58 @@
     window.syncAdminProfileDisplay = syncAdminProfileDisplay;
     window.resolveAdminAvatar = resolveAdminAvatar;
 
+    function initMobileFormAccordions() {
+        const formCards = Array.from(document.querySelectorAll(".form-card"));
+        if (formCards.length <= 1) return;
+
+        formCards.forEach((card, idx) => {
+            const header = card.querySelector(".form-card-header");
+            if (!header) return;
+
+            card.classList.add("is-accordion-card");
+            if (idx === 0) {
+                card.classList.add("is-expanded");
+            }
+            header.setAttribute("role", "button");
+            header.setAttribute("tabindex", "0");
+            header.setAttribute("aria-expanded", idx === 0 ? "true" : "false");
+
+            if (!header.querySelector(".form-card-chevron")) {
+                const chev = document.createElement("span");
+                chev.className = "form-card-chevron";
+                chev.setAttribute("aria-hidden", "true");
+                chev.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>`;
+                header.appendChild(chev);
+            }
+
+            function toggleCard() {
+                if (window.innerWidth > 768) return;
+                const expanded = card.classList.toggle("is-expanded");
+                header.setAttribute("aria-expanded", String(expanded));
+            }
+
+            header.addEventListener("click", toggleCard);
+            header.addEventListener("keydown", (e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    toggleCard();
+                }
+            });
+        });
+
+        // Auto-expand any collapsed card containing an invalid field on form submit
+        document.addEventListener("invalid", (e) => {
+            const target = e.target;
+            if (!target || typeof target.closest !== "function") return;
+            const parentCard = target.closest(".form-card");
+            if (parentCard && !parentCard.classList.contains("is-expanded")) {
+                parentCard.classList.add("is-expanded");
+                const header = parentCard.querySelector(".form-card-header");
+                if (header) header.setAttribute("aria-expanded", "true");
+            }
+        }, true);
+    }
+
     // Initialize on DOM Ready
     if (document.readyState === "loading") {
         document.addEventListener("DOMContentLoaded", function () {
@@ -928,6 +981,7 @@
             initNotificationDropdown();
             updateActiveSidebarItem();
             syncAdminProfileDisplay();
+            initMobileFormAccordions();
         });
     } else {
         initAdminThemeToggle();
@@ -936,5 +990,6 @@
         initNotificationDropdown();
         updateActiveSidebarItem();
         syncAdminProfileDisplay();
+        initMobileFormAccordions();
     }
 })();

@@ -803,22 +803,16 @@ tr {
 
     .status-tabs {
         width: 100%;
-        overflow-x: auto;
         padding-bottom: 4px;
-        flex-wrap: nowrap;
-        -webkit-overflow-scrolling: touch;
-        scrollbar-width: none;
-    }
-
-    .status-tabs::-webkit-scrollbar {
-        display: none;
+        flex-wrap: wrap;
+        gap: 8px;
     }
 
     .status-tab-btn {
         flex-shrink: 0;
         white-space: nowrap;
-        padding: 8px 14px;
-        min-height: 38px;
+        padding: 9px 14px;
+        min-height: 44px;
     }
 
     .table-container {
@@ -844,8 +838,8 @@ tr {
 
 @media (max-width: 480px) {
     .stats-strip {
-        grid-template-columns: 1fr;
-        gap: 12px;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
     }
 
     .stat-pill {
