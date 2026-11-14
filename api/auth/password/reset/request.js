@@ -54,7 +54,7 @@ export default async function handler(req, res) {
             return jsonResponse({
                 success: false,
                 code: 'EMAIL_SERVICE_NOT_CONFIGURED',
-                error: 'Email delivery is not configured on the server. Please verify SMTP settings.'
+                error: 'Email delivery is not configured on the server. Please verify Resend settings.'
             }, 200, res);
         }
     } catch (err) {

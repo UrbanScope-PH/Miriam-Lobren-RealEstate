@@ -76,9 +76,9 @@ def _require_otp_configuration() -> None:
         get_otp_secret()
     except RuntimeError as exc:
         raise HTTPException(status_code=503, detail=str(exc)) from exc
-    has_smtp = bool((os.environ.get("SMTP_USER", "").strip() or "urbanscope.cvsu@gmail.com") and (os.environ.get("SMTP_PASS", "").strip() or "cdaipsavbkxhqvbk"))
     has_resend = bool(os.environ.get("RESEND_API_KEY", "").strip())
-    if not has_smtp and not has_resend:
+    has_smtp = bool(os.environ.get("SMTP_USER", "").strip() and os.environ.get("SMTP_PASS", "").strip())
+    if not has_resend and not has_smtp:
         raise HTTPException(status_code=503, detail="Email verification is not configured on the server.")
 
 
