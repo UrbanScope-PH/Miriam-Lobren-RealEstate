@@ -70,7 +70,7 @@ python3 run.py
 | `VERCEL_ADMIN_SESSION_SECRET` | *(required on Vercel)* | Private random signing secret for 12-hour Admin/Superadmin page sessions. Configure in Vercel Project Settings; at least 32 characters. Hosted admin sign-in uses Google for the existing staff accounts. |
 | `VERCEL_ADMIN_EMAILS` | *(optional)* | Comma-separated additional Google email addresses permitted to use the Vercel Admin portal. |
 | `RESEND_API_KEY` | *(required for email OTP)* | Private Resend key used by server endpoints to send registration and password-recovery codes. |
-| `RESEND_FROM_EMAIL` | *(required for email OTP)* | Verified sender address configured in Resend. |
+| `RESEND_FROM_EMAIL` | `UrbanScope <noreply@miriamlobren.site>` | Verified sender address configured in Resend (custom domain `miriamlobren.site`). |
 | `AUTH_OTP_SECRET` | *(required for email OTP)* | Private random secret of at least 32 characters used to hash OTPs. |
 | `SUPABASE_SERVICE_ROLE_KEY` | *(required on Vercel for email OTP)* | Private server-side key used to store challenges and manage verified accounts. Never add it to frontend code. |
 
