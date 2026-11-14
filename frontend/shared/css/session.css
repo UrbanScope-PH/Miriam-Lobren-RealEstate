@@ -455,6 +455,12 @@ html.auth-checking body {
     }
 }
 
+.profile-dropdown-divider {
+    height: 1px;
+    background: #e6eee8;
+    margin: 6px 8px;
+}
+
 /* Inquiry page top bar badge */
 .user-profile-badge {
     position: relative;
@@ -513,7 +519,10 @@ html.auth-checking body {
 
     @media (min-width: 769px) {
 
-        .mobile-drawer-auth {
+        .mobile-drawer-auth,
+        .profile-mobile-nav-group,
+        .profile-dropdown-divider,
+        .nav-link-mobile-icon {
             display: none !important;
         }
     }
@@ -775,6 +784,10 @@ html.dark-mode .client-notif-dropdown {
 html.dark-mode .profile-dropdown-head {
     background: transparent !important;
     border-bottom-color: #26392c;
+}
+
+html.dark-mode .profile-dropdown-divider {
+    background: #26392c;
 }
 
 html.dark-mode .profile-dropdown-head small {
@@ -1390,11 +1403,18 @@ html.dark-mode .property-image::after {
     position: fixed;
     bottom: calc(24px + env(safe-area-inset-bottom, 0px));
     right: 24px;
-    z-index: 9998;
+    z-index: 10002;
     display: flex;
     flex-direction: column;
     align-items: flex-end;
     pointer-events: none;
+}
+
+.contact-fab.open ~ .back-to-top-btn,
+body:has(.contact-fab.open) .back-to-top-btn {
+    opacity: 0 !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
 }
 
 body.has-contact-fab .client-approval-toast,

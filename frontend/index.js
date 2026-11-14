@@ -288,6 +288,41 @@ function resetHomeCategory() {
     applyCurrentFiltersAndRender();
 }
 
+let showAllPropertiesOnMobile = false;
+
+function hasActivePropertyFilters() {
+    return (
+        (activeCategory && activeCategory !== 'all') ||
+        (activeLocation && activeLocation !== 'all') ||
+        Boolean(activeKeyword && activeKeyword.trim()) ||
+        (activeMaxPrice !== null && activeMaxPrice !== undefined && activeMaxPrice !== '') ||
+        (activeSort && activeSort !== 'featured')
+    );
+}
+
+function updateMobilePropertiesExpandUi(totalCount, hasFilter) {
+    const grid = document.getElementById('propertyGrid');
+    const wrap = document.getElementById('mobilePropsExpandWrap');
+    const btn = document.getElementById('mobileShowAllPropsBtn');
+    const expanded = Boolean(showAllPropertiesOnMobile || hasFilter);
+
+    if (grid) {
+        grid.classList.toggle('mobile-props-expanded', expanded);
+    }
+    if (!wrap || !btn) return;
+
+    if (totalCount <= 3 || hasFilter) {
+        wrap.hidden = true;
+        return;
+    }
+
+    wrap.hidden = false;
+    btn.setAttribute('aria-expanded', String(showAllPropertiesOnMobile));
+    btn.textContent = showAllPropertiesOnMobile
+        ? 'Show Fewer Properties'
+        : `Show All Properties (${totalCount})`;
+}
+
 function renderFeaturedGrid(list) {
     const grid = document.getElementById('propertyGrid');
     if (!grid) return;
@@ -304,10 +339,13 @@ function renderFeaturedGrid(list) {
                 <button onclick="resetHomeCategory()" style="background: var(--green, #1f4928); color: #fff; border: none; padding: 9px 20px; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 0.88rem; transition: background 0.2s;">Reset Filters</button>
             </div>
         `;
+        updateMobilePropertiesExpandUi(0, false);
         return;
     }
 
-    grid.innerHTML = list.map(item => {
+    const hasFilter = hasActivePropertyFilters();
+
+    grid.innerHTML = list.map((item, idx) => {
         const imgSrc = resolveCardImage(item.image_url, item);
         const detailUrl = getPropertyDetailUrl(item);
         const specsLot = item.lot_area ? `${item.lot_area} sqm` : (item.floor_area ? `${item.floor_area} sqm` : 'N/A');
@@ -326,9 +364,10 @@ function renderFeaturedGrid(list) {
         const badgeHtml = isSold
             ? `<span class="property-status-badge badge-sold">Sold Out</span>`
             : (isRfo ? `<span class="property-status-badge badge-rfo">RFO Ready</span>` : '');
+        const mobileExtraClass = idx >= 3 ? 'mobile-collapsed-card' : '';
 
         return `
-        <article class="property-card ${isSold ? 'card-sold' : ''} reveal-on-scroll" onclick="location.href='${detailUrl}'">
+        <article class="property-card ${isSold ? 'card-sold' : ''} ${mobileExtraClass} reveal-on-scroll" onclick="location.href='${detailUrl}'">
             <div class="property-image">
                 ${badgeHtml}
                 <img src="${imgSrc}" alt="${displayTitle}" decoding="async" onerror="this.src='assets/images/property1.jpg'">
@@ -381,6 +420,7 @@ function renderFeaturedGrid(list) {
     if (window.UrbanSession && typeof UrbanSession.initScrollReveals === 'function') {
         UrbanSession.initScrollReveals();
     }
+    updateMobilePropertiesExpandUi(list.length, hasFilter);
 }
 
 function filterPropertyList(list, category, location, keyword, maxPrice = null) {
@@ -1067,8 +1107,14 @@ function initHomepage() {
 
     // 8. FAQs Accordion Interactive Toggle
     const faqItems = document.querySelectorAll('.faq-item');
+    const faqsAccordion = document.getElementById('faqsAccordion');
+    const faqExpandBtn = document.getElementById('mobileShowAllFaqsBtn');
+    const faqExpandWrap = document.getElementById('mobileFaqsExpandWrap');
 
-    faqItems.forEach(item => {
+    faqItems.forEach((item, idx) => {
+        if (idx >= 4) {
+            item.classList.add('mobile-faq-extra');
+        }
         const questionBtn = item.querySelector('.faq-question');
         if (questionBtn) {
             questionBtn.addEventListener('click', () => {
@@ -1088,6 +1134,40 @@ function initHomepage() {
             });
         }
     });
+
+    if (faqExpandWrap && faqExpandBtn) {
+        if (faqItems.length <= 4) {
+            faqExpandWrap.hidden = true;
+        } else {
+            faqExpandBtn.textContent = `Show All ${faqItems.length} Questions`;
+            faqExpandBtn.addEventListener('click', () => {
+                const isExpanded = faqsAccordion ? faqsAccordion.classList.toggle('mobile-faqs-expanded') : false;
+                faqExpandBtn.setAttribute('aria-expanded', String(isExpanded));
+                faqExpandBtn.textContent = isExpanded
+                    ? 'Show Fewer Questions'
+                    : `Show All ${faqItems.length} Questions`;
+            });
+        }
+    }
+
+    const propsExpandBtn = document.getElementById('mobileShowAllPropsBtn');
+    if (propsExpandBtn) {
+        propsExpandBtn.addEventListener('click', () => {
+            showAllPropertiesOnMobile = !showAllPropertiesOnMobile;
+            const visibleCount = document.querySelectorAll('#propertyGrid .property-card').length;
+            updateMobilePropertiesExpandUi(visibleCount, hasActivePropertyFilters());
+        });
+    }
+
+    const aboutReadMoreBtn = document.getElementById('aboutReadMoreBtn');
+    const aboutBioExtra = document.getElementById('aboutBioExtra');
+    if (aboutReadMoreBtn && aboutBioExtra) {
+        aboutReadMoreBtn.addEventListener('click', () => {
+            const isExpanded = aboutBioExtra.classList.toggle('is-expanded');
+            aboutReadMoreBtn.setAttribute('aria-expanded', String(isExpanded));
+            aboutReadMoreBtn.textContent = isExpanded ? 'Show less' : 'Read full bio';
+        });
+    }
 
     // 9. Smooth scroll for FAQs anchor
     document.querySelectorAll('a[href="#faqs"]').forEach(link => {
@@ -1201,6 +1281,10 @@ function renderHomepageAgentDetails(profile) {
     if (aboutPhoto && avatarUrl) {
         aboutPhoto.src = avatarUrl;
         aboutPhoto.alt = `${cleanName} - ${title}`;
+    }
+    const aboutMobileAvatar = document.getElementById('aboutMobileAvatar');
+    if (aboutMobileAvatar && avatarUrl) {
+        aboutMobileAvatar.src = avatarUrl;
     }
 
     // 3. FAQs Section

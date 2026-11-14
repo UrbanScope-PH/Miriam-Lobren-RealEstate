@@ -27,7 +27,7 @@ Built for **Miriam Lobren, Real Estate Salesperson** (CD Miranda Realty, Las Pi�
 - **Superadmin Console** — focused account and role governance, privileged-account overview, and database health checks. Property and inquiry workflows stay in the Agent Admin portal.
 - **Administrative Access Control** — Vercel checks a signed, HttpOnly session before serving Admin and Superadmin pages. Hosted admin sign-in requires Google verification for an approved staff account; normal client sign-ins and editable browser storage cannot grant administrative access.
 - **Legal & Privacy Hub** — comprehensive Terms of Service (aligned with RESA RA 9646) and Privacy Policy (compliant with Philippine Data Privacy Act RA 10173).
-- **Responsive Design** — optimized for desktop, tablet, and mobile with a shared mobile navigation shell across public, client, Admin, and Superadmin pages, dynamic viewport sizing (`100dvh`), safe-area insets, mobile keyboard hints, and touch-friendly (`@media (pointer: coarse)`) controls.
+- **Responsive Design** — optimized for desktop, tablet, and mobile with a shared mobile navigation shell across public, client, Admin, and Superadmin pages, dynamic viewport sizing (`100dvh`), safe-area insets, mobile keyboard hints, touch-friendly (`@media (pointer: coarse)`) 44px+ controls, high-contrast WCAG AA typography, progressive mobile expand toggles and section accordions, sticky property quick-CTA actions, and stacked Admin/Superadmin mobile cards.
 
 ---
 

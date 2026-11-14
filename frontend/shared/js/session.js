@@ -489,16 +489,42 @@
     // ------------------------------------------------------------------
     function dropdownHtml(user) {
         var base = getBasePath();
+        var path = location.pathname.toLowerCase().replace(/\\/g, '/');
+        var onHome = path === '/' || path.endsWith('/index.html') || path.endsWith('/frontend/');
+        var sectionPrefix = onHome ? '' : (base + 'index.html');
         return '' +
             '<div class="profile-dropdown" role="menu">' +
             '<div class="profile-dropdown-head">' +
             '<span class="profile-avatar">' + avatarInnerHtml(user) + '</span>' +
             '<div><strong>' + esc(user.name) + '</strong><small>' + esc(user.email) + '</small></div>' +
             '</div>' +
-            '<a href="' + base + 'index.html" role="menuitem">Home</a>' +
-            '<a href="' + base + 'pages/inquiry/inquiry.html" role="menuitem">Submit an Inquiry</a>' +
-            '<a href="' + base + 'pages/inquiry/history.html" role="menuitem">Inquiry History</a>' +
-            '<button type="button" class="signout-item" role="menuitem" data-action="signout">Sign Out</button>' +
+            '<a href="' + base + 'index.html" role="menuitem">' +
+            '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 9.5L12 3l9 6.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1V9.5z"></path></svg>' +
+            '<span>Home</span></a>' +
+            '<div class="profile-mobile-nav-group">' +
+            '<a href="' + sectionPrefix + '#properties" role="menuitem">' +
+            '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1"></rect><rect x="14" y="3" width="7" height="7" rx="1"></rect><rect x="3" y="14" width="7" height="7" rx="1"></rect><rect x="14" y="14" width="7" height="7" rx="1"></rect></svg>' +
+            '<span>Properties</span></a>' +
+            '<a href="' + sectionPrefix + '#about" role="menuitem">' +
+            '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"></circle><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"></path></svg>' +
+            '<span>About</span></a>' +
+            '<a href="' + sectionPrefix + '#faqs" role="menuitem">' +
+            '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M9.1 9a3 3 0 0 1 5.8 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>' +
+            '<span>FAQs</span></a>' +
+            '<a href="' + sectionPrefix + '#contact" role="menuitem">' +
+            '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>' +
+            '<span>Contact</span></a>' +
+            '</div>' +
+            '<div class="profile-dropdown-divider" role="separator"></div>' +
+            '<a href="' + base + 'pages/inquiry/inquiry.html" role="menuitem">' +
+            '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>' +
+            '<span>Submit an Inquiry</span></a>' +
+            '<a href="' + base + 'pages/inquiry/history.html" role="menuitem">' +
+            '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><polyline points="12 7 12 12 15.5 14"></polyline></svg>' +
+            '<span>Inquiry History</span></a>' +
+            '<button type="button" class="signout-item" role="menuitem" data-action="signout">' +
+            '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>' +
+            '<span>Sign Out</span></button>' +
             '</div>';
     }
 
@@ -566,12 +592,27 @@
                 '<svg class="profile-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>' +
                 '</button>' + dropdownHtml(user);
             wireAvatarFallbacks(wrap);
-            if (mobileToggleEl) acts.insertBefore(wrap, mobileToggleEl);
-            else acts.appendChild(wrap);
+            acts.appendChild(wrap);
+
+            function closeMobileDrawerIfOpen() {
+                var navEl = document.getElementById('mainNav');
+                var backdropEl = document.querySelector('.mobile-nav-backdrop');
+                var toggleEl = document.getElementById('mobileNavToggle');
+                if (navEl) navEl.classList.remove('mobile-open');
+                if (backdropEl) backdropEl.classList.remove('active');
+                if (toggleEl) {
+                    toggleEl.classList.remove('active');
+                    toggleEl.setAttribute('aria-expanded', 'false');
+                }
+                document.body.classList.remove('nav-locked');
+            }
 
             notifWrap.querySelector('#clientNotifBtn').addEventListener('click', function (e) {
                 e.stopPropagation();
+                closeMobileDrawerIfOpen();
                 wrap.classList.remove('open');
+                var chipEl = wrap.querySelector('#profileChip');
+                if (chipEl) chipEl.setAttribute('aria-expanded', 'false');
                 var open = notifWrap.classList.toggle('open');
                 this.setAttribute('aria-expanded', String(open));
                 if (open && user && user.email) {
@@ -581,10 +622,24 @@
 
             wrap.querySelector('#profileChip').addEventListener('click', function (e) {
                 e.stopPropagation();
+                closeMobileDrawerIfOpen();
                 notifWrap.classList.remove('open');
+                var notifBtnEl = notifWrap.querySelector('#clientNotifBtn');
+                if (notifBtnEl) notifBtnEl.setAttribute('aria-expanded', 'false');
                 var open = wrap.classList.toggle('open');
-                this.setAttribute('aria-expanded', open);
+                this.setAttribute('aria-expanded', String(open));
             });
+
+            var dropdownEl = wrap.querySelector('.profile-dropdown');
+            if (dropdownEl) {
+                dropdownEl.addEventListener('click', function (e) {
+                    if (e.target.closest('a[href]')) {
+                        wrap.classList.remove('open');
+                        var chipEl = wrap.querySelector('#profileChip');
+                        if (chipEl) chipEl.setAttribute('aria-expanded', 'false');
+                    }
+                });
+            }
 
             loadClientNotifications();
         }
@@ -612,6 +667,7 @@
 
         var acts = navbar.querySelector('.nav-acts, .topbar-right');
         var toggle = document.getElementById('mobileNavToggle');
+        var profileEl = acts ? acts.querySelector('#profileMenu, .profile-menu') : null;
         if (!toggle) {
             toggle = document.createElement('button');
             toggle.className = 'mobile-nav-toggle';
@@ -623,8 +679,11 @@
                 '<span class="hamburger-line"></span>' +
                 '<span class="hamburger-line"></span>' +
                 '<span class="hamburger-line"></span>';
-            if (acts) acts.appendChild(toggle);
+            if (acts && profileEl) acts.insertBefore(toggle, profileEl);
+            else if (acts) acts.appendChild(toggle);
             else navbar.appendChild(toggle);
+        } else if (acts && profileEl && toggle.parentElement === acts) {
+            acts.insertBefore(toggle, profileEl);
         }
 
         var backdrop = document.querySelector('.mobile-nav-backdrop');
@@ -634,9 +693,28 @@
             document.body.appendChild(backdrop);
         }
 
-        // Remove any previous drawer auth/user sections so the mobile drawer contains only primary nav links
+        // Remove any previous drawer auth/user sections so the mobile drawer contains only primary nav links + guest auth buttons
         var existingAuth = nav.querySelector('.mobile-drawer-auth, .mobile-drawer-user');
         if (existingAuth) existingAuth.remove();
+
+        var mobileNavIcons = {
+            home: '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9.5L12 3l9 6.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1V9.5z"></path></svg>',
+            properties: '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"></rect><rect x="14" y="3" width="7" height="7" rx="1"></rect><rect x="3" y="14" width="7" height="7" rx="1"></rect><rect x="14" y="14" width="7" height="7" rx="1"></rect></svg>',
+            about: '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"></circle><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"></path></svg>',
+            faqs: '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"></circle><path d="M9.1 9a3 3 0 0 1 5.8 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>',
+            contact: '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>'
+        };
+
+        nav.querySelectorAll('a').forEach(function (link) {
+            if (link.closest('.mobile-drawer-auth') || link.querySelector('.nav-link-mobile-icon')) return;
+            var key = (link.textContent || '').trim().toLowerCase();
+            var svg = mobileNavIcons[key] || mobileNavIcons.home;
+            var iconSpan = document.createElement('span');
+            iconSpan.className = 'nav-link-mobile-icon';
+            iconSpan.setAttribute('aria-hidden', 'true');
+            iconSpan.innerHTML = svg;
+            link.insertBefore(iconSpan, link.firstChild);
+        });
 
         var base = getBasePath();
         if (user) {
@@ -690,6 +768,12 @@
                 setMenuOpen(false);
             }
         };
+
+        document.addEventListener('click', function (e) {
+            if (nav.classList.contains('mobile-open') && !nav.contains(e.target) && !toggle.contains(e.target)) {
+                setMenuOpen(false);
+            }
+        });
 
         document.addEventListener('keydown', function (e) {
             if (e.key === 'Escape' && nav.classList.contains('mobile-open')) {
@@ -1346,9 +1430,86 @@
         }
     });
 
+    // ------------------------------------------------------------------
+    // Sticky Mobile Property Quick CTA Bar (Call + Inquire on Property Pages)
+    // ------------------------------------------------------------------
+    function initPropertyMobileCtaBar() {
+        var path = location.pathname.toLowerCase().replace(/\\/g, '/');
+        if (!path.includes('/pages/properties/')) return;
+        var sourceInquire = document.querySelector('.submit-inquiry-btn');
+        if (!sourceInquire) return;
+        if (document.getElementById('mobilePropertyCtaBar')) return;
+
+        var currentPhone = CONTACT_CONFIG.fallbackPhone;
+        try {
+            var p = JSON.parse(localStorage.getItem('urbanscope_admin_profile') || 'null');
+            if (p && p.phone) currentPhone = p.phone;
+        } catch (_) {}
+        var cleanDigits = currentPhone.replace(/[^\d+]/g, '');
+
+        var bar = document.createElement('div');
+        bar.className = 'mobile-property-cta-bar';
+        bar.id = 'mobilePropertyCtaBar';
+        bar.setAttribute('role', 'region');
+        bar.setAttribute('aria-label', 'Property quick contact actions');
+        bar.innerHTML =
+            '<a href="tel:' + cleanDigits + '" class="mobile-cta-call-btn" id="mobilePropertyCallBtn" aria-label="Call Miriam Lobren">' +
+                '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>' +
+                '<span>Call Miriam</span>' +
+            '</a>' +
+            '<a href="' + esc(sourceInquire.getAttribute('href') || '../inquiry/inquiry.html') + '" class="mobile-cta-inquire-btn" id="mobilePropertyInquireBtn">' +
+                '<span>Inquire Now</span>' +
+                '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>' +
+            '</a>';
+
+        document.body.appendChild(bar);
+        document.body.classList.add('has-property-cta-bar');
+
+        var ctaInq = document.getElementById('mobilePropertyInquireBtn');
+        var ctaCall = document.getElementById('mobilePropertyCallBtn');
+
+        function syncCtaState() {
+            var footerPhone = document.getElementById('footerAgentPhone');
+            if (ctaCall && footerPhone && footerPhone.textContent.trim()) {
+                var digits = footerPhone.textContent.replace(/[^\d+]/g, '');
+                if (digits) ctaCall.setAttribute('href', 'tel:' + digits);
+            }
+            if (!ctaInq || !sourceInquire) return;
+            var isClosed = sourceInquire.classList.contains('inquiry-closed') || sourceInquire.getAttribute('aria-disabled') === 'true';
+            var targetHref = sourceInquire.getAttribute('href') || '../inquiry/inquiry.html';
+            ctaInq.setAttribute('href', isClosed ? '#' : targetHref);
+            ctaInq.classList.toggle('is-closed', isClosed);
+            var span = ctaInq.querySelector('span');
+            if (span) {
+                span.textContent = isClosed ? 'Sold Out' : 'Inquire Now';
+            }
+            if (isClosed) {
+                ctaInq.setAttribute('aria-disabled', 'true');
+                ctaInq.setAttribute('tabindex', '-1');
+            } else {
+                ctaInq.removeAttribute('aria-disabled');
+                ctaInq.removeAttribute('tabindex');
+            }
+        }
+
+        if (ctaInq) {
+            ctaInq.addEventListener('click', function (e) {
+                if (ctaInq.getAttribute('aria-disabled') === 'true') e.preventDefault();
+            });
+        }
+
+        syncCtaState();
+        if (typeof MutationObserver !== 'undefined') {
+            var observer = new MutationObserver(syncCtaState);
+            observer.observe(sourceInquire, { attributes: true, childList: true, subtree: true, characterData: true });
+        }
+        window.addEventListener('urbanscope:profileUpdated', syncCtaState);
+    }
+
     document.addEventListener('DOMContentLoaded', function () {
         initThemeToggle();
         initContactFab();
+        initPropertyMobileCtaBar();
         initScrollReveals();
         initBackToTop();
         if (root.classList.contains('logged-in') || root.getAttribute('data-auth-state') === 'logged-in') {

@@ -173,7 +173,7 @@
 
             // Build DOM structure
             container.innerHTML = [
-                '<div class="calc-card">',
+                '<div class="calc-card mobile-calc-collapsed">',
                 '  <div class="calc-header">',
                 '    <div class="calc-header-title">',
                 '      <div class="calc-header-icon" aria-hidden="true">',
@@ -200,8 +200,19 @@
                 '      <strong class="calc-tcp-val" id="calcTcpVal">' + UrbanCalculator.formatPeso(state.tcp) + '</strong>',
                 '    </div>',
                 '  </div>',
+                '  <div class="calc-mobile-summary-bar" id="calcMobileSummaryBar">',
+                '    <div class="calc-mobile-summary-info">',
+                '      <span class="calc-mobile-summary-lbl">Est. Monthly Amortization</span>',
+                '      <strong class="calc-mobile-summary-val" id="calcMobileAmortVal">—</strong>',
+                '      <small class="calc-mobile-summary-sub" id="calcMobileAmortSub"></small>',
+                '    </div>',
+                '    <button type="button" class="calc-mobile-toggle-btn" id="calcMobileToggleBtn" aria-expanded="false" aria-controls="calcCardBody">',
+                '      <span>Customize Loan Computation</span>',
+                '      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><polyline points="6 9 12 15 18 9"></polyline></svg>',
+                '    </button>',
+                '  </div>',
 
-                '  <div class="calc-body">',
+                '  <div class="calc-body" id="calcCardBody">',
                 '    <!-- Left Controls Column -->',
                 '    <div class="calc-controls">',
                 '      <!-- Financing Mode -->',
@@ -332,6 +343,22 @@
             var elMonthlyDpHint = container.querySelector('#calcMonthlyDpHint');
             var elLoanableVal = container.querySelector('#calcLoanableVal');
             var elInquireBtn = container.querySelector('#calcInquireBtn');
+            var elCalcCard = container.querySelector('.calc-card');
+            var elMobileAmortVal = container.querySelector('#calcMobileAmortVal');
+            var elMobileAmortSub = container.querySelector('#calcMobileAmortSub');
+            var elMobileToggleBtn = container.querySelector('#calcMobileToggleBtn');
+
+            if (elMobileToggleBtn && elCalcCard) {
+                elMobileToggleBtn.addEventListener('click', function () {
+                    var collapsed = elCalcCard.classList.toggle('mobile-calc-collapsed');
+                    var expanded = !collapsed;
+                    elMobileToggleBtn.setAttribute('aria-expanded', String(expanded));
+                    var labelSpan = elMobileToggleBtn.querySelector('span');
+                    if (labelSpan) {
+                        labelSpan.textContent = expanded ? 'Hide Loan Calculator' : 'Customize Loan Computation';
+                    }
+                });
+            }
 
             // Refresh calculation results
             function update() {
@@ -350,6 +377,8 @@
                 if (elTermText) elTermText.textContent = res.loanTermYears + ' Years (' + (res.loanTermYears * 12) + ' Mos)';
                 if (elMonthlyAmortVal) elMonthlyAmortVal.textContent = UrbanCalculator.formatPeso(res.monthlyAmortization) + ' / mo';
                 if (elAmortSubText) elAmortSubText.textContent = (state.financing === 'pagibig' ? 'Pag-IBIG @ 6.25%' : 'Bank @ 7.0%') + ' for ' + res.loanTermYears + ' years';
+                if (elMobileAmortVal) elMobileAmortVal.textContent = UrbanCalculator.formatPeso(res.monthlyAmortization) + ' / mo';
+                if (elMobileAmortSub) elMobileAmortSub.textContent = (state.financing === 'pagibig' ? 'Pag-IBIG @ 6.25%' : 'Bank @ 7.0%') + ' · ' + res.loanTermYears + ' yrs · ' + res.dpPercent + '% DP';
                 if (elGmiVal) elGmiVal.textContent = UrbanCalculator.formatPeso(res.requiredGmi) + ' / mo';
                 if (elMonthlyDpVal) elMonthlyDpVal.textContent = UrbanCalculator.formatPeso(res.monthlyDp) + ' / mo';
                 if (elMonthlyDpHint) elMonthlyDpHint.textContent = 'Payable for ' + res.dpMonths + ' mos (Net of reservation)';
@@ -597,6 +626,9 @@
                 '        <div class="bm-projects-list" id="bmProjectsList">',
                 '          <!-- Dynamically populated -->',
                 '        </div>',
+                '        <div class="mobile-expand-wrap mobile-bm-expand-wrap" id="bmExpandWrap">',
+                '          <button type="button" class="mobile-expand-btn" id="bmShowMoreBtn" aria-expanded="false" aria-controls="bmProjectsList">Show All ' + PROJECTS.length + ' Homes</button>',
+                '        </div>',
                 '      </div>',
                 '    </div>',
                 '  </div>',
@@ -609,6 +641,24 @@
             var elMaxPrice = container.querySelector('#bmMaxPrice');
             var elCount = container.querySelector('#bmMatchCount');
             var elList = container.querySelector('#bmProjectsList');
+            var elBmBtn = container.querySelector('#bmShowMoreBtn');
+            var elBmWrap = container.querySelector('#bmExpandWrap');
+            var showAllBmMobile = false;
+
+            if (elBmBtn && elList) {
+                if (PROJECTS.length <= 2 && elBmWrap) {
+                    elBmWrap.hidden = true;
+                } else {
+                    elBmBtn.addEventListener('click', function () {
+                        showAllBmMobile = !showAllBmMobile;
+                        elList.classList.toggle('mobile-bm-expanded', showAllBmMobile);
+                        elBmBtn.setAttribute('aria-expanded', String(showAllBmMobile));
+                        elBmBtn.textContent = showAllBmMobile
+                            ? 'Show Fewer Homes'
+                            : 'Show All ' + PROJECTS.length + ' Homes';
+                    });
+                }
+            }
 
             function renderMatches(salary) {
                 var res = UrbanCalculator.computeAffordabilityFromSalary(salary, 20, UrbanCalculator.RATES.bank, 20);
@@ -620,12 +670,12 @@
                 var matchCount = 0;
                 var html = '';
 
-                PROJECTS.forEach(function (p) {
+                PROJECTS.forEach(function (p, idx) {
                     var qualifies = salary >= p.minSalary;
                     if (qualifies) matchCount++;
 
                     html += [
-                        '<div class="bm-project-item ' + (qualifies ? 'qualified' : 'unqualified') + '">',
+                        '<div class="bm-project-item ' + (qualifies ? 'qualified' : 'unqualified') + (idx >= 2 ? ' mobile-bm-extra' : '') + '">',
                         '  <div class="bm-item-thumb">',
                         '    <img src="' + imgBase + p.image + '" alt="' + p.title + '" loading="lazy" onerror="this.src=\'' + imgBase + 'assets/images/property1.jpg\'">',
                         '    <span class="bm-item-badge ' + (qualifies ? 'badge-match' : 'badge-gap') + '">',
@@ -651,7 +701,10 @@
                 });
 
                 if (elCount) elCount.textContent = matchCount + ' of ' + PROJECTS.length + ' Accredited Homes Fit Your Budget';
-                if (elList) elList.innerHTML = html;
+                if (elList) {
+                    elList.innerHTML = html;
+                    elList.classList.toggle('mobile-bm-expanded', showAllBmMobile);
+                }
             }
 
             if (slider) {

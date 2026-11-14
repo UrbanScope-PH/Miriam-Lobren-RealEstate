@@ -421,18 +421,21 @@ img, video, canvas, svg {
     }
 }
 
-.legal {
+.legal,
+.footer-legal {
     display: flex;
     gap: 20px;
 }
 
-.legal a {
-    color: rgba(255, 255, 255, 0.7);
+.legal a,
+.footer-legal a {
+    color: rgba(255, 255, 255, 0.85);
     text-decoration: none;
 }
 
 @media (hover: hover) and (pointer: fine) {
-    .legal a:hover {
+    .legal a:hover,
+    .footer-legal a:hover {
         color: #ffffff;
         text-decoration: underline;
     }
@@ -813,7 +816,8 @@ img, video, canvas, svg {
         gap: 16px;
     }
 
-    .legal {
+    .legal,
+    .footer-legal {
         flex-wrap: wrap;
         justify-content: center;
         gap: 14px;
@@ -868,7 +872,7 @@ img, video, canvas, svg {
     border: 1px solid rgba(45, 92, 57, 0.18);
     box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12);
     cursor: pointer;
-    z-index: 10001;
+    z-index: 9990;
     display: flex;
     align-items: center;
     justify-content: center;

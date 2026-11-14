@@ -50,7 +50,7 @@
 }
 
 .page-header p {
-    color: #7c857e;
+    color: #526456;
     font-size: 14px;
 }
 
@@ -114,7 +114,7 @@
 }
 
 .form-card-header p {
-    color: #7c857e;
+    color: #526456;
     font-size: 13px;
 }
 
@@ -309,7 +309,7 @@
     flex-shrink: 0;
     padding-right: 13px;
 
-    color: #7c857e;
+    color: #526456;
     font-size: 12px;
 }
 
@@ -364,7 +364,7 @@
 
 .upload-area p {
     margin-bottom: 18px;
-    color: #7c857e;
+    color: #526456;
     font-size: 13px;
 }
 
@@ -404,7 +404,7 @@
     display: block;
     margin-top: 12px;
 
-    color: #9aa19b;
+    color: #526456;
     font-size: 11px;
 }
 

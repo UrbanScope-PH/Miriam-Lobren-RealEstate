@@ -557,10 +557,10 @@ html.dark-mode .search-select-option.is-selected .search-select-option-sub {
 
 /* Standout Warm Accent RFO Badge (Rule 11) */
 .property-status-badge.badge-rfo {
-    background: var(--accent-warm, #d97706);
+    background: #b45309;
     color: #ffffff;
     border: 1px solid rgba(254, 243, 199, 0.45);
-    box-shadow: 0 4px 12px rgba(217, 119, 6, 0.32);
+    box-shadow: 0 4px 12px rgba(180, 83, 9, 0.32);
 }
 
 /* Sold Out badge */

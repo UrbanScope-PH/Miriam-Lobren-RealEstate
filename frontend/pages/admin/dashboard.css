@@ -16,7 +16,7 @@
 .welcome-eyebrow {
     display: block;
     margin-bottom: 5px;
-    color: #548564;
+    color: #2d5c39;
     font-size: 10px;
     font-weight: 800;
     letter-spacing: 1.3px;
@@ -272,7 +272,7 @@
 .section-eyebrow {
     display: block;
     margin-bottom: 7px;
-    color: #558363;
+    color: #2d5c39;
     font-size: 9.5px;
     font-weight: 800;
     letter-spacing: 1.25px;
@@ -524,7 +524,7 @@
 
 .daily-reminder p {
     margin-top: 5px;
-    color: #718174;
+    color: #526456;
     font-size: 10.5px;
     line-height: 1.8;
 }
@@ -1070,7 +1070,7 @@
 .table-panel .panel-heading p {
     font-size: 13px;
     line-height: 1.6;
-    color: #718174;
+    color: #526456;
     margin: 0;
 }
 

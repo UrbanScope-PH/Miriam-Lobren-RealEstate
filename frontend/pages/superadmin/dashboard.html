@@ -277,7 +277,7 @@
                 <div class="sa-overview-grid dashboard-feature-grid">
 
                     <!-- RBAC Security Card -->
-                    <article class="sa-card feature-card">
+                    <article class="sa-card feature-card mobile-sa-card-collapsed" id="saRoleResponsibilitiesCard">
                         <div class="feature-card-header">
                             <div>
                                 <span class="section-eyebrow">GOVERNANCE & PERMISSIONS</span>
@@ -285,6 +285,10 @@
                                 <p>Account permissions and responsibilities by role</p>
                             </div>
                             <span class="sa-badge-green" id="saTriggerOnlineBadge">Trigger Online</span>
+                            <button type="button" class="sa-mobile-collapse-btn" id="btnToggleRolesCard" aria-expanded="false">
+                                <span>View Roles</span>
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                            </button>
                         </div>
                         <div class="sa-card-body">
                             <div class="sa-authority-list">
@@ -462,6 +466,7 @@
 
                 <!-- USERS TABLE -->
                 <div class="sa-table-container users-card">
+                    <div class="mobile-cards-list" id="usersMobileList" aria-label="User accounts mobile list"></div>
                     <div class="table-container">
                         <table class="sa-table" id="usersTable">
                             <thead>

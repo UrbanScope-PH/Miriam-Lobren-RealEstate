@@ -547,12 +547,18 @@
     }
 
     function renderUsersTable(users) {
+        const mobileList = document.getElementById('usersMobileList');
         if (!elements.usersTableBody) return;
 
         if (users.length === 0) {
             elements.usersTableBody.innerHTML = `<tr><td colspan="6" class="text-center py-4 text-muted">No accounts match the current filter.</td></tr>`;
+            if (mobileList) {
+                mobileList.innerHTML = `<div class="mobile-empty-state">No accounts match the current filter.</div>`;
+            }
             return;
         }
+
+        const mobileCardsHtml = [];
 
         elements.usersTableBody.innerHTML = users.map(u => {
             const cleanEmail = (u.email || '').toLowerCase().trim();
@@ -606,6 +612,29 @@
                 `;
             }
 
+            mobileCardsHtml.push(`
+                <article class="mobile-data-card mobile-sa-user-card" id="user-card-${safeIdAttr}">
+                    <div class="mobile-card-top">
+                        <div class="mobile-sa-user-head">
+                            <div class="table-avatar">${escapeHtml(initials)}</div>
+                            <div class="mobile-sa-user-id">
+                                <strong>${escapeHtml(u.full_name || 'No Name Provided')}</strong>
+                                <small>${escapeHtml(u.email)}</small>
+                            </div>
+                        </div>
+                        ${roleBadge}
+                    </div>
+                    <div class="mobile-card-meta-row">
+                        <span>ID #${safeIdAttr}</span>
+                        <span>${escapeHtml(u.phone || 'No phone')}</span>
+                        <span>Joined ${formatDate(u.created_at)}</span>
+                    </div>
+                    <div class="mobile-sa-user-actions">
+                        ${actionsHtml}
+                    </div>
+                </article>
+            `);
+
             return `
                 <tr id="user-row-${safeIdAttr}">
                     <td><strong>#${escapeHtml(String(u.id))}</strong></td>
@@ -625,6 +654,10 @@
                 </tr>
             `;
         }).join('');
+
+        if (mobileList) {
+            mobileList.innerHTML = mobileCardsHtml.join('');
+        }
     }
 
     // ACTIONS & MODALS
@@ -1118,6 +1151,18 @@
     async function init() {
         initSuperadminThemeToggle();
         startClock();
+
+        const rolesCard = document.getElementById('saRoleResponsibilitiesCard');
+        const toggleRolesBtn = document.getElementById('btnToggleRolesCard');
+        if (rolesCard && toggleRolesBtn) {
+            toggleRolesBtn.addEventListener('click', () => {
+                const collapsed = rolesCard.classList.toggle('mobile-sa-card-collapsed');
+                const expanded = !collapsed;
+                toggleRolesBtn.setAttribute('aria-expanded', String(expanded));
+                const lbl = toggleRolesBtn.querySelector('span');
+                if (lbl) lbl.textContent = expanded ? 'Hide Roles' : 'View Roles';
+            });
+        }
 
         const isAuthorized = await verifySuperadminAccess();
         if (!isAuthorized) return;

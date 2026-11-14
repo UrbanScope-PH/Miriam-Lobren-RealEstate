@@ -516,6 +516,11 @@
                     </div>
                 </article>
             </div>
+            <div class="mobile-expand-wrap" id="mobilePropsExpandWrap" hidden>
+                <button type="button" class="mobile-expand-btn" id="mobileShowAllPropsBtn" aria-expanded="false">
+                    Show All Properties (6)
+                </button>
+            </div>
         </section>
 
         <!-- QUICK HOME AFFORDABILITY & BUDGET MATCHER -->
@@ -525,7 +530,10 @@
         <section class="about" id="about">
             <div class="about-content">
                 <div class="about-text reveal-on-scroll">
-                    <h2>About Me</h2>
+                    <div class="about-mobile-header">
+                        <img id="aboutMobileAvatar" class="about-mobile-avatar" src="assets/images/agent.jpg" alt="" aria-hidden="true" onerror="this.src='assets/images/home-bg.jpg'">
+                        <h2>About Me</h2>
+                    </div>
                     <p>Hello! I'm <strong id="aboutAgentName">Miriam Lobren</strong>, a <span
                             id="aboutAgentRoleText">licensed real estate professional</span> with <strong
                             id="aboutAgentBrokerage">CD Miranda Realty</strong>. With years of
@@ -534,9 +542,10 @@
                         Workers (OFWs) find homes that match their lifestyle and long-term financial goals.</span>
                     </p>
 
-                    <p>Whether you're looking for ready-for-occupancy family home, an affordable pre-selling unit, or
+                    <p id="aboutBioExtra" class="about-bio-extra">Whether you're looking for ready-for-occupancy family home, an affordable pre-selling unit, or
                         a prime investment with strong capital appreciation, I am here to provide transparent price
                         computations, site trippings, and dedicated end-to-end guidance.</p>
+                    <button type="button" class="mobile-inline-toggle" id="aboutReadMoreBtn" aria-expanded="false" aria-controls="aboutBioExtra">Read full bio</button>
 
                     <a href="#properties" class="learn-more-btn">
                         <span>Explore Properties</span>
@@ -777,6 +786,11 @@
                             </div>
                         </div>
                     </div>
+                </div>
+                <div class="mobile-expand-wrap" id="mobileFaqsExpandWrap">
+                    <button type="button" class="mobile-expand-btn" id="mobileShowAllFaqsBtn" aria-expanded="false" aria-controls="faqsAccordion">
+                        Show All 8 Questions
+                    </button>
                 </div>
             </div>
         </section>

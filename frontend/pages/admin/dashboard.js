@@ -124,6 +124,13 @@ function rebuildCalendarSchedule() {
     });
 
     calendarAppointments = nextAppointments;
+    const calSummaryEl = document.getElementById("mobileCalendarSummary");
+    if (calSummaryEl) {
+        const totalEvents = Object.values(nextAppointments).reduce((sum, arr) => sum + arr.length, 0);
+        calSummaryEl.textContent = totalEvents > 0
+            ? `${totalEvents} scheduled viewing${totalEvents === 1 ? "" : "s"}`
+            : "No scheduled viewings";
+    }
     renderCalendar();
     renderAgenda();
 }
@@ -569,6 +576,7 @@ function formatInquiryLabel(rawTitle) {
 
 function renderInquiryRows(inquiries) {
     const tbody = document.getElementById("recentInquiriesBody") || document.getElementById("recentInquiryRows");
+    const mobileList = document.getElementById("recentInquiriesMobileList");
 
     if (!tbody) return;
 
@@ -580,11 +588,16 @@ function renderInquiryRows(inquiries) {
                 </td>
             </tr>
         `;
+        if (mobileList) {
+            mobileList.innerHTML = `<div class="mobile-empty-state">No recent inquiries yet.</div>`;
+        }
 
         updateInquiryEmptyState();
 
         return;
     }
+
+    const mobileCardsHtml = [];
 
     tbody.innerHTML = inquiries.slice(0, 5).map(inquiry => {
         const inquiryId = escapeHTML(
@@ -634,6 +647,43 @@ function renderInquiryRows(inquiries) {
             parsedSchedule.display || ""
         );
 
+        mobileCardsHtml.push(`
+            <article class="mobile-data-card mobile-dash-inquiry-card">
+                <div class="mobile-card-top">
+                    <div class="mobile-card-title-block">
+                        <strong>${clientName}</strong>
+                        <small>${inquiryId} &middot; ${escapeHTML(createdAt)}</small>
+                    </div>
+                    <span class="status-pill ${statusClass}">${status}</span>
+                </div>
+                <p class="mobile-dash-prop">${propertyTitle}</p>
+                <div class="mobile-card-actions-bar">
+                    <button
+                        class="action-view-btn"
+                        type="button"
+                        data-raw-id="${inquiry.id}"
+                        data-inquiry-id="${inquiryId}"
+                        data-client-name="${clientName}"
+                        data-property-title="${propertyTitle}"
+                        data-created-at="${escapeHTML(createdAt)}"
+                        data-status="${status}"
+                        data-status-class="${statusClass}"
+                        data-inquiry-phone="${phone}"
+                        data-inquiry-email="${email}"
+                        data-inquiry-message="${message}"
+                        data-schedule-date="${scheduleDate}"
+                        aria-label="View inquiry from ${clientName}"
+                    >
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                            <circle cx="12" cy="12" r="3"></circle>
+                        </svg>
+                        <span>View</span>
+                    </button>
+                </div>
+            </article>
+        `);
+
         return `
             <tr>
                 <td class="id-col">${inquiryId}</td>
@@ -677,6 +727,10 @@ function renderInquiryRows(inquiries) {
             </tr>
         `;
     }).join("");
+
+    if (mobileList) {
+        mobileList.innerHTML = mobileCardsHtml.join("");
+    }
 
     updateInquiryEmptyState();
 }
@@ -1294,6 +1348,20 @@ window.deletePropertyListing = async function(id, title) {
 /* INITIALIZE */
 
 document.addEventListener("DOMContentLoaded", () => {
+    const calCard = document.getElementById("dashboardCalendarCard") || document.querySelector(".calendar-card");
+    const calToggleBtn = document.getElementById("mobileCalendarToggleBtn");
+    if (calCard && calToggleBtn) {
+        calToggleBtn.addEventListener("click", () => {
+            const isCollapsed = calCard.classList.toggle("mobile-calendar-collapsed");
+            const expanded = !isCollapsed;
+            calToggleBtn.setAttribute("aria-expanded", String(expanded));
+            const labelEl = calToggleBtn.querySelector(".calendar-mobile-toggle-label");
+            if (labelEl) {
+                labelEl.textContent = expanded ? "Hide Calendar" : "Show Calendar";
+            }
+        });
+    }
+
     renderCalendar();
     renderAgenda();
     syncCalendarToToday();

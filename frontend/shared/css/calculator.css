@@ -336,7 +336,7 @@
 
 .calc-kpi-hint {
     font-size: 0.7rem;
-    color: #718877;
+    color: #526456;
 }
 
 .calc-eligibility-tip {
@@ -500,7 +500,7 @@
 
 .budget-salary-note {
     font-size: 0.74rem;
-    color: #6a8270;
+    color: #526456;
 }
 
 .budget-slider-wrap {
@@ -554,7 +554,7 @@
 
 .budget-metric-hint {
     font-size: 0.7rem;
-    color: #718877;
+    color: #526456;
 }
 
 .budget-matcher-cta-bar {
@@ -707,8 +707,8 @@
 }
 
 .badge-gap {
-    background: rgba(0, 0, 0, 0.75);
-    color: #fed7aa;
+    background: #1e293b;
+    color: #ffedd5;
 }
 
 .bm-item-info {
@@ -749,7 +749,7 @@
 }
 
 .bm-item-pricing small {
-    color: #718877;
+    color: #526456;
 }
 
 .bm-item-act {
@@ -899,7 +899,7 @@ html[data-theme="dark"] .calc-kpi-val {
 
 html.dark-mode .calc-kpi-hint,
 html[data-theme="dark"] .calc-kpi-hint {
-    color: #799581;
+    color: #a7bfae;
 }
 
 html.dark-mode .calc-eligibility-tip,
@@ -980,7 +980,7 @@ html[data-theme="dark"] .budget-salary-val {
 
 html.dark-mode .budget-salary-note,
 html[data-theme="dark"] .budget-salary-note {
-    color: #799581;
+    color: #a7bfae;
 }
 
 html.dark-mode .budget-slider-labels,
@@ -1006,7 +1006,7 @@ html[data-theme="dark"] .budget-metric-val {
 
 html.dark-mode .budget-metric-hint,
 html[data-theme="dark"] .budget-metric-hint {
-    color: #799581;
+    color: #a7bfae;
 }
 
 html.dark-mode .bm-cta-btn,

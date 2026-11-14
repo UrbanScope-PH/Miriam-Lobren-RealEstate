@@ -92,7 +92,7 @@
     position: absolute;
     top: 18px;
     right: 18px;
-    background: rgba(18, 38, 25, 0.78);
+    background: rgba(18, 38, 25, 0.92);
     color: #ffffff;
     border: 1px solid rgba(255, 255, 255, 0.28);
     padding: 8px 16px;
@@ -1148,7 +1148,7 @@ html[data-auth-state="logged-in"] .inquiry-note,
 
 .tcp-disclaimer {
     font-size: 12px;
-    color: #94a3b8;
+    color: #526456;
     margin-top: 14px;
     line-height: 1.5;
 }
@@ -1377,7 +1377,7 @@ html.dark-mode .tcp-doc-btn {
 }
 
 html.dark-mode .tcp-disclaimer {
-    color: #8da394;
+    color: #a7bfae;
 }
 
 html.dark-mode .tcp-document-modal {
