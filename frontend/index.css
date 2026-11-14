@@ -391,7 +391,7 @@ html.dark-mode .search-select-option.is-selected .search-select-option-sub {
 }
 
 .section-heading h2 {
-    font-size: 32px;
+    font-size: clamp(22px, 2.8vw, 32px);
     font-weight: 700;
     color: var(--green);
 }
@@ -455,7 +455,11 @@ html.dark-mode .search-select-option.is-selected .search-select-option-sub {
     cursor: pointer;
     white-space: nowrap;
     border-radius: 8px; /* Inner radius = 14px - 6px = 8px */
-    flex-shrink: 0;
+    flex: 1 1 auto;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
     transition: all 0.2s ease;
 }
 
@@ -1295,13 +1299,6 @@ html.dark-mode .property-status-badge.badge-rfo {
     }
 }
 
-@media (max-width: 900px) {
-    .category-tabs {
-        justify-content: flex-start;
-        gap: 8px;
-    }
-}
-
 @media (max-width: 768px) {
     .hero {
         padding: 40px 5% 44px;
@@ -1489,8 +1486,8 @@ html.dark-mode .property-status-badge.badge-rfo {
     justify-content: space-between;
     align-items: center;
     margin-bottom: 20px;
-    flex-wrap: wrap;
-    gap: 12px;
+    flex-wrap: nowrap;
+    gap: 16px;
 }
 
 .featured-header-row:has(.sort-select-wrap.is-open),

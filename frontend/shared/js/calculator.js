@@ -626,9 +626,6 @@
                 '        <div class="bm-projects-list" id="bmProjectsList">',
                 '          <!-- Dynamically populated -->',
                 '        </div>',
-                '        <div class="mobile-expand-wrap mobile-bm-expand-wrap" id="bmExpandWrap">',
-                '          <button type="button" class="mobile-expand-btn" id="bmShowMoreBtn" aria-expanded="false" aria-controls="bmProjectsList">Show All ' + PROJECTS.length + ' Homes</button>',
-                '        </div>',
                 '      </div>',
                 '    </div>',
                 '  </div>',
@@ -641,24 +638,6 @@
             var elMaxPrice = container.querySelector('#bmMaxPrice');
             var elCount = container.querySelector('#bmMatchCount');
             var elList = container.querySelector('#bmProjectsList');
-            var elBmBtn = container.querySelector('#bmShowMoreBtn');
-            var elBmWrap = container.querySelector('#bmExpandWrap');
-            var showAllBmMobile = false;
-
-            if (elBmBtn && elList) {
-                if (PROJECTS.length <= 2 && elBmWrap) {
-                    elBmWrap.hidden = true;
-                } else {
-                    elBmBtn.addEventListener('click', function () {
-                        showAllBmMobile = !showAllBmMobile;
-                        elList.classList.toggle('mobile-bm-expanded', showAllBmMobile);
-                        elBmBtn.setAttribute('aria-expanded', String(showAllBmMobile));
-                        elBmBtn.textContent = showAllBmMobile
-                            ? 'Show Fewer Homes'
-                            : 'Show All ' + PROJECTS.length + ' Homes';
-                    });
-                }
-            }
 
             function renderMatches(salary) {
                 var res = UrbanCalculator.computeAffordabilityFromSalary(salary, 20, UrbanCalculator.RATES.bank, 20);
@@ -670,12 +649,12 @@
                 var matchCount = 0;
                 var html = '';
 
-                PROJECTS.forEach(function (p, idx) {
+                PROJECTS.forEach(function (p) {
                     var qualifies = salary >= p.minSalary;
                     if (qualifies) matchCount++;
 
                     html += [
-                        '<div class="bm-project-item ' + (qualifies ? 'qualified' : 'unqualified') + (idx >= 2 ? ' mobile-bm-extra' : '') + '">',
+                        '<div class="bm-project-item ' + (qualifies ? 'qualified' : 'unqualified') + '">',
                         '  <div class="bm-item-thumb">',
                         '    <img src="' + imgBase + p.image + '" alt="' + p.title + '" loading="lazy" onerror="this.src=\'' + imgBase + 'assets/images/property1.jpg\'">',
                         '    <span class="bm-item-badge ' + (qualifies ? 'badge-match' : 'badge-gap') + '">',
@@ -703,7 +682,6 @@
                 if (elCount) elCount.textContent = matchCount + ' of ' + PROJECTS.length + ' Accredited Homes Fit Your Budget';
                 if (elList) {
                     elList.innerHTML = html;
-                    elList.classList.toggle('mobile-bm-expanded', showAllBmMobile);
                 }
             }
 
