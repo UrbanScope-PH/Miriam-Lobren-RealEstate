@@ -18,11 +18,17 @@ from backend.auth import AUTHORIZED_ADMIN_EMAILS, hash_password, require_admin, 
 from backend.database import DB_PATH, get_db_connection, row_to_dict
 from backend.models import SuperadminCreateUser, SuperadminUpdateUser, UserRoleUpdate
 from backend.routers.auth import (
+    SUPABASE_ANON_KEY,
     SUPABASE_URL,
     normalize_db_role,
     sync_password_to_supabase,
 )
-from backend.security import escape_postgrest_filter_value, sanitize_image_url, sanitize_user_dict
+from backend.security import (
+    escape_postgrest_filter_value,
+    get_supabase_service_key,
+    sanitize_image_url,
+    sanitize_user_dict,
+)
 
 router = APIRouter()
 
@@ -31,7 +37,7 @@ _CLOUD_SYNC_MIN_INTERVAL_SEC: float = 10.0
 
 
 def _service_role_key() -> str:
-    return os.environ.get("SUPABASE_SERVICE_ROLE_KEY", "").strip()
+    return get_supabase_service_key(SUPABASE_ANON_KEY)
 
 
 def _cloud_sync_enabled() -> bool:

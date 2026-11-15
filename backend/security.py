@@ -94,6 +94,23 @@ def get_client_ip(request: Optional[Request]) -> str:
     return request.client.host if request.client else "unknown"
 
 
+def get_supabase_service_key(anon_key: str = "") -> str:
+    """Resolve the Supabase privileged server key across supported env var names, rejecting publishable keys."""
+    for env_name in (
+        "SUPABASE_SERVICE_ROLE_KEY",
+        "SUPABASE_SECRET_KEY",
+        "SUPABASE_SERVICE_KEY",
+        "STORAGE_SUPABASE_SERVICE_ROLE_KEY",
+    ):
+        raw = os.environ.get(env_name, "").strip()
+        if (raw.startswith('"') and raw.endswith('"')) or (raw.startswith("'") and raw.endswith("'")):
+            raw = raw[1:-1].strip()
+        if not raw or raw == anon_key or raw.startswith("sb_publishable_"):
+            continue
+        return raw
+    return ""
+
+
 # ==========================================================
 # RATE LIMITER (SLIDING WINDOW WITH OPTIONAL SQLITE PERSISTENCE)
 # ==========================================================

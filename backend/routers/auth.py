@@ -45,6 +45,7 @@ from backend.security import (
     CSRF_COOKIE_NAME,
     check_rate_limit,
     get_client_ip,
+    get_supabase_service_key,
     is_https_request,
     is_same_origin_request,
     sanitize_image_url,
@@ -77,7 +78,7 @@ OTP_GENERIC_RESET_MESSAGE = "If an account can be recovered with that email, a v
 
 
 def _supabase_service_role_key() -> str:
-    return os.environ.get("SUPABASE_SERVICE_ROLE_KEY", "").strip()
+    return get_supabase_service_key(SUPABASE_ANON_KEY)
 
 
 def _supabase_api_key() -> str:
@@ -180,7 +181,7 @@ def _verified_cloud_password_update(email: str, password_hash: str) -> bool:
     """Update a cloud password after OTP proof; service credentials can set verification state."""
     if _is_cloud_sync_disabled():
         return False
-    key = os.environ.get("SUPABASE_SERVICE_ROLE_KEY", "").strip()
+    key = _supabase_service_role_key()
     if not key:
         return False
     try:
@@ -291,7 +292,7 @@ def sync_password_to_supabase(email: str, password_hash: str) -> bool:
 
 def sync_new_user_to_supabase(user_dict: dict, password_hash: str) -> bool:
     """Synchronizes a newly registered or Google-authenticated user to Supabase Cloud."""
-    key = os.environ.get("SUPABASE_SERVICE_ROLE_KEY", "").strip()
+    key = _supabase_service_role_key()
     if _is_cloud_sync_disabled() or not key:
         return False
     try:
