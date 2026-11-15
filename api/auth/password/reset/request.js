@@ -3,6 +3,7 @@ import {
     issueOtp,
     isValidEmail,
     jsonResponse,
+    mapOtpErrorMessage,
     normalizeEmail,
     otpEnvironmentReady,
     parseJsonBody
@@ -67,7 +68,7 @@ export default async function handler(req, res) {
         console.error('Password reset email dispatch error:', error?.message || 'unknown error');
         return jsonResponse({
             success: false,
-            error: 'Unable to deliver recovery email right now. Please try again shortly.'
+            error: mapOtpErrorMessage(error, 'Unable to deliver recovery email right now. Please try again shortly.')
         }, 503, res);
     }
 }

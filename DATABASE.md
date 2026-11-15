@@ -437,6 +437,8 @@ supabase/
                                              Sets users.title default to 'Real Estate Salesperson' (RESA RA 9646 compliant) and normalizes legacy 'Real Estate Agent' rows
   migrations/20261115031500_security_rls_and_rate_limits.sql
                                              Locks private tables (users, inquiries, inquiry_documents, appointments, saved_properties, notifications) & property writes strictly to service_role; keeps public SELECT only on properties/property_images; adds security_rate_limits, check_and_increment_rate_limit, and check_auth_email_challenge RPCs
+  migrations/20261115143500_otp_service_role_rls_policies.sql
+                                             Adds explicit service_role RLS policies on auth_email_challenges and auth_email_challenge_requests and reloads the PostgREST schema cache
   seed.sql                                   Demo data (users, 6 properties, inquiries, ...)
   scripts/                                   One-off data fixes to paste into the SQL Editor (never auto-run)
 ```

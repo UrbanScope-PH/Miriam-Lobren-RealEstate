@@ -2,6 +2,7 @@ import {
     checkOtp,
     isValidEmail,
     jsonResponse,
+    mapOtpErrorMessage,
     normalizeEmail,
     otpEnvironmentReady,
     parseJsonBody
@@ -47,7 +48,10 @@ export default async function handler(req, res) {
         return jsonResponse({ success: true, message: 'Verification code is valid.' }, 200, res);
     } catch (error) {
         console.error('OTP check error:', error?.message || 'unknown error');
-        return jsonResponse({ success: false, error: 'Verification check is temporarily unavailable.' }, 503, res);
+        return jsonResponse({
+            success: false,
+            error: mapOtpErrorMessage(error, 'Verification check is temporarily unavailable.')
+        }, 503, res);
     }
 }
 
