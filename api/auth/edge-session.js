@@ -50,7 +50,7 @@ async function fetchCloudStaffUser(cleanEmail) {
     }
     const res = await fetch(restUrl('users', {
         email: `eq.${cleanEmail}`,
-        select: 'id,email,password_hash,full_name,phone,role,avatar_url,bio,email_verified_at'
+        select: '*'
     }), {
         headers: serviceHeaders({}, true)
     });

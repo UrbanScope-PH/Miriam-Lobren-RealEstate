@@ -33,7 +33,7 @@ export default async function handler(req, res) {
     if (req.method === 'GET') {
         try {
             const listRes = await fetch(restUrl('users', {
-                select: 'id,email,full_name,phone,role,avatar_url,bio,email_verified_at,created_at,updated_at',
+                select: '*',
                 order: 'id.asc'
             }), { headers: serviceHeaders({}, true) });
             if (!listRes.ok) {
