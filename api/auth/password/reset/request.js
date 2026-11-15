@@ -1,5 +1,6 @@
 import {
     getCloudUser,
+    getOtpBindFingerprint,
     issueOtp,
     isValidEmail,
     jsonResponse,
@@ -12,6 +13,7 @@ import {
     checkRateLimit,
     getClientIp,
     isStrictSameOrigin,
+    jsonWithCookies,
     verifyBotDefense
 } from '../../../../lib/server-security.js';
 
@@ -56,14 +58,16 @@ export default async function handler(req, res) {
             user.bio !== '__URBANSCOPE_DELETED__' &&
             user.password_hash !== '__DELETED_ACCOUNT__'
         );
+        const otpCtx = { req, cookies: [] };
         if (activeUser) {
-            await issueOtp(email, 'password_reset', ip);
+            otpCtx.bindValue = getOtpBindFingerprint(user.password_hash);
+            await issueOtp(email, 'password_reset', ip, otpCtx);
         }
-        return jsonResponse({
+        return jsonWithCookies({
             success: true,
             code: 'OTP_SENT',
             message: GENERIC_RESET_MSG
-        }, 200, res);
+        }, 200, res, { cookies: otpCtx.cookies });
     } catch (error) {
         console.error('Password reset email dispatch error:', error?.message || 'unknown error');
         return jsonResponse({

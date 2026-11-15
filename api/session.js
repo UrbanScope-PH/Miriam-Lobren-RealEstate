@@ -529,8 +529,9 @@ async function handleSessionRequest(req, res) {
         if (!otpEnvironmentReady()) {
             return jsonWithCookies({ success: false, error: 'Email verification is not configured on the server.' }, 503, res);
         }
+        const otpCtx = { req, cookies: [] };
         try {
-            const issued = await issueOtp(cleanEmail, 'register', ip);
+            const issued = await issueOtp(cleanEmail, 'register', ip, otpCtx);
             if (!issued) {
                 return jsonWithCookies({
                     success: false,
@@ -556,7 +557,7 @@ async function handleSessionRequest(req, res) {
             full_name: googleInfo.full_name,
             avatar_url: safeAvatarCheck.ok ? safeAvatarCheck.value : 'assets/images/agent.jpg',
             message: `We sent a 6-digit verification code to your Gmail (${cleanEmail}). Please verify to complete registration.`
-        }, 200, res);
+        }, 200, res, { cookies: otpCtx.cookies });
     }
 
     if (action === 'google-verify') {
@@ -592,9 +593,10 @@ async function handleSessionRequest(req, res) {
         if (!otpEnvironmentReady()) {
             return jsonWithCookies({ success: false, error: 'Email verification is not configured on the server.' }, 503, res);
         }
+        const otpCtx = { req, cookies: [] };
         let consumed = false;
         try {
-            consumed = await consumeOtp(cleanEmail, 'register', code);
+            consumed = await consumeOtp(cleanEmail, 'register', code, otpCtx);
         } catch (otpErr) {
             console.error('[session] Google verify OTP consume error:', otpErr?.message || otpErr);
             return jsonWithCookies({
@@ -603,13 +605,13 @@ async function handleSessionRequest(req, res) {
             }, 503, res);
         }
         if (!consumed) {
-            return jsonWithCookies({ success: false, error: 'That verification code is invalid or expired.' }, 400, res);
+            return jsonWithCookies({ success: false, error: 'That verification code is invalid or expired.' }, 400, res, { cookies: otpCtx.cookies });
         }
 
         const safeAvatarCheck = sanitizeImageUrl(googleInfo.avatar_url || body.avatar_url, { defaultValue: 'assets/images/agent.jpg' });
         const existingLookup = await fetchUserByEmailResult(cleanEmail);
         if (existingLookup.dbError) {
-            return jsonWithCookies({ success: false, error: 'Unable to complete registration right now.' }, 503, res);
+            return jsonWithCookies({ success: false, error: 'Unable to complete registration right now.' }, 503, res, { cookies: otpCtx.cookies });
         }
         const existing = existingLookup.row;
         let savedUser = existing;
@@ -648,7 +650,7 @@ async function handleSessionRequest(req, res) {
                 { optionalProtectedColumns: ['google_id'] }
             );
             if (!insertRes.ok) {
-                return jsonWithCookies({ success: false, error: 'Unable to complete registration right now.' }, 503, res);
+                return jsonWithCookies({ success: false, error: 'Unable to complete registration right now.' }, 503, res, { cookies: otpCtx.cookies });
             }
             const inserted = insertRes.data;
             savedUser = Array.isArray(inserted) ? inserted[0] : inserted;
@@ -660,7 +662,7 @@ async function handleSessionRequest(req, res) {
             user: sanitizeUser(savedUser),
             redirect_url: redirectForRole(cleanEmail, role),
             message: 'Account verified and registered successfully! Welcome to UrbanScope.'
-        }, 200, res, { cookies });
+        }, 200, res, { cookies: [...cookies, ...otpCtx.cookies] });
     }
 
     if (action === 'update-profile') {

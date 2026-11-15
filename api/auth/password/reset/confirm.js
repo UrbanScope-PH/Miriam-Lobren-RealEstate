@@ -3,6 +3,7 @@ import {
     consumeOtp,
     createPasswordHash,
     getCloudUser,
+    getOtpBindFingerprint,
     isValidEmail,
     jsonResponse,
     mapOtpErrorMessage,
@@ -14,7 +15,8 @@ import {
 import {
     checkRateLimit,
     getClientIp,
-    isStrictSameOrigin
+    isStrictSameOrigin,
+    jsonWithCookies
 } from '../../../../lib/server-security.js';
 
 export default async function handler(req, res) {
@@ -45,11 +47,12 @@ export default async function handler(req, res) {
             if (!user || !user.password_hash || user.bio === '__URBANSCOPE_DELETED__' || user.password_hash === '__DELETED_ACCOUNT__') {
                 return jsonResponse({ success: false, error: 'That code is invalid or expired. Request a new code and try again.' }, 400, res);
             }
-            const valid = await checkOtp(email, 'password_reset', code);
+            const otpCtx = { req, cookies: [], bindValue: getOtpBindFingerprint(user.password_hash) };
+            const valid = await checkOtp(email, 'password_reset', code, otpCtx);
             if (!valid) {
-                return jsonResponse({ success: false, error: 'That code is invalid or expired. Request a new code and try again.' }, 400, res);
+                return jsonWithCookies({ success: false, error: 'That code is invalid or expired. Request a new code and try again.' }, 400, res, { cookies: otpCtx.cookies });
             }
-            return jsonResponse({ success: true, message: 'Verification code is valid.' }, 200, res);
+            return jsonWithCookies({ success: true, message: 'Verification code is valid.' }, 200, res, { cookies: otpCtx.cookies });
         } catch (error) {
             console.error('Password reset code check failed:', error?.message || 'unknown error');
             return jsonResponse({
@@ -68,16 +71,17 @@ export default async function handler(req, res) {
         if (!user || !user.password_hash || user.bio === '__URBANSCOPE_DELETED__' || user.password_hash === '__DELETED_ACCOUNT__') {
             return jsonResponse({ success: false, error: 'That code is invalid or expired. Request a new code and try again.' }, 400, res);
         }
-        if (!await consumeOtp(email, 'password_reset', code)) {
-            return jsonResponse({ success: false, error: 'That code is invalid or expired. Request a new code and try again.' }, 400, res);
+        const otpCtx = { req, cookies: [], bindValue: getOtpBindFingerprint(user.password_hash) };
+        if (!await consumeOtp(email, 'password_reset', code, otpCtx)) {
+            return jsonWithCookies({ success: false, error: 'That code is invalid or expired. Request a new code and try again.' }, 400, res, { cookies: otpCtx.cookies });
         }
         const updated = await updateCloudUser(email, {
             password_hash: await createPasswordHash(password),
             email_verified_at: new Date().toISOString(),
             updated_at: new Date().toISOString()
         });
-        if (!updated) return jsonResponse({ success: false, error: 'Unable to update that account. Request a new code and try again.' }, 400, res);
-        return jsonResponse({ success: true, message: 'Password updated. You can now log in with your new password.' }, 200, res);
+        if (!updated) return jsonWithCookies({ success: false, error: 'Unable to update that account. Request a new code and try again.' }, 400, res, { cookies: otpCtx.cookies });
+        return jsonWithCookies({ success: true, message: 'Password updated. You can now log in with your new password.' }, 200, res, { cookies: otpCtx.cookies });
     } catch (error) {
         console.error('Password recovery could not be completed:', error?.message || 'unknown error');
         return jsonResponse({
