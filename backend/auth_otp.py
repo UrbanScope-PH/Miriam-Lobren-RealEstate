@@ -2,12 +2,16 @@
 
 import hashlib
 import hmac
+import html
 import json
 import os
+import re
 import secrets
 import time
 import urllib.error
 import urllib.request
+import uuid
+from typing import Dict, Optional
 
 from backend.database import get_db_connection
 from backend.auth import _parse_env_file
@@ -185,20 +189,86 @@ def get_valid_from_sender(sender: str) -> str:
     return f"{s} <noreply@miriamlobren.site>"
 
 
-def send_email_message(to_email: str, subject: str, text_content: str, html_content: str) -> None:
+def get_valid_reply_to(raw_value: str) -> Optional[str]:
+    """Return a clean Reply-To address when configured, else None."""
+    cleaned = re.sub(r"[\r\n]+", " ", str(raw_value or "")).strip()
+    if not cleaned:
+        return None
+    named_match = re.match(r"^([^<>]{1,100})<\s*([^\s<>@]+@[^\s<>@]+\.[^\s<>@]+)\s*>$", cleaned)
+    if named_match:
+        display_name = named_match.group(1).strip().strip("\"'")
+        address = named_match.group(2).strip().lower()
+        return f"{display_name} <{address}>" if display_name else address
+    if re.match(r"^[^\s<>@]+@[^\s<>@]+\.[^\s<>@]+$", cleaned):
+        return cleaned.lower()
+    return None
+
+
+def wrap_email_html_document(title: str, body_html: str) -> str:
+    """Wrap email body content in a standards-compliant HTML5 transactional layout."""
+    safe_title = html.escape(title or "UrbanScope Notification")
+    return "".join([
+        "<!DOCTYPE html>",
+        '<html lang="en">',
+        "<head>",
+        '<meta charset="UTF-8">',
+        '<meta name="viewport" content="width=device-width, initial-scale=1.0">',
+        '<meta http-equiv="x-ua-compatible" content="ie=edge">',
+        f"<title>{safe_title}</title>",
+        "</head>",
+        "<body style=\"margin:0;padding:24px 16px;background-color:#f6faf6;font-family:Arial,'Helvetica Neue',Helvetica,sans-serif;color:#172b1d;line-height:1.55;\">",
+        '<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="max-width:560px;margin:0 auto;background-color:#ffffff;border:1px solid #d7e5dc;border-radius:12px;">',
+        "<tr>",
+        '<td style="padding:20px 24px 16px;border-bottom:1px solid #e6efe8;">',
+        '<div style="font-size:20px;font-weight:700;color:#1e5c33;letter-spacing:-0.01em;">UrbanScope</div>',
+        '<div style="font-size:12px;color:#4f6856;margin-top:2px;">Miriam Lobren Real Estate</div>',
+        "</td>",
+        "</tr>",
+        "<tr>",
+        f'<td style="padding:24px;font-size:15px;color:#20352a;">{body_html}</td>',
+        "</tr>",
+        "<tr>",
+        '<td style="padding:16px 24px 20px;border-top:1px solid #e6efe8;background-color:#fbfdfb;font-size:12px;color:#5a7262;border-radius:0 0 12px 12px;">',
+        "UrbanScope &middot; Miriam Lobren Real Estate &middot; Las Pi&ntilde;as City &amp; Cavite, Philippines<br>",
+        '<a href="https://miriamlobren.site" style="color:#1e5c33;text-decoration:none;">https://miriamlobren.site</a><br>',
+        "Automated transactional email sent in response to your account or inquiry activity.",
+        "</td>",
+        "</tr>",
+        "</table>",
+        "</body>",
+        "</html>",
+    ])
+
+
+def send_email_message(
+    to_email: str,
+    subject: str,
+    text_content: str,
+    html_content: str,
+    reply_to: str = "",
+    headers: Optional[Dict[str, str]] = None,
+) -> None:
     """Send an email using the Resend API."""
     api_key = os.environ.get("RESEND_API_KEY", "").strip()
     if not api_key:
         raise RuntimeError("RESEND_API_KEY is required to send email.")
 
     sender = get_valid_from_sender(os.environ.get("RESEND_FROM_EMAIL", "") or DEFAULT_RESEND_FROM_EMAIL)
-    payload = json.dumps({
+    resolved_reply_to = get_valid_reply_to(reply_to or os.environ.get("RESEND_REPLY_TO", ""))
+    merged_headers: Dict[str, str] = {"X-Entity-Ref-ID": str(uuid.uuid4())}
+    if isinstance(headers, dict):
+        merged_headers.update(headers)
+    body_obj = {
         "from": sender,
         "to": [to_email],
         "subject": subject,
         "text": text_content,
-        "html": html_content
-    }).encode("utf-8")
+        "html": html_content,
+        "headers": merged_headers,
+    }
+    if resolved_reply_to:
+        body_obj["reply_to"] = resolved_reply_to
+    payload = json.dumps(body_obj).encode("utf-8")
     req = urllib.request.Request(
         "https://api.resend.com/emails",
         data=payload,
@@ -230,16 +300,37 @@ def send_email_message(to_email: str, subject: str, text_content: str, html_cont
 def send_otp_email(email: str, purpose: str, code: str) -> None:
     """Send an OTP using the Resend API."""
     is_registration = purpose == "register"
-    subject = "Verify your UrbanScope email" if is_registration else "Your UrbanScope password reset code"
     action = "verify your email address" if is_registration else "reset your password"
-    text_content = f"Your UrbanScope code to {action} is {code}. It expires in 10 minutes. If you did not request this, ignore this email."
-    html_content = (
-        "<div style=\"font-family:Arial,sans-serif;max-width:520px;margin:auto;color:#20352a\">"
-        "<h2>UrbanScope</h2>"
-        f"<p>Use this code to {action}:</p>"
-        f"<p style=\"font-size:32px;font-weight:700;letter-spacing:8px;color:#245b37\">{code}</p>"
-        "<p>This code expires in 10 minutes and can be used once.</p>"
-        "<p>If you did not request this, you can ignore this email.</p></div>"
+    heading = "Email Verification Code" if is_registration else "Password Reset Code"
+    subject = (
+        f"Your UrbanScope verification code: {code}"
+        if is_registration
+        else f"Your UrbanScope password reset code: {code}"
     )
+    safe_code = html.escape(code)
+    text_content = "\n".join([
+        "UrbanScope - Miriam Lobren Real Estate",
+        "",
+        f"Use this one-time security code to {action}:",
+        "",
+        f"{code}",
+        "",
+        "This verification code expires in 10 minutes and can only be used once.",
+        "For your security, do not share this code with anyone.",
+        "If you did not request this code, you can safely ignore this message.",
+        "",
+        "UrbanScope | Miriam Lobren Real Estate",
+        "Las Pinas City & Cavite, Philippines | https://miriamlobren.site",
+    ])
+    body_html = (
+        f'<h1 style="margin:0 0 12px;font-size:20px;line-height:1.3;color:#172b1d;">{heading}</h1>'
+        f'<p style="margin:0 0 14px;">Use this one-time security code to {action}:</p>'
+        '<div style="margin:18px 0;padding:16px 20px;background-color:#f0f7f2;border:1px solid #cbe0d1;border-radius:10px;text-align:center;">'
+        f'<span style="font-family:\'Courier New\',Courier,monospace;font-size:32px;font-weight:700;letter-spacing:8px;color:#1e5c33;">{safe_code}</span>'
+        "</div>"
+        '<p style="margin:0 0 10px;font-size:14px;color:#2c4234;">This verification code expires in <strong>10 minutes</strong> and can only be used once.</p>'
+        '<p style="margin:0;font-size:13px;color:#4f6856;">For your security, do not share this code with anyone. If you did not request this code, you can safely ignore this message.</p>'
+    )
+    html_content = wrap_email_html_document(subject, body_html)
     send_email_message(email, subject, text_content, html_content)
 
