@@ -64,6 +64,12 @@
             const darkColor = (p.includes('/pages/admin/') || p.includes('/pages/superadmin/')) ? '#131f17' : '#0e1611';
             const lightColor = p.includes('/pages/auth/') ? '#f6faf6' : '#ffffff';
             const targetColor = isDark ? darkColor : lightColor;
+            if (document.documentElement && document.documentElement.style) {
+                document.documentElement.style.colorScheme = isDark ? 'dark' : 'light';
+            }
+            document.querySelectorAll('meta[name="color-scheme"]').forEach(function (meta) {
+                meta.setAttribute('content', isDark ? 'dark' : 'light');
+            });
             document.querySelectorAll('meta[name="theme-color"]').forEach(function (meta) {
                 meta.setAttribute('content', targetColor);
             });

@@ -1,6 +1,7 @@
 @import url('https://fonts.googleapis.com/css2?family=Dancing+Script:wght@600&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap');
 
 :root {
+    color-scheme: light;
     --brand-dark-green: #204329;
     --brand-primary-green: #2d5c39;
     --brand-hover-green: #23492d;
@@ -547,10 +548,55 @@ body {
     font-size: 12.5px;
 }
 
+.remember-label input[type="checkbox"],
 .remember-label input {
-    accent-color: var(--brand-primary-green);
-    width: 15px;
-    height: 15px;
+    appearance: none;
+    -webkit-appearance: none;
+    color-scheme: light;
+    position: relative;
+    display: inline-grid;
+    place-content: center;
+    flex-shrink: 0;
+    width: 16px;
+    height: 16px;
+    margin: 0;
+    border-radius: 4px;
+    border: 1.5px solid #96ab9b;
+    background-color: #ffffff;
+    cursor: pointer;
+    transition: background-color 0.16s ease, border-color 0.16s ease, box-shadow 0.16s ease;
+}
+
+.remember-label input[type="checkbox"]::after {
+    content: "";
+    width: 4.5px;
+    height: 8.5px;
+    margin-bottom: 1.5px;
+    border: solid #ffffff;
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg) scale(0);
+    transition: transform 0.12s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.remember-label input[type="checkbox"]:checked {
+    background-color: var(--brand-primary-green);
+    border-color: var(--brand-primary-green);
+}
+
+.remember-label input[type="checkbox"]:checked::after {
+    transform: rotate(45deg) scale(1);
+}
+
+.remember-label input[type="checkbox"]:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(45, 92, 57, 0.18);
+}
+
+@media (hover: hover) and (pointer: fine) {
+    .remember-label:hover input[type="checkbox"]:not(:checked) {
+        border-color: var(--brand-primary-green);
+        background-color: #f4f9f5;
+    }
 }
 
 .forgot-link {
@@ -2339,6 +2385,28 @@ html.dark-mode .terms-label.is-accepted {
     background-color: rgba(62, 163, 93, 0.16);
     border-color: #2f573b;
     color: #86efac;
+}
+
+html.dark-mode .remember-label input[type="checkbox"] {
+    color-scheme: dark;
+    background-color: #142018;
+    border-color: #3f5d47;
+}
+
+html.dark-mode .remember-label input[type="checkbox"]:checked {
+    background-color: #3ea35d;
+    border-color: #3ea35d;
+}
+
+html.dark-mode .remember-label input[type="checkbox"]:focus-visible {
+    box-shadow: 0 0 0 3px rgba(74, 222, 128, 0.22);
+}
+
+@media (hover: hover) and (pointer: fine) {
+    html.dark-mode .remember-label:hover input[type="checkbox"]:not(:checked) {
+        border-color: #4ade80;
+        background-color: #1a2b20;
+    }
 }
 
 /* Auth Modals (Terms & OTP) in Dark Mode */

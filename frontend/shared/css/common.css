@@ -10,6 +10,7 @@
    UrbanScope Design Tokens & Global Variables
    ========================================================================== */
 :root {
+    color-scheme: light;
     /* Brand Green Color Scale */
     --green: #2d5c39;
     --dark-green: #1a3b23;
@@ -63,6 +64,7 @@
 
 /* Dark Mode Design Token Adjustments */
 html.dark-mode {
+    color-scheme: dark;
     --text-dark: #ecfdf5;
     --text-muted: #94a3b8;
     --text-subtle: #cbd5e1;
