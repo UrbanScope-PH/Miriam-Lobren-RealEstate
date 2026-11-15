@@ -1413,6 +1413,8 @@ path when rendering from a page.
 139. **Forgot Password Unregistered & Google-Only Error Handling:**
   - **Backend Guard (`api/auth/password/reset/request.js`, `backend/routers/auth.py`):** `/api/auth/password/reset/request` no longer issues or fakes OTP delivery for unregistered/deleted emails (`404`, `code: 'EMAIL_NOT_REGISTERED'`, `'This email is not registered yet. Please register first.'`) or Google-only accounts without a local password (`400`, `code: 'GOOGLE_ACCOUNT_NO_PASSWORD'`, `'This account uses Google Sign-In and does not have a password. Please log in with Google instead.'`), preventing unsolicited reset emails and misleading Step 2 redirects.
   - **Frontend Gateway & UI (`frontend/shared/js/supabase.js`, `frontend/shared/js/api.js`, `frontend/pages/auth/forgot-password.js`, `forgot-password.css`):** `apiSendPasswordResetEmail` preserves server `code`; `forgot-password.js` keeps Step 1 open on error, renders safe DOM action links (`Create an account` -> `register.html` / `Go to Log In` -> `login.html`), displays resend errors cleanly, and relies on `.auth-notice.is-error` / `html.dark-mode #resetStatus.is-error` CSS rules rather than inline light-mode color overrides.
+140. **Legal Hub Vector Contact Icons (`frontend/pages/legal/terms.html`, `privacy.html`, `legal.css`):**
+  - Replaced emoji characters (`📍`, `📧`, `📞`) in the Section 10 contact cards on both `terms.html` and `privacy.html` with crisp aligned Lucide-style inline SVG icons (`.legal-contact-icon` inside `.legal-contact-row`) and `.legal-contact-link` styling (including `#86efac` dark-mode contrast).
 
 ---
 

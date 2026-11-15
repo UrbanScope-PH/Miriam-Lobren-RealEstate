@@ -393,6 +393,41 @@ body {
     margin: 0;
 }
 
+.legal-contact-info .legal-contact-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 6px;
+}
+
+.legal-contact-info .legal-contact-row + .legal-contact-row {
+    margin-top: 4px;
+}
+
+.legal-contact-icon {
+    width: 16px;
+    height: 16px;
+    color: var(--green);
+    flex-shrink: 0;
+}
+
+.legal-contact-link {
+    color: var(--green);
+    font-weight: 700;
+    text-decoration: none;
+}
+
+@media (hover: hover) and (pointer: fine) {
+    .legal-contact-link:hover {
+        text-decoration: underline;
+    }
+}
+
+html.dark-mode .legal-contact-icon,
+html.dark-mode .legal-contact-link {
+    color: #86efac;
+}
+
 .legal-contact-actions {
     display: inline-flex;
     gap: 12px;
