@@ -13,6 +13,7 @@
     const subtitle = document.getElementById('resetSubtitle');
 
     let currentEmail = '';
+    let verifiedCode = '';
     let resendTimer = null;
 
     function showStatus(message, type) {
@@ -59,6 +60,7 @@
     // STEP 1: Request Verification Code (Email Only)
     // ==========================================
     if (requestForm) {
+        if (window.UrbanBotGuard) window.UrbanBotGuard.init('resetRequestForm', 'resetTurnstile');
         requestForm.addEventListener('submit', async function (event) {
             event.preventDefault();
             const email = String(emailInput?.value || '').trim().toLowerCase();
@@ -73,12 +75,14 @@
 
             if (button) { button.disabled = true; button.textContent = 'Sending Code…'; }
 
+            const botData = window.UrbanBotGuard ? window.UrbanBotGuard.collect('resetRequestForm', 'resetTurnstile') : {};
             const result = typeof apiSendPasswordResetEmail === 'function'
-                ? await apiSendPasswordResetEmail(email)
+                ? await apiSendPasswordResetEmail(email, botData)
                 : { success: false, error: 'Password recovery is currently unavailable. Please try again.' };
 
             if (result && result.success) {
                 currentEmail = email;
+                verifiedCode = '';
                 if (requestForm) requestForm.hidden = true;
                 if (verifyForm) verifyForm.hidden = false;
                 if (newPasswordForm) newPasswordForm.hidden = true;
@@ -92,6 +96,7 @@
                     codeInput.focus();
                 }
             } else {
+                if (window.UrbanBotGuard) window.UrbanBotGuard.reset('resetTurnstile');
                 showStatus((result && result.error) || 'Unable to find an account with that email. Please check and try again.', 'error');
             }
 
@@ -122,6 +127,7 @@
                 : { success: false, error: 'Verification service unavailable. Please refresh and try again.' };
 
             if (verifyResult && verifyResult.success) {
+                verifiedCode = code;
                 if (verifyForm) verifyForm.hidden = true;
                 if (newPasswordForm) newPasswordForm.hidden = false;
                 if (title) title.textContent = 'Create new password';
@@ -143,8 +149,10 @@
             if (!currentEmail) return;
             resendButton.disabled = true;
             if (resendStatus) resendStatus.textContent = 'Sending new code…';
+            verifiedCode = '';
+            const botData = window.UrbanBotGuard ? window.UrbanBotGuard.collect('resetRequestForm', 'resetTurnstile') : {};
             const result = typeof apiSendPasswordResetEmail === 'function'
-                ? await apiSendPasswordResetEmail(currentEmail)
+                ? await apiSendPasswordResetEmail(currentEmail, botData)
                 : { success: false };
 
             if (result && result.success) {
@@ -181,10 +189,18 @@
                 return;
             }
 
+            if (!/^[0-9]{6}$/.test(verifiedCode)) {
+                showStatus('Please verify your 6-digit email code before setting a new password.', 'error');
+                if (verifyForm) verifyForm.hidden = false;
+                if (newPasswordForm) newPasswordForm.hidden = true;
+                codeInput?.focus();
+                return;
+            }
+
             if (button) { button.disabled = true; button.textContent = 'Updating Password…'; }
 
             const updateResult = typeof apiResetPasswordWithVerifiedCode === 'function'
-                ? await apiResetPasswordWithVerifiedCode(currentEmail, password)
+                ? await apiResetPasswordWithVerifiedCode(currentEmail, verifiedCode, password)
                 : { success: false, error: 'Password update service is unavailable.' };
 
             if (updateResult && updateResult.success) {

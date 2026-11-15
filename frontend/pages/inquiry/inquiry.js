@@ -16,12 +16,76 @@ let inquirySubmitOriginalHtml = '';
 let inquirySubmitInProgress = false;
 let inquiryCooldownTicker = null;
 let inMemoryInquiryCooldown = { ownerEmail: '', until: 0 };
+const inquiryFormLoadedAt = Date.now();
+
+function escInquiryHtml(val) {
+    if (typeof window.escapeHtml === 'function') return window.escapeHtml(val);
+    return String(val ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+
+function getInquiryTurnstileToken() {
+    const container = document.getElementById('inquiryTurnstile');
+    if (container && container.dataset.turnstileToken) return container.dataset.turnstileToken;
+    const input = document.querySelector('#inquiryForm input[name="cf-turnstile-response"]');
+    return input ? String(input.value || '') : '';
+}
+
+function resetInquiryTurnstile() {
+    const container = document.getElementById('inquiryTurnstile');
+    if (!container) return;
+    container.dataset.turnstileToken = '';
+    if (window.turnstile && container.dataset.widgetId) {
+        try { window.turnstile.reset(container.dataset.widgetId); } catch (_) {}
+    }
+}
+
+async function initInquiryTurnstile() {
+    const container = document.getElementById('inquiryTurnstile');
+    if (!container || container.dataset.turnstileInit === '1') return;
+    if (typeof apiGetGoogleConfig !== 'function') return;
+    try {
+        const cfg = await apiGetGoogleConfig();
+        const siteKey = cfg && cfg.turnstile_site_key ? String(cfg.turnstile_site_key).trim() : '';
+        if (!siteKey) return;
+        container.dataset.turnstileInit = '1';
+        container.hidden = false;
+        let script = document.querySelector('script[src*="challenges.cloudflare.com/turnstile"]');
+        if (!script) {
+            script = document.createElement('script');
+            script.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit';
+            script.async = true;
+            script.defer = true;
+            document.head.appendChild(script);
+        }
+        const started = Date.now();
+        const poll = setInterval(() => {
+            if (window.turnstile && typeof window.turnstile.render === 'function') {
+                clearInterval(poll);
+                const widgetId = window.turnstile.render(container, {
+                    sitekey: siteKey,
+                    callback: (tok) => { container.dataset.turnstileToken = tok || ''; },
+                    'expired-callback': () => { container.dataset.turnstileToken = ''; },
+                    'error-callback': () => { container.dataset.turnstileToken = ''; }
+                });
+                container.dataset.widgetId = String(widgetId);
+            } else if (Date.now() - started >= 7000) {
+                clearInterval(poll);
+            }
+        }, 120);
+    } catch (_) {}
+}
 
 function getInquiryCooldownOwnerEmail(fallbackEmail) {
     if (inquirySessionEmail) return inquirySessionEmail;
 
     try {
-        const storedUser = localStorage.getItem('urbanscope_user') || localStorage.getItem('urbanscope_demo_user');
+        const storedUser = localStorage.getItem('urbanscope_user')
+            || (window.location.protocol === 'file:' ? localStorage.getItem('urbanscope_demo_user') : null);
         if (storedUser) {
             const user = JSON.parse(storedUser);
             if (user && user.email) return String(user.email).trim().toLowerCase();
@@ -240,10 +304,10 @@ function renderAvailablePropertyOptions(selectedId = '') {
         ? '<option value="">Choose an available listing</option>'
         : '<option value="">No available properties to inquire about</option>';
     const options = loadedProperties.map(property => {
-        const title = property.title || property.propertyName || 'Property';
-        const location = property.location ? ` - ${property.location}` : '';
-        const price = property.price ? ` (₱${Number(property.price).toLocaleString()})` : '';
-        return `<option value="${property.id}">${title}${location}${price}</option>`;
+        const title = escInquiryHtml(property.title || property.propertyName || 'Property');
+        const location = property.location ? ` - ${escInquiryHtml(property.location)}` : '';
+        const price = property.price ? ` (₱${escInquiryHtml(Number(property.price).toLocaleString())})` : '';
+        return `<option value="${escInquiryHtml(String(property.id ?? ''))}">${title}${location}${price}</option>`;
     }).join('');
 
     select.innerHTML = placeholder + options;
@@ -438,7 +502,7 @@ function showCalculatorPrefBanner(intentData) {
             </div>
             <div class="calc-pref-content">
                 <strong>Simulated Financing Preference Attached:</strong>
-                <span>${fName} ${rate ? '(' + rate + ')' : ''} · ${dpPct}% DP (${dpMonths} mos) · ${term} Years${amort ? ' · Est. Amort: <strong>' + amort + '</strong>' : ''}</span>
+                <span>${escInquiryHtml(fName)} ${rate ? '(' + escInquiryHtml(rate) + ')' : ''} · ${escInquiryHtml(dpPct)}% DP (${escInquiryHtml(dpMonths)} mos) · ${escInquiryHtml(term)} Years${amort ? ' · Est. Amort: <strong>' + escInquiryHtml(amort) + '</strong>' : ''}</span>
             </div>
         </div>
     `;
@@ -527,7 +591,8 @@ async function refreshSelectedPropertyAvailability() {
 
 function isUserLoggedIn() {
     try {
-        const storedUser = localStorage.getItem('urbanscope_user') || localStorage.getItem('urbanscope_demo_user');
+        const storedUser = localStorage.getItem('urbanscope_user')
+            || (window.location.protocol === 'file:' ? localStorage.getItem('urbanscope_demo_user') : null);
         if (storedUser) {
             const u = JSON.parse(storedUser);
             if (u && (u.email || u.id)) return true;
@@ -832,7 +897,13 @@ async function submitInquiry() {
         client_email: clientEmail,
         client_phone: normalizedPhone,
         message: formattedMessage,
-        status: 'Under Review'
+        status: 'Under Review',
+        _hp: hpVal,
+        company_website: hpVal,
+        _ft: inquiryFormLoadedAt,
+        ft: inquiryFormLoadedAt,
+        turnstileToken: getInquiryTurnstileToken(),
+        turnstile_token: getInquiryTurnstileToken()
     };
 
     let result = null;
@@ -840,7 +911,9 @@ async function submitInquiry() {
         if (typeof apiSubmitInquiry === 'function') {
             result = await apiSubmitInquiry(inquiryData);
         } else {
-            result = { success: true };
+            result = window.location.protocol === 'file:'
+                ? { success: true }
+                : { success: false, error: 'Inquiry service is unavailable. Please reload the page.' };
         }
     } catch (err) {
         console.error('Submission request failed:', err);
@@ -850,10 +923,12 @@ async function submitInquiry() {
     inquirySubmitInProgress = false;
 
     if (result && result.success) {
+        resetInquiryTurnstile();
         try { sessionStorage.removeItem('urbanscope_calc_intent'); } catch (e) { }
         startInquiryCooldown(ownerEmail);
         showSuccessModal(inquiryData, scheduleDetails);
     } else {
+        resetInquiryTurnstile();
         refreshInquiryCooldownUi();
         const errMsg = result ? (result.error || 'Unable to submit inquiry. Please try again.') : 'Unable to submit inquiry. Please try again.';
         showToastNotice(errMsg, true);
@@ -1162,7 +1237,7 @@ function initUrbanSelect(selectEl) {
         const selectedOpt = selectEl.options[selectEl.selectedIndex] || selectEl.options[0];
         if (!selectedOpt) return;
         const icon = getOptionIcon(selectedOpt.value, selectedOpt.text);
-        valueSpan.innerHTML = (icon ? icon + ' ' : '') + `<span>${selectedOpt.text}</span>`;
+        valueSpan.innerHTML = (icon ? icon + ' ' : '') + `<span>${escInquiryHtml(selectedOpt.text)}</span>`;
     }
 
     function openDropdown() {
@@ -1194,7 +1269,7 @@ function initUrbanSelect(selectEl) {
             optRow.innerHTML = `
                 <div class="custom-select-option-content">
                     ${iconSvg ? `<span class="custom-select-option-icon">${iconSvg}</span>` : ''}
-                    <span class="custom-select-option-text">${opt.text}</span>
+                    <span class="custom-select-option-text">${escInquiryHtml(opt.text)}</span>
                 </div>
                 <svg class="custom-select-check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                     <polyline points="20 6 9 17 4 12"></polyline>
@@ -1262,17 +1337,20 @@ window.addEventListener('DOMContentLoaded', () => {
     if (submitBtn) inquirySubmitOriginalHtml = submitBtn.innerHTML;
 
     updateInquirySessionUi();
+    initInquiryTurnstile();
 
     document.addEventListener('urbanscope:user', (event) => {
         inquirySessionEmail = String(event.detail?.email || '').trim().toLowerCase();
         refreshInquiryCooldownUi();
         updateInquirySessionUi();
+    initInquiryTurnstile();
     });
 
     window.addEventListener('storage', (event) => {
         if (event.key && (event.key.startsWith(INQUIRY_COOLDOWN_STORAGE_PREFIX) || event.key === 'urbanscope_user' || event.key === 'urbanscope_demo_user')) {
             refreshInquiryCooldownUi();
             updateInquirySessionUi();
+    initInquiryTurnstile();
         }
         if (event.key === 'cached_live_properties') {
             refreshSelectedPropertyAvailability();

@@ -71,21 +71,58 @@ document.addEventListener("DOMContentLoaded", async () => {
         return str || "Other";
     }
 
+    const MAX_PROPERTY_IMAGE_BYTES = 5 * 1024 * 1024;
+    const ALLOWED_PROPERTY_IMAGE_MIMES = new Set(["image/png", "image/jpeg", "image/jpg", "image/webp"]);
+
+    function sanitizeStoredPropertyImage(rawUrl) {
+        const raw = String(rawUrl || "").trim();
+        if (!raw) return "";
+        if (/^https?:\/\//i.test(raw)) return raw;
+        if (/^data:image\/(png|jpeg|jpg|webp|gif);base64,[A-Za-z0-9+/=]+$/i.test(raw)) return raw;
+        const cleaned = raw.replace(/^(\.\.\/)+/, "").replace(/^\/+/, "");
+        if (cleaned.startsWith("assets/images/") && !cleaned.includes("..")) {
+            return "../../" + cleaned;
+        }
+        return "";
+    }
+
+    function detectSafePropertyImageMime(file) {
+        return new Promise((resolve) => {
+            if (!file) return resolve(null);
+            if (file.size > MAX_PROPERTY_IMAGE_BYTES) return resolve(null);
+            if (!file.type || !ALLOWED_PROPERTY_IMAGE_MIMES.has(file.type.toLowerCase())) return resolve(null);
+            const reader = new FileReader();
+            reader.onerror = () => resolve(null);
+            reader.onload = (e) => {
+                const buf = e.target?.result;
+                if (!(buf instanceof ArrayBuffer) || buf.byteLength < 12) return resolve(null);
+                const bytes = new Uint8Array(buf);
+                const isPng = bytes[0] === 0x89 && bytes[1] === 0x50 && bytes[2] === 0x4E && bytes[3] === 0x47
+                    && bytes[4] === 0x0D && bytes[5] === 0x0A && bytes[6] === 0x1A && bytes[7] === 0x0A;
+                if (isPng) return resolve("image/png");
+                const isJpeg = bytes[0] === 0xFF && bytes[1] === 0xD8 && bytes[2] === 0xFF;
+                if (isJpeg) return resolve("image/jpeg");
+                const isWebp = bytes[0] === 0x52 && bytes[1] === 0x49 && bytes[2] === 0x46 && bytes[3] === 0x46
+                    && bytes[8] === 0x57 && bytes[9] === 0x45 && bytes[10] === 0x42 && bytes[11] === 0x50;
+                if (isWebp) return resolve("image/webp");
+                resolve(null);
+            };
+            reader.readAsArrayBuffer(file.slice(0, 16));
+        });
+    }
+
     function renderCurrentImages(url) {
         if (!currentImageContainer) return;
         currentImageContainer.replaceChildren();
 
-        if (!url) {
+        const resolvedSrc = sanitizeStoredPropertyImage(url);
+        if (!resolvedSrc) {
             const placeholder = document.createElement("div");
             placeholder.className = "image-placeholder";
             placeholder.textContent = "No saved image for this property.";
             currentImageContainer.appendChild(placeholder);
             return;
         }
-
-        const resolvedSrc = (url.startsWith("http") || url.startsWith("data:"))
-            ? url
-            : "../../" + url.replace(/^(\.\.\/)+/, "");
 
         const wrapper = document.createElement("div");
         const image = document.createElement("img");
@@ -172,9 +209,11 @@ document.addEventListener("DOMContentLoaded", async () => {
         renderCurrentImages(currentImageUrl);
     }
 
-    function readImageFileAsDataUrl(file) {
+    async function readImageFileAsDataUrl(file) {
+        if (!file) return null;
+        const verifiedMime = await detectSafePropertyImageMime(file);
+        if (!verifiedMime) return null;
         return new Promise((resolve) => {
-            if (!file) return resolve(null);
             const reader = new FileReader();
             reader.onload = (e) => {
                 const img = new Image();
@@ -196,9 +235,10 @@ document.addEventListener("DOMContentLoaded", async () => {
                     canvas.height = height;
                     const ctx = canvas.getContext("2d");
                     ctx.drawImage(img, 0, 0, width, height);
-                    resolve(canvas.toDataURL("image/jpeg", 0.82));
+                    const outputMime = verifiedMime === "image/png" ? "image/png" : (verifiedMime === "image/webp" ? "image/webp" : "image/jpeg");
+                    resolve(canvas.toDataURL(outputMime, 0.82));
                 };
-                img.onerror = () => resolve(e.target.result);
+                img.onerror = () => resolve(null);
                 img.src = e.target.result;
             };
             reader.onerror = () => resolve(null);
@@ -206,7 +246,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         });
     }
 
-    imageInput?.addEventListener("change", () => {
+    imageInput?.addEventListener("change", async () => {
         if (!currentImageContainer) return;
         const file = imageInput.files?.[0];
         if (!file) {
@@ -214,11 +254,13 @@ document.addEventListener("DOMContentLoaded", async () => {
             return;
         }
 
-        if (!file.type.startsWith("image/")) {
+        const safeMime = await detectSafePropertyImageMime(file);
+        if (!safeMime) {
+            const errMsg = "Please select a valid PNG, JPEG, or WebP image under 5MB.";
             if (typeof window.showFeedbackToast === 'function') {
-                window.showFeedbackToast("Please select a valid image file.", "warn");
+                window.showFeedbackToast(errMsg, "warn");
             } else {
-                alert("Please select a valid image file.");
+                alert(errMsg);
             }
             imageInput.value = "";
             renderCurrentImages(currentImageUrl);
@@ -236,6 +278,14 @@ document.addEventListener("DOMContentLoaded", async () => {
         preview.style.objectFit = "cover";
 
         preview.onload = () => URL.revokeObjectURL(preview.src);
+        preview.onerror = () => {
+            URL.revokeObjectURL(preview.src);
+            imageInput.value = "";
+            renderCurrentImages(currentImageUrl);
+            if (typeof window.showFeedbackToast === 'function') {
+                window.showFeedbackToast("Selected image could not be decoded safely.", "warn");
+            }
+        };
         wrapper.appendChild(preview);
         currentImageContainer.appendChild(wrapper);
     });
@@ -282,7 +332,11 @@ document.addEventListener("DOMContentLoaded", async () => {
             let imageUrl = currentImageUrl;
             const selectedFile = imageInput?.files?.[0];
             if (selectedFile) {
-                imageUrl = await readImageFileAsDataUrl(selectedFile);
+                const validatedDataUrl = await readImageFileAsDataUrl(selectedFile);
+                if (!validatedDataUrl) {
+                    throw new Error("Replacement image must be a valid PNG, JPEG, or WebP file under 5MB.");
+                }
+                imageUrl = validatedDataUrl;
             }
 
             const updates = {

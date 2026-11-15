@@ -18,6 +18,18 @@ function escapePropHtml(str) {
 }
 
 
+function sanitizeAdminPropImg(rawUrl, fallback = '../../assets/images/property1.jpg') {
+    const raw = String(rawUrl || '').trim();
+    if (!raw) return fallback;
+    if (/^https?:\/\//i.test(raw)) return raw;
+    if (/^data:image\/(png|jpeg|jpg|webp|gif);base64,[A-Za-z0-9+/=]+$/i.test(raw)) return raw;
+    const cleaned = raw.replace(/^(\.\.\/)+/, '').replace(/^\/+/, '');
+    if (cleaned.startsWith('assets/images/') && !cleaned.includes('..')) {
+        return '../../' + cleaned;
+    }
+    return fallback;
+}
+
 function normalizePropertyRowMeta(property) {
     const title = property.title || property.name || property.propertyName || "Listing";
     const type = property.property_type || property.type || property.propertyType || "—";
@@ -27,9 +39,7 @@ function normalizePropertyRowMeta(property) {
     const isSold = rawStatus.toLowerCase() === 'sold' || rawStatus.toLowerCase() === 'sold out';
     const displayStatus = isSold ? 'Sold' : (rawStatus || 'Available');
 
-    let imgSrc = property.image_url ?
-        (property.image_url.startsWith('http') || property.image_url.startsWith('data:') ? property.image_url : '../../' + property.image_url.replace(/^(\.\.\/)+/, '')) :
-        '';
+    let imgSrc = property.image_url ? sanitizeAdminPropImg(property.image_url, '') : '';
 
     const tLower = title.toLowerCase();
     if (!imgSrc || imgSrc.includes('property1.jpg') || imgSrc.includes('property2.jpg') || imgSrc.includes('property3.jpg')) {
@@ -37,7 +47,10 @@ function normalizePropertyRowMeta(property) {
         else if (tLower.includes('kathleen')) imgSrc = '../../assets/images/kathleen-facade.jpg';
         else if (tLower.includes('liora')) imgSrc = '../../assets/images/LioraHomes.jpg';
         else if (tLower.includes('airmen')) imgSrc = '../../assets/images/AirmenTriplex.WEBP';
+        else if (tLower.includes('benecia')) imgSrc = '../../assets/images/benecia-facade.jpg';
+        else if (tLower.includes('amore')) imgSrc = '../../assets/images/amore-facade.jpg';
     }
+    if (!imgSrc) imgSrc = '../../assets/images/property1.jpg';
 
     return { title, type, loc, priceStr, rawStatus, isSold, displayStatus, imgSrc };
 }
@@ -149,7 +162,7 @@ function addPropertyMobileCard(property) {
     card.className = "mobile-data-card mobile-property-card" + (meta.isSold ? " is-sold" : "");
     card.innerHTML = `
         <div class="mobile-prop-top">
-            <img class="mobile-prop-thumb" src="${meta.imgSrc}" alt="${safeTitle}" onerror="this.src='../../assets/images/property1.jpg'">
+            <img class="mobile-prop-thumb" src="${escapePropHtml(meta.imgSrc)}" alt="${safeTitle}" onerror="this.src='../../assets/images/property1.jpg'">
             <div class="mobile-prop-meta">
                 <div class="mobile-card-title-row">
                     <strong>${safeTitle}</strong>
@@ -204,7 +217,7 @@ function addPropertyRow(property) {
         <td>
             <div class="property-name" style="display:flex; align-items:center; gap:12px;">
                 <div class="property-image" style="width:48px;height:48px;overflow:hidden;border-radius:8px;flex-shrink:0;">
-                    <img src="${imgSrc}" alt="${safeTitle}" style="width:100%;height:100%;object-fit:cover;${isSold ? 'filter:grayscale(1); opacity:0.8;' : ''}" onerror="this.src='../../assets/images/property1.jpg'">
+                    <img src="${escapePropHtml(imgSrc)}" alt="${safeTitle}" style="width:100%;height:100%;object-fit:cover;${isSold ? 'filter:grayscale(1); opacity:0.8;' : ''}" onerror="this.src='../../assets/images/property1.jpg'">
                 </div>
                 <div>
                     <strong style="${isSold ? 'color:var(--text-muted, #526456);' : 'color:var(--text-dark, #1b2e21);'} font-size:0.92rem; display:block; line-height:1.3;">${safeTitle}</strong>

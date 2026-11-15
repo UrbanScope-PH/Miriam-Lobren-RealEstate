@@ -45,7 +45,10 @@ function forbiddenResponse() {
             status: 403,
             headers: {
                 'Content-Type': 'text/html; charset=utf-8',
-                'Cache-Control': 'private, no-store, max-age=0'
+                'Cache-Control': 'private, no-store, max-age=0',
+                'X-Content-Type-Options': 'nosniff',
+                'X-Frame-Options': 'DENY',
+                'Referrer-Policy': 'strict-origin-when-cross-origin'
             }
         }
     );
@@ -94,6 +97,9 @@ export default async function proxy(request) {
     return next({
         headers: {
             'Cache-Control': 'private, no-store, max-age=0',
+            'X-Content-Type-Options': 'nosniff',
+            'X-Frame-Options': 'DENY',
+            'Referrer-Policy': 'strict-origin-when-cross-origin',
             Vary: 'Cookie'
         }
     });

@@ -234,36 +234,58 @@ def init_db():
 
     conn.commit()
 
-    # Seed & Sync Admin Accounts with RBAC (admin.realestate@gmail.com, urbanscope.cvsu@gmail.com)
+    # Seed & Sync Admin Accounts with RBAC from env or one-time generated local bootstrap secrets
     from backend.auth import hash_password
+    from backend.security import is_production_mode
+    import secrets
 
-    admin_pass = hash_password("realestate2026")
-    miriam_pass = "44642fa6779150106462e64ac546bbd4$8702f1df11fd794ec0394fb4d7339b0f5e86a37652e80dabf6aa21c40351b20c"  # 111112
-    superadmin_pass = hash_password("urbanscope2026")
+    bootstrap_generated = []
 
-    accounts_to_sync = [
-        ("admin.realestate@gmail.com", admin_pass, "Miriam Lobren (Admin)", "+63 900 000 0000", "admin"),
-        ("miriamalobren@gmail.com", miriam_pass, "Miriam Lobren", "+63 918 964 5434", "admin"),
-        ("miriam@gmail.com", admin_pass, "Miriam Lobren", "+63 918 964 5434", "admin"),
-        ("urbanscope.cvsu@gmail.com", superadmin_pass, "UrbanScope Superadmin (CvSU)", "+63 900 000 0000", "superadmin")
+    def _resolve_bootstrap_password(email: str, env_var: str) -> Optional[str]:
+        val = os.environ.get(env_var, "").strip()
+        if val:
+            return hash_password(val)
+        if is_production_mode():
+            return None
+        generated = secrets.token_urlsafe(12)
+        bootstrap_generated.append(f"{email} ({env_var}): {generated}")
+        return hash_password(generated)
+
+    accounts_spec = [
+        ("admin.realestate@gmail.com", "SEED_ADMIN_PASSWORD", "Miriam Lobren (Admin)", "+63 900 000 0000", "admin"),
+        ("miriamalobren@gmail.com", "SEED_MIRIAM_PASSWORD", "Miriam Lobren", "+63 918 964 5434", "admin"),
+        ("miriam@gmail.com", "SEED_ADMIN_PASSWORD", "Miriam Lobren", "+63 918 964 5434", "admin"),
+        ("urbanscope.cvsu@gmail.com", "SEED_SUPERADMIN_PASSWORD", "UrbanScope Superadmin (CvSU)", "+63 900 000 0000", "superadmin"),
     ]
 
-    for email, pwd_hash, full_name, phone, role in accounts_to_sync:
+    for email, env_var, full_name, phone, role in accounts_spec:
         cursor.execute("SELECT id, password_hash, role FROM users WHERE LOWER(email) = LOWER(?)", (email,))
         existing = cursor.fetchone()
         if existing:
-            # Preserve existing user's password and profile updates; ensure proper RBAC role
             if not existing[1]:
-                cursor.execute("UPDATE users SET password_hash = ? WHERE id = ?", (pwd_hash, existing[0]))
+                pwd_hash = _resolve_bootstrap_password(email, env_var)
+                if pwd_hash:
+                    cursor.execute("UPDATE users SET password_hash = ? WHERE id = ?", (pwd_hash, existing[0]))
             if existing[2] != role:
                 cursor.execute("UPDATE users SET role = ? WHERE id = ?", (role, existing[0]))
         else:
-            cursor.execute(
-                "INSERT INTO users (email, password_hash, full_name, phone, role, email_verified_at) VALUES (?, ?, ?, ?, ?, ?)",
-                (email, pwd_hash, full_name, phone, role, datetime.now(timezone.utc).isoformat())
-            )
+            pwd_hash = _resolve_bootstrap_password(email, env_var)
+            if pwd_hash:
+                cursor.execute(
+                    "INSERT INTO users (email, password_hash, full_name, phone, role, email_verified_at) VALUES (?, ?, ?, ?, ?, ?)",
+                    (email, pwd_hash, full_name, phone, role, datetime.now(timezone.utc).isoformat())
+                )
 
-    # Demote any unauthorized user emails that may have been previously given admin role
+    if bootstrap_generated and not is_production_mode():
+        creds_file = DB_PATH.parent / ".bootstrap_credentials.txt"
+        try:
+            existing_txt = creds_file.read_text(encoding="utf-8") if creds_file.is_file() else ""
+            creds_file.write_text(existing_txt + "\n".join(bootstrap_generated) + "\n", encoding="utf-8")
+            os.chmod(creds_file, 0o600)
+        except OSError:
+            pass
+
+    # Demote any unauthorized user emails that may have been previously given non-client privileged roles
     cursor.execute("""
         UPDATE users
         SET role = 'user'
@@ -271,7 +293,7 @@ def init_db():
           AND role NOT IN ('user', 'client', 'admin')
     """)
     conn.commit()
-    print("✓ RBAC credentials & database triggers verified (Superadmin: urbanscope.cvsu@gmail.com, Admin: miriamalobren@gmail.com / miriam@gmail.com / admin.realestate@gmail.com)")
+    print("✓ RBAC database schema and triggers verified.")
 
     # Purge legacy @example.com demo rows left behind by databases seeded before they were removed
     cursor.execute("DELETE FROM inquiries WHERE LOWER(client_email) LIKE '%@example.com'")

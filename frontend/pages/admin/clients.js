@@ -233,7 +233,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         const mobileCards = [];
 
         tableBody.innerHTML = filtered.map(inq => {
-            const id = inq.id;
+            const safeId = escapeHtml(String(inq.id ?? ''));
             const name = inq.client_name || inq.name || 'Anonymous Client';
             const email = inq.email || inq.client_email || 'No email provided';
             const phone = inq.phone || inq.client_phone || inq.contact_number || 'N/A';
@@ -241,17 +241,18 @@ document.addEventListener('DOMContentLoaded', async () => {
             const rawPropTitle = inq.property_title || propertiesMap[inq.property_id] || (inq.property_id ? `Property #${inq.property_id}` : '');
             const propParts = formatInquiryDisplayParts(rawPropTitle);
             const normStatus = getNormalizedStatus(inq.status);
-            const badgeClass = getBadgeClass(normStatus);
-            const dateStr = inq.created_at ? new Date(inq.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'Recent';
+            const safeStatus = escapeHtml(normStatus);
+            const safeBadgeClass = escapeHtml(getBadgeClass(normStatus));
+            const dateStr = escapeHtml(inq.created_at ? new Date(inq.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'Recent');
 
             mobileCards.push(`
-                <article class="mobile-data-card mobile-client-card" data-id="${id}">
+                <article class="mobile-data-card mobile-client-card" data-id="${safeId}">
                     <div class="mobile-card-top">
                         <div class="mobile-card-title-block">
                             <strong>${escapeHtml(name)}</strong>
                             <small>${escapeHtml(email)}</small>
                         </div>
-                        <span class="mobile-card-date">${escapeHtml(dateStr)}</span>
+                        <span class="mobile-card-date">${dateStr}</span>
                     </div>
                     <div class="mobile-card-detail">
                         <strong>${escapeHtml(propParts.primary)}</strong>
@@ -267,21 +268,21 @@ document.addEventListener('DOMContentLoaded', async () => {
                     </div>
                     <div class="mobile-card-actions-bar">
                         <button type="button"
-                                class="status-select-pill ${badgeClass}"
-                                id="mobile-badge-${id}"
-                                data-id="${id}"
-                                data-status="${escapeHtml(normStatus)}"
+                                class="status-select-pill ${safeBadgeClass}"
+                                id="mobile-badge-${safeId}"
+                                data-id="${safeId}"
+                                data-status="${safeStatus}"
+                                data-client-action="toggle-menu"
                                 aria-haspopup="listbox"
                                 aria-expanded="false"
-                                aria-label="Change inquiry status for ${escapeHtml(name)} (currently ${escapeHtml(normStatus)})"
-                                onclick="window.toggleStatusMenu(event, '${id}')">
+                                aria-label="Change inquiry status for ${escapeHtml(name)} (currently ${safeStatus})">
                             <span class="status-pill-dot" aria-hidden="true"></span>
-                            <span class="status-pill-label">${escapeHtml(normStatus)}</span>
+                            <span class="status-pill-label">${safeStatus}</span>
                             <svg class="status-select-chevron" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                                 <polyline points="6 9 12 15 18 9"></polyline>
                             </svg>
                         </button>
-                        <button type="button" class="action-btn view" onclick="window.viewInquiryDetails('${id}')">
+                        <button type="button" class="action-btn view" data-id="${safeId}" data-client-action="view">
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
                                 <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
                                 <circle cx="12" cy="12" r="3"></circle>
@@ -293,7 +294,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             `);
 
             return `
-                <tr data-id="${id}">
+                <tr data-id="${safeId}">
                     <td class="client-name-cell">
                         <strong>${escapeHtml(name)}</strong>
                         <small>${escapeHtml(email)}</small>
@@ -311,16 +312,16 @@ document.addEventListener('DOMContentLoaded', async () => {
                     <td>
                         <div class="status-cell-wrapper">
                             <button type="button"
-                                    class="status-select-pill ${badgeClass}"
-                                    id="badge-${id}"
-                                    data-id="${id}"
-                                    data-status="${escapeHtml(normStatus)}"
+                                    class="status-select-pill ${safeBadgeClass}"
+                                    id="badge-${safeId}"
+                                    data-id="${safeId}"
+                                    data-status="${safeStatus}"
+                                    data-client-action="toggle-menu"
                                     aria-haspopup="listbox"
                                     aria-expanded="false"
-                                    aria-label="Change inquiry status for ${escapeHtml(name)} (currently ${escapeHtml(normStatus)})"
-                                    onclick="window.toggleStatusMenu(event, '${id}')">
+                                    aria-label="Change inquiry status for ${escapeHtml(name)} (currently ${safeStatus})">
                                 <span class="status-pill-dot" aria-hidden="true"></span>
-                                <span class="status-pill-label">${escapeHtml(normStatus)}</span>
+                                <span class="status-pill-label">${safeStatus}</span>
                                 <svg class="status-select-chevron" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                                     <polyline points="6 9 12 15 18 9"></polyline>
                                 </svg>
@@ -328,7 +329,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                         </div>
                     </td>
                     <td>
-                        <button class="action-btn view" onclick="window.viewInquiryDetails('${id}')">
+                        <button class="action-btn view" type="button" data-id="${safeId}" data-client-action="view">
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
                                 <circle cx="12" cy="12" r="3"></circle>
@@ -343,6 +344,22 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (mobileList) {
             mobileList.innerHTML = mobileCards.join('');
         }
+        [tableBody, mobileList].forEach(container => {
+            if (container && !container.dataset.clientActionsBound) {
+                container.dataset.clientActionsBound = '1';
+                container.addEventListener('click', (event) => {
+                    const btn = event.target.closest('button[data-client-action]');
+                    if (!btn) return;
+                    const action = btn.getAttribute('data-client-action');
+                    const rawId = btn.getAttribute('data-id');
+                    if (action === 'toggle-menu' && typeof window.toggleStatusMenu === 'function') {
+                        window.toggleStatusMenu(event, rawId);
+                    } else if (action === 'view' && typeof window.viewInquiryDetails === 'function') {
+                        window.viewInquiryDetails(rawId);
+                    }
+                });
+            }
+        });
     }
 
     const STATUS_OPTIONS = [
@@ -609,9 +626,9 @@ document.addEventListener('DOMContentLoaded', async () => {
                 <div style="background: var(--light-green); padding: 14px 18px; border-radius: 10px; display: flex; justify-content: space-between; align-items: center;">
                     <div>
                         <strong style="color: var(--dark-green); font-size: 1.1rem; display: block;">${escapeHtml(name)}</strong>
-                        <span style="color: var(--text-muted); font-size: 0.85rem;">Submitted on: ${dateStr}</span>
+                        <span style="color: var(--text-muted); font-size: 0.85rem;">Submitted on: ${escapeHtml(dateStr)}</span>
                     </div>
-                    <span class="status-badge ${getBadgeClass(normStatus)}">${normStatus}</span>
+                    <span class="status-badge ${escapeHtml(getBadgeClass(normStatus))}">${escapeHtml(normStatus)}</span>
                 </div>
 
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; font-size: 0.9rem;">

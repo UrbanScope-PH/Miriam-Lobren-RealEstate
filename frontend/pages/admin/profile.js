@@ -43,18 +43,29 @@ document.addEventListener('DOMContentLoaded', async () => {
     const passwordForm = document.getElementById('passwordForm');
     const passwordAlertBox = document.getElementById('passwordAlertBox');
 
+    function escProfileHtml(val) {
+        if (typeof window.escapeHtml === 'function') return window.escapeHtml(val);
+        return String(val ?? '')
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
+    }
+
     function showAlert(message, type = 'success') {
         if (!alertBox) return;
-        alertBox.className = `alert-box ${type}`;
+        const safeType = type === 'success' ? 'success' : 'error';
+        alertBox.className = `alert-box ${safeType}`;
         alertBox.style.display = 'flex';
         alertBox.innerHTML = `
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                ${type === 'success' 
+                ${safeType === 'success' 
                     ? '<polyline points="20 6 9 17 4 12"></polyline>' 
                     : '<circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line>'
                 }
             </svg>
-            <span>${message}</span>
+            <span>${escProfileHtml(message)}</span>
         `;
         alertBox.scrollIntoView({ behavior: 'smooth', block: 'start' });
         setTimeout(() => {
@@ -64,17 +75,18 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     function showPasswordAlert(message, type = 'success') {
+        const safeType = type === 'success' ? 'success' : 'error';
         if (passwordAlertBox) {
-            passwordAlertBox.className = `alert-box ${type}`;
+            passwordAlertBox.className = `alert-box ${safeType}`;
             passwordAlertBox.style.display = 'flex';
             passwordAlertBox.innerHTML = `
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    ${type === 'success' 
+                    ${safeType === 'success' 
                         ? '<polyline points="20 6 9 17 4 12"></polyline>' 
                         : '<circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line>'
                     }
                 </svg>
-                <span>${message}</span>
+                <span>${escProfileHtml(message)}</span>
             `;
             passwordAlertBox.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
             setTimeout(() => {
@@ -83,16 +95,16 @@ document.addEventListener('DOMContentLoaded', async () => {
             }, 6000);
         }
         if (alertBox) {
-            alertBox.className = `alert-box ${type}`;
+            alertBox.className = `alert-box ${safeType}`;
             alertBox.style.display = 'flex';
             alertBox.innerHTML = `
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    ${type === 'success' 
+                    ${safeType === 'success' 
                         ? '<polyline points="20 6 9 17 4 12"></polyline>' 
                         : '<circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line>'
                     }
                 </svg>
-                <span>${message}</span>
+                <span>${escProfileHtml(message)}</span>
             `;
             setTimeout(() => {
                 alertBox.style.display = 'none';
@@ -185,17 +197,26 @@ document.addEventListener('DOMContentLoaded', async () => {
     const btnResetAvatar = document.getElementById('btnResetAvatar');
     const DEFAULT_AVATAR = '../../assets/images/agent.jpg';
 
+    const SAFE_DATA_IMAGE_REGEX = /^data:image\/(png|jpeg|jpg|webp|gif);base64,[A-Za-z0-9+/=]+$/i;
+    const ALLOWED_AVATAR_MIMES = new Set(['image/png', 'image/jpeg', 'image/jpg', 'image/webp']);
+
     function resolveAdminAvatar(avatarUrl) {
         if (!avatarUrl || typeof avatarUrl !== 'string') return DEFAULT_AVATAR;
         const trimmed = avatarUrl.trim();
         if (!trimmed) return DEFAULT_AVATAR;
-        if (trimmed.startsWith('data:') || /^https?:\/\//i.test(trimmed)) {
+        if (SAFE_DATA_IMAGE_REGEX.test(trimmed) || /^https?:\/\//i.test(trimmed)) {
             return trimmed;
+        }
+        if (trimmed.startsWith('data:')) {
+            return DEFAULT_AVATAR;
         }
         if (trimmed.startsWith('/') || trimmed.startsWith('../')) {
-            return trimmed;
+            return trimmed.includes('..') && !trimmed.startsWith('../../assets/images/') ? DEFAULT_AVATAR : trimmed;
         }
         const clean = trimmed.replace(/^\/+/, '');
+        if (!clean.startsWith('assets/images/') || clean.includes('..')) {
+            return DEFAULT_AVATAR;
+        }
         return '../../' + clean;
     }
 
@@ -203,15 +224,16 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (!avatarUrl || typeof avatarUrl !== 'string') return false;
         const trimmed = avatarUrl.trim();
         if (!trimmed) return false;
-        if (trimmed.startsWith('data:image/')) return true;
+        if (SAFE_DATA_IMAGE_REGEX.test(trimmed)) return true;
+        if (trimmed.startsWith('data:')) return false;
         if (/^https?:\/\//i.test(trimmed)) return true;
         if (trimmed.includes('agent.jpg')) return false;
-        return true;
+        return false;
     }
 
     // Clean up any stale/corrupted default path stored in custom avatar key
     let cachedCustom = localStorage.getItem('urbanscope_profile_avatar');
-    if (cachedCustom && (cachedCustom.includes('agent.jpg') || (!cachedCustom.startsWith('data:') && !/^https?:\/\//i.test(cachedCustom)))) {
+    if (cachedCustom && (cachedCustom.includes('agent.jpg') || (!SAFE_DATA_IMAGE_REGEX.test(cachedCustom) && !/^https?:\/\//i.test(cachedCustom)))) {
         localStorage.removeItem('urbanscope_profile_avatar');
         cachedCustom = null;
     }
@@ -250,7 +272,33 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     const MAX_AVATAR_BYTES = 5 * 1024 * 1024; // 5MB
 
-    function readAndOptimizeAvatar(file) {
+    function detectRasterImageMime(file) {
+        return new Promise((resolve, reject) => {
+            if (!file) return reject(new Error('No file selected.'));
+            const reader = new FileReader();
+            reader.onerror = () => reject(new Error('Failed to inspect file header.'));
+            reader.onload = (e) => {
+                const buf = e.target?.result;
+                if (!(buf instanceof ArrayBuffer) || buf.byteLength < 12) {
+                    return reject(new Error('Invalid or empty image file.'));
+                }
+                const bytes = new Uint8Array(buf);
+                const isPng = bytes[0] === 0x89 && bytes[1] === 0x50 && bytes[2] === 0x4E && bytes[3] === 0x47
+                    && bytes[4] === 0x0D && bytes[5] === 0x0A && bytes[6] === 0x1A && bytes[7] === 0x0A;
+                if (isPng) return resolve('image/png');
+                const isJpeg = bytes[0] === 0xFF && bytes[1] === 0xD8 && bytes[2] === 0xFF;
+                if (isJpeg) return resolve('image/jpeg');
+                const isWebp = bytes[0] === 0x52 && bytes[1] === 0x49 && bytes[2] === 0x46 && bytes[3] === 0x46
+                    && bytes[8] === 0x57 && bytes[9] === 0x45 && bytes[10] === 0x42 && bytes[11] === 0x50;
+                if (isWebp) return resolve('image/webp');
+                reject(new Error('Unsupported or corrupted image signature. Please upload PNG, JPG, or WebP.'));
+            };
+            reader.readAsArrayBuffer(file.slice(0, 16));
+        });
+    }
+
+    async function readAndOptimizeAvatar(file) {
+        const verifiedMime = await detectRasterImageMime(file);
         return new Promise((resolve, reject) => {
             const reader = new FileReader();
             reader.onerror = () => reject(new Error('Failed to read file'));
@@ -277,8 +325,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                     ctx.imageSmoothingEnabled = true;
                     ctx.imageSmoothingQuality = 'high';
                     ctx.drawImage(img, 0, 0, w, h);
-                    const mimeType = file.type === 'image/png' ? 'image/png' : 'image/jpeg';
-                    resolve(canvas.toDataURL(mimeType, 0.9));
+                    const outputMime = verifiedMime === 'image/png' ? 'image/png' : (verifiedMime === 'image/webp' ? 'image/webp' : 'image/jpeg');
+                    resolve(canvas.toDataURL(outputMime, 0.9));
                 };
                 img.src = e.target.result;
             };
@@ -298,8 +346,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                 return;
             }
 
-            if (!file.type || !file.type.startsWith('image/')) {
-                showAlert('Invalid file format. Please upload an image file (PNG, JPG, WebP).', 'error');
+            if (!file.type || !ALLOWED_AVATAR_MIMES.has(file.type.toLowerCase())) {
+                showAlert('Invalid file format. Please upload PNG, JPG, or WebP.', 'error');
                 avatarFileInput.value = '';
                 return;
             }
@@ -416,7 +464,9 @@ document.addEventListener('DOMContentLoaded', async () => {
             const mergedAdmin = { ...storedAdmin, ...updatedData };
             localStorage.setItem('adminUser', JSON.stringify(mergedAdmin));
             localStorage.setItem('urbanscope_user', JSON.stringify(mergedAdmin));
-            localStorage.setItem('urbanscope_demo_user', JSON.stringify(mergedAdmin));
+            if (window.location && window.location.protocol === 'file:') {
+                localStorage.setItem('urbanscope_demo_user', JSON.stringify(mergedAdmin));
+            }
             try {
                 window.dispatchEvent(new CustomEvent('urbanscope:profileUpdated', { detail: updatedData }));
             } catch (e) {}
@@ -495,21 +545,15 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
 
             try {
+                try {
+                    localStorage.removeItem('adminPassword');
+                    localStorage.removeItem('urbanscope_admin_password_updated');
+                } catch (_) {}
                 let result = null;
                 if (typeof apiUpdateAdminPassword === 'function') {
                     result = await apiUpdateAdminPassword(curPass, newPass);
                 } else {
-                    // Fallback to local storage
-                    const activePass = localStorage.getItem('adminPassword') || '';
-                    const updatedPass = localStorage.getItem('urbanscope_admin_password_updated') || '';
-                    const effectivePass = updatedPass || activePass || 'realestate2026';
-                    if (curPass !== effectivePass) {
-                        result = { success: false, error: 'The current password you entered is incorrect.' };
-                    } else {
-                        localStorage.setItem('adminPassword', newPass);
-                        localStorage.setItem('urbanscope_admin_password_updated', newPass);
-                        result = { success: true };
-                    }
+                    result = { success: false, error: 'Authentication service is unavailable. Please reload the page.' };
                 }
 
                 if (!result || !result.success) {

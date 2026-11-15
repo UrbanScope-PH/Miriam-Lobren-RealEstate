@@ -4,6 +4,29 @@
  * in-page search filtering without page navigation, and smooth scrolling.
  */
 
+function _escHtml(val) {
+    if (typeof window.escapeHtml === 'function') return window.escapeHtml(val);
+    return String(val ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+
+function _safeImgUrl(url, fallback = 'assets/images/casasuerte.jpg') {
+    if (typeof window.sanitizeImageUrl === 'function') {
+        return window.sanitizeImageUrl(url, fallback);
+    }
+    const raw = String(url || '').trim();
+    if (!raw) return fallback;
+    if (/^https?:\/\//i.test(raw)) return raw;
+    if (/^data:image\/(png|jpeg|jpg|webp|gif);base64,[A-Za-z0-9+/=]+$/i.test(raw)) return raw;
+    const cleaned = raw.replace(/^(\.\.\/)+/, '').replace(/^\/+/, '');
+    if (cleaned.startsWith('assets/images/') && !cleaned.includes('..')) return cleaned;
+    return fallback;
+}
+
 function scrollCategories(direction) {
     const tabs = document.getElementById('categoryTabs');
     if (tabs) {
@@ -149,10 +172,7 @@ function resolveCardImage(url, item) {
         if (t.includes('benecia')) return 'assets/images/benecia-facade.jpg';
         if (t.includes('amore')) return 'assets/images/amore-facade.jpg';
     }
-    if (!url) return 'assets/images/casasuerte.jpg';
-    if (url.startsWith('http') || url.startsWith('data:')) return url;
-    if (url.startsWith('../')) return url.substring(3);
-    return url;
+    return _safeImgUrl(url, 'assets/images/casasuerte.jpg');
 }
 
 function getPropertyDetailUrl(item) {
@@ -163,7 +183,7 @@ function getPropertyDetailUrl(item) {
     if (title.includes('kathleen')) return 'pages/properties/kathleen.html';
     if (title.includes('benecia')) return 'pages/properties/benecia.html';
     if (title.includes('amore')) return 'pages/properties/amore-classico.html';
-    return `pages/properties/property-detail.html?id=${item.id}`;
+    return `pages/properties/property-detail.html?id=${encodeURIComponent(String(item.id ?? ''))}`;
 }
 
 function getPropertyPricingMeta(item) {
@@ -241,7 +261,7 @@ function showFeedbackToast(msg, icon = '✓') {
         `;
         document.body.appendChild(toast);
     }
-    toast.innerHTML = `<span style="color: #4ade80; font-weight: 800;">${icon}</span> <span>${msg}</span>`;
+    toast.innerHTML = `<span style="color: #4ade80; font-weight: 800;">${_escHtml(icon)}</span> <span>${_escHtml(msg)}</span>`;
     requestAnimationFrame(() => {
         toast.style.opacity = '1';
         toast.style.transform = 'translateX(-50%) translateY(0)';
@@ -254,7 +274,9 @@ function showFeedbackToast(msg, icon = '✓') {
 }
 
 function copyPropertyLink(id) {
-    const url = window.location.origin + '/pages/properties/property-detail.html?id=' + id;
+    let rawId = String(id ?? '');
+    try { rawId = decodeURIComponent(rawId); } catch (e) {}
+    const url = window.location.origin + '/pages/properties/property-detail.html?id=' + encodeURIComponent(rawId);
     if (navigator.clipboard && navigator.clipboard.writeText) {
         navigator.clipboard.writeText(url).then(() => {
             showFeedbackToast('Property link copied to clipboard!');
@@ -366,14 +388,20 @@ function renderFeaturedGrid(list) {
             : (isRfo ? `<span class="property-status-badge badge-rfo">RFO Ready</span>` : '');
         const mobileExtraClass = idx >= 3 ? 'mobile-collapsed-card' : '';
 
+        const safeDetailUrl = _escHtml(detailUrl);
+        const safeImgSrc = _escHtml(imgSrc);
+        const safeTitle = _escHtml(displayTitle);
+        const safeLocation = _escHtml(item.location || '');
+        const safeId = _escHtml(encodeURIComponent(String(item.id ?? '')));
+
         return `
-        <article class="property-card ${isSold ? 'card-sold' : ''} ${mobileExtraClass} reveal-on-scroll" onclick="location.href='${detailUrl}'">
+        <article class="property-card ${isSold ? 'card-sold' : ''} ${mobileExtraClass} reveal-on-scroll" onclick="location.href='${safeDetailUrl}'">
             <div class="property-image">
                 ${badgeHtml}
-                <img src="${imgSrc}" alt="${displayTitle}" decoding="async" onerror="this.src='assets/images/property1.jpg'">
+                <img src="${safeImgSrc}" alt="${safeTitle}" decoding="async" onerror="this.src='assets/images/property1.jpg'">
                 <div class="card-actions">
                     <button class="card-icon-btn share-btn" type="button" aria-label="Share property"
-                        onclick="event.stopPropagation(); copyPropertyLink('${item.id}')">
+                        onclick="event.stopPropagation(); copyPropertyLink('${safeId}')">
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                             stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <circle cx="18" cy="5" r="3"></circle>
@@ -386,31 +414,31 @@ function renderFeaturedGrid(list) {
                 </div>
             </div>
             <div class="property-info">
-                <h3 class="property-title">${displayTitle}</h3>
-                <p class="property-location">${item.location}</p>
+                <h3 class="property-title">${safeTitle}</h3>
+                <p class="property-location">${safeLocation}</p>
                 <div class="property-details">
                     <span class="spec-pill"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                             stroke-width="2">
                             <path d="M2 4v16M2 8h18a2 2 0 0 1 2 2v10M2 17h20M6 8v9" />
-                        </svg> ${bedLabel}</span>
+                        </svg> ${_escHtml(bedLabel)}</span>
                     <span class="spec-pill"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                             stroke-width="2">
                             <path d="M9 6h6a2 2 0 0 1 2 2v10H7V8a2 2 0 0 1 2-2z" />
-                        </svg> ${bathLabel}</span>
+                        </svg> ${_escHtml(bathLabel)}</span>
                     <span class="spec-pill"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                             stroke-width="2">
                             <rect x="3" y="3" width="18" height="18" rx="2" />
-                        </svg> ${specsLot}</span>
+                        </svg> ${_escHtml(specsLot)}</span>
                 </div>
                 <div class="property-tcp-container">
                     <div class="tcp-pill-tag">
                         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
-                        <span>${pricing.tcpTag}</span>
+                        <span>${_escHtml(pricing.tcpTag)}</span>
                     </div>
                     <div class="property-price-row">
-                        <strong class="property-price tabular-nums">${pricing.priceDisplay}</strong>
+                        <strong class="property-price tabular-nums">${_escHtml(pricing.priceDisplay)}</strong>
                     </div>
-                    <p class="tcp-subtext tabular-nums">${pricing.tcpSubtext}</p>
+                    <p class="tcp-subtext tabular-nums">${_escHtml(pricing.tcpSubtext)}</p>
                 </div>
             </div>
         </article>
@@ -713,7 +741,7 @@ function initSearchSelect(selectEl) {
         const selectedOpt = selectEl.options[selectEl.selectedIndex] || selectEl.options[0];
         if (!selectedOpt) return;
         const icon = getOptionIcon(selectedOpt.value, selectedOpt.text);
-        valueSpan.innerHTML = `<span class="search-select-icon">${icon}</span><span class="search-select-text">${selectedOpt.text}</span>`;
+        valueSpan.innerHTML = `<span class="search-select-icon">${icon}</span><span class="search-select-text">${_escHtml(selectedOpt.text)}</span>`;
     }
 
     function closeDropdown() {
@@ -762,12 +790,12 @@ function initSearchSelect(selectEl) {
                 const sub = opt.text.slice(commaIdx + 1).trim();
                 optionTextHtml = `
                     <div class="search-select-option-text search-select-option-stacked">
-                        <span class="search-select-option-main">${main}</span>
-                        <span class="search-select-option-sub">${sub}</span>
+                        <span class="search-select-option-main">${_escHtml(main)}</span>
+                        <span class="search-select-option-sub">${_escHtml(sub)}</span>
                     </div>
                 `;
             } else {
-                optionTextHtml = `<span class="search-select-option-text">${opt.text}</span>`;
+                optionTextHtml = `<span class="search-select-option-text">${_escHtml(opt.text)}</span>`;
             }
 
             optDiv.innerHTML = `
@@ -893,7 +921,7 @@ function initSortSelect(selectEl) {
         const selectedOpt = selectEl.options[selectEl.selectedIndex] || selectEl.options[0];
         if (!selectedOpt) return;
         const icon = getSortOptionIcon(selectedOpt.value, selectedOpt.text);
-        valueSpan.innerHTML = `<span class="sort-select-icon">${icon}</span><span class="sort-select-text">${selectedOpt.text}</span>`;
+        valueSpan.innerHTML = `<span class="sort-select-icon">${icon}</span><span class="sort-select-text">${_escHtml(selectedOpt.text)}</span>`;
     }
 
     function closeDropdown() {
@@ -938,7 +966,7 @@ function initSortSelect(selectEl) {
             optDiv.innerHTML = `
                 <div class="sort-select-option-content">
                     <span class="sort-select-option-icon">${iconSvg}</span>
-                    <span class="sort-select-option-text">${opt.text}</span>
+                    <span class="sort-select-option-text">${_escHtml(opt.text)}</span>
                 </div>
                 <span class="sort-select-check" aria-hidden="true">
                     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">

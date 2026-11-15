@@ -63,25 +63,30 @@ python3 run.py
 
 | Variable | Default | Purpose |
 | :--- | :--- | :--- |
+| `URBANSCOPE_ENV` | `development` | Set to `production` in production deployments (disables debug/Swagger `/docs` unless enabled, enforces strict HTTPS/CORS/secret checks) |
 | `HOST` | `127.0.0.1` | Server host |
 | `PORT` | `8000` | Server port |
-| `URBANSCOPE_SECRET_KEY` | dev fallback | JWT signing secret. **Set this in production.** |
+| `ALLOWED_ORIGINS` | local dev defaults | Comma-separated allowed CORS origins for production APIs |
+| `FORCE_HTTPS` | `false` | Redirects non-HTTPS requests to HTTPS when enabled behind TLS proxies |
+| `ENABLE_API_DOCS` | `true` (dev) | Controls `/docs`, `/redoc`, and `/openapi.json` exposure (disabled automatically when `URBANSCOPE_ENV=production`) |
+| `URBANSCOPE_SECRET_KEY` | git-ignored dev key | JWT signing secret (`>= 32` chars). **Required in production.** |
 | `GOOGLE_CLIENT_ID` | *(empty)* | Google OAuth 2.0 Web Client ID (`*.apps.googleusercontent.com`) for Google Sign-In |
-| `VERCEL_ADMIN_SESSION_SECRET` | *(required on Vercel)* | Private random signing secret for 12-hour Admin/Superadmin page sessions. Configure in Vercel Project Settings; at least 32 characters. Hosted admin sign-in uses Google for the existing staff accounts. |
+| `VERCEL_ADMIN_SESSION_SECRET` | *(required on Vercel)* | Private random signing secret (`>= 32` chars) for signed `HttpOnly` user and Admin/Superadmin session cookies. |
 | `VERCEL_ADMIN_EMAILS` | *(optional)* | Comma-separated additional Google email addresses permitted to use the Vercel Admin portal. |
 | `RESEND_API_KEY` | *(required for email OTP)* | Private Resend key used by server endpoints to send registration and password-recovery codes. |
 | `RESEND_FROM_EMAIL` | `UrbanScope <noreply@miriamlobren.site>` | Verified sender address configured in Resend (custom domain `miriamlobren.site`). |
-| `AUTH_OTP_SECRET` | *(required for email OTP)* | Private random secret of at least 32 characters used to hash OTPs. |
-| `SUPABASE_SERVICE_ROLE_KEY` | *(required on Vercel for email OTP)* | Private server-side key used to store challenges and manage verified accounts. Never add it to frontend code. |
+| `AUTH_OTP_SECRET` | *(required for email OTP)* | Private random secret (`>= 32` chars) used to HMAC-hash OTPs. |
+| `SUPABASE_SERVICE_ROLE_KEY` | *(required on Vercel)* | Server-only key used by `/api/*` endpoints to read/write RLS-protected Supabase tables and rate-limit RPCs. Never expose in frontend JS. |
+| `TURNSTILE_SITE_KEY` / `TURNSTILE_SECRET_KEY` | *(optional)* | Optional Cloudflare Turnstile widget keys complementing built-in honeypot, form-timing, and distributed rate-limiting checks. |
 
-For hosted email verification and recovery, apply `supabase/migrations/20261105120000_email_otp_auth.sql` and set the four OTP variables in Vercel Project Settings before redeploying. Local FastAPI also needs the Resend credentials and OTP secret; add the service-role key when local account changes should sync to the hosted database.
+For hosted deployments, apply all Supabase migrations through `supabase/migrations/20261115031500_security_rls_and_rate_limits.sql`, configure the private secrets in Vercel Project Settings, and set platform spend/billing caps on Vercel, Supabase, Resend, and Google Cloud before deploying. Local development generates initial staff bootstrap credentials once in git-ignored `backend/.bootstrap_credentials.txt` unless `SEED_*_PASSWORD` env vars are provided.
 
-To reset the data, delete `backend/urbanscope.db` and restart the server.
+To reset local SQLite data, delete `backend/urbanscope.db` and restart the server.
 
 > [!NOTE]
-> Seeded admin accounts are for local development only. Change them and set
-> `URBANSCOPE_SECRET_KEY` before deploying publicly. For Vercel, also set
-> `VERCEL_ADMIN_SESSION_SECRET` in the project's Environment Variables and redeploy.
+> Never store admin passwords or service-role keys in source control. Set
+> `URBANSCOPE_ENV=production`, `URBANSCOPE_SECRET_KEY`, `VERCEL_ADMIN_SESSION_SECRET`,
+> `AUTH_OTP_SECRET`, and `SUPABASE_SERVICE_ROLE_KEY` before deploying publicly.
 
 ---
 

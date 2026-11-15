@@ -110,9 +110,38 @@ document.addEventListener("DOMContentLoaded", () => {
         propertyImages.files = transfer.files;
     }
 
+    const MAX_PROPERTY_IMAGE_BYTES = 5 * 1024 * 1024;
+    const ALLOWED_PROPERTY_IMAGE_MIMES = new Set(["image/png", "image/jpeg", "image/jpg", "image/webp"]);
+
+    function detectSafePropertyImageMime(file) {
+        return new Promise((resolve) => {
+            if (!file) return resolve(null);
+            if (file.size > MAX_PROPERTY_IMAGE_BYTES) return resolve(null);
+            if (!file.type || !ALLOWED_PROPERTY_IMAGE_MIMES.has(file.type.toLowerCase())) return resolve(null);
+            const reader = new FileReader();
+            reader.onerror = () => resolve(null);
+            reader.onload = (e) => {
+                const buf = e.target?.result;
+                if (!(buf instanceof ArrayBuffer) || buf.byteLength < 12) return resolve(null);
+                const bytes = new Uint8Array(buf);
+                const isPng = bytes[0] === 0x89 && bytes[1] === 0x50 && bytes[2] === 0x4E && bytes[3] === 0x47
+                    && bytes[4] === 0x0D && bytes[5] === 0x0A && bytes[6] === 0x1A && bytes[7] === 0x0A;
+                if (isPng) return resolve("image/png");
+                const isJpeg = bytes[0] === 0xFF && bytes[1] === 0xD8 && bytes[2] === 0xFF;
+                if (isJpeg) return resolve("image/jpeg");
+                const isWebp = bytes[0] === 0x52 && bytes[1] === 0x49 && bytes[2] === 0x46 && bytes[3] === 0x46
+                    && bytes[8] === 0x57 && bytes[9] === 0x45 && bytes[10] === 0x42 && bytes[11] === 0x50;
+                if (isWebp) return resolve("image/webp");
+                resolve(null);
+            };
+            reader.readAsArrayBuffer(file.slice(0, 16));
+        });
+    }
+
     if (propertyImages && imagePreview) {
-        propertyImages.addEventListener("change", () => {
-            const incomingFiles = Array.from(propertyImages.files);
+        propertyImages.addEventListener("change", async () => {
+            const incomingFiles = Array.from(propertyImages.files || []);
+            let rejectedCount = 0;
 
             const existingKeys = new Set(
                 selectedFiles.map((file) =>
@@ -120,19 +149,28 @@ document.addEventListener("DOMContentLoaded", () => {
                 )
             );
 
-            incomingFiles.forEach((file) => {
-                if (!file.type.startsWith("image/")) {
-                    return;
+            for (const file of incomingFiles) {
+                const safeMime = await detectSafePropertyImageMime(file);
+                if (!safeMime) {
+                    rejectedCount += 1;
+                    continue;
                 }
 
-                const key =
-                    `${file.name}-${file.size}-${file.lastModified}`;
-
+                const key = `${file.name}-${file.size}-${file.lastModified}`;
                 if (!existingKeys.has(key)) {
                     selectedFiles.push(file);
                     existingKeys.add(key);
                 }
-            });
+            }
+
+            if (rejectedCount > 0) {
+                const msg = "Only valid PNG, JPEG, or WebP images under 5MB are allowed.";
+                if (typeof window.showFeedbackToast === "function") {
+                    window.showFeedbackToast(msg, "warn");
+                } else {
+                    alert(msg);
+                }
+            }
 
             updateFileInput();
             renderImagePreviews();
@@ -159,9 +197,11 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-    function readImageFileAsDataUrl(file) {
+    async function readImageFileAsDataUrl(file) {
+        if (!file) return null;
+        const verifiedMime = await detectSafePropertyImageMime(file);
+        if (!verifiedMime) return null;
         return new Promise((resolve) => {
-            if (!file) return resolve(null);
             const reader = new FileReader();
             reader.onload = (e) => {
                 const img = new Image();
@@ -183,9 +223,10 @@ document.addEventListener("DOMContentLoaded", () => {
                     canvas.height = height;
                     const ctx = canvas.getContext("2d");
                     ctx.drawImage(img, 0, 0, width, height);
-                    resolve(canvas.toDataURL("image/jpeg", 0.82));
+                    const outputMime = verifiedMime === "image/png" ? "image/png" : (verifiedMime === "image/webp" ? "image/webp" : "image/jpeg");
+                    resolve(canvas.toDataURL(outputMime, 0.82));
                 };
-                img.onerror = () => resolve(e.target.result);
+                img.onerror = () => resolve(null);
                 img.src = e.target.result;
             };
             reader.onerror = () => resolve(null);
@@ -215,6 +256,19 @@ document.addEventListener("DOMContentLoaded", () => {
             let uploadedImageUrl = null;
             if (selectedFiles.length > 0) {
                 uploadedImageUrl = await readImageFileAsDataUrl(selectedFiles[0]);
+                if (!uploadedImageUrl) {
+                    if (submitBtn) {
+                        submitBtn.disabled = false;
+                        submitBtn.innerText = originalBtnText;
+                    }
+                    const errMsg = "Uploaded file could not be verified as a valid PNG, JPEG, or WebP image under 5MB.";
+                    if (typeof window.showFeedbackToast === "function") {
+                        window.showFeedbackToast(errMsg, "warn");
+                    } else {
+                        alert(errMsg);
+                    }
+                    return;
+                }
             }
 
             const propertyName = document.getElementById("propertyName")?.value.trim() || "New Listing";

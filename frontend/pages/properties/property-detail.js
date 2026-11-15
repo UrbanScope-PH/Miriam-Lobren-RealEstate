@@ -16,6 +16,28 @@ let panStartX = 0;
 let panStartY = 0;
 let documentModalPreviousOverflow = null;
 
+function _escDetailHtml(val) {
+    if (typeof window.escapeHtml === 'function') return window.escapeHtml(val);
+    return String(val ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+
+function _safeDetailImg(url, fallback = '../../assets/images/property1.jpg') {
+    const raw = String(url || '').trim();
+    if (!raw) return fallback;
+    if (/^https?:\/\//i.test(raw)) return raw;
+    if (/^data:image\/(png|jpeg|jpg|webp|gif);base64,[A-Za-z0-9+/=]+$/i.test(raw)) return raw;
+    const cleaned = raw.replace(/^(\.\.\/)+/, '').replace(/^\/+/, '');
+    if (cleaned.startsWith('assets/images/') && !cleaned.includes('..')) {
+        return '../../' + cleaned;
+    }
+    return fallback;
+}
+
 function initGallery() {
     const mainImg = document.getElementById('mainGalleryImg');
     const thumbs = document.querySelectorAll('.thumb');
@@ -216,9 +238,9 @@ async function loadPropertyFromDb() {
     else if (tCheck.includes('amore')) cleanTitle = 'Amore Classico';
     if (titleEl) titleEl.innerText = cleanTitle;
     if (locEl) {
-        locEl.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg> ${property.location}`;
+        locEl.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg> ${_escDetailHtml(property.location || '')}`;
     }
-    if (priceEl) priceEl.innerText = `₱${Number(property.price).toLocaleString()}`;
+    if (priceEl) priceEl.innerText = `₱${Number(property.price || 0).toLocaleString()}`;
     
     if (statusBadge && property.status) {
         const soldOut = isSoldOutProperty(property);
@@ -228,7 +250,7 @@ async function loadPropertyFromDb() {
     }
 
     if (mainImgEl && property.image_url) {
-        const fullImg = (property.image_url.startsWith('http') || property.image_url.startsWith('data:')) ? property.image_url : '../../' + property.image_url.replace(/^(\.\.\/)+/, '');
+        const fullImg = _safeDetailImg(property.image_url, '../../assets/images/property1.jpg');
         mainImgEl.src = fullImg;
         galleryImages[0] = fullImg;
         updateGallery();
@@ -321,13 +343,16 @@ async function loadPropertyFromDb() {
     }
 
     if (propImages.length > 0 && (!window.galleryImages || window.galleryImages.length <= 1)) {
-        galleryImages = propImages;
+        galleryImages = propImages.map(src => _safeDetailImg(src, '../../assets/images/property1.jpg'));
         if (thumbsContainer) {
-            thumbsContainer.innerHTML = propImages.map((src, idx) => `
-                <div class="thumb ${idx === 0 ? 'active' : ''}" onclick="selectThumb(${idx}, '${src}')">
-                    <img src="${src}" alt="Photo ${idx + 1}" loading="lazy" decoding="async">
+            thumbsContainer.innerHTML = galleryImages.map((src, idx) => {
+                const safeSrc = _escDetailHtml(src);
+                return `
+                <div class="thumb ${idx === 0 ? 'active' : ''}" onclick="selectThumb(${idx}, '${safeSrc}')">
+                    <img src="${safeSrc}" alt="Photo ${idx + 1}" loading="lazy" decoding="async">
                 </div>
-            `).join('');
+            `;
+            }).join('');
         }
         if (mainImgEl) {
             mainImgEl.src = galleryImages[0];
@@ -342,42 +367,42 @@ async function loadPropertyFromDb() {
             <div class="spec-item">
                 <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M2 4v16M2 8h18a2 2 0 0 1 2 2v10M2 17h20M6 8v9"/></svg>
                 <div class="spec-info">
-                    <strong>${property.bedrooms || 0}</strong>
+                    <strong>${_escDetailHtml(property.bedrooms || 0)}</strong>
                     <span>Bed Rooms</span>
                 </div>
             </div>
             <div class="spec-item">
                 <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 12v7a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-7M2 12h20M7 12V5a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v7"/></svg>
                 <div class="spec-info">
-                    <strong>${property.bathrooms || 0}</strong>
+                    <strong>${_escDetailHtml(property.bathrooms || 0)}</strong>
                     <span>Bath Rooms</span>
                 </div>
             </div>
             <div class="spec-item">
                 <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 3v18M15 3v18M3 9h18M3 15h18"/></svg>
                 <div class="spec-info">
-                    <strong>${property.lot_area || 0} sqm</strong>
+                    <strong>${_escDetailHtml(property.lot_area || 0)} sqm</strong>
                     <span>Lot Area</span>
                 </div>
             </div>
             <div class="spec-item">
                 <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 21h18M5 21V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16M9 9h6M9 13h6M9 17h6"/></svg>
                 <div class="spec-info">
-                    <strong>${property.floor_area || 0} sqm</strong>
+                    <strong>${_escDetailHtml(property.floor_area || 0)} sqm</strong>
                     <span>Floor Area</span>
                 </div>
             </div>
             <div class="spec-item">
                 <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M16 3H8L4 7h16l-4-4z"/><circle cx="7.5" cy="15.5" r="1.5"/><circle cx="16.5" cy="15.5" r="1.5"/></svg>
                 <div class="spec-info">
-                    <strong>${property.carports || 1} Car</strong>
+                    <strong>${_escDetailHtml(property.carports || 1)} Car</strong>
                     <span>Garage / Carport</span>
                 </div>
             </div>
             <div class="spec-item">
                 <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 22"/></svg>
                 <div class="spec-info">
-                    <strong>${property.property_type || 'Residential'}</strong>
+                    <strong>${_escDetailHtml(property.property_type || 'Residential')}</strong>
                     <span>Property Type</span>
                 </div>
             </div>
@@ -399,8 +424,8 @@ async function loadPropertyFromDb() {
                 const col1 = list.slice(0, half);
                 const col2 = list.slice(half);
                 amenitiesGrid.innerHTML = `
-                    <ul>${col1.map(item => `<li><span class="bullet">&bull;</span> ${item}</li>`).join('')}</ul>
-                    <ul>${col2.map(item => `<li><span class="bullet">&bull;</span> ${item}</li>`).join('')}</ul>
+                    <ul>${col1.map(item => `<li><span class="bullet">&bull;</span> ${_escDetailHtml(item)}</li>`).join('')}</ul>
+                    <ul>${col2.map(item => `<li><span class="bullet">&bull;</span> ${_escDetailHtml(item)}</li>`).join('')}</ul>
                 `;
             }
         }
@@ -890,7 +915,7 @@ function openDocumentPreview(src, title) {
     const heading = dialog.querySelector('#tcpDocumentTitle');
     const image = dialog.querySelector('#tcpDocumentImage');
     if (heading) heading.textContent = title || 'Official Computation Document';
-    if (image) image.src = src;
+    if (image) image.src = _safeDetailImg(src, '../../assets/images/property1.jpg');
     documentModalPreviousOverflow = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
     if (!dialog.open) dialog.showModal();
@@ -974,16 +999,19 @@ function syncLightboxImage() {
     const thumbsContainer = document.getElementById('lightboxThumbs');
     if (galleryImages.length === 0) return;
 
-    const currentSrc = galleryImages[currentSlide] || '';
+    const currentSrc = _safeDetailImg(galleryImages[currentSlide] || '', '../../assets/images/property1.jpg');
     if (img) img.src = currentSrc;
     if (counter) counter.textContent = `${currentSlide + 1} / ${galleryImages.length}`;
 
     if (thumbsContainer) {
-        thumbsContainer.innerHTML = galleryImages.map((src, i) => `
+        thumbsContainer.innerHTML = galleryImages.map((src, i) => {
+            const safeSrc = _escDetailHtml(_safeDetailImg(src, '../../assets/images/property1.jpg'));
+            return `
             <div class="lightbox-thumb ${i === currentSlide ? 'active' : ''}" onclick="selectLightboxSlide(${i})">
-                <img src="${src}" alt="Slide ${i + 1}" loading="lazy" decoding="async">
+                <img src="${safeSrc}" alt="Slide ${i + 1}" loading="lazy" decoding="async">
             </div>
-        `).join('');
+        `;
+        }).join('');
     }
     resetLightboxZoom();
 }

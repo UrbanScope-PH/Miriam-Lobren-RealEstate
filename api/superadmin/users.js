@@ -4,7 +4,6 @@ import {
     getCloudUser,
     getCloudUserById,
     insertCloudUser,
-    isSameOrigin,
     isValidEmail,
     jsonResponse,
     normalizeEmail,
@@ -12,29 +11,50 @@ import {
     updateCloudUserById
 } from '../../lib/email-auth.js';
 import { readAdminSession, SUPERADMIN_EMAIL } from '../../lib/admin-session.js';
-
-function publicUser(user) {
-    if (!user) return null;
-    return {
-        id: user.id,
-        email: user.email,
-        full_name: user.full_name,
-        phone: user.phone || '',
-        role: user.role || 'client',
-        avatar_url: user.avatar_url || 'assets/images/agent.jpg',
-        created_at: user.created_at
-    };
-}
+import {
+    checkRateLimit,
+    getClientIp,
+    getServiceRoleKey,
+    restUrl,
+    sanitizeUser,
+    serviceHeaders,
+    verifyCsrfIfAuthenticated
+} from '../../lib/server-security.js';
 
 export default async function handler(req, res) {
-    if (req.method !== 'POST') return jsonResponse({ success: false, error: 'Method not allowed.' }, 405, res);
-    if (!isSameOrigin(req)) return jsonResponse({ success: false, error: 'This request is not allowed.' }, 403, res);
     const session = readAdminSession(req);
     if (!session || session.email !== SUPERADMIN_EMAIL || session.role !== 'superadmin') {
         return jsonResponse({ success: false, error: 'Only the Superadmin can manage accounts.' }, 403, res);
     }
-    if (!String(process.env.SUPABASE_SERVICE_ROLE_KEY || '').trim()) {
+    if (!getServiceRoleKey()) {
         return jsonResponse({ success: false, error: 'Cloud account management is not configured.' }, 503, res);
+    }
+
+    if (req.method === 'GET') {
+        try {
+            const listRes = await fetch(restUrl('users', {
+                select: 'id,email,full_name,phone,role,avatar_url,bio,email_verified_at,created_at,updated_at',
+                order: 'id.asc'
+            }), { headers: serviceHeaders({}, true) });
+            if (!listRes.ok) {
+                return jsonResponse({ success: false, error: 'Unable to load user directory.' }, 502, res);
+            }
+            const rows = await listRes.json().catch(() => []);
+            const active = Array.isArray(rows)
+                ? rows.filter((u) => u && u.bio !== '__URBANSCOPE_DELETED__' && u.password_hash !== '__DELETED_ACCOUNT__' && !String(u.email || '').startsWith('deleted_')).map(sanitizeUser)
+                : [];
+            return jsonResponse({ success: true, users: active }, 200, res);
+        } catch (_) {
+            return jsonResponse({ success: false, error: 'Unable to load user directory.' }, 503, res);
+        }
+    }
+
+    if (req.method !== 'POST') return jsonResponse({ success: false, error: 'Method not allowed.' }, 405, res);
+    if (!verifyCsrfIfAuthenticated(req)) return jsonResponse({ success: false, error: 'This request is not allowed.' }, 403, res);
+
+    const ip = getClientIp(req);
+    if (!await checkRateLimit({ key: `sa_users:ip:${ip}`, limit: 40, windowSeconds: 300, blockSeconds: 300 })) {
+        return jsonResponse({ success: false, error: 'Too many requests. Please slow down.' }, 429, res);
     }
 
     const body = await parseJsonBody(req);
@@ -51,8 +71,8 @@ export default async function handler(req, res) {
             if (!['user', 'admin', 'superadmin'].includes(role)) {
                 return jsonResponse({ success: false, error: 'Invalid role.' }, 400, res);
             }
-            if (!isValidEmail(email) || fullName.length < 2 || fullName.length > 120 || password.length < 6 || password.length > 128) {
-                return jsonResponse({ success: false, error: 'Enter a valid email, name, and password of at least 6 characters.' }, 400, res);
+            if (!isValidEmail(email) || fullName.length < 2 || fullName.length > 120 || phone.length > 40 || password.length < 8 || password.length > 128) {
+                return jsonResponse({ success: false, error: 'Enter a valid email, name, and password of at least 8 characters.' }, 400, res);
             }
             const existing = await getCloudUser(email);
             const now = new Date().toISOString();
@@ -73,7 +93,7 @@ export default async function handler(req, res) {
                     : null)
                 : await insertCloudUser(fields);
             if (!user) return jsonResponse({ success: false, error: 'An account with this email already exists.' }, 409, res);
-            return jsonResponse({ success: true, message: 'Account created successfully.', user: publicUser(user) }, 200, res);
+            return jsonResponse({ success: true, message: 'Account created successfully.', user: sanitizeUser(user) }, 200, res);
         }
 
         if (action === 'update') {
@@ -103,13 +123,13 @@ export default async function handler(req, res) {
             if (payload.phone !== undefined) patch.phone = phone;
             if (payload.role !== undefined) patch.role = role;
             if (password) {
-                if (password.length < 6 || password.length > 128) return jsonResponse({ success: false, error: 'Password must contain at least 6 characters.' }, 400, res);
+                if (password.length < 8 || password.length > 128) return jsonResponse({ success: false, error: 'Password must contain at least 8 characters.' }, 400, res);
                 patch.password_hash = await createPasswordHash(password);
                 patch.email_verified_at = new Date().toISOString();
             }
             const updated = await updateCloudUserById(id, patch);
             return updated
-                ? jsonResponse({ success: true, message: 'User account updated successfully.', user: publicUser(updated) }, 200, res)
+                ? jsonResponse({ success: true, message: 'User account updated successfully.', user: sanitizeUser(updated) }, 200, res)
                 : jsonResponse({ success: false, error: 'Unable to update the account.' }, 503, res);
         }
 

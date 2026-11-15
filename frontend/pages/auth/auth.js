@@ -635,7 +635,8 @@ document.addEventListener("DOMContentLoaded", () => {
         window.setTimeout(() => { if (otpInput) otpInput.focus(); }, 120);
 
         if (typeof apiStartRegistrationOtp === "function") {
-            apiStartRegistrationOtp(googleData.email).catch(() => {});
+            const botData = window.UrbanBotGuard ? window.UrbanBotGuard.collect() : {};
+            apiStartRegistrationOtp(googleData.email, botData).catch(() => {});
         }
 
         function startGoogleOtpCountdown() {
@@ -664,7 +665,8 @@ document.addEventListener("DOMContentLoaded", () => {
                 resendBtn.disabled = true;
                 if (resendStatus) resendStatus.textContent = "Requesting a new code...";
                 if (typeof apiStartRegistrationOtp === "function") {
-                    const res = await apiStartRegistrationOtp(window.__activeGooglePending.email);
+                    const botData = window.UrbanBotGuard ? window.UrbanBotGuard.collect() : {};
+                    const res = await apiStartRegistrationOtp(window.__activeGooglePending.email, botData);
                     if (res && res.success) {
                         if (otpMessage) {
                             otpMessage.textContent = "A new 6-digit verification code has been sent to your Gmail.";
@@ -897,6 +899,7 @@ document.addEventListener("DOMContentLoaded", () => {
                         throw new Error('Registration verification service is temporarily unavailable. Please try again.');
                     }
 
+                    const botData = window.UrbanBotGuard ? window.UrbanBotGuard.collect() : {};
                     verifyRes = await verifyFn({
                         email: pending.email,
                         code: pending.code,
@@ -905,7 +908,8 @@ document.addEventListener("DOMContentLoaded", () => {
                         credential: pending.credential,
                         full_name: pending.full_name,
                         avatar_url: pending.avatar_url,
-                        google_id: pending.google_id
+                        google_id: pending.google_id,
+                        ...botData
                     });
                 } catch (err) {
                     console.error('Google registration verification error:', err);
@@ -1004,7 +1008,8 @@ document.addEventListener("DOMContentLoaded", () => {
                     }
 
                     setLoadingState(true, "Verifying Google Account...");
-                    const res = await apiSignInWithGoogle({ access_token: tokenResponse.access_token });
+                    const botData = window.UrbanBotGuard ? window.UrbanBotGuard.collect() : {};
+                    const res = await apiSignInWithGoogle({ access_token: tokenResponse.access_token, ...botData });
                     if (res && res.requires_verification) {
                         setLoadingState(false);
                         promptGoogleVerificationAndTerms({
@@ -1126,4 +1131,122 @@ document.addEventListener("DOMContentLoaded", () => {
     } else {
         setup();
     }
+})();
+
+// ==========================================
+// 5. SHARED BOT DEFENSE & OPTIONAL TURNSTILE GUARD
+// ==========================================
+(function initUrbanBotGuard() {
+    const pageLoadedAt = Date.now();
+    const formTimestamps = new Map();
+    let configPromise = null;
+    let turnstileSdkPromise = null;
+
+    function getSiteConfig() {
+        if (!configPromise) {
+            configPromise = (typeof apiGetGoogleConfig === "function")
+                ? apiGetGoogleConfig().catch(() => ({}))
+                : Promise.resolve({});
+        }
+        return configPromise;
+    }
+
+    function ensureTurnstileSdk(timeoutMs = 7000) {
+        if (window.turnstile && typeof window.turnstile.render === "function") {
+            return Promise.resolve(true);
+        }
+        if (turnstileSdkPromise) return turnstileSdkPromise;
+        turnstileSdkPromise = new Promise((resolve) => {
+            let script = document.querySelector('script[src*="challenges.cloudflare.com/turnstile"]');
+            if (!script) {
+                script = document.createElement("script");
+                script.src = "https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit";
+                script.async = true;
+                script.defer = true;
+                document.head.appendChild(script);
+            }
+            const started = Date.now();
+            const timer = setInterval(() => {
+                if (window.turnstile && typeof window.turnstile.render === "function") {
+                    clearInterval(timer);
+                    resolve(true);
+                } else if (Date.now() - started >= timeoutMs) {
+                    clearInterval(timer);
+                    resolve(false);
+                }
+            }, 120);
+        });
+        return turnstileSdkPromise;
+    }
+
+    async function renderTurnstileIfEnabled(turnstileId) {
+        if (!turnstileId) return;
+        const container = document.getElementById(turnstileId);
+        if (!container || container.dataset.turnstileInit === "1") return;
+        const cfg = await getSiteConfig();
+        const siteKey = cfg && cfg.turnstile_site_key ? String(cfg.turnstile_site_key).trim() : "";
+        if (!siteKey) return;
+
+        container.dataset.turnstileInit = "1";
+        container.hidden = false;
+        const ready = await ensureTurnstileSdk();
+        if (!ready || !window.turnstile) return;
+
+        const widgetId = window.turnstile.render(container, {
+            sitekey: siteKey,
+            callback: (token) => {
+                container.dataset.turnstileToken = token || "";
+            },
+            "expired-callback": () => {
+                container.dataset.turnstileToken = "";
+            },
+            "error-callback": () => {
+                container.dataset.turnstileToken = "";
+            }
+        });
+        container.dataset.widgetId = String(widgetId);
+    }
+
+    window.UrbanBotGuard = {
+        init(formId, turnstileId) {
+            if (formId && !formTimestamps.has(formId)) {
+                formTimestamps.set(formId, Date.now());
+            }
+            if (turnstileId) {
+                renderTurnstileIfEnabled(turnstileId).catch(() => {});
+            }
+        },
+        collect(formId, turnstileId) {
+            const form = formId ? document.getElementById(formId) : null;
+            const hpInput = form
+                ? form.querySelector('input[name="company_website"], input[name="companyWebsite"]')
+                : document.querySelector('input[name="company_website"], input[name="companyWebsite"]');
+            const container = turnstileId ? document.getElementById(turnstileId) : null;
+            const cfInput = form
+                ? form.querySelector('input[name="cf-turnstile-response"]')
+                : document.querySelector('input[name="cf-turnstile-response"]');
+            const _hp = hpInput ? String(hpInput.value || "") : "";
+            const _ft = (formId && formTimestamps.get(formId)) || pageLoadedAt;
+            const turnstileToken = (container && container.dataset.turnstileToken) || (cfInput && cfInput.value) || "";
+            return {
+                _hp,
+                company_website: _hp,
+                _ft,
+                ft: _ft,
+                turnstileToken,
+                turnstile_token: turnstileToken
+            };
+        },
+        reset(turnstileId) {
+            if (!turnstileId) return;
+            const container = document.getElementById(turnstileId);
+            if (!container) return;
+            container.dataset.turnstileToken = "";
+            if (window.turnstile && container.dataset.widgetId) {
+                try {
+                    window.turnstile.reset(container.dataset.widgetId);
+                } catch (_) {}
+            }
+        }
+    };
 })();

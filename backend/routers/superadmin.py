@@ -5,6 +5,7 @@ Handles user management, RBAC role updates, executive metrics, and SQLite diagno
 
 import json
 import os
+import secrets
 import time
 import urllib.error
 import urllib.parse
@@ -17,20 +18,20 @@ from backend.auth import AUTHORIZED_ADMIN_EMAILS, hash_password, require_admin, 
 from backend.database import DB_PATH, get_db_connection, row_to_dict
 from backend.models import SuperadminCreateUser, SuperadminUpdateUser, UserRoleUpdate
 from backend.routers.auth import (
-    SUPABASE_ANON_KEY as _SUPABASE_ANON_KEY,
     SUPABASE_URL,
     normalize_db_role,
     sync_password_to_supabase,
 )
+from backend.security import escape_postgrest_filter_value, sanitize_image_url, sanitize_user_dict
 
 router = APIRouter()
 
-# Reads may use the public key; cloud account mutations require the private server key.
-SUPABASE_ANON_KEY = _SUPABASE_ANON_KEY
-SUPABASE_SERVICE_ROLE_KEY = os.environ.get("SUPABASE_SERVICE_ROLE_KEY", "").strip()
-
 _LAST_CLOUD_USER_SYNC_TS: float = 0.0
 _CLOUD_SYNC_MIN_INTERVAL_SEC: float = 10.0
+
+
+def _service_role_key() -> str:
+    return os.environ.get("SUPABASE_SERVICE_ROLE_KEY", "").strip()
 
 
 def _cloud_sync_enabled() -> bool:
@@ -41,9 +42,11 @@ def _pull_supabase_users_to_sqlite(force: bool = False) -> None:
     """
     Lightweight, non-blocking sync of active Supabase Cloud user accounts into local SQLite
     so accounts registered on Vercel / mobile appear in local Superadmin governance.
+    Requires SUPABASE_SERVICE_ROLE_KEY under strict RLS.
     """
     global _LAST_CLOUD_USER_SYNC_TS
-    if not _cloud_sync_enabled():
+    service_key = _service_role_key()
+    if not _cloud_sync_enabled() or not service_key:
         return
     now = time.monotonic()
     if not force and (now - _LAST_CLOUD_USER_SYNC_TS) < _CLOUD_SYNC_MIN_INTERVAL_SEC:
@@ -53,12 +56,12 @@ def _pull_supabase_users_to_sqlite(force: bool = False) -> None:
     try:
         url = (
             f"{SUPABASE_URL}/rest/v1/users"
-            "?select=email,password_hash,full_name,phone,role,avatar_url,google_id,bio,created_at"
+            "?select=email,password_hash,full_name,phone,role,avatar_url,google_id,bio,email_verified_at,created_at"
             "&order=id.asc"
         )
         req = urllib.request.Request(url, headers={
-            "apikey": SUPABASE_ANON_KEY,
-            "Authorization": f"Bearer {SUPABASE_ANON_KEY}"
+            "apikey": service_key,
+            "Authorization": f"Bearer {service_key}"
         })
         with urllib.request.urlopen(req, timeout=2.5) as resp:
             remote_users = json.loads(resp.read().decode("utf-8"))
@@ -82,18 +85,22 @@ def _pull_supabase_users_to_sqlite(force: bool = False) -> None:
                 continue
 
             norm_role = normalize_db_role(ru.get("role"), clean_email)
-            pwd_hash = ru.get("password_hash") or hash_password(f"cloud-sync-{clean_email}")
+            pwd_hash = ru.get("password_hash") or hash_password(secrets.token_urlsafe(32))
             full_name = (ru.get("full_name") or clean_email.split("@")[0]).strip()
             phone = (ru.get("phone") or "").strip()
-            avatar_url = (ru.get("avatar_url") or "assets/images/agent.jpg").strip()
+            try:
+                avatar_url = sanitize_image_url(ru.get("avatar_url"), default="assets/images/agent.jpg")
+            except ValueError:
+                avatar_url = "assets/images/agent.jpg"
             google_id = ru.get("google_id") or None
+            verified_at = ru.get("email_verified_at") or datetime.now(timezone.utc).isoformat()
 
             cursor.execute(
                 """
                 INSERT INTO users (email, password_hash, full_name, phone, role, avatar_url, google_id, email_verified_at)
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?)
                 """,
-                (clean_email, pwd_hash, full_name, phone, norm_role, avatar_url, google_id, ru["email_verified_at"])
+                (clean_email, pwd_hash, full_name, phone, norm_role, avatar_url, google_id, verified_at)
             )
             new_id = cursor.lastrowid
             # Re-apply role after trg_user_role_insert in case remote account was promoted to admin
@@ -118,14 +125,15 @@ def _sync_create_user_to_supabase(
     assigned_role: str
 ) -> None:
     """Syncs a Superadmin-created account to Supabase Cloud (inserting or reactivating if soft-deleted)."""
-    if not _cloud_sync_enabled() or not SUPABASE_SERVICE_ROLE_KEY:
+    service_key = _service_role_key()
+    if not _cloud_sync_enabled() or not service_key:
         return
     try:
-        encoded_email = urllib.parse.quote(clean_email)
-        check_url = f"{SUPABASE_URL}/rest/v1/users?email=ilike.{encoded_email}&select=id,bio"
+        encoded_email = urllib.parse.quote(clean_email.strip().lower(), safe="")
+        check_url = f"{SUPABASE_URL}/rest/v1/users?email=eq.{encoded_email}&select=id,bio"
         req_check = urllib.request.Request(check_url, headers={
-            "apikey": SUPABASE_ANON_KEY,
-            "Authorization": f"Bearer {SUPABASE_ANON_KEY}"
+            "apikey": service_key,
+            "Authorization": f"Bearer {service_key}"
         })
         with urllib.request.urlopen(req_check, timeout=2.5) as resp:
             existing = json.loads(resp.read().decode("utf-8"))
@@ -146,8 +154,8 @@ def _sync_create_user_to_supabase(
                 patch_url,
                 data=patch_body,
                 headers={
-                    "apikey": SUPABASE_SERVICE_ROLE_KEY,
-                    "Authorization": f"Bearer {SUPABASE_SERVICE_ROLE_KEY}",
+                    "apikey": service_key,
+                    "Authorization": f"Bearer {service_key}",
                     "Content-Type": "application/json"
                 },
                 method="PATCH"
@@ -168,8 +176,8 @@ def _sync_create_user_to_supabase(
             post_url,
             data=post_body,
             headers={
-                "apikey": SUPABASE_SERVICE_ROLE_KEY,
-                "Authorization": f"Bearer {SUPABASE_SERVICE_ROLE_KEY}",
+                "apikey": service_key,
+                "Authorization": f"Bearer {service_key}",
                 "Content-Type": "application/json"
             },
             method="POST"
@@ -182,19 +190,20 @@ def _sync_create_user_to_supabase(
 
 def _sync_update_user_to_supabase(match_email: str, patch_fields: dict) -> None:
     """Syncs Superadmin profile/role/password edits to Supabase Cloud by matching email."""
-    if not _cloud_sync_enabled() or not SUPABASE_SERVICE_ROLE_KEY or not match_email or not patch_fields:
+    service_key = _service_role_key()
+    if not _cloud_sync_enabled() or not service_key or not match_email or not patch_fields:
         return
     try:
-        encoded_email = urllib.parse.quote(match_email.strip().lower())
-        url = f"{SUPABASE_URL}/rest/v1/users?email=ilike.{encoded_email}"
+        encoded_email = urllib.parse.quote(match_email.strip().lower(), safe="")
+        url = f"{SUPABASE_URL}/rest/v1/users?email=eq.{encoded_email}"
         payload = dict(patch_fields)
         payload["updated_at"] = datetime.now(timezone.utc).isoformat()
         req = urllib.request.Request(
             url,
             data=json.dumps(payload).encode("utf-8"),
             headers={
-                "apikey": SUPABASE_SERVICE_ROLE_KEY,
-                "Authorization": f"Bearer {SUPABASE_SERVICE_ROLE_KEY}",
+                "apikey": service_key,
+                "Authorization": f"Bearer {service_key}",
                 "Content-Type": "application/json",
                 "Prefer": "return=representation"
             },
@@ -208,21 +217,23 @@ def _sync_update_user_to_supabase(match_email: str, patch_fields: dict) -> None:
 
 def _sync_delete_user_to_supabase(target_email: str, user_id: int = None) -> None:
     """Deletes an account and its inquiries from Supabase Cloud, falling back to email scramble if DELETE RLS is blocked."""
-    if not _cloud_sync_enabled() or not SUPABASE_SERVICE_ROLE_KEY or not target_email:
+    service_key = _service_role_key()
+    if not _cloud_sync_enabled() or not service_key or not target_email:
         return
     try:
         clean_email = target_email.strip().lower()
-        encoded_email = urllib.parse.quote(clean_email)
+        encoded_email = urllib.parse.quote(clean_email, safe="")
+        safe_filter_email = urllib.parse.quote(escape_postgrest_filter_value(clean_email), safe="")
 
         # 1. Delete associated inquiries and appointments from Supabase Cloud
         for email_table in ("inquiries", "appointments"):
             try:
-                email_cleanup_url = f"{SUPABASE_URL}/rest/v1/{email_table}?client_email=ilike.{encoded_email}"
+                email_cleanup_url = f"{SUPABASE_URL}/rest/v1/{email_table}?client_email=eq.{encoded_email}"
                 req_cleanup = urllib.request.Request(
                     email_cleanup_url,
                     headers={
-                        "apikey": SUPABASE_SERVICE_ROLE_KEY,
-                        "Authorization": f"Bearer {SUPABASE_SERVICE_ROLE_KEY}",
+                        "apikey": service_key,
+                        "Authorization": f"Bearer {service_key}",
                     },
                     method="DELETE"
                 )
@@ -236,12 +247,12 @@ def _sync_delete_user_to_supabase(target_email: str, user_id: int = None) -> Non
         if user_id:
             matching_ids.add(str(user_id))
         try:
-            users_query_url = f"{SUPABASE_URL}/rest/v1/users?or=(email.ilike.{encoded_email},email.ilike.deleted_*_{encoded_email})&select=id"
+            users_query_url = f"{SUPABASE_URL}/rest/v1/users?or=(email.eq.{safe_filter_email},email.ilike.deleted_*_{safe_filter_email})&select=id"
             req_users = urllib.request.Request(
                 users_query_url,
                 headers={
-                    "apikey": SUPABASE_SERVICE_ROLE_KEY,
-                    "Authorization": f"Bearer {SUPABASE_SERVICE_ROLE_KEY}",
+                    "apikey": service_key,
+                    "Authorization": f"Bearer {service_key}",
                 }
             )
             with urllib.request.urlopen(req_users, timeout=3.0) as resp:
@@ -259,8 +270,8 @@ def _sync_delete_user_to_supabase(target_email: str, user_id: int = None) -> Non
                 req_inq_id = urllib.request.Request(
                     inq_id_url,
                     headers={
-                        "apikey": SUPABASE_SERVICE_ROLE_KEY,
-                        "Authorization": f"Bearer {SUPABASE_SERVICE_ROLE_KEY}",
+                        "apikey": service_key,
+                        "Authorization": f"Bearer {service_key}",
                     },
                     method="DELETE"
                 )
@@ -273,8 +284,8 @@ def _sync_delete_user_to_supabase(target_email: str, user_id: int = None) -> Non
                 req_notif = urllib.request.Request(
                     notif_url,
                     headers={
-                        "apikey": SUPABASE_SERVICE_ROLE_KEY,
-                        "Authorization": f"Bearer {SUPABASE_SERVICE_ROLE_KEY}",
+                        "apikey": service_key,
+                        "Authorization": f"Bearer {service_key}",
                     },
                     method="DELETE"
                 )
@@ -287,8 +298,8 @@ def _sync_delete_user_to_supabase(target_email: str, user_id: int = None) -> Non
                 req_appt = urllib.request.Request(
                     appt_url,
                     headers={
-                        "apikey": SUPABASE_SERVICE_ROLE_KEY,
-                        "Authorization": f"Bearer {SUPABASE_SERVICE_ROLE_KEY}",
+                        "apikey": service_key,
+                        "Authorization": f"Bearer {service_key}",
                     },
                     method="DELETE"
                 )
@@ -301,8 +312,8 @@ def _sync_delete_user_to_supabase(target_email: str, user_id: int = None) -> Non
                 req_saved = urllib.request.Request(
                     saved_url,
                     headers={
-                        "apikey": SUPABASE_SERVICE_ROLE_KEY,
-                        "Authorization": f"Bearer {SUPABASE_SERVICE_ROLE_KEY}",
+                        "apikey": service_key,
+                        "Authorization": f"Bearer {service_key}",
                     },
                     method="DELETE"
                 )
@@ -312,12 +323,12 @@ def _sync_delete_user_to_supabase(target_email: str, user_id: int = None) -> Non
                 pass
 
         # 2. Delete user from Supabase Cloud
-        del_url = f"{SUPABASE_URL}/rest/v1/users?email=ilike.{encoded_email}"
+        del_url = f"{SUPABASE_URL}/rest/v1/users?email=eq.{encoded_email}"
         req_del = urllib.request.Request(
             del_url,
             headers={
-                "apikey": SUPABASE_SERVICE_ROLE_KEY,
-                "Authorization": f"Bearer {SUPABASE_SERVICE_ROLE_KEY}",
+                "apikey": service_key,
+                "Authorization": f"Bearer {service_key}",
                 "Prefer": "return=representation"
             },
             method="DELETE"
@@ -327,7 +338,7 @@ def _sync_delete_user_to_supabase(target_email: str, user_id: int = None) -> Non
             if isinstance(deleted, list) and len(deleted) > 0:
                 return
 
-        # 3. Fallback: scramble email and mark soft-delete if physical DELETE was blocked by RLS
+        # 3. Fallback: scramble email and mark soft-delete if physical DELETE was blocked
         timestamp = int(datetime.now(timezone.utc).timestamp() * 1000)
         scrambled_email = f"deleted_{timestamp}_{clean_email}"
         soft_body = json.dumps({
@@ -340,8 +351,8 @@ def _sync_delete_user_to_supabase(target_email: str, user_id: int = None) -> Non
             del_url,
             data=soft_body,
             headers={
-                "apikey": SUPABASE_SERVICE_ROLE_KEY,
-                "Authorization": f"Bearer {SUPABASE_SERVICE_ROLE_KEY}",
+                "apikey": service_key,
+                "Authorization": f"Bearer {service_key}",
                 "Content-Type": "application/json"
             },
             method="PATCH"
@@ -432,10 +443,16 @@ def get_user_directory(current_user: dict = Depends(require_admin)):
     _pull_supabase_users_to_sqlite()
     conn = get_db_connection()
     cursor = conn.cursor()
-    cursor.execute("SELECT id, email, full_name, phone, role, created_at FROM users ORDER BY created_at DESC")
+    cursor.execute("""
+        SELECT id, email, full_name, phone, role, created_at
+        FROM users
+        WHERE COALESCE(bio, '') != '__URBANSCOPE_DELETED__'
+          AND COALESCE(password_hash, '') != '__DELETED_ACCOUNT__'
+        ORDER BY created_at DESC
+    """)
     rows = cursor.fetchall()
     conn.close()
-    return [row_to_dict(r) for r in rows]
+    return [sanitize_user_dict(row_to_dict(r)) for r in rows]
 
 
 @router.get("/api/superadmin/users", tags=["Superadmin"])
@@ -444,10 +461,16 @@ def list_superadmin_users(current_superadmin: dict = Depends(require_superadmin)
     _pull_supabase_users_to_sqlite()
     conn = get_db_connection()
     cursor = conn.cursor()
-    cursor.execute("SELECT id, email, full_name, phone, role, created_at FROM users ORDER BY id ASC")
+    cursor.execute("""
+        SELECT id, email, full_name, phone, role, created_at
+        FROM users
+        WHERE COALESCE(bio, '') != '__URBANSCOPE_DELETED__'
+          AND COALESCE(password_hash, '') != '__DELETED_ACCOUNT__'
+        ORDER BY id ASC
+    """)
     rows = cursor.fetchall()
     conn.close()
-    return [row_to_dict(r) for r in rows]
+    return [sanitize_user_dict(row_to_dict(r)) for r in rows]
 
 
 @router.put("/api/superadmin/users/{user_id}/role", tags=["Superadmin"])
@@ -551,8 +574,12 @@ def superadmin_update_user(user_id: int, payload: SuperadminUpdateUser, current_
         cloud_patch["role"] = target_role
 
     new_pwd_hash = None
-    if payload.password is not None and len(payload.password.strip()) >= 6:
-        new_pwd_hash = hash_password(payload.password.strip())
+    if payload.password is not None and payload.password.strip():
+        clean_pwd = payload.password.strip()
+        if len(clean_pwd) < 8:
+            conn.close()
+            raise HTTPException(status_code=400, detail="New password must be at least 8 characters long.")
+        new_pwd_hash = hash_password(clean_pwd)
         updates.append("password_hash = ?")
         params.append(new_pwd_hash)
         cloud_patch["password_hash"] = new_pwd_hash
@@ -566,7 +593,7 @@ def superadmin_update_user(user_id: int, payload: SuperadminUpdateUser, current_
         conn.commit()
 
     cursor.execute("SELECT id, email, full_name, phone, role, created_at FROM users WHERE id = ?", (user_id,))
-    updated_user = row_to_dict(cursor.fetchone())
+    updated_user = sanitize_user_dict(row_to_dict(cursor.fetchone()))
     conn.close()
 
     if updated_user and updated_user.get("role") == "admin" and updated_user.get("email"):
@@ -601,7 +628,12 @@ def superadmin_create_user(payload: SuperadminCreateUser, current_superadmin: di
     if clean_email == "urbanscope.cvsu@gmail.com":
         assigned_role = "superadmin"
 
-    password_hash = hash_password(payload.password)
+    clean_pwd = (payload.password or "").strip()
+    if len(clean_pwd) < 8:
+        conn.close()
+        raise HTTPException(status_code=400, detail="Password must be at least 8 characters long.")
+
+    password_hash = hash_password(clean_pwd)
     clean_name = payload.full_name.strip()
     clean_phone = (payload.phone or "").strip()
 
@@ -615,7 +647,7 @@ def superadmin_create_user(payload: SuperadminCreateUser, current_superadmin: di
     conn.commit()
 
     cursor.execute("SELECT id, email, full_name, phone, role, created_at FROM users WHERE id = ?", (new_id,))
-    new_user = row_to_dict(cursor.fetchone())
+    new_user = sanitize_user_dict(row_to_dict(cursor.fetchone()))
     conn.close()
 
     if assigned_role == "admin":

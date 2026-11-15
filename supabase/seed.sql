@@ -10,11 +10,9 @@
 -- ==============================================================================
 
 -- ------------------------------------------------------------------------------
--- 8.1 Seed: Users (Admin Miriam Lobren & Clients)
--- Passwords:
---   urbanscope.cvsu@gmail.com -> urbanscope2026 (or urbanscope)
---   admin.realestate@gmail.com -> realestate2026
---   client@gmail.com        -> client123
+-- 8.1 Seed: Users (Admin Miriam Lobren & Clients — dev/demo PBKDF2 hashes only)
+-- Never store plaintext passwords in SQL seed files. Set custom passwords
+-- locally or reset via the authenticated Admin/Superadmin profile console.
 -- ------------------------------------------------------------------------------
 INSERT INTO users (id, email, password_hash, full_name, phone, role, license_number, avatar_url) VALUES
 (

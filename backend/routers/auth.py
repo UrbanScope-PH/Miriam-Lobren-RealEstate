@@ -24,6 +24,8 @@ from backend.auth import (
     get_current_user_from_request,
     get_google_client_id,
     hash_password,
+    require_admin,
+    require_user,
     verify_google_token,
     verify_password,
 )
@@ -39,6 +41,17 @@ from backend.auth_otp import (
     send_otp_email,
 )
 from backend.database import determine_user_role, get_db_connection, row_to_dict
+from backend.security import (
+    CSRF_COOKIE_NAME,
+    check_rate_limit,
+    get_client_ip,
+    is_https_request,
+    is_same_origin_request,
+    sanitize_image_url,
+    sanitize_user_dict,
+    set_csrf_cookie,
+    verify_bot_defense,
+)
 from backend.models import (
     AdminProfileUpdate,
     AuthResponse,
@@ -63,8 +76,12 @@ OTP_GENERIC_REGISTER_MESSAGE = "If registration can proceed, a verification code
 OTP_GENERIC_RESET_MESSAGE = "If an account can be recovered with that email, a verification code has been sent."
 
 
+def _supabase_service_role_key() -> str:
+    return os.environ.get("SUPABASE_SERVICE_ROLE_KEY", "").strip()
+
+
 def _supabase_api_key() -> str:
-    return os.environ.get("SUPABASE_SERVICE_ROLE_KEY", "").strip() or SUPABASE_ANON_KEY
+    return _supabase_service_role_key()
 
 
 def _email_is_valid(email: str) -> bool:
@@ -81,28 +98,76 @@ def _require_otp_configuration() -> None:
 
 
 def _request_origin_allowed(request: Request) -> bool:
-    origin = request.headers.get("origin")
-    if not origin:
-        return True
-    try:
-        origin_host = urllib.parse.urlparse(origin).hostname
-        request_host = request.url.hostname
-        if origin_host == request_host:
-            return True
-        local_hosts = {"localhost", "127.0.0.1", "::1"}
-        return origin_host in local_hosts and request_host in local_hosts
-    except Exception:
-        return False
+    return is_same_origin_request(request)
+
+
+def _set_auth_cookies(response: Response, request: Request, token: str) -> None:
+    secure_cookie = is_https_request(request)
+    response.set_cookie(
+        key="access_token",
+        value=token,
+        httponly=True,
+        secure=secure_cookie,
+        samesite="lax",
+        max_age=7 * 24 * 3600,
+        path="/",
+    )
+    existing_csrf = (request.cookies.get(CSRF_COOKIE_NAME) or "").strip() or None
+    set_csrf_cookie(response, request, existing_csrf)
+
+
+def _enforce_bot_and_rate(
+    request: Request,
+    bucket: str,
+    *,
+    email: str = "",
+    limit: int = 10,
+    window_seconds: int = 300,
+    block_seconds: int = 600,
+    payload: Optional[object] = None,
+    check_bot: bool = True,
+) -> None:
+    ip = get_client_ip(request)
+    if not check_rate_limit(f"{bucket}:ip:{ip}", limit=limit, window_seconds=window_seconds, block_seconds=block_seconds):
+        raise HTTPException(status_code=429, detail="Too many attempts. Please wait a few minutes and try again.")
+    if email:
+        if not check_rate_limit(
+            f"{bucket}:acct:{email.strip().lower()}",
+            limit=max(limit, 8),
+            window_seconds=window_seconds,
+            block_seconds=block_seconds,
+        ):
+            raise HTTPException(status_code=429, detail="Too many attempts for this email. Please try again later.")
+    if check_bot and payload is not None:
+        honeypot = (
+            getattr(payload, "company_website", None)
+            or getattr(payload, "website", None)
+            or getattr(payload, "hp", None)
+        )
+        rendered_ms = getattr(payload, "form_rendered_ms", None)
+        if rendered_ms is None:
+            rendered_ms = getattr(payload, "ft", None)
+        turnstile = getattr(payload, "turnstile_token", None)
+        ok, msg = verify_bot_defense(
+            request,
+            honeypot_val=honeypot,
+            form_rendered_ms=rendered_ms,
+            turnstile_token=turnstile,
+        )
+        if not ok:
+            raise HTTPException(status_code=400, detail=msg or "Submission blocked by anti-spam verification.")
 
 
 def _cloud_user_by_email(email: str) -> Optional[dict]:
     """Look up the cloud account with server credentials when available."""
     if _is_cloud_sync_disabled():
         return None
+    key = _supabase_service_role_key()
+    if not key:
+        return None
     try:
-        encoded = urllib.parse.quote(email, safe="")
+        encoded = urllib.parse.quote(email.strip().lower(), safe="")
         url = f"{SUPABASE_URL}/rest/v1/users?email=eq.{encoded}&select=id,email,password_hash,role,full_name,phone,bio"
-        key = _supabase_api_key()
         req = urllib.request.Request(url, headers={"apikey": key, "Authorization": f"Bearer {key}"})
         with urllib.request.urlopen(req, timeout=2.5) as resp:
             rows = json.loads(resp.read().decode("utf-8"))
@@ -142,16 +207,14 @@ def _verified_cloud_password_update(email: str, password_hash: str) -> bool:
 def _issue_otp_for_local_request(email: str, purpose: str, request: Request) -> bool:
     code = create_otp()
     digest = otp_digest(email, purpose, code)
-    ip_address = request.client.host if request.client else "unknown"
+    ip_address = get_client_ip(request)
     if not issue_local_challenge(email, purpose, digest, ip_digest(ip_address)):
         return False
-    print(f"[AUTH OTP] Issued code for {email} ({purpose}): {code}")
     try:
         send_otp_email(email, purpose, code)
         return True
-    except Exception as e:
-        print(f"[AUTH OTP] Email sending failed: {e}")
-        return True
+    except Exception:
+        return False
 
 
 def _is_cloud_sync_disabled() -> bool:
@@ -173,13 +236,13 @@ def normalize_db_role(role: Optional[str], email: str = "") -> str:
 
 def sync_password_to_supabase(email: str, password_hash: str) -> bool:
     """Synchronizes updated PBKDF2 password hash to Supabase Cloud so all devices & phones stay in sync."""
-    key = os.environ.get("SUPABASE_SERVICE_ROLE_KEY", "").strip() or SUPABASE_ANON_KEY
+    key = _supabase_service_role_key()
     if _is_cloud_sync_disabled() or not key:
         return False
     try:
         clean_email = email.strip().lower()
-        encoded_email = urllib.parse.quote(clean_email)
-        url = f"{SUPABASE_URL}/rest/v1/users?email=ilike.{encoded_email}"
+        encoded_email = urllib.parse.quote(clean_email, safe="")
+        url = f"{SUPABASE_URL}/rest/v1/users?email=eq.{encoded_email}"
         body = json.dumps({
             "password_hash": password_hash,
             "updated_at": datetime.now(timezone.utc).isoformat()
@@ -301,18 +364,19 @@ def sync_new_user_to_supabase(user_dict: dict, password_hash: str) -> bool:
 
 def sync_password_from_supabase_if_valid(clean_email: str, plain_password: str) -> Optional[str]:
     """Checks Supabase Cloud if account or password was created/updated remotely, syncing to SQLite if valid."""
-    if _is_cloud_sync_disabled():
+    key = _supabase_service_role_key()
+    if _is_cloud_sync_disabled() or not key:
         return None
     try:
-        encoded_email = urllib.parse.quote(clean_email)
+        encoded_email = urllib.parse.quote(clean_email.strip().lower(), safe="")
         url = (
             f"{SUPABASE_URL}/rest/v1/users"
-            f"?email=ilike.{encoded_email}"
-            f"&select=id,email,password_hash,full_name,phone,role,avatar_url,google_id,bio"
+            f"?email=eq.{encoded_email}"
+            f"&select=id,email,password_hash,full_name,phone,role,avatar_url,google_id,bio,email_verified_at"
         )
         req = urllib.request.Request(url, headers={
-            "apikey": SUPABASE_ANON_KEY,
-            "Authorization": f"Bearer {SUPABASE_ANON_KEY}"
+            "apikey": key,
+            "Authorization": f"Bearer {key}"
         })
         with urllib.request.urlopen(req, timeout=3) as resp:
             data = json.loads(resp.read().decode("utf-8"))
@@ -365,14 +429,15 @@ def sync_password_from_supabase_if_valid(clean_email: str, plain_password: str) 
 
 def sync_latest_password_from_supabase(clean_email: str) -> Optional[str]:
     """Fetches the latest password_hash from Supabase Cloud if reachable, syncing to local SQLite."""
-    if _is_cloud_sync_disabled():
+    key = _supabase_service_role_key()
+    if _is_cloud_sync_disabled() or not key:
         return None
     try:
-        encoded_email = urllib.parse.quote(clean_email)
-        url = f"{SUPABASE_URL}/rest/v1/users?email=ilike.{encoded_email}&select=id,email,password_hash"
+        encoded_email = urllib.parse.quote(clean_email.strip().lower(), safe="")
+        url = f"{SUPABASE_URL}/rest/v1/users?email=eq.{encoded_email}&select=id,email,password_hash"
         req = urllib.request.Request(url, headers={
-            "apikey": SUPABASE_ANON_KEY,
-            "Authorization": f"Bearer {SUPABASE_ANON_KEY}"
+            "apikey": key,
+            "Authorization": f"Bearer {key}"
         })
         with urllib.request.urlopen(req, timeout=1.5) as resp:
             data = json.loads(resp.read().decode("utf-8"))
@@ -394,13 +459,31 @@ def sync_latest_password_from_supabase(clean_email: str) -> Optional[str]:
 # AUTHENTICATION ENDPOINTS (WITH RBAC)
 # ==========================================================
 
+@router.get("/api/auth/csrf", tags=["Auth"])
+def get_csrf_token(request: Request, response: Response):
+    """Ensure a CSRF double-submit cookie exists for cookie-authenticated API calls."""
+    existing = (request.cookies.get(CSRF_COOKIE_NAME) or "").strip() or None
+    token = set_csrf_cookie(response, request, existing)
+    return {"csrfToken": token}
+
+
 @router.post("/api/auth/register/start", tags=["Auth"])
 def start_email_registration(payload: EmailOtpStartRequest, request: Request):
     """Send a short-lived email code without revealing whether an account exists."""
     if not _request_origin_allowed(request):
         raise HTTPException(status_code=403, detail="This request is not allowed.")
-    _require_otp_configuration()
     clean_email = payload.email.strip().lower()
+    _enforce_bot_and_rate(
+        request,
+        "reg_start",
+        email=clean_email,
+        limit=8,
+        window_seconds=300,
+        block_seconds=600,
+        payload=payload,
+        check_bot=True,
+    )
+    _require_otp_configuration()
     if not _email_is_valid(clean_email):
         raise HTTPException(status_code=400, detail="Enter a valid email address.")
     if clean_email in AUTHORIZED_ADMIN_EMAILS or clean_email in AUTHORIZED_SUPERADMIN_EMAILS:
@@ -417,18 +500,31 @@ def start_email_registration(payload: EmailOtpStartRequest, request: Request):
 
 
 @router.post("/api/auth/register/check-code", tags=["Auth"])
+@router.post("/api/auth/password/reset/check-code", tags=["Auth"])
 def check_registration_code_endpoint(payload: OtpCodeCheckRequest, request: Request):
     """
     Validates whether the entered 6-digit email OTP is correct and active
     without consuming it, allowing client UI to guard subsequent steps (e.g. Terms & Policy).
     """
     clean_email = payload.email.strip().lower()
+    _enforce_bot_and_rate(
+        request,
+        "otp_check",
+        email=clean_email,
+        limit=15,
+        window_seconds=300,
+        block_seconds=600,
+        check_bot=False,
+    )
     code = payload.code.strip()
     if not _email_is_valid(clean_email) or not re.fullmatch(r"[0-9]{6}", code):
         raise HTTPException(status_code=400, detail="Please enter a valid 6-digit verification code.")
 
     _require_otp_configuration()
-    purpose = payload.purpose or "register"
+    is_reset_route = "/password/reset/" in (request.url.path or "")
+    purpose = "password_reset" if is_reset_route else (payload.purpose or "register")
+    if purpose not in ("register", "password_reset"):
+        raise HTTPException(status_code=400, detail="Invalid verification purpose.")
     supplied_hash = otp_digest(clean_email, purpose, code)
     if not check_local_challenge(clean_email, purpose, supplied_hash):
         raise HTTPException(
@@ -443,8 +539,20 @@ def complete_email_registration(payload: EmailOtpRegistrationComplete, request: 
     """Consume a verified email code, create the client account, and start a session."""
     if not _request_origin_allowed(request):
         raise HTTPException(status_code=403, detail="This request is not allowed.")
-    _require_otp_configuration()
     clean_email = payload.email.strip().lower()
+    _enforce_bot_and_rate(
+        request,
+        "reg_verify",
+        email=clean_email,
+        limit=10,
+        window_seconds=300,
+        block_seconds=600,
+        payload=payload,
+        check_bot=True,
+    )
+    if getattr(payload, "terms_accepted", True) is False:
+        raise HTTPException(status_code=400, detail="You must accept the Terms of Service and Privacy Policy.")
+    _require_otp_configuration()
     code = payload.code.strip()
     if not _email_is_valid(clean_email) or not re.fullmatch(r"[0-9]{6}", code):
         raise HTTPException(status_code=400, detail="Check the verification code and email address.")
@@ -473,7 +581,7 @@ def complete_email_registration(payload: EmailOtpRegistrationComplete, request: 
         user_id = cursor.lastrowid
         conn.commit()
         cursor.execute(
-            "SELECT id, email, full_name, phone, role, avatar_url, google_id, created_at FROM users WHERE id = ?",
+            "SELECT id, email, full_name, phone, role, avatar_url, created_at FROM users WHERE id = ?",
             (user_id,)
         )
         user_dict = row_to_dict(cursor.fetchone())
@@ -491,11 +599,11 @@ def complete_email_registration(payload: EmailOtpRegistrationComplete, request: 
         "email": user_dict["email"],
         "role": user_dict["role"]
     })
-    response.set_cookie(key="access_token", value=token, httponly=True, samesite="lax", max_age=7 * 24 * 3600, path="/")
+    _set_auth_cookies(response, request, token)
     return AuthResponse(
         success=True,
         token=token,
-        user=UserResponse(**user_dict),
+        user=UserResponse(**sanitize_user_dict(user_dict)),
         redirect_url="/index.html",
         message="Email verified and registration complete."
     )
@@ -506,21 +614,34 @@ def request_password_reset(payload: PasswordResetRequest, request: Request):
     """Send a password-recovery code using the same response for known and unknown emails."""
     if not _request_origin_allowed(request):
         raise HTTPException(status_code=403, detail="This request is not allowed.")
-    _require_otp_configuration()
     clean_email = payload.email.strip().lower()
+    _enforce_bot_and_rate(
+        request,
+        "pw_reset_req",
+        email=clean_email,
+        limit=8,
+        window_seconds=300,
+        block_seconds=600,
+        payload=payload,
+        check_bot=True,
+    )
+    _require_otp_configuration()
     if not _email_is_valid(clean_email):
         raise HTTPException(status_code=400, detail="Enter a valid email address.")
 
     conn = get_db_connection()
     try:
         local_user = conn.execute(
-            "SELECT password_hash FROM users WHERE LOWER(email) = ?", (clean_email,)
+            "SELECT password_hash, bio FROM users WHERE LOWER(email) = ?", (clean_email,)
         ).fetchone()
     finally:
         conn.close()
     cloud_user = _cloud_user_by_email(clean_email)
     has_password = bool((local_user and local_user["password_hash"]) or (cloud_user and cloud_user.get("password_hash")))
-    deleted = bool((cloud_user and (cloud_user.get("bio") == "__URBANSCOPE_DELETED__" or cloud_user.get("password_hash") == "__DELETED_ACCOUNT__")))
+    deleted = bool(
+        (local_user and (local_user["bio"] == "__URBANSCOPE_DELETED__" or local_user["password_hash"] == "__DELETED_ACCOUNT__"))
+        or (cloud_user and (cloud_user.get("bio") == "__URBANSCOPE_DELETED__" or cloud_user.get("password_hash") == "__DELETED_ACCOUNT__"))
+    )
     cloud_only_reset_needs_service_key = bool(cloud_user and not local_user and not _supabase_service_role_key())
     if has_password and not deleted and not cloud_only_reset_needs_service_key:
         _issue_otp_for_local_request(clean_email, "password_reset", request)
@@ -532,8 +653,17 @@ def complete_password_reset(payload: PasswordResetComplete, request: Request):
     """Reset a password after consuming a single-use email code."""
     if not _request_origin_allowed(request):
         raise HTTPException(status_code=403, detail="This request is not allowed.")
-    _require_otp_configuration()
     clean_email = payload.email.strip().lower()
+    _enforce_bot_and_rate(
+        request,
+        "pw_reset_confirm",
+        email=clean_email,
+        limit=10,
+        window_seconds=300,
+        block_seconds=600,
+        check_bot=False,
+    )
+    _require_otp_configuration()
     code = payload.code.strip()
     if not _email_is_valid(clean_email) or not re.fullmatch(r"[0-9]{6}", code):
         raise HTTPException(status_code=400, detail="Enter a valid email address and six-digit code.")
@@ -542,10 +672,12 @@ def complete_password_reset(payload: PasswordResetComplete, request: Request):
     conn = get_db_connection()
     try:
         local_row = conn.execute(
-            "SELECT id FROM users WHERE LOWER(email) = ?", (clean_email,)
+            "SELECT id, bio, password_hash FROM users WHERE LOWER(email) = ?", (clean_email,)
         ).fetchone()
     finally:
         conn.close()
+    if (local_row and (local_row["bio"] == "__URBANSCOPE_DELETED__" or local_row["password_hash"] == "__DELETED_ACCOUNT__")):
+        raise HTTPException(status_code=400, detail="That code is invalid or expired. Request a new code and try again.")
     if not local_row and not local_user:
         raise HTTPException(status_code=400, detail="That code is invalid or expired. Request a new code and try again.")
     if local_user and not local_row and not _supabase_service_role_key():
@@ -581,15 +713,22 @@ def register_user(payload: UserRegister, response: Response):
 
 
 @router.post("/api/auth/login", response_model=AuthResponse, tags=["Auth"])
-def login_user(payload: UserLogin, response: Response):
+def login_user(payload: UserLogin, request: Request, response: Response):
     """
     Authenticates a user against verified database credentials and issues
-    token with automatic redirection based on role:
-    - Superadmin (urbanscope.cvsu@gmail.com) -> /pages/superadmin/dashboard.html
-    - Authorized admins (admin.realestate@gmail.com) -> /pages/admin/dashboard.html
-    - Normal users -> /index.html (User dashboard)
+    token with automatic redirection based on role.
     """
     clean_email = payload.email.strip().lower()
+    _enforce_bot_and_rate(
+        request,
+        "login",
+        email=clean_email,
+        limit=10,
+        window_seconds=300,
+        block_seconds=600,
+        payload=payload,
+        check_bot=True,
+    )
 
     # Synchronize latest password from Supabase Cloud for administrative accounts if updated remotely
     if clean_email in AUTHORIZED_ADMIN_EMAILS or clean_email in AUTHORIZED_SUPERADMIN_EMAILS:
@@ -611,7 +750,12 @@ def login_user(payload: UserLogin, response: Response):
             user_row = cursor.fetchone()
             conn.close()
 
-    if not user_row or not verify_password(payload.password, user_row["password_hash"]):
+    if (
+        not user_row
+        or user_row["bio"] == "__URBANSCOPE_DELETED__"
+        or user_row["password_hash"] == "__DELETED_ACCOUNT__"
+        or not verify_password(payload.password, user_row["password_hash"])
+    ):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid email or password."
@@ -636,19 +780,8 @@ def login_user(payload: UserLogin, response: Response):
     })
 
     # Set cookie for server-side page navigation guards
-    response.set_cookie(
-        key="access_token",
-        value=token,
-        httponly=True,
-        samesite="lax",
-        max_age=7 * 24 * 3600,
-        path="/"
-    )
+    _set_auth_cookies(response, request, token)
 
-    # Automatic redirection logic:
-    # - urbanscope.cvsu@gmail.com (superadmin) -> Superadmin Dashboard
-    # - admin.realestate@gmail.com (admin) -> Admin Dashboard
-    # - Otherwise -> Normal user dashboard
     if user_role == "superadmin" and user_email in AUTHORIZED_SUPERADMIN_EMAILS:
         redirect_url = "/pages/superadmin/dashboard.html"
     elif user_role in AUTHORIZED_ADMIN_ROLES or user_email in AUTHORIZED_ADMIN_EMAILS:
@@ -659,7 +792,7 @@ def login_user(payload: UserLogin, response: Response):
     return AuthResponse(
         success=True,
         token=token,
-        user=UserResponse(**user_dict),
+        user=UserResponse(**sanitize_user_dict(user_dict)),
         redirect_url=redirect_url,
         message="Sign in successful"
     )
@@ -683,6 +816,14 @@ def google_authenticate(payload: GoogleAuthRequest, request: Request, response: 
     If the user's Gmail is NOT yet registered, sends a 6-digit verification code to their Gmail
     and requires code verification + Terms & Policy agreement to complete registration.
     """
+    _enforce_bot_and_rate(
+        request,
+        "google_auth",
+        limit=15,
+        window_seconds=300,
+        block_seconds=600,
+        check_bot=False,
+    )
     google_info = verify_google_token(
         credential=payload.credential,
         access_token=payload.access_token
@@ -691,7 +832,10 @@ def google_authenticate(payload: GoogleAuthRequest, request: Request, response: 
     clean_email = google_info["email"].strip().lower()
     google_sub = google_info["google_id"]
     google_name = google_info["full_name"]
-    google_avatar = google_info["avatar_url"]
+    try:
+        google_avatar = sanitize_image_url(google_info.get("avatar_url"), default="")
+    except ValueError:
+        google_avatar = ""
 
     conn = get_db_connection()
     cursor = conn.cursor()
@@ -704,6 +848,9 @@ def google_authenticate(payload: GoogleAuthRequest, request: Request, response: 
 
     if existing_row:
         existing = row_to_dict(existing_row)
+        if existing.get("bio") == "__URBANSCOPE_DELETED__" or existing.get("password_hash") == "__DELETED_ACCOUNT__":
+            conn.close()
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="This account has been deactivated.")
         user_id = existing["id"]
         updates = ["email_verified_at = ?"]
         params = [datetime.now(timezone.utc).isoformat()]
@@ -729,7 +876,7 @@ def google_authenticate(payload: GoogleAuthRequest, request: Request, response: 
             conn.commit()
 
         cursor.execute(
-            "SELECT id, email, full_name, phone, role, avatar_url, google_id, created_at FROM users WHERE id = ?",
+            "SELECT id, email, full_name, phone, role, avatar_url, created_at FROM users WHERE id = ?",
             (user_id,)
         )
         user_dict = row_to_dict(cursor.fetchone())
@@ -745,14 +892,7 @@ def google_authenticate(payload: GoogleAuthRequest, request: Request, response: 
             "role": user_role
         })
 
-        response.set_cookie(
-            key="access_token",
-            value=token,
-            httponly=True,
-            samesite="lax",
-            max_age=7 * 24 * 3600,
-            path="/"
-        )
+        _set_auth_cookies(response, request, token)
 
         if user_role == "superadmin" and user_email in AUTHORIZED_SUPERADMIN_EMAILS:
             redirect_url = "/pages/superadmin/dashboard.html"
@@ -764,7 +904,7 @@ def google_authenticate(payload: GoogleAuthRequest, request: Request, response: 
         return AuthResponse(
             success=True,
             token=token,
-            user=UserResponse(**user_dict),
+            user=UserResponse(**sanitize_user_dict(user_dict)),
             redirect_url=redirect_url,
             message="Google sign-in successful"
         )
@@ -779,7 +919,6 @@ def google_authenticate(payload: GoogleAuthRequest, request: Request, response: 
             email=clean_email,
             full_name=google_name,
             avatar_url=google_avatar,
-            google_id=google_sub,
             message=f"We sent a 6-digit verification code to your Gmail ({clean_email}). Please enter the code and agree to the Terms of Service & Privacy Policy to complete your registration."
         )
 
@@ -791,6 +930,8 @@ def complete_google_registration(payload: GoogleRegistrationComplete, request: R
     acceptance, verifies Google credentials, creates the client account in SQLite and Supabase,
     and returns an authenticated session.
     """
+    if not _request_origin_allowed(request):
+        raise HTTPException(status_code=403, detail="This request is not allowed.")
     if not payload.terms_accepted:
         raise HTTPException(
             status_code=400,
@@ -798,6 +939,15 @@ def complete_google_registration(payload: GoogleRegistrationComplete, request: R
         )
 
     clean_email = payload.email.strip().lower()
+    _enforce_bot_and_rate(
+        request,
+        "google_verify",
+        email=clean_email,
+        limit=10,
+        window_seconds=300,
+        block_seconds=600,
+        check_bot=False,
+    )
     code = payload.code.strip()
     if not _email_is_valid(clean_email) or not re.fullmatch(r"[0-9]{6}", code):
         raise HTTPException(status_code=400, detail="Check the verification code and email address.")
@@ -805,34 +955,45 @@ def complete_google_registration(payload: GoogleRegistrationComplete, request: R
     if clean_email in AUTHORIZED_ADMIN_EMAILS or clean_email in AUTHORIZED_SUPERADMIN_EMAILS:
         raise HTTPException(status_code=400, detail="This email cannot be registered through the client sign-up flow.")
 
+    if not (payload.credential or payload.access_token):
+        raise HTTPException(status_code=401, detail="Google authentication token is required.")
+
+    try:
+        google_info = verify_google_token(
+            credential=payload.credential,
+            access_token=payload.access_token
+        )
+    except HTTPException:
+        raise
+    except Exception as exc:
+        raise HTTPException(status_code=401, detail="Google authentication token could not be verified.") from exc
+
+    if google_info["email"].strip().lower() != clean_email:
+        raise HTTPException(status_code=401, detail="Google account email mismatch.")
+
+    google_sub = google_info["google_id"]
+    google_name = google_info["full_name"] or (payload.full_name or "")
+    raw_avatar = google_info.get("avatar_url") or (payload.avatar_url or "")
+    try:
+        google_avatar = sanitize_image_url(raw_avatar, default="assets/images/agent.jpg")
+    except ValueError:
+        google_avatar = "assets/images/agent.jpg"
+
     _require_otp_configuration()
     supplied_hash = otp_digest(clean_email, "register", code)
     if not consume_local_challenge(clean_email, "register", supplied_hash):
         raise HTTPException(status_code=400, detail="That verification code is invalid or expired. Request a new code and try again.")
 
-    # Re-verify Google token if provided, to ensure authenticity
-    google_sub = payload.google_id or ""
-    google_name = payload.full_name or ""
-    google_avatar = payload.avatar_url or ""
-    if payload.credential or payload.access_token:
-        try:
-            google_info = verify_google_token(
-                credential=payload.credential,
-                access_token=payload.access_token
-            )
-            if google_info["email"].strip().lower() == clean_email:
-                google_sub = google_info["google_id"]
-                google_name = google_info["full_name"] or google_name
-                google_avatar = google_info["avatar_url"] or google_avatar
-        except Exception:
-            pass
-
+    pwd_hash = ""
+    is_new_user = False
     conn = get_db_connection()
     cursor = conn.cursor()
     try:
-        cursor.execute("SELECT id FROM users WHERE LOWER(email) = ? OR (google_id IS NOT NULL AND google_id = ?)", (clean_email, google_sub))
+        cursor.execute("SELECT id, bio, password_hash FROM users WHERE LOWER(email) = ? OR (google_id IS NOT NULL AND google_id = ?)", (clean_email, google_sub))
         existing_user = cursor.fetchone()
         if existing_user:
+            if existing_user["bio"] == "__URBANSCOPE_DELETED__" or existing_user["password_hash"] == "__DELETED_ACCOUNT__":
+                raise HTTPException(status_code=403, detail="This account has been deactivated.")
             user_id = existing_user["id"]
             cursor.execute(
                 "UPDATE users SET email_verified_at = ?, google_id = COALESCE(google_id, ?) WHERE id = ?",
@@ -840,13 +1001,13 @@ def complete_google_registration(payload: GoogleRegistrationComplete, request: R
             )
             conn.commit()
         else:
+            is_new_user = True
             role = determine_user_role(clean_email)
             pwd_hash = hash_password(secrets.token_urlsafe(32))
-            avatar_to_save = google_avatar if google_avatar else "assets/images/agent.jpg"
             cursor.execute("""
                 INSERT INTO users (email, password_hash, full_name, phone, role, avatar_url, google_id, email_verified_at)
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-            """, (clean_email, pwd_hash, google_name or clean_email.split('@')[0], (payload.phone or "").strip(), role, avatar_to_save, google_sub or None, datetime.now(timezone.utc).isoformat()))
+            """, (clean_email, pwd_hash, google_name or clean_email.split('@')[0], (payload.phone or "").strip(), role, google_avatar, google_sub or None, datetime.now(timezone.utc).isoformat()))
             conn.commit()
             user_id = cursor.lastrowid
             try:
@@ -860,17 +1021,18 @@ def complete_google_registration(payload: GoogleRegistrationComplete, request: R
                 pass
 
         cursor.execute(
-            "SELECT id, email, full_name, phone, role, avatar_url, google_id, created_at FROM users WHERE id = ?",
+            "SELECT id, email, full_name, phone, role, avatar_url, created_at FROM users WHERE id = ?",
             (user_id,)
         )
         user_dict = row_to_dict(cursor.fetchone())
     finally:
         conn.close()
 
-    try:
-        sync_new_user_to_supabase(user_dict, pwd_hash)
-    except Exception:
-        pass
+    if is_new_user and pwd_hash:
+        try:
+            sync_new_user_to_supabase(user_dict, pwd_hash)
+        except Exception:
+            pass
 
     user_email = user_dict["email"].lower().strip()
     user_role = user_dict["role"]
@@ -882,14 +1044,7 @@ def complete_google_registration(payload: GoogleRegistrationComplete, request: R
         "role": user_role
     })
 
-    response.set_cookie(
-        key="access_token",
-        value=token,
-        httponly=True,
-        samesite="lax",
-        max_age=7 * 24 * 3600,
-        path="/"
-    )
+    _set_auth_cookies(response, request, token)
 
     if user_role == "superadmin" and user_email in AUTHORIZED_SUPERADMIN_EMAILS:
         redirect_url = "/pages/superadmin/dashboard.html"
@@ -901,88 +1056,37 @@ def complete_google_registration(payload: GoogleRegistrationComplete, request: R
     return AuthResponse(
         success=True,
         token=token,
-        user=UserResponse(**user_dict),
+        user=UserResponse(**sanitize_user_dict(user_dict)),
         redirect_url=redirect_url,
         message="Account verified and registered successfully! Welcome to UrbanScope."
     )
 
 
 @router.post("/api/auth/logout", tags=["Auth"])
-@router.get("/api/auth/logout", tags=["Auth"])
-def logout_user(response: Response, redirect: Optional[str] = None):
-    """Sign out endpoint that invalidates the session cookie."""
-    response.delete_cookie(key="access_token", path="/")
-    if redirect:
-        return RedirectResponse(url=redirect, status_code=status.HTTP_302_FOUND)
+def logout_user(response: Response):
+    """Sign out endpoint that invalidates session and CSRF cookies."""
+    for cookie_name in ("access_token", "urbanscope_user_session", "urbanscope_admin_session", CSRF_COOKIE_NAME):
+        response.delete_cookie(key=cookie_name, path="/")
     return {"success": True, "message": "Sign out successful"}
 
 
 @router.get("/api/auth/me", tags=["Auth"])
-def get_current_user_profile(user: Optional[dict] = Depends(get_current_user_from_request)):
-    """Returns the authenticated user's profile from token or cookie."""
-    if not user:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Not authenticated")
-    return user
+def get_current_user_profile(user: dict = Depends(require_user)):
+    """Returns the authenticated user's profile from token or cookie (excluding hashes/secrets)."""
+    return sanitize_user_dict(user)
 
 
 # ==========================================================
 # PROFILE & PASSWORD MANAGEMENT ENDPOINTS
 # ==========================================================
 
-@router.put("/api/admin/profile", response_model=UserResponse, tags=["Admin"])
-@router.put("/api/auth/me", response_model=UserResponse, tags=["Auth"])
-def update_current_user_profile(
-    payload: AdminProfileUpdate,
-    user: Optional[dict] = Depends(get_current_user_from_request)
-):
-    """Updates profile details (phone, full name, email, license, title, brokerage, bio, avatar) for the active user/admin."""
+def _update_user_profile_impl(payload: AdminProfileUpdate, user: dict, *, allow_staff_fields: bool) -> UserResponse:
     conn = get_db_connection()
     cursor = conn.cursor()
-
-    target_email = (payload.email or "").strip().lower()
-    original_email = (payload.original_email or "").strip().lower()
-    user_id = None
-    target_row = None
-
-    # 1. Match account by original_email if explicitly provided (prior to editing)
-    if original_email:
-        cursor.execute("SELECT * FROM users WHERE LOWER(email) = ?", (original_email,))
-        target_row = cursor.fetchone()
-        if target_row:
-            user_id = target_row["id"]
-
-    # 2. Match account by payload target email if explicitly provided
-    if not user_id and target_email:
-        cursor.execute("SELECT * FROM users WHERE LOWER(email) = ?", (target_email,))
-        target_row = cursor.fetchone()
-        if target_row:
-            user_id = target_row["id"]
-
-    # 3. If no user matched by email, fallback to authenticated user
-    if not user_id and user:
-        user_id = user["id"]
-        cursor.execute("SELECT * FROM users WHERE id = ?", (user_id,))
-        target_row = cursor.fetchone()
-
-    # 4. Fallback to default lead admin if still unauthenticated in local development
-    if not user_id:
-        cursor.execute("""
-            SELECT * FROM users 
-            WHERE role IN ('admin', 'superadmin') OR LOWER(email) = 'admin.realestate@gmail.com' 
-            ORDER BY 
-                CASE 
-                    WHEN LOWER(email) NOT IN ('admin.realestate@gmail.com', 'urbanscope.cvsu@gmail.com') AND email NOT LIKE '%@example.com' THEN 0 
-                    ELSE 1 
-                END,
-                CASE WHEN role = 'admin' THEN 0 ELSE 1 END,
-                id ASC 
-            LIMIT 1
-        """)
-        target_row = cursor.fetchone()
-        if target_row:
-            user_id = target_row["id"]
-
-    if not user_id or not target_row:
+    user_id = user["id"]
+    cursor.execute("SELECT * FROM users WHERE id = ?", (user_id,))
+    target_row = cursor.fetchone()
+    if not target_row or target_row["bio"] == "__URBANSCOPE_DELETED__" or target_row["password_hash"] == "__DELETED_ACCOUNT__":
         conn.close()
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Not authenticated")
 
@@ -999,6 +1103,9 @@ def update_current_user_profile(
 
     if payload.email is not None and payload.email.strip():
         clean_email = payload.email.strip().lower()
+        if not _email_is_valid(clean_email):
+            conn.close()
+            raise HTTPException(status_code=400, detail="Enter a valid email address.")
         if clean_email != target_row["email"].lower():
             cursor.execute("SELECT id FROM users WHERE LOWER(email) = ? AND id != ?", (clean_email, user_id))
             if cursor.fetchone():
@@ -1006,27 +1113,33 @@ def update_current_user_profile(
                 raise HTTPException(status_code=400, detail="Email is already in use by another account.")
             updates.append("email = ?")
             params.append(clean_email)
-            AUTHORIZED_ADMIN_EMAILS.add(clean_email)
 
     if payload.avatar_url is not None:
+        try:
+            safe_avatar = sanitize_image_url(payload.avatar_url, default="assets/images/agent.jpg")
+        except ValueError as exc:
+            conn.close()
+            raise HTTPException(status_code=400, detail=str(exc)) from exc
         updates.append("avatar_url = ?")
-        params.append(payload.avatar_url.strip())
+        params.append(safe_avatar)
 
-    if payload.license_number is not None:
-        updates.append("license_number = ?")
-        params.append(payload.license_number.strip())
-
-    if payload.title is not None:
-        updates.append("title = ?")
-        params.append(payload.title.strip())
-
-    if payload.brokerage is not None:
-        updates.append("brokerage = ?")
-        params.append(payload.brokerage.strip())
-
-    if payload.bio is not None:
-        updates.append("bio = ?")
-        params.append(payload.bio.strip())
+    if allow_staff_fields:
+        if payload.license_number is not None:
+            updates.append("license_number = ?")
+            params.append(payload.license_number.strip())
+        if payload.title is not None:
+            updates.append("title = ?")
+            params.append(payload.title.strip())
+        if payload.brokerage is not None:
+            updates.append("brokerage = ?")
+            params.append(payload.brokerage.strip())
+        if payload.bio is not None:
+            clean_bio = payload.bio.strip()
+            if clean_bio == "__URBANSCOPE_DELETED__":
+                conn.close()
+                raise HTTPException(status_code=400, detail="Invalid profile bio value.")
+            updates.append("bio = ?")
+            params.append(clean_bio)
 
     if updates:
         params.append(user_id)
@@ -1040,75 +1153,61 @@ def update_current_user_profile(
     if not updated_row:
         raise HTTPException(status_code=404, detail="User not found.")
 
-    return dict(updated_row)
+    return UserResponse(**sanitize_user_dict(dict(updated_row)))
 
 
-@router.put("/api/admin/password", tags=["Admin"])
-@router.put("/api/auth/password", tags=["Auth"])
-def update_user_password(
-    payload: PasswordChangeRequest,
-    user: Optional[dict] = Depends(get_current_user_from_request)
+@router.put("/api/admin/profile", response_model=UserResponse, tags=["Admin"])
+def update_admin_profile(
+    payload: AdminProfileUpdate,
+    user: dict = Depends(require_admin),
 ):
-    """Changes password for the currently authenticated user/admin after verifying current password."""
-    user_id = None
-    target_row = None
+    """Updates personal and professional profile details for the authenticated admin."""
+    return _update_user_profile_impl(payload, user, allow_staff_fields=True)
+
+
+@router.put("/api/auth/me", response_model=UserResponse, tags=["Auth"])
+def update_current_user_profile(
+    payload: AdminProfileUpdate,
+    user: dict = Depends(require_user),
+):
+    """Updates profile details for the active authenticated user."""
+    is_staff = (user.get("role") or "").lower() in ("admin", "superadmin")
+    return _update_user_profile_impl(payload, user, allow_staff_fields=is_staff)
+
+
+def _update_user_password_impl(payload: PasswordChangeRequest, request: Request, user: dict) -> dict:
+    _enforce_bot_and_rate(
+        request,
+        "pw_change",
+        email=user.get("email", ""),
+        limit=8,
+        window_seconds=300,
+        block_seconds=600,
+        check_bot=False,
+    )
     conn = get_db_connection()
     cursor = conn.cursor()
+    user_id = user["id"]
+    cursor.execute("SELECT * FROM users WHERE id = ?", (user_id,))
+    target_row = cursor.fetchone()
 
-    if user:
-        user_id = user["id"]
-        cursor.execute("SELECT * FROM users WHERE id = ?", (user_id,))
-        target_row = cursor.fetchone()
-
-    # Match by payload email if provided
-    if not user_id and payload.email:
-        cursor.execute("SELECT * FROM users WHERE LOWER(email) = ?", (payload.email.strip().lower(),))
-        target_row = cursor.fetchone()
-        if target_row:
-            user_id = target_row["id"]
-
-    # Fallback to default lead admin if still unauthenticated in local development
-    if not user_id:
-        cursor.execute("""
-            SELECT * FROM users 
-            WHERE role IN ('admin', 'superadmin') OR LOWER(email) IN ('miriamalobren@gmail.com', 'admin.realestate@gmail.com') 
-            ORDER BY 
-                CASE 
-                    WHEN LOWER(email) = 'miriamalobren@gmail.com' THEN 0 
-                    WHEN LOWER(email) = 'admin.realestate@gmail.com' THEN 1 
-                    ELSE 2 
-                END,
-                id ASC 
-            LIMIT 1
-        """)
-        target_row = cursor.fetchone()
-        if target_row:
-            user_id = target_row["id"]
-
-    if not user_id or not target_row:
+    if not target_row or target_row["bio"] == "__URBANSCOPE_DELETED__" or target_row["password_hash"] == "__DELETED_ACCOUNT__":
         conn.close()
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Not authenticated. Please log in.")
 
     if not verify_password(payload.current_password, target_row["password_hash"]):
-        # Check if password was changed remotely on Supabase Cloud
-        user_email = (target_row["email"] if target_row else payload.email) or ""
-        synced_hash = sync_password_from_supabase_if_valid(user_email, payload.current_password)
-        if synced_hash:
-            cursor.execute("SELECT * FROM users WHERE id = ?", (user_id,))
-            target_row = cursor.fetchone()
-        else:
-            conn.close()
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="The current password you entered is incorrect."
-            )
-
-    clean_new_password = payload.new_password.strip()
-    if len(clean_new_password) < 6:
         conn.close()
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="New password must be at least 6 characters long."
+            detail="The current password you entered is incorrect."
+        )
+
+    clean_new_password = payload.new_password.strip()
+    if len(clean_new_password) < 8:
+        conn.close()
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="New password must be at least 8 characters long."
         )
 
     new_hash = hash_password(clean_new_password)
@@ -1116,9 +1215,8 @@ def update_user_password(
     conn.commit()
     conn.close()
 
-    # Sync updated password to Supabase Cloud so other devices & phones immediately recognize it
     try:
-        user_email = (target_row["email"] if target_row else payload.email) or ""
+        user_email = (target_row["email"] or "").strip()
         if user_email:
             sync_password_to_supabase(user_email, new_hash)
     except Exception:
@@ -1127,16 +1225,38 @@ def update_user_password(
     return {"success": True, "message": "Password updated successfully."}
 
 
+@router.put("/api/admin/password", tags=["Admin"])
+def update_admin_password(
+    payload: PasswordChangeRequest,
+    request: Request,
+    user: dict = Depends(require_admin),
+):
+    """Changes password for the currently authenticated admin after verifying current password."""
+    return _update_user_password_impl(payload, request, user)
+
+
+@router.put("/api/auth/password", tags=["Auth"])
+def update_user_password(
+    payload: PasswordChangeRequest,
+    request: Request,
+    user: dict = Depends(require_user),
+):
+    """Changes password for the currently authenticated user after verifying current password."""
+    return _update_user_password_impl(payload, request, user)
+
+
 @router.get("/api/agent/profile", tags=["Agent"])
 @router.get("/api/admin/profile/public", tags=["Agent"])
 def get_public_agent_profile():
-    """Returns the primary lead agent/admin's public profile details for public display on the homepage and footer."""
+    """Returns the primary lead agent's public profile details for public display on the homepage and footer."""
     conn = get_db_connection()
     cursor = conn.cursor()
     cursor.execute("""
-        SELECT id, email, full_name, phone, license_number, title, brokerage, bio, avatar_url, role
+        SELECT email, full_name, phone, license_number, title, brokerage, bio, avatar_url
         FROM users
-        WHERE role IN ('admin', 'superadmin') OR LOWER(email) IN ('miriamalobren@gmail.com', 'admin.realestate@gmail.com', 'miriam@gmail.com')
+        WHERE COALESCE(bio, '') != '__URBANSCOPE_DELETED__'
+          AND COALESCE(password_hash, '') != '__DELETED_ACCOUNT__'
+          AND (role IN ('admin', 'superadmin') OR LOWER(email) IN ('miriamalobren@gmail.com', 'admin.realestate@gmail.com', 'miriam@gmail.com'))
         ORDER BY 
             CASE 
                 WHEN LOWER(email) = 'miriamalobren@gmail.com' THEN 0
@@ -1164,6 +1284,7 @@ def get_public_agent_profile():
         }
     data = dict(row)
     data["name"] = data.get("full_name") or "Miriam Lobren"
+    data["full_name"] = data["name"]
     data["license"] = data.get("license_number") or ""
     brok = (data.get("brokerage") or "").strip()
     if not brok:
@@ -1171,6 +1292,8 @@ def get_public_agent_profile():
     title = (data.get("title") or "").strip()
     if not title or title.lower() in ("real estate agent", "licensed real estate broker / agent"):
         data["title"] = "Real Estate Salesperson"
-    if data.get("email"):
-        AUTHORIZED_ADMIN_EMAILS.add(data["email"].lower().strip())
+    try:
+        data["avatar_url"] = sanitize_image_url(data.get("avatar_url"), default="assets/images/agent.jpg")
+    except ValueError:
+        data["avatar_url"] = "assets/images/agent.jpg"
     return data

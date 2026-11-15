@@ -416,7 +416,8 @@
             if (!pendingOtpEmail || typeof apiStartRegistrationOtp !== 'function') return;
             resendEmailOtpBtn.disabled = true;
             if (otpResendStatus) otpResendStatus.textContent = 'Requesting a new code…';
-            const result = await apiStartRegistrationOtp(pendingOtpEmail);
+            const botData = window.UrbanBotGuard ? window.UrbanBotGuard.collect('registerForm', 'registerTurnstile') : {};
+            const result = await apiStartRegistrationOtp(pendingOtpEmail, botData);
             if (!result || !result.success) {
                 if (otpResendStatus) otpResendStatus.textContent = (result && result.error) || 'Could not request a new code.';
                 resendEmailOtpBtn.disabled = false;
@@ -429,6 +430,7 @@
     }
 
     if (registerForm) {
+        if (window.UrbanBotGuard) window.UrbanBotGuard.init('registerForm', 'registerTurnstile');
         registerForm.addEventListener('input', saveRegisterDraft);
         registerForm.addEventListener('change', saveRegisterDraft);
 
@@ -473,8 +475,9 @@
             btn.innerText = 'Sending Verification Code…';
 
             try {
+                const botData = window.UrbanBotGuard ? window.UrbanBotGuard.collect('registerForm', 'registerTurnstile') : {};
                 const otpRes = typeof apiStartRegistrationOtp === 'function'
-                    ? await apiStartRegistrationOtp(email)
+                    ? await apiStartRegistrationOtp(email, botData)
                     : { success: false, error: 'Registration service is unavailable. Please try again later.' };
 
                 if (otpRes && otpRes.success) {
@@ -497,6 +500,7 @@
                 }
             }
 
+            if (window.UrbanBotGuard) window.UrbanBotGuard.reset('registerTurnstile');
             btn.disabled = false;
             btn.innerText = originalText;
         });
@@ -518,8 +522,9 @@
             }
 
             if (button) { button.disabled = true; button.textContent = 'Verifying…'; }
+            const botData = window.UrbanBotGuard ? window.UrbanBotGuard.collect('registerForm', 'registerTurnstile') : {};
             const result = typeof apiCompleteRegistrationOtp === 'function'
-                ? await apiCompleteRegistrationOtp(pendingOtpEmail, code, password, fullname, phone)
+                ? await apiCompleteRegistrationOtp(pendingOtpEmail, code, password, fullname, phone, { ...botData, terms_accepted: true })
                 : { success: false, error: 'Email verification is unavailable. Please try again.' };
             if (result && result.success) {
                 try { sessionStorage.removeItem(DRAFT_STORAGE_KEY); } catch (error) {}

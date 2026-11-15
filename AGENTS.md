@@ -29,18 +29,17 @@ pip install -r backend/requirements.txt
 python run.py            # serves site + API on http://127.0.0.1:8000
 ```
 
-- Site: `http://127.0.0.1:8000/` · API docs: `http://127.0.0.1:8000/docs`
-- `run.py` uses `uvicorn --reload`, so Python edits hot-reload.
-- Env vars (or `.env` in root — see `.env.example`): `HOST`, `PORT`, `URBANSCOPE_SECRET_KEY`, `GOOGLE_CLIENT_ID`; Vercel deployments also require `VERCEL_ADMIN_SESSION_SECRET` and may set `VERCEL_ADMIN_EMAILS` in Vercel project settings.
+- Site: `http://127.0.0.1:8000/` · API docs (dev only): `http://127.0.0.1:8000/docs`
+- `run.py` disables `reload` and `/docs` when `URBANSCOPE_ENV=production` unless `ENABLE_API_DOCS=true`.
+- Env vars (or `.env` in root — see `.env.example`): `URBANSCOPE_ENV`, `HOST`, `PORT`, `FORCE_HTTPS`, `ENABLE_API_DOCS`, `ALLOWED_ORIGINS`, `URBANSCOPE_SECRET_KEY`, `GOOGLE_CLIENT_ID`, `RESEND_API_KEY`, `RESEND_FROM_EMAIL`, `AUTH_OTP_SECRET`, `SUPABASE_SERVICE_ROLE_KEY`, optional `TURNSTILE_SITE_KEY`/`TURNSTILE_SECRET_KEY`; Vercel deployments also require `VERCEL_ADMIN_SESSION_SECRET` and may set `VERCEL_ADMIN_EMAILS`.
 - Frontend also works from VS Code Live Server (`:5500/frontend/`); it calls the API at `http://127.0.0.1:8000/api`.
 - **Reset data:** delete `backend/urbanscope.db` and restart (or run `python backend/seed_rbac.py`).
 
-Demo logins:
-- Superadmin: `urbanscope.cvsu@gmail.com` / `urbanscope2026`
-- Admin: `miriamalobren@gmail.com` (pass: `111112` or updated via Admin Profile; legacy demo: `admin.realestate@gmail.com` / `realestate2026`)
+Local Staff Bootstrap (never store plaintext passwords in source):
+- Set `SEED_SUPERADMIN_PASSWORD`, `SEED_MIRIAM_PASSWORD`, and `SEED_ADMIN_PASSWORD` before first boot, or in `development` mode `init_db()` generates one-time random bootstrap passwords and writes them once to git-ignored `backend/.bootstrap_credentials.txt`.
+- Production (`URBANSCOPE_ENV=production`) never auto-generates default passwords or exposes debug/OTP codes.
 
-There is **no test suite, linter, or build step**. Verify changes by running the server
-and exercising the page / `/docs` endpoint you touched.
+Verify changes with Python (`backend/`) / Node (`api/`, `lib/`, `proxy.js`) checks and by exercising the pages/endpoints you touched.
 
 ---
 
@@ -128,7 +127,7 @@ path when rendering from a page.
   accessing client inquiries (`GET /api/inquiries`), and reading metrics (`GET /api/stats`) are
   protected by the `require_admin` dependency. Superadmin endpoints (`/api/superadmin/*`) are
   protected by `require_superadmin`.
-- **Vercel Static-Page Protection:** Since Vercel serves HTML statically and does not run FastAPI middleware, root `proxy.js` checks a signed `HttpOnly` admin cookie before serving Admin/Superadmin HTML at public and underlying `/frontend/pages/...` paths. `api/auth/edge-session.js` verifies Google tokens or email/password credentials server-side and issues a 12-hour cookie only for the staff allowlist (`admin.realestate@gmail.com`, `miriamalobren@gmail.com`, `miriam@gmail.com`, `urbanscope.cvsu@gmail.com`) and optional `VERCEL_ADMIN_EMAILS` entries. Approved Admin staff can access the Admin portal; only the root Superadmin can access Superadmin. Configure a private `VERCEL_ADMIN_SESSION_SECRET` (at least 32 characters) in Vercel Project Settings before deployment. Hosted route authorization never trusts localStorage role values.
+- **Vercel Static-Page Protection & API Proxy Architecture:** Since Vercel serves HTML statically and does not run FastAPI middleware, root `proxy.js` checks a signed `HttpOnly` admin cookie before serving Admin/Superadmin HTML at public and underlying `/frontend/pages/...` paths. Vercel Serverless Functions keep `api/*.js` count within the Hobby limit (`<= 12`, currently `11`): `/api/session` (login/logout/session/Google/profile/password/lead agent), `/api/inquiries` (CRUD, ownership checks, admin status workflow), `/api/properties` (CRUD with admin guard & SVG/URI blocking), `/api/superadmin/users`, `/api/auth/edge-session`, `/api/auth/admin-password/change`, `/api/auth/register/*`, and `/api/auth/password/reset/*`. Configure private secrets (`VERCEL_ADMIN_SESSION_SECRET`, `AUTH_OTP_SECRET`, `SUPABASE_SERVICE_ROLE_KEY`, `RESEND_API_KEY`) in Vercel Project Settings before deployment. Supabase RLS (`20261115031500_security_rls_and_rate_limits.sql`) permits browser `anon` reads strictly on `properties` and `property_images`, routing all private reads/writes server-side with `service_role`. Hosted route authorization never trusts `localStorage` values.
 
 ---
 
@@ -166,7 +165,7 @@ path when rendering from a page.
 3. **`/api/stats` count:** Returns 3 aggregate counts (`total_properties`, `total_inquiries`,
    `pending_inquiries`); the admin dashboard computes the other 2 cards dynamically from the inquiry list.
 4. **`init_db()` runs twice on startup:** (module import + lifespan). Harmless because it's idempotent.
-5. **CORS & JWT secrets:** CORS is `allow_origins=["*"]` with credentials, and there's a hard-coded fallback JWT secret — dev only.
+5. **CORS & JWT secrets:** CORS origins default to local hosts in dev and `ALLOWED_ORIGINS` in prod (`allow_origins=["*"]` removed); JWT signing secret is read from `URBANSCOPE_SECRET_KEY` (production fails closed if unset; dev generates a persistent key in git-ignored `backend/.urbanscope_dev_secret`).
 6. **Unified Sign-In:** `/pages/admin/login.html` 302-redirects to `/pages/auth/login.html`, which handles
    role detection and redirects clients to home/redirect target, admins to `/pages/admin/dashboard.html`,
    and superadmins to `/pages/superadmin/dashboard.html`.
@@ -262,7 +261,7 @@ path when rendering from a page.
       - **FastAPI Endpoints**: Implemented `PUT /api/admin/password` and `PUT /api/auth/password` taking `PasswordChangeRequest(current_password, new_password)`. Validates current password against SQLite `users.password_hash` using `verify_password()`, hashes the new password with PBKDF2-HMAC-SHA256 (100,000 iterations), and updates the database row.
       - **Browser WebCrypto PBKDF2 Engine (`supabase.js` & `api.js`)**: Implemented `verifyPBKDF2()` and `hashPBKDF2()` using native `crypto.subtle`, completely matching Python's PBKDF2-HMAC-SHA256 standard without external dependencies.
       - **Supabase Cloud Synchronization**: `apiUpdateAdminPassword` queries Supabase `users`, validates the current password against remote `password_hash` (or default seed fallbacks), generates a fresh PBKDF2 hash, and patches the remote record.
-      - **Session & Sign-In Synchronization**: `apiSignIn` checks Supabase `password_hash` with `verifyPBKDF2` and honors updated session passwords (`urbanscope_admin_password_updated` and `adminPassword`), enabling seamless sign-in immediately after changing password.
+      - **Session & Sign-In Synchronization**: `apiSignIn` authenticates exclusively through backend `/api/session` / `/api/auth/login` with server-side PBKDF2 verification (note: legacy client password caches were purged in §126).
       - **Dedicated Card Alert Box (`#passwordAlertBox`)**: Added dedicated in-card alert banner in `profile.html` and `showPasswordAlert()` in `profile.js` to provide immediate error/success feedback directly inside the Change Password card without scrolling away.
 20. **Supabase migration 0002 (`20261030230000_admin_profile_fields_and_superadmin_role.sql`):**
     - Adds `users.title`, `users.brokerage`, `users.bio` and allows `'superadmin'` in `users_role_check`. Idempotent like 0001.
@@ -499,8 +498,8 @@ path when rendering from a page.
     - **End-to-End Flow & Verification**:
       - `frontend/pages/admin/profile.js` captures current, new, and confirm passwords and triggers `apiUpdateAdminPassword(curPass, newPass)` in `frontend/shared/js/supabase.js` and `api.js`.
       - `PUT /api/admin/password` in `backend/routers/auth.py` validates the request, resolves the account via authenticated JWT/session cookie or email fallback, verifies the `current_password` against the stored PBKDF2 hash, and updates `users.password_hash` in SQLite.
-      - Supabase Cloud sync: Asynchronously generates a PBKDF2 salt-hash and updates `${REST_BASE}/users` if remote cloud is active.
-      - Client Storage: Synchronizes `urbanscope_admin_password_updated` and `adminPassword` in `localStorage` for seamless immediate sign-in.
+      - Supabase Cloud sync: Asynchronously generates a PBKDF2 salt-hash and updates `${REST_BASE}/users` via server-side `service_role`.
+      - Client Storage: Never stores plaintext password strings in `localStorage` (legacy password storage keys purged in §126).
     - **Database Restart Persistence Guarantee (`backend/database.py`)**:
       - `init_db()` was previously overwriting existing users' `password_hash` with default seed hashes on every server boot or reload.
       - Updated `init_db()` to check `if not existing[1]:` so that existing users' custom updated passwords and profile info are strictly preserved across server restarts and lifespan reloads.
@@ -523,23 +522,19 @@ path when rendering from a page.
     - **UI & UX Styling (`profile.css`)**: Encapsulated inputs inside `.password-input-wrapper` with `padding-right: 42px` to prevent text overlap, placing eye toggle buttons vertically centered on the right with smooth hover elevation, dark-green brand accents, focus rings, and zero interference with form submission.
     - **Dynamic Icon & State Swap (`profile.js`)**: Clicking an eye toggle dynamically flips `type="password"` to `type="text"` (and vice versa) and transitions between eye-open (`Show password`) and eye-slashed (`Hide password`) SVG icons. Automatic reset listener reverts all fields back to masked password mode upon successful password updates.
 
-42. **Complete Invalidation of Old Password on Admin Login & Strict Cloud Authority:**
-    - **Problem Identified**: After an administrator updated their password in Admin Profile Settings (`/pages/admin/profile.html`), the old password (`realestate2026` or the previous password) could still be used to log in successfully on the admin portal.
+42. **Complete Invalidation of Old Password on Admin Login & Strict Server Authority:**
+    - **Problem Identified**: After an administrator updated their password in Admin Profile Settings (`/pages/admin/profile.html`), a previous/default demo password could still be used to log in due to legacy client fallbacks.
     - **Root Causes**:
-      1. *Legacy Default Fallback Bypass*: In `apiSignIn` (`frontend/shared/js/supabase.js` and `api.js`), Step 2 (Supabase Cloud check) and Step 3 (offline check) contained hardcoded fallback blocks (`else if (cleanEmail === 'admin.realestate@gmail.com' && password === 'realestate2026') passValid = true;` and `isValid = (password === 'realestate2026' || password === locallyUpdated || password === activePass)`). Even when PBKDF2 hash verification failed against the new password, the bypass overrode `passValid` to `true` and rewrote `localStorage.adminPassword` back to the old password.
-      2. *Backend Fallthrough on 401*: When the local FastAPI backend rejected the old password with HTTP 401 Unauthorized, `supabase.js` logged a warning and fell through to Step 2 instead of returning the 401 error.
-      3. *Cross-Device Hash Staleness*: When the password was updated on a mobile phone (updating Supabase Cloud), the laptop's SQLite database still held the old hash until an initial login occurred.
+      1. *Legacy Default Fallback Bypass*: Legacy versions of `apiSignIn` and offline profile checks contained hardcoded fallback blocks that accepted legacy demo passwords even when stored PBKDF2 hashes differed.
+      2. *Backend Fallthrough on 401*: Rejected HTTP 401 login responses previously fell through to offline checks.
+      3. *Cross-Device Hash Staleness*: SQLite and Supabase Cloud could temporarily hold different password hashes until synced.
     - **Solution Implemented**:
-      - **Strict Stored Hash Enforcement (`supabase.js` & `api.js`)**:
-        - In `apiSignIn` Step 1: If the local backend returns HTTP 401, it immediately returns `{ success: false, error: 'Invalid email or password.' }`, halting execution without falling through to offline fallbacks.
-        - In `apiSignIn` Step 2 (Supabase Cloud): If `remoteUser.password_hash` exists, validity is determined strictly by `verifyPBKDF2(password, storedHash)`. The legacy hardcoded bypass was completely removed. Default passwords (`realestate2026`) are only checked if NO stored hash and NO updated password exist.
-        - In `apiSignIn` Step 3 (Offline fallback): Checks `const effectiveAdminPass = locallyUpdated || activePass;`. If set, ONLY that updated password is valid; `realestate2026` is strictly rejected.
-        - In `apiUpdateAdminPassword`: If `stored` exists, verification is strictly performed against `stored`.
+      - **Strict Stored Hash Enforcement (`supabase.js` & `api.js`, hardened further in §126)**:
+        - `apiSignIn` halts on HTTP 401 without offline credential fallbacks, delegating PBKDF2 verification strictly to server endpoints (`/api/auth/login` or `/api/session`), with legacy demo passwords completely removed.
+        - `apiUpdateAdminPassword` and `profile.js` validate password updates server-side via authenticated session tokens.
       - **Backend Proactive Cloud Sync (`backend/routers/auth.py`)**:
-        - Added `sync_latest_password_from_supabase(clean_email)`: On login for administrative accounts, the backend proactively checks Supabase Cloud and syncs the latest password hash into local SQLite before validating credentials. If the user changed the password on their phone, the laptop immediately invalidates the old password and accepts only the new password.
+        - Added `sync_latest_password_from_supabase(clean_email)`: On login for administrative accounts, the backend proactively checks Supabase Cloud and syncs the latest password hash into local SQLite before validating credentials.
         - In `update_user_password`: Verifies current password against Supabase Cloud if SQLite hash was updated remotely before rejecting with 400.
-      - **Profile Settings Fallback (`profile.js`)**:
-        - Form submission fallback strictly verifies `curPass === (updatedPass || activePass || 'realestate2026')`, preventing the old password from changing passwords once an updated password exists.
 
 43. **Registration Mandatory Scroll-to-Accept Terms of Service & Privacy Policy Modal:**
     - On `/pages/auth/register.html`, clicking the `"I agree to the Terms of Service and Privacy Policy"` checkbox (`#terms`), label (`#termsLabel`), or inline links (`#openTermsLink`, `#openPrivacyLink`) prevents immediate checkbox activation and opens a dedicated agreement popup modal (`#termsModalOverlay`).
@@ -740,13 +735,13 @@ path when rendering from a page.
     - **Problem Identified**: The administrator could no longer sign in after updating the profile email to `miriamalobren@gmail.com` (Miriam Lobren's official email). Edge session verification (`/api/auth/edge-session`) returned HTTP 403 Forbidden ("This account does not have administrative access"), FastAPI rejected logins with 401 Unauthorized, and Vercel routing middleware (`proxy.js`) prevented access to `/pages/admin/*` because `miriamalobren@gmail.com` was missing from the staff whitelist.
     - **Root Causes**:
       1. *Admin Session Whitelist Restriction*: `ADMIN_EMAILS` in `lib/admin-session.js` only included `admin.realestate@gmail.com` and `miriam@gmail.com`, causing `isAuthorizedAdminRole()` to reject `miriamalobren@gmail.com`.
-      2. *Edge Session Password Fallback*: `verifyStaffPassword` in `api/auth/edge-session.js` only accepted the default admin password `realestate2026` for legacy addresses.
+      2. *Edge Session Password Fallback*: `verifyStaffPassword` in `api/auth/edge-session.js` only accepted a legacy default password for legacy addresses.
       3. *FastAPI Authorization & RBAC Triggers*: `AUTHORIZED_ADMIN_EMAILS` in `backend/auth.py` and SQLite triggers in `backend/database.py` only assigned the `'admin'` role to `admin.realestate@gmail.com`.
-      4. *Supabase Cloud Role & Password Hash Alignment*: Row `id: 17` (`miriamalobren@gmail.com`) in Supabase had an outdated password hash preventing verification against `realestate2026`.
+      4. *Supabase Cloud Role & Password Hash Alignment*: Row `id: 17` (`miriamalobren@gmail.com`) in Supabase had an outdated password hash preventing verification against the staff credential.
     - **Solution Implemented**:
       - **Staff Whitelists**: Added `miriamalobren@gmail.com` to `ADMIN_EMAILS` in `lib/admin-session.js`, `AUTHORIZED_ADMIN_EMAILS` in `backend/auth.py`, staff arrays in `auth.js`, `edge-session.js`, `register/start.js`, and `register/verify.js`.
-      - **Database Seed & Triggers**: Updated `backend/database.py` (`trg_user_role_insert` and `trg_user_role_update`) and `backend/seed_rbac.py` to automatically assign `'admin'` to `miriamalobren@gmail.com`. The password is not fixed (allowing dynamic changes via Admin Profile settings), preserving existing hashes and initializing `111112` for first-time setup.
-      - **Supabase Cloud Sync & Dynamic Password Verification**: Synchronized `miriamalobren@gmail.com` in Supabase with verified PBKDF2 hash for password `111112`. Removed hardcoded password bypasses in gateways so that changed passwords in Supabase Cloud and SQLite take immediate dynamic effect across Edge Session, FastAPI, and client gateways.
+      - **Database Seed & Triggers**: Updated `backend/database.py` (`trg_user_role_insert` and `trg_user_role_update`) and `backend/seed_rbac.py` to automatically assign `'admin'` to `miriamalobren@gmail.com`. Password hashes preserve existing credentials and initialize via `SEED_*_PASSWORD` or local dev bootstrap (`backend/.bootstrap_credentials.txt`).
+      - **Supabase Cloud Sync & Dynamic Password Verification**: Synchronized `miriamalobren@gmail.com` in Supabase with a verified PBKDF2 hash. Removed hardcoded password bypasses in gateways so that changed passwords in Supabase Cloud and SQLite take immediate dynamic effect across Edge Session, FastAPI, and client gateways.
       - **Gateway & UI Fallbacks**: Updated `frontend/shared/js/supabase.js`, `api.js`, `session.js`, `index.js`, and `profile.js` to normalize roles, recognize `miriamalobren@gmail.com` as lead admin, support password changes via `apiUpdateAdminPassword`, and update contact mailto links across all legal and property pages.
 68. **Admin Password Change Session Fix & Cloud Schema Reconciliation (`profile.html`, `lib/admin-session.js`, `api/auth/admin-password/change.js`):**
     - **Problem**: Admin on `/pages/admin/profile.html` received `"A valid admin session is required."` error banner when changing passwords, preventing password updates.
@@ -756,7 +751,7 @@ path when rendering from a page.
       3. *Lack of Header Token Fallback & Auto-Reauthentication*: If an admin's cookie expired, the frontend halted immediately without using the typed current password to refresh the admin session.
     - **Solution**:
       - Updated `readAdminSession()` in `lib/admin-session.js` with multi-runtime `getHeader()` support (Node `req.headers.cookie`, Web `headers.get('cookie')`, and `Authorization: Bearer <token>`).
-      - Updated `api/auth/admin-password/change.js` to verify against PBKDF2 cloud hashes, fallback to `111112` only when no stored hash exists, update Supabase Cloud, and issue refreshed session cookies (`Set-Cookie`) and tokens.
+      - Updated `api/auth/admin-password/change.js` to verify against PBKDF2 cloud hashes via HMAC-signed admin sessions, update Supabase Cloud via `service_role`, and issue refreshed session cookies (`Set-Cookie`) and tokens.
       - Removed `email_verified_at` from Supabase REST select queries and sanitized update patches across `lib/email-auth.js`, `backend/routers/auth.py`, and `backend/routers/superadmin.py`.
       - Enhanced `apiUpdateAdminPassword` in `frontend/shared/js/supabase.js` and `frontend/shared/js/api.js` to send `Authorization: Bearer` alongside cookies, and automatically re-authenticate if session cookie expired, seamlessly retrying the password change.
       - Updated hint text in `frontend/pages/admin/profile.html` to `"Minimum 6 characters."` to match actual backend validation.
@@ -1346,6 +1341,12 @@ path when rendering from a page.
       - Email OTP verification and password recovery now dispatch exclusively via the **Resend API** (`https://api.resend.com/emails`) with the custom verified domain `miriamlobren.site` (`DEFAULT_RESEND_FROM_EMAIL = 'UrbanScope <noreply@miriamlobren.site>'`), reading `RESEND_API_KEY` from `.env` or Vercel Environment Variables (never hardcoded in tracked source files).
       - Updated `getValidFromSender()` / `get_valid_from_sender()` to normalize empty strings, bare domains (`miriamlobren.site`), bare emails, and display-name values to `UrbanScope <noreply@miriamlobren.site>`. Added `"User-Agent": "UrbanScope/1.0"` and `HTTPError` parsing to `send_otp_email()` in `backend/auth_otp.py`, plus automatic `.env` loading in `lib/email-auth.js` for local execution.
       - Updated unconfigured-email error messages in `api/auth/register/start.js` and `api/auth/password/reset/request.js` and updated `.env.example`, `README.md`, and `DATABASE.md`.
+126. **Full-Stack Security Hardening Suite (Auth, RLS, API Proxy, XSS, Uploads, Rate Limits, Headers, Bot Defense):**
+      - **Secrets & Dev Bootstrap (`backend/security.py`, `backend/database.py`, `backend/seed_rbac.py`, `.env.example`, `.gitignore`, `supabase/seed.sql`):** Scrubbed all hardcoded admin credentials, secret keys, `adminPassword`/`urbanscope_admin_password_updated` `localStorage` keys, and plaintext OTP debugging (`devCode`/`codeHash`/OTP console logs) from source, seeds, and docs. Production (`URBANSCOPE_ENV=production`) fails closed if `URBANSCOPE_SECRET_KEY`, `VERCEL_ADMIN_SESSION_SECRET`, `AUTH_OTP_SECRET`, or `SUPABASE_SERVICE_ROLE_KEY` is missing; local dev generates a persistent secret in `backend/.urbanscope_dev_secret` and one-time initial staff passwords in `backend/.bootstrap_credentials.txt` (both git-ignored) unless `SEED_*_PASSWORD` env vars are set.
+      - **Supabase RLS Lockdown & Distributed RPCs (`supabase/migrations/20261115031500_security_rls_and_rate_limits.sql`):** Replaced permissive `USING (true)` policies on `users`, `inquiries`, `inquiry_documents`, `appointments`, `saved_properties`, `notifications`, and `properties`/`property_images` mutations with `service_role`-only access; retained public `SELECT` strictly on `properties` and `property_images`; added `security_rate_limits` (`check_and_increment_rate_limit`) and non-consuming `check_auth_email_challenge` RPCs.
+      - **Vercel Serverless Proxy Layer & Cookies (`proxy.js`, `lib/admin-session.js`, `lib/server-security.js`, `lib/email-auth.js`, `api/*.js` — 11 files, `<= 12` Hobby limit):** Added signed `HttpOnly`, `SameSite=Lax`, `Secure` cookie sessions (`urbanscope_user_session`, `urbanscope_admin_session`) and CSRF double-submit cookies (`urbanscope_csrf` / `X-CSRF-Token`) across `/api/session`, `/api/inquiries` (including default REST `POST` `'create'` action routing), `/api/properties`, and `/api/superadmin/users`, stripping `password_hash`/`google_id` via `sanitizeUser()`, blocking mass-assignment of status/role fields, enforcing server-side ownership checks on client inquiries, preserving `email_verified_at` via `writeCloudUserMutation()` (with `PGRST204` fallback) in `lib/email-auth.js`, and validating raster image URLs (blocking `data:image/svg+xml`, `javascript:`, oversized data URIs).
+      - **FastAPI Hardening (`run.py`, `backend/{app,auth,middleware,models,security}.py`, `backend/routers/*.py`):** Disabled `/docs`, `/redoc`, `/openapi.json`, and `reload` in production unless `ENABLE_API_DOCS=true`; replaced `allow_origins=["*"]` with strict origin lists (`ALLOWED_ORIGINS`); added `SecurityHeadersMiddleware` + optional `FORCE_HTTPS`; rejected URL query `?token=`/`sb_session_` bypasses; added rate limiting (`429`), CSRF checks for cookie sessions, and honeypot/timing/Turnstile bot defense.
+      - **Frontend XSS, Upload & Bot Guard Hardening (`frontend/shared/js/{supabase,api,session}.js`, `frontend/index.js`, `frontend/pages/{properties,inquiry,auth,admin,superadmin}/*.{html,css,js}`):** Escaped dynamic HTML template interpolations and sanitized URLs across public, inquiry, admin, and superadmin scripts; replaced inline `onclick` row handlers with delegated `data-*` listeners; enforced PNG/JPEG/WebP MIME + FileReader magic-bytes checks and 5MB cap on admin `profile`, `add-property`, and `edit-property` uploads (rejecting `img.onerror`); restricted `urbanscope_demo_user` fallback strictly to `file:` protocol; added `window.UrbanBotGuard` (`.hp-field`, form-timing `_ft`, optional Turnstile slot) across auth & inquiry forms; fixed forgot-password Step 3 confirmation (`apiResetPasswordWithVerifiedCode(email, code, password)`).
 
 ---
 
