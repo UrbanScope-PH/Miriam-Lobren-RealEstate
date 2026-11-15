@@ -179,18 +179,21 @@
         } catch (err) {
             console.error('Session lookup failed:', err);
         }
-        try {
-            var demo = JSON.parse(localStorage.getItem(DEMO_USER_KEY));
-            if (demo && (demo.role === 'admin' || demo.role === 'superadmin')) return null;
-            return demo;
-        } catch (e) {
-            return null;
+        if (typeof location !== 'undefined' && location.protocol === 'file:') {
+            try {
+                var demo = JSON.parse(localStorage.getItem(DEMO_USER_KEY));
+                if (demo && (demo.role === 'admin' || demo.role === 'superadmin')) return null;
+                return demo;
+            } catch (e) {
+                return null;
+            }
         }
+        return null;
     }
 
     function hasCustomClientAvatar(user) {
         var url = String((user && user.avatar_url) || '').trim();
-        return /^https?:\/\//i.test(url) || /^data:image\//i.test(url);
+        return /^https?:\/\/[^\s<>"'`]+$/i.test(url) || /^data:image\/(?:png|jpeg|jpg|webp|gif);base64,[A-Za-z0-9+/=]+$/i.test(url);
     }
 
     function avatarInnerHtml(user) {

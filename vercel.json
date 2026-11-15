@@ -1,41 +1,70 @@
 {
-  "$schema": "https://openapi.vercel.sh/vercel.json",
   "cleanUrls": false,
+  "trailingSlash": false,
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        { "key": "Strict-Transport-Security", "value": "max-age=31536000; includeSubDomains; preload" },
+        { "key": "X-Content-Type-Options", "value": "nosniff" },
+        { "key": "X-Frame-Options", "value": "DENY" },
+        { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" },
+        { "key": "Permissions-Policy", "value": "camera=(), microphone=(), geolocation=()" },
+        { "key": "Cross-Origin-Opener-Policy", "value": "same-origin-allow-popups" },
+        { "key": "Content-Security-Policy", "value": "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://accounts.google.com https://challenges.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://accounts.google.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https://*.googleusercontent.com https://vfspjuqymfbagesjxjmc.supabase.co https://www.google.com https://maps.google.com; connect-src 'self' http://127.0.0.1:8000 http://localhost:8000 https://vfspjuqymfbagesjxjmc.supabase.co https://accounts.google.com https://oauth2.googleapis.com https://www.googleapis.com https://challenges.cloudflare.com; frame-src 'self' https://maps.google.com https://www.google.com https://accounts.google.com https://challenges.cloudflare.com; object-src 'none'; base-uri 'self'; form-action 'self' https://accounts.google.com; frame-ancestors 'none'; upgrade-insecure-requests" }
+      ]
+    },
+    {
+      "source": "/api/(.*)",
+      "headers": [
+        { "key": "Cache-Control", "value": "private, no-store, max-age=0" },
+        { "key": "X-Content-Type-Options", "value": "nosniff" },
+        { "key": "X-Frame-Options", "value": "DENY" }
+      ]
+    },
+    {
+      "source": "/(pages/admin|pages/superadmin|frontend/pages/admin|frontend/pages/superadmin)/(.*)",
+      "headers": [
+        { "key": "Cache-Control", "value": "private, no-store, max-age=0" },
+        { "key": "X-Robots-Tag", "value": "noindex, nofollow" }
+      ]
+    }
+  ],
   "redirects": [
+    { "source": "/", "destination": "/frontend/index.html", "permanent": false },
+    { "source": "/index.html", "destination": "/frontend/index.html", "permanent": false },
+    { "source": "/admin", "destination": "/pages/admin/dashboard.html", "permanent": false },
+    { "source": "/superadmin", "destination": "/pages/superadmin/dashboard.html", "permanent": false },
     { "source": "/properties/:path*", "destination": "/pages/properties/:path*", "permanent": true },
     { "source": "/inquiry/:path*", "destination": "/pages/inquiry/:path*", "permanent": true },
     { "source": "/auth/:path*", "destination": "/pages/auth/:path*", "permanent": true },
-    { "source": "/admin/:path*", "destination": "/pages/admin/:path*", "permanent": true }
+    { "source": "/admin/:path*", "destination": "/pages/admin/:path*", "permanent": true },
+    { "source": "/superadmin/:path*", "destination": "/pages/superadmin/:path*", "permanent": true },
+    { "source": "/pages/admin/login.html", "destination": "/pages/auth/login.html", "permanent": false },
+    { "source": "/pages/admin/properties.html", "destination": "/pages/admin/propertylist.html", "permanent": true },
+    { "source": "/pages/admin/manage-properties.html", "destination": "/pages/admin/propertylist.html", "permanent": true },
+    { "source": "/frontend/pages/admin/login.html", "destination": "/pages/auth/login.html", "permanent": false },
+    { "source": "/frontend/pages/admin/properties.html", "destination": "/pages/admin/propertylist.html", "permanent": true },
+    { "source": "/frontend/pages/admin/manage-properties.html", "destination": "/pages/admin/propertylist.html", "permanent": true }
   ],
-  "proxy": {
-    "entrypoint": "proxy.js",
-    "matcher": [
-      "/",
-      "/index.html",
-      "/pages/admin",
-      "/pages/admin/:path*",
-      "/pages/superadmin",
-      "/pages/superadmin/:path*",
-      "/frontend/pages/admin",
-      "/frontend/pages/admin/:path*",
-      "/frontend/pages/superadmin",
-      "/frontend/pages/superadmin/:path*",
-      "/admin",
-      "/admin/:path*",
-      "/superadmin",
-      "/superadmin/:path*"
-    ]
-  },
+  "proxy": [
+    { "source": "/admin" },
+    { "source": "/admin/:path*" },
+    { "source": "/superadmin" },
+    { "source": "/superadmin/:path*" },
+    { "source": "/pages/admin/:path*" },
+    { "source": "/pages/superadmin/:path*" },
+    { "source": "/frontend/pages/admin/:path*" },
+    { "source": "/frontend/pages/superadmin/:path*" }
+  ],
   "rewrites": [
-    { "source": "/", "destination": "/frontend/index.html" },
-    { "source": "/index.html", "destination": "/frontend/index.html" },
-    { "source": "/index.css", "destination": "/frontend/index.css" },
-    { "source": "/index.js", "destination": "/frontend/index.js" },
-    { "source": "/favicon.ico", "destination": "/frontend/assets/images/favicon.jpg" },
-    { "source": "/robots.txt", "destination": "/frontend/robots.txt" },
-    { "source": "/sitemap.xml", "destination": "/frontend/sitemap.xml" },
     { "source": "/pages/:path*", "destination": "/frontend/pages/:path*" },
     { "source": "/shared/:path*", "destination": "/frontend/shared/:path*" },
-    { "source": "/assets/:path*", "destination": "/frontend/assets/:path*" }
+    { "source": "/assets/:path*", "destination": "/frontend/assets/:path*" },
+    { "source": "/index.css", "destination": "/frontend/index.css" },
+    { "source": "/index.js", "destination": "/frontend/index.js" },
+    { "source": "/manifest.json", "destination": "/frontend/manifest.json" },
+    { "source": "/favicon.ico", "destination": "/frontend/assets/images/logo.png" },
+    { "source": "/:path((?!frontend/|api/|\\.well-known/).*)", "destination": "/frontend/:path" }
   ]
 }

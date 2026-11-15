@@ -39,6 +39,8 @@ This document records all features, enhancements, bug fixes, user requests, arch
 | **Nov 2026** | **Google Sign-Up Terms Gate** | Enforced mandatory scroll-to-accept Terms of Service & Privacy Policy approval before launching Google OAuth on registration (`#googleSignup`), seamlessly continuing into Google sign-up upon clicking **I Agree** | `frontend/pages/auth/register.js`, `frontend/pages/auth/auth.js` |
 | **Nov 2026** | **Navbar Alignment** | Aligned client inquiry and history page navigation with the homepage standard navbar, logos, and session profile chip | `inquiry.html`, `inquiry.css`, `history.html`, `history.css` |
 | **Nov 2026** | **Deployment Environments** | Configured GitHub production and preview environments integrated with Vercel Bot automated builds | `README.md`, `AGENTS.md`, GitHub Settings |
+| **Nov 2026** | **Resend Email Auth & Custom Domain** | Removed Google SMTP (`SMTP_USER`/`SMTP_PASS`/`nodemailer`/`smtplib`) and switched OTP registration and password recovery exclusively to Resend (`noreply@miriamlobren.site`) | `lib/email-auth.js`, `backend/auth_otp.py`, `backend/routers/auth.py`, `api/auth/**` |
+| **Nov 2026** | **Full-Stack Security Hardening** | Locked down Supabase RLS (`service_role` private/write + public property `SELECT`), moved private/admin mutations to 11 Vercel `/api/*` proxies (`<= 12` limit) with signed `HttpOnly`/CSRF cookies, added DB rate limits (`check_and_increment_rate_limit`), fail-closed prod secrets, honeypot/timing/Turnstile bot defense, PBKDF2 hashing, XSS/SQLi/upload magic-byte guards, CSP/HSTS/HTTPS headers, and credential/debug scrubbing | `proxy.js`, `api/**`, `lib/*`, `supabase/migrations/20261115031500_security_rls_and_rate_limits.sql`, `backend/**`, `frontend/**`, `vercel.json` |
 
 ---
 
@@ -377,8 +379,8 @@ This document records all features, enhancements, bug fixes, user requests, arch
 ### 26. Complete Invalidation of Old Password on Admin Login
 - **User Prompt:** *"i can still use the old password on admin after i change it, it should be not be able to use and only the password i set to new should be able to log in in the admin, the old one should not be able"*
 - **Rationale & Implementation:**
-  - Administrators who updated their password discovered they could still log in using the old default password (`realestate2026`) or previous password.
-  - Eliminated legacy demo credential fallbacks in `apiSignIn` (`frontend/shared/js/supabase.js` and `api.js`) where `cleanEmail === 'admin.realestate@gmail.com' && password === 'realestate2026'` was overriding failed hash checks.
+  - Administrators who updated their password discovered they could still log in using the old default demo password or previous password.
+  - Eliminated legacy demo credential fallbacks in `apiSignIn` (`frontend/shared/js/supabase.js` and `api.js`) where legacy hardcoded staff fallbacks were overriding failed hash checks.
   - Fixed `apiSignIn` Step 1: When local FastAPI returns HTTP 401 Unauthorized, execution halts immediately with `{ success: false, error: 'Invalid email or password.' }` without falling through to offline demo fallbacks.
   - Fixed `apiSignIn` Step 2 (Supabase Cloud): Enforces that if `remoteUser.password_hash` exists, authentication is determined strictly by `verifyPBKDF2(password, storedHash)`. Default seed passwords are never checked when a user password hash is present.
   - Fixed `apiSignIn` Step 3 (Offline fallback): Checks `const effectiveAdminPass = locallyUpdated || activePass;`. If set, only that specific updated password is valid, rejecting the old password.
@@ -438,6 +440,6 @@ This document records all features, enhancements, bug fixes, user requests, arch
 | **Draft Caching** | Verified `sessionStorage` key `urbanscope_register_draft` saving & restoring | Verified |
 | **RBAC Security** | Server-side `rbac_admin_guard_middleware` active on `/pages/admin/*` and `/pages/superadmin/*` | Verified |
 | **Brand Harmonization** | Brand logo and typography pixel match between `inquiry.html` and `history.html` | Verified |
-| **Old Password Rejection** | Tested `POST /api/auth/login` and `apiSignIn` with old password `realestate2026` | `401 Unauthorized` / Rejected |
+| **Old Password Rejection** | Tested `POST /api/auth/login` and `apiSignIn` with old demo password | `401 Unauthorized` / Rejected |
 | **New Password Acceptance** | Tested `POST /api/auth/login` and `apiSignIn` with newly updated password | `200 OK` / Authenticated |
 

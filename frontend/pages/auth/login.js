@@ -89,6 +89,7 @@ if (registerLink && window.location.search) {
 
 const loginForm = document.getElementById('loginForm');
 if (loginForm) {
+    if (window.UrbanBotGuard) window.UrbanBotGuard.init('loginForm', 'loginTurnstile');
     loginForm.addEventListener('submit', async function(e) {
         e.preventDefault();
         const btn = this.querySelector('.btn-submit');
@@ -96,12 +97,13 @@ if (loginForm) {
 
         const email = document.getElementById('email').value.trim();
         const password = document.getElementById('password').value;
+        const botData = window.UrbanBotGuard ? window.UrbanBotGuard.collect('loginForm', 'loginTurnstile') : {};
 
         btn.disabled = true;
         btn.innerText = 'Signing In...';
 
         try {
-            const res = await apiSignIn(email, password);
+            const res = await apiSignIn(email, password, botData);
             if (res && res.success) {
                 const user = res.data?.user || {};
                 const cleanEmail = (user.email || email).toLowerCase();
@@ -135,6 +137,7 @@ if (loginForm) {
                     }
                 }
             } else {
+                if (window.UrbanBotGuard) window.UrbanBotGuard.reset('loginTurnstile');
                 const failMsg = res?.error || 'Invalid email or password.';
                 if (typeof window.showFeedbackToast === 'function') {
                     window.showFeedbackToast(failMsg, 'error');
@@ -145,6 +148,7 @@ if (loginForm) {
                 btn.innerText = originalText;
             }
         } catch (err) {
+            if (window.UrbanBotGuard) window.UrbanBotGuard.reset('loginTurnstile');
             const errMsg = err.message || 'An unexpected error occurred.';
             if (typeof window.showFeedbackToast === 'function') {
                 window.showFeedbackToast(errMsg, 'error');

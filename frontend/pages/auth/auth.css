@@ -2553,4 +2553,26 @@ html.dark-mode .strength-bars span {
     border-radius: 10px;
 }
 
+/* Bot defense honeypot & optional Turnstile container */
+.hp-field {
+    position: absolute !important;
+    left: -9999px !important;
+    width: 1px !important;
+    height: 1px !important;
+    overflow: hidden !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+}
+
+.turnstile-slot {
+    margin: 8px 0 4px;
+    display: flex;
+    justify-content: center;
+}
+
+.turnstile-slot[hidden] {
+    display: none !important;
+}
+
+
 

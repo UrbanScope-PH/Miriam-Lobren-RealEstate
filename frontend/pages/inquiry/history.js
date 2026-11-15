@@ -44,7 +44,7 @@
             currentUser = await window.UrbanSession.getUser();
         }
 
-        if (!currentUser) {
+        if (!currentUser && window.location.protocol === 'file:') {
             try {
                 currentUser = JSON.parse(localStorage.getItem('urbanscope_demo_user'));
             } catch (e) { }
@@ -248,7 +248,8 @@
             const rawStatus = item.status || 'Under Review';
             const statusLower = rawStatus.toLowerCase().trim();
             const statusClass = getStatusClass(rawStatus);
-            const formattedDate = formatDate(item.created_at);
+            const safeId = escHtml(String(item.id ?? ''));
+            const formattedDate = escHtml(formatDate(item.created_at));
             const title = escHtml(item.property_title || item.propertyTitle || 'General Consultation');
             const phone = escHtml(item.client_phone || item.clientPhone || 'Not specified');
             const email = escHtml(item.client_email || item.clientEmail || (currentUser && currentUser.email) || '');
@@ -259,7 +260,7 @@
             const isClosed = statusLower === 'closed' || statusLower === 'completed';
 
             return `
-                <article class="inquiry-card" data-id="${item.id}">
+                <article class="inquiry-card" data-id="${safeId}">
                     <div class="card-top-row">
                         <div class="card-topic-group">
                             <div class="topic-icon-badge">
@@ -271,14 +272,14 @@
                             <div>
                                 <h3 class="card-title">${title}</h3>
                                 <div class="card-meta-line">
-                                    <span>Inquiry #${item.id}</span>
+                                    <span>Inquiry #${safeId}</span>
                                     <span>&bull;</span>
                                     <span>Submitted ${formattedDate}</span>
                                 </div>
                             </div>
                         </div>
 
-                        <div class="status-pill ${statusClass}">
+                        <div class="status-pill ${escHtml(statusClass)}">
                             <span class="status-dot"></span>
                             <span>${escHtml(rawStatus)}</span>
                         </div>
@@ -309,20 +310,20 @@
 
                     <div class="card-actions-row">
                         ${isUnderReview ? `
-                            <button type="button" class="card-btn btn-modify" onclick="openModifyModal(${item.id})">
+                            <button type="button" class="card-btn btn-modify" data-inquiry-action="modify" data-inquiry-id="${safeId}">
                                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
                                 <span>Modify Details</span>
                             </button>
                         ` : ''}
 
                         ${(!isCancelled && !isClosed) ? `
-                            <button type="button" class="card-btn btn-cancel" onclick="openCancelModal(${item.id})">
+                            <button type="button" class="card-btn btn-cancel" data-inquiry-action="cancel" data-inquiry-id="${safeId}">
                                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="10"></circle><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"></line></svg>
                                 <span>Cancel Inquiry</span>
                             </button>
                         ` : ''}
 
-                        <button type="button" class="card-btn btn-delete" onclick="openDeleteModal(${item.id})">
+                        <button type="button" class="card-btn btn-delete" data-inquiry-action="delete" data-inquiry-id="${safeId}">
                             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
                             <span>Delete</span>
                         </button>
@@ -330,6 +331,18 @@
                 </article>
             `;
         }).join('');
+        if (!inquiriesListEl.dataset.actionBound) {
+            inquiriesListEl.dataset.actionBound = '1';
+            inquiriesListEl.addEventListener('click', (event) => {
+                const btn = event.target.closest('button[data-inquiry-action]');
+                if (!btn) return;
+                const action = btn.getAttribute('data-inquiry-action');
+                const id = btn.getAttribute('data-inquiry-id');
+                if (action === 'modify' && typeof window.openModifyModal === 'function') window.openModifyModal(id);
+                else if (action === 'cancel' && typeof window.openCancelModal === 'function') window.openCancelModal(id);
+                else if (action === 'delete' && typeof window.openDeleteModal === 'function') window.openDeleteModal(id);
+            });
+        }
     }
 
     // ==========================================

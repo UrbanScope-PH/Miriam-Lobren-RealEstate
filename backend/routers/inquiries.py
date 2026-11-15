@@ -6,18 +6,32 @@ Handles inquiry submission, admin listing, client history, modifications, cancel
 import re
 from typing import List, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Body, Depends, HTTPException, Query, Request, status
 
 from backend.auth import (
     AUTHORIZED_ADMIN_EMAILS,
     AUTHORIZED_ADMIN_ROLES,
-    get_current_user_from_request,
+    AUTHORIZED_SUPERADMIN_EMAILS,
     require_admin,
+    require_user,
 )
 from backend.database import get_db_connection, row_to_dict
 from backend.models import InquiryCreate, InquiryResponse
+from backend.security import check_rate_limit, get_client_ip, verify_bot_defense
 
 router = APIRouter()
+
+_ALLOWED_ADMIN_STATUSES = {"Under Review", "Pending", "Approved", "Scheduled", "Contacted", "Completed", "Cancelled"}
+
+
+def _is_staff_user(user: dict) -> bool:
+    role = (user.get("role") or "").strip().lower()
+    email = (user.get("email") or "").strip().lower()
+    return (
+        role in AUTHORIZED_ADMIN_ROLES
+        or email in AUTHORIZED_ADMIN_EMAILS
+        or email in AUTHORIZED_SUPERADMIN_EMAILS
+    )
 
 
 # ==========================================================
@@ -25,8 +39,32 @@ router = APIRouter()
 # ==========================================================
 
 @router.post("/api/inquiries", tags=["Inquiries"])
-def submit_inquiry(payload: InquiryCreate):
+def submit_inquiry(payload: InquiryCreate, request: Request):
     """Submits a new client inquiry (Public / Client)."""
+    ip = get_client_ip(request)
+    if not check_rate_limit(f"inq_create:ip:{ip}", limit=8, window_seconds=300, block_seconds=600):
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail="Too many inquiry submissions. Please try again in a few minutes.",
+        )
+
+    honeypot = (
+        getattr(payload, "company_website", None)
+        or getattr(payload, "website", None)
+        or getattr(payload, "hp", None)
+    )
+    rendered_ms = getattr(payload, "form_rendered_ms", None)
+    if rendered_ms is None:
+        rendered_ms = getattr(payload, "ft", None)
+    ok, msg = verify_bot_defense(
+        request,
+        honeypot_val=honeypot,
+        form_rendered_ms=rendered_ms,
+        turnstile_token=getattr(payload, "turnstile_token", None),
+    )
+    if not ok:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=msg or "Submission blocked.")
+
     conn = get_db_connection()
     cursor = conn.cursor()
 
@@ -57,16 +95,18 @@ def submit_inquiry(payload: InquiryCreate):
                 detail="This property is sold out and is no longer accepting inquiries."
             )
 
+    # Always force initial inquiry status server-side to prevent status tampering
+    forced_status = "Under Review"
     cursor.execute("""
         INSERT INTO inquiries (property_title, client_name, client_email, client_phone, message, status)
         VALUES (?, ?, ?, ?, ?, ?)
     """, (
         property_title,
         payload.client_name.strip(),
-        payload.client_email.strip(),
+        payload.client_email.strip().lower(),
         payload.client_phone.strip() if payload.client_phone else "",
         payload.message.strip(),
-        payload.status or "Under Review"
+        forced_status,
     ))
     conn.commit()
 
@@ -112,19 +152,26 @@ def list_inquiries(admin_user: dict = Depends(require_admin)):
 @router.get("/api/inquiries/my", response_model=List[InquiryResponse], tags=["Inquiries"])
 def list_my_inquiries(
     email: Optional[str] = Query(None),
-    current_user: Optional[dict] = Depends(get_current_user_from_request)
+    current_user: dict = Depends(require_user)
 ):
     """
-    Lists inquiries submitted by the current client.
-    Matches either the authenticated session email, or the provided email query parameter.
+    Lists inquiries submitted by the authenticated client (or specified client email if admin).
     """
-    user_email = (current_user.get("email") if current_user else email) or ""
-    user_email = user_email.strip().lower()
+    caller_email = (current_user.get("email") or "").strip().lower()
+    is_admin = _is_staff_user(current_user)
+    requested_email = (email or "").strip().lower()
 
+    if requested_email and requested_email != caller_email and not is_admin:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="You are not authorized to view another user's inquiries."
+        )
+
+    user_email = requested_email if (requested_email and is_admin) else caller_email
     if not user_email:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Authentication required or client email must be provided."
+            detail="Authentication required."
         )
 
     conn = get_db_connection()
@@ -144,12 +191,12 @@ def list_my_inquiries(
 @router.patch("/api/inquiries/{inquiry_id}", tags=["Inquiries"])
 def modify_inquiry(
     inquiry_id: int,
-    payload: dict,
-    current_user: Optional[dict] = Depends(get_current_user_from_request)
+    payload: dict = Body(...),
+    current_user: dict = Depends(require_user)
 ):
     """
     Modifies or cancels an inquiry.
-    Authorized for the client who submitted the inquiry (matching email) or administrators.
+    Authorized strictly for the authenticated client owner or authenticated administrators.
     """
     conn = get_db_connection()
     cursor = conn.cursor()
@@ -161,24 +208,9 @@ def modify_inquiry(
 
     inq = row_to_dict(row)
     inq_email = (inq.get("client_email") or "").strip().lower()
-
-    is_admin = False
-    is_owner = False
-
-    if current_user:
-        role = (current_user.get("role") or "").lower()
-        caller_email = (current_user.get("email") or "").strip().lower()
-        if role in AUTHORIZED_ADMIN_ROLES or caller_email in AUTHORIZED_ADMIN_EMAILS:
-            is_admin = True
-        if caller_email and caller_email == inq_email:
-            is_owner = True
-    else:
-        admin_candidate = (payload.get("admin_email") or payload.get("caller_email") or "").strip().lower()
-        if admin_candidate in AUTHORIZED_ADMIN_EMAILS:
-            is_admin = True
-        passed_email = (payload.get("client_email") or "").strip().lower()
-        if passed_email and passed_email == inq_email:
-            is_owner = True
+    caller_email = (current_user.get("email") or "").strip().lower()
+    is_admin = _is_staff_user(current_user)
+    is_owner = bool(caller_email and caller_email == inq_email)
 
     if not is_admin and not is_owner:
         conn.close()
@@ -208,23 +240,42 @@ def modify_inquiry(
     params = []
 
     if "message" in payload and payload["message"] is not None:
+        clean_msg = str(payload["message"]).strip()
+        if not clean_msg or len(clean_msg) > 4000:
+            conn.close()
+            raise HTTPException(status_code=400, detail="Message must be between 1 and 4000 characters.")
         updates.append("message = ?")
-        params.append(str(payload["message"]).strip())
+        params.append(clean_msg)
 
     if "client_phone" in payload and payload["client_phone"] is not None:
+        clean_phone = str(payload["client_phone"]).strip()
+        if len(clean_phone) > 40:
+            conn.close()
+            raise HTTPException(status_code=400, detail="Phone number is too long.")
         updates.append("client_phone = ?")
-        params.append(str(payload["client_phone"]).strip())
+        params.append(clean_phone)
 
     if "property_title" in payload and payload["property_title"] is not None:
+        clean_title = str(payload["property_title"]).strip()
+        if not clean_title or len(clean_title) > 250:
+            conn.close()
+            raise HTTPException(status_code=400, detail="Property title must be between 1 and 250 characters.")
         updates.append("property_title = ?")
-        params.append(str(payload["property_title"]).strip())
+        params.append(clean_title)
 
     if requested_status is not None:
-        if not is_admin and requested_status not in ["Cancelled", "Under Review"]:
+        if not is_admin:
+            if requested_status != "Cancelled":
+                conn.close()
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Clients can only cancel an inquiry."
+                )
+        elif requested_status not in _ALLOWED_ADMIN_STATUSES:
             conn.close()
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Clients can only cancel an inquiry."
+                detail="Invalid inquiry status value."
             )
         updates.append("status = ?")
         params.append(requested_status)
@@ -288,12 +339,11 @@ def modify_inquiry(
 @router.delete("/api/inquiries/{inquiry_id}", tags=["Inquiries"])
 def delete_inquiry(
     inquiry_id: int,
-    client_email: Optional[str] = Query(None),
-    current_user: Optional[dict] = Depends(get_current_user_from_request)
+    current_user: dict = Depends(require_user)
 ):
     """
     Deletes an inquiry permanently.
-    Authorized for the client owner (matching email) or administrators.
+    Authorized strictly for the authenticated client owner or authenticated administrators.
     """
     conn = get_db_connection()
     cursor = conn.cursor()
@@ -305,20 +355,9 @@ def delete_inquiry(
 
     inq = row_to_dict(row)
     inq_email = (inq.get("client_email") or "").strip().lower()
-
-    is_admin = False
-    is_owner = False
-
-    if current_user:
-        role = (current_user.get("role") or "").lower()
-        caller_email = (current_user.get("email") or "").strip().lower()
-        if role in AUTHORIZED_ADMIN_ROLES or caller_email in AUTHORIZED_ADMIN_EMAILS:
-            is_admin = True
-        if caller_email and caller_email == inq_email:
-            is_owner = True
-    elif client_email:
-        if client_email.strip().lower() == inq_email:
-            is_owner = True
+    caller_email = (current_user.get("email") or "").strip().lower()
+    is_admin = _is_staff_user(current_user)
+    is_owner = bool(caller_email and caller_email == inq_email)
 
     if not is_admin and not is_owner:
         conn.close()
@@ -359,32 +398,39 @@ def delete_inquiry(
 def cancel_inquiry(
     inquiry_id: int,
     payload: Optional[dict] = None,
-    current_user: Optional[dict] = Depends(get_current_user_from_request)
+    current_user: dict = Depends(require_user)
 ):
     """
     Cancels an inquiry by setting its status to 'Cancelled'.
     """
-    data = {"status": "Cancelled"}
-    if payload and "client_email" in payload:
-        data["client_email"] = payload["client_email"]
-    return modify_inquiry(inquiry_id, data, current_user)
+    return modify_inquiry(inquiry_id, {"status": "Cancelled"}, current_user)
 
 
 @router.get("/api/notifications", tags=["Notifications"])
 def list_notifications(
     role: Optional[str] = Query(None),
     email: Optional[str] = Query(None),
-    current_user: Optional[dict] = Depends(get_current_user_from_request)
+    current_user: dict = Depends(require_user)
 ):
     """
-    Lists notifications for either administrators (role='admin') or a specific client email.
-    Auto-synchronizes notification records for approved inquiries.
+    Lists notifications for either authenticated administrators (role='admin')
+    or the currently authenticated client.
     """
+    is_admin = _is_staff_user(current_user)
+    caller_email = (current_user.get("email") or "").strip().lower()
+    requested_role = (role or "").strip().lower()
+    requested_email = (email or "").strip().lower()
+
+    if requested_role == "admin" and not is_admin:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Admin access required.")
+    if requested_email and requested_email != caller_email and not is_admin:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="You cannot view another user's notifications.")
+
     conn = get_db_connection()
     cursor = conn.cursor()
 
-    target_role = (role or "").strip().lower()
-    target_email = (email or (current_user.get("email") if current_user else "") or "").strip().lower()
+    target_role = requested_role if is_admin else "client"
+    target_email = requested_email if (requested_email and is_admin) else caller_email
 
     if target_role == "admin":
         cursor.execute(
@@ -437,59 +483,63 @@ def list_notifications(
     return notifs
 
 
-@router.post("/api/notifications/read", tags=["Notifications"])
-def mark_notifications_read(
-    payload: Optional[dict] = None,
-    current_user: Optional[dict] = Depends(get_current_user_from_request)
-):
-    """
-    Marks notifications as read and seen for admin, a specific client email, or single inquiry.
-    """
+def _update_notification_flags(payload: Optional[dict], current_user: dict, *, set_read: bool) -> dict:
+    is_admin = _is_staff_user(current_user)
+    caller_email = (current_user.get("email") or "").strip().lower()
     data = payload or {}
-    target_role = str(data.get("role") or "").strip().lower()
-    target_email = str(data.get("email") or (current_user.get("email") if current_user else "") or "").strip().lower()
+    requested_role = str(data.get("role") or "").strip().lower()
+    requested_email = str(data.get("email") or "").strip().lower()
     notif_id = data.get("id") or data.get("notif_id")
     inquiry_id = data.get("inquiry_id") or data.get("inquiryId")
 
+    if requested_role == "admin" and not is_admin:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Admin access required.")
+    if requested_email and requested_email != caller_email and not is_admin:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Cannot update notifications for another user.")
+
+    target_email = requested_email if (requested_email and is_admin) else caller_email
+    set_clause = "is_read = 1, is_seen = 1" if set_read else "is_seen = 1"
+
     conn = get_db_connection()
     cursor = conn.cursor()
-    if target_role == "admin":
-        cursor.execute("UPDATE notifications SET is_read = 1, is_seen = 1 WHERE LOWER(recipient_role) = 'admin'")
-    elif notif_id:
-        cursor.execute("UPDATE notifications SET is_read = 1, is_seen = 1 WHERE id = ?", (notif_id,))
-    elif inquiry_id and target_email:
-        cursor.execute("UPDATE notifications SET is_read = 1, is_seen = 1 WHERE LOWER(recipient_email) = ? AND inquiry_id = ?", (target_email, inquiry_id))
+    if requested_role == "admin" and is_admin:
+        cursor.execute(f"UPDATE notifications SET {set_clause} WHERE LOWER(recipient_role) = 'admin'")
+    elif notif_id is not None:
+        if is_admin:
+            cursor.execute(f"UPDATE notifications SET {set_clause} WHERE id = ?", (notif_id,))
+        else:
+            cursor.execute(
+                f"UPDATE notifications SET {set_clause} WHERE id = ? AND LOWER(recipient_email) = ?",
+                (notif_id, caller_email),
+            )
+    elif inquiry_id is not None and target_email:
+        cursor.execute(
+            f"UPDATE notifications SET {set_clause} WHERE LOWER(recipient_email) = ? AND inquiry_id = ?",
+            (target_email, inquiry_id),
+        )
     elif target_email:
-        cursor.execute("UPDATE notifications SET is_read = 1, is_seen = 1 WHERE LOWER(recipient_email) = ?", (target_email,))
+        cursor.execute(
+            f"UPDATE notifications SET {set_clause} WHERE LOWER(recipient_email) = ?",
+            (target_email,),
+        )
     conn.commit()
     conn.close()
     return {"success": True}
+
+
+@router.post("/api/notifications/read", tags=["Notifications"])
+def mark_notifications_read(
+    payload: Optional[dict] = None,
+    current_user: dict = Depends(require_user)
+):
+    """Marks notifications as read and seen for the authenticated admin or client."""
+    return _update_notification_flags(payload, current_user, set_read=True)
 
 
 @router.post("/api/notifications/seen", tags=["Notifications"])
 def mark_notifications_seen(
     payload: Optional[dict] = None,
-    current_user: Optional[dict] = Depends(get_current_user_from_request)
+    current_user: dict = Depends(require_user)
 ):
-    """
-    Marks notifications as seen (toasted/presented to user) so they won't notify again on other devices.
-    """
-    data = payload or {}
-    target_role = str(data.get("role") or "").strip().lower()
-    target_email = str(data.get("email") or (current_user.get("email") if current_user else "") or "").strip().lower()
-    notif_id = data.get("id") or data.get("notif_id")
-    inquiry_id = data.get("inquiry_id") or data.get("inquiryId")
-
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    if target_role == "admin":
-        cursor.execute("UPDATE notifications SET is_seen = 1 WHERE LOWER(recipient_role) = 'admin'")
-    elif notif_id:
-        cursor.execute("UPDATE notifications SET is_seen = 1 WHERE id = ?", (notif_id,))
-    elif inquiry_id and target_email:
-        cursor.execute("UPDATE notifications SET is_seen = 1 WHERE LOWER(recipient_email) = ? AND inquiry_id = ?", (target_email, inquiry_id))
-    elif target_email:
-        cursor.execute("UPDATE notifications SET is_seen = 1 WHERE LOWER(recipient_email) = ?", (target_email,))
-    conn.commit()
-    conn.close()
-    return {"success": True}
+    """Marks notifications as seen so they won't toast repeatedly."""
+    return _update_notification_flags(payload, current_user, set_read=False)

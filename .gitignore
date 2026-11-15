@@ -9,6 +9,8 @@ Thumbs.db
 .env
 .env.local
 .env.*.local
+backend/.urbanscope_dev_secret
+backend/.bootstrap_credentials.txt
 
 # Database & uploads (runtime data)
 *.db

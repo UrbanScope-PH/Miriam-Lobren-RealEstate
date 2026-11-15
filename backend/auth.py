@@ -50,8 +50,33 @@ for _env_key, _env_val in _parse_env_file().items():
     if _env_val and _env_key not in os.environ:
         os.environ[_env_key] = _env_val
 
+from backend.security import is_production_mode
+
 # Security settings
-SECRET_KEY = os.environ.get("URBANSCOPE_SECRET_KEY", "urbanscope-real-estate-secret-key-2026-production")
+def _resolve_jwt_secret() -> str:
+    env_secret = os.environ.get("URBANSCOPE_SECRET_KEY", "").strip()
+    if len(env_secret) >= 32:
+        return env_secret
+    if is_production_mode():
+        raise RuntimeError("URBANSCOPE_SECRET_KEY (>= 32 chars) must be set in production.")
+    dev_secret_file = ROOT_DIR / "backend" / ".urbanscope_dev_secret"
+    try:
+        if dev_secret_file.is_file():
+            stored = dev_secret_file.read_text(encoding="utf-8").strip()
+            if len(stored) >= 32:
+                return stored
+        generated = secrets.token_hex(32)
+        dev_secret_file.write_text(generated, encoding="utf-8")
+        try:
+            os.chmod(dev_secret_file, 0o600)
+        except OSError:
+            pass
+        return generated
+    except OSError:
+        return secrets.token_hex(32)
+
+
+SECRET_KEY = _resolve_jwt_secret()
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_DAYS = 7
 
@@ -207,27 +232,44 @@ AUTHORIZED_ADMIN_ROLES: Set[str] = {
 
 
 def hash_password(password: str) -> str:
-    """Hashes a password with a cryptographically secure random salt using PBKDF2-HMAC-SHA256."""
+    """Hashes a password with a cryptographically secure random salt using 600k-round PBKDF2-HMAC-SHA256."""
     salt = secrets.token_hex(16)
+    iterations = 600000
     key = hashlib.pbkdf2_hmac(
         'sha256',
         password.encode('utf-8'),
         salt.encode('utf-8'),
-        100000
+        iterations
     )
-    return f"{salt}${key.hex()}"
+    return f"pbkdf2_sha256${iterations}${salt}${key.hex()}"
 
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
-    """Verifies a plain password against stored salt$hash representation."""
-    if not plain_password or not hashed_password:
+    """Verifies a plain password against stored PBKDF2 hash (no plaintext fallback)."""
+    if not plain_password or not hashed_password or not isinstance(hashed_password, str):
         return False
-    if plain_password == hashed_password:
-        return True
     if '$' not in hashed_password:
         return False
     try:
+        if hashed_password.startswith("pbkdf2_sha256$"):
+            parts = hashed_password.split('$')
+            if len(parts) != 4:
+                return False
+            iterations = int(parts[1])
+            salt, expected_hex = parts[2], parts[3]
+            if iterations < 10000 or not salt or not expected_hex:
+                return False
+            computed_key = hashlib.pbkdf2_hmac(
+                'sha256',
+                plain_password.encode('utf-8'),
+                salt.encode('utf-8'),
+                iterations
+            )
+            return hmac.compare_digest(computed_key.hex(), expected_hex)
+
         salt, expected_hex = hashed_password.split('$', 1)
+        if not salt or not expected_hex:
+            return False
         computed_key = hashlib.pbkdf2_hmac(
             'sha256',
             plain_password.encode('utf-8'),
@@ -286,11 +328,6 @@ def get_current_user_from_request(
         return None
 
     payload = decode_access_token(token)
-    if not payload and isinstance(token, str):
-        if token.startswith("sb_session_") or token.startswith("sb_google_") or token.startswith("demo_token_"):
-            parts = token.split("_")
-            if len(parts) >= 3 and parts[2].isdigit():
-                payload = {"sub": parts[2]}
     if not payload:
         return None
 
@@ -311,11 +348,25 @@ def get_current_user_from_request(
     if not row:
         return None
 
-    return row_to_dict(row)
+    user_dict = row_to_dict(row)
+    if user_dict.get("bio") == "__URBANSCOPE_DELETED__" or user_dict.get("password_hash") == "__DELETED_ACCOUNT__":
+        return None
+
+    return user_dict
 
 
 # Alias for backward compatibility
 get_current_user_from_header = get_current_user_from_request
+
+
+def require_user(user: Optional[dict] = Depends(get_current_user_from_request)) -> dict:
+    """Require any authenticated, non-deleted user session."""
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Authentication required. Please log in."
+        )
+    return user
 
 
 def require_admin(user: Optional[dict] = Depends(get_current_user_from_request)) -> dict:

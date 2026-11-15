@@ -21,15 +21,20 @@ schema, seed data, how migrations work, and how the frontend reaches it.
 
 ```mermaid
 flowchart LR
-    Browser["Frontend pages"] -->|"fetch()"| GW["frontend/shared/js/supabase.js (REST gateway)"]
-    GW -->|"HTTP /api/*"| API["backend/app.py + backend/routers/* (FastAPI)"]
+    Browser["Frontend pages"] -->|"fetch() /api/* + csrf"| GW["frontend/shared/js/supabase.js (REST gateway)"]
+    GW -->|"Local SQLite / Dev"| API["backend/app.py + backend/routers/* (FastAPI)"]
     API --> DB[("backend/urbanscope.db (SQLite)")]
+    GW -->|"Hosted Vercel /api/*"| VERCEL["api/*.js (Signed cookies + RLS service_role)"]
+    VERCEL --> PG[("Supabase Postgres (RLS-locked)")]
+    Browser -.->|"Public catalog SELECT only"| PG
 ```
 
 > [!NOTE]
-> Despite its name, `frontend/shared/js/supabase.js` does **not** talk to Supabase. It is a
-> REST client for the local FastAPI backend, kept under that filename for
-> backward compatibility with existing page scripts.
+> `frontend/shared/js/supabase.js` routes all authenticated, inquiry, notification, and
+> admin/superadmin requests through backend `/api/*` endpoints (FastAPI locally or Vercel
+> serverless handlers in production using `service_role`). Browser `anon` access to Supabase
+> is strictly limited by RLS (`20261115031500_security_rls_and_rate_limits.sql`) to public
+> `SELECT` queries on `properties` and `property_images`.
 
 ---
 
@@ -267,26 +272,25 @@ Defined in [`backend/auth.py`](backend/auth.py).
   against `oauth2.googleapis.com/tokeninfo` and `www.googleapis.com/oauth2/v3/userinfo`, enforcing
   audience (`aud`/`azp`) match against `GOOGLE_CLIENT_ID` (from env or `.env`) and `email_verified == true`.
 - **Email OTP:** Password registration and forgotten-password recovery use six-digit, single-use email codes. Challenges are stored as HMAC digests, expire after 10 minutes, allow five attempts, and have 60-second resend and 10-per-hour IP-hash limits. FastAPI stores challenge state in SQLite; Vercel uses the service-role-only Supabase issue/consume RPCs added by `20261105120000_email_otp_auth.sql`. Existing cloud users are marked verified by the migration. Password recovery also marks verified after successful email ownership proof. A database trigger prevents anonymous clients from assigning privileged roles, marking accounts verified, changing roles, or changing password hashes. Hosted Superadmin role/account edits and admin password changes use signed-session server functions; local cloud writes require the server-side service-role key.
-- **Mail delivery configuration:** Set `RESEND_API_KEY`, a verified `RESEND_FROM_EMAIL` (e.g., `UrbanScope <noreply@miriamlobren.site>`), and private `AUTH_OTP_SECRET` (at least 32 characters). Vercel also needs server-only `SUPABASE_SERVICE_ROLE_KEY`. Apply the migration before deploying Vercel OTP functions; never expose server secrets in frontend code.
+- **Mail delivery configuration:** Set `RESEND_API_KEY`, a verified `RESEND_FROM_EMAIL` (e.g., `UrbanScope <noreply@miriamlobren.site>`), and private `AUTH_OTP_SECRET` (at least 32 characters). Vercel also needs server-only `SUPABASE_SERVICE_ROLE_KEY`. Apply the migrations before deploying Vercel OTP/API functions; never expose server secrets in frontend code.
 - **JWT:** HS256, 7-day expiry, payload `{ sub: "<user id>", email, role, exp, iat }`.
-  Secret from env var `URBANSCOPE_SECRET_KEY` (a hard-coded fallback exists for dev).
-- **Vercel Admin Page Session:** Since Vercel serves the frontend statically, root Routing Middleware (`proxy.js`) verifies a separate 12-hour signed `HttpOnly`, `Secure`, `SameSite=Lax` cookie before returning Admin/Superadmin HTML. The Vercel Function at `POST /api/auth/edge-session` verifies Google directly and accepts the existing staff accounts plus optional comma-separated `VERCEL_ADMIN_EMAILS`; it does not trust the currently public Supabase user-table role/password policies. Configure the server-only `VERCEL_ADMIN_SESSION_SECRET` (minimum 32 characters) in Vercel Project Settings and redeploy. Admin staff can access Admin; only `urbanscope.cvsu@gmail.com` can access Superadmin. Hosted admin access uses Google Sign-In, while local FastAPI deployments keep password sign-in and the existing `access_token` cookie/middleware.
-- **Client storage:** `localStorage` keys `urbanscope_jwt_token`, `urbanscope_user`,
-  `urbanscope_demo_user`, `adminUser`, `adminPassword`, `urbanscope_admin_password_updated`.
+  Secret from env var `URBANSCOPE_SECRET_KEY` (required in production; local development generates a persistent random key under git-ignored `backend/.urbanscope_dev_secret`).
+- **Vercel Admin Page Session & API Proxy:** Since Vercel serves the frontend statically, root Routing Middleware (`proxy.js`) verifies a signed `HttpOnly`, `Secure`, `SameSite=Lax` cookie before returning Admin/Superadmin HTML. User login/profile sessions (`api/session.js`) and privileged admin routes (`api/auth/edge-session.js`, `api/inquiries.js`, `api/properties.js`, `api/superadmin/users.js`) use signed `HttpOnly` cookies, CSRF double-submit tokens (`X-CSRF-Token` matching `urbanscope_csrf` cookie), and server-only `SUPABASE_SERVICE_ROLE_KEY`. Configure `VERCEL_ADMIN_SESSION_SECRET` (minimum 32 characters) in Vercel Project Settings before deployment. Admin staff can access Admin; only `urbanscope.cvsu@gmail.com` can access Superadmin.
+- **Client storage:** Non-sensitive display cache and preference keys only (`urbanscope_user`, `urbanscope_admin_profile`, `adminUser`, plus `file:`-only `urbanscope_demo_user`). Plaintext password keys and legacy `urbanscope_jwt_token` fallbacks are never stored on client storage.
 
 ---
 
-## 7. Seed Data
+## 7. Seed Data & Development Bootstrap
 
-Seeding happens inside `init_db()` **only when the table is empty**, per table.
+Seeding happens inside `init_db()` **only when the table is empty** or missing initial staff hashes, per table.
 
-**Users**
+**Users (No plaintext passwords in source)**
 
-| Email | Password | Role | Name |
+| Email | Role | Password Provisioning | Name |
 | :--- | :--- | :--- | :--- |
-| `urbanscope.cvsu@gmail.com` | `urbanscope2026` | `superadmin` | UrbanScope Superadmin (CvSU) |
-| `miriamalobren@gmail.com` | `111112` (or updated via Admin Profile) | `admin` | Miriam Lobren (Lead Admin) |
-| `admin.realestate@gmail.com` | `realestate2026` | `admin` | Real Estate Admin |
+| `urbanscope.cvsu@gmail.com` | `superadmin` | `SEED_SUPERADMIN_PASSWORD` env var, or generated once in dev into git-ignored `backend/.bootstrap_credentials.txt` | UrbanScope Superadmin (CvSU) |
+| `miriamalobren@gmail.com` | `admin` | `SEED_MIRIAM_PASSWORD` env var, or generated once in dev into `backend/.bootstrap_credentials.txt` | Miriam Lobren (Lead Admin) |
+| `admin.realestate@gmail.com` | `admin` | `SEED_ADMIN_PASSWORD` env var, or generated once in dev into `backend/.bootstrap_credentials.txt` | Real Estate Admin |
 
 **Properties (6 accredited featured listings)**
 
@@ -431,6 +435,8 @@ supabase/
                                              Sets users.brokerage default to 'CD Miranda Realty' and normalizes legacy 'UrbanScope' rows
   migrations/20261111120100_set_default_title_real_estate_salesperson.sql
                                              Sets users.title default to 'Real Estate Salesperson' (RESA RA 9646 compliant) and normalizes legacy 'Real Estate Agent' rows
+  migrations/20261115031500_security_rls_and_rate_limits.sql
+                                             Locks private tables (users, inquiries, inquiry_documents, appointments, saved_properties, notifications) & property writes strictly to service_role; keeps public SELECT only on properties/property_images; adds security_rate_limits, check_and_increment_rate_limit, and check_auth_email_challenge RPCs
   seed.sql                                   Demo data (users, 6 properties, inquiries, ...)
   scripts/                                   One-off data fixes to paste into the SQL Editor (never auto-run)
 ```
@@ -471,5 +477,5 @@ supabase migration new add_some_column   # create the next migration file
 | Environment | Database Engine | Primary Access Gateway |
 | :--- | :--- | :--- |
 | **Local Development** | SQLite 3 (`backend/urbanscope.db`) | FastAPI REST Endpoints (`/api/*`) |
-| **Cloud Production** | Supabase Postgres (Remote Cloud) | Supabase REST / Edge Functions |
-| **Failover Strategy** | Local Cache & Fallback Tables | Client LocalStorage Resiliency |
+| **Cloud Production** | Supabase Postgres (Remote Cloud, RLS-locked) | Public read-only catalog (`properties`, `property_images`) via Supabase `anon` key; all PII, auth, inquiries, properties mutations, and Superadmin routes proxied server-side via Vercel `/api/*` using `service_role` |
+| **Failover Strategy** | Local Cache & Fallback Tables | Non-sensitive UI/catalog `localStorage` resiliency |

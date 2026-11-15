@@ -96,6 +96,28 @@ function parsePrice(str) {
     return parseFloat(num) || 0;
 }
 
+function _escPropHtml(val) {
+    if (typeof window.escapeHtml === 'function') return window.escapeHtml(val);
+    return String(val ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+
+function _safePropImg(url, fallback = '../../assets/images/property1.jpg') {
+    const raw = String(url || '').trim();
+    if (!raw) return fallback;
+    if (/^https?:\/\//i.test(raw)) return raw;
+    if (/^data:image\/(png|jpeg|jpg|webp|gif);base64,[A-Za-z0-9+/=]+$/i.test(raw)) return raw;
+    const cleaned = raw.replace(/^(\.\.\/)+/, '').replace(/^\/+/, '');
+    if (cleaned.startsWith('assets/images/') && !cleaned.includes('..')) {
+        return '../../' + cleaned;
+    }
+    return fallback;
+}
+
 function renderProperties(list) {
     const grid = document.getElementById('listingGrid');
     if (!grid) return;
@@ -116,29 +138,33 @@ function renderProperties(list) {
     }
 
     grid.innerHTML = list.map(item => {
-        const imgSrc = item.image_url ? 
-            (item.image_url.startsWith('http') || item.image_url.startsWith('data:') ? item.image_url : '../../' + item.image_url.replace(/^(\.\.\/)+/, '')) : 
-            '../../assets/images/property1.jpg';
-        const specsText = `${item.bedrooms || 0} Beds &bull; ${item.bathrooms || 0} Baths &bull; ${item.lot_area || 0} sqm Lot` + 
-            (item.floor_area ? ` (${item.floor_area} sqm Flr)` : '');
+        const imgSrc = _safePropImg(item.image_url, '../../assets/images/property1.jpg');
+        const safeId = encodeURIComponent(String(item.id ?? ''));
+        const safeTitle = _escPropHtml(item.title || 'Property');
+        const safeLocation = _escPropHtml(item.location || '');
+        const beds = Number(item.bedrooms || 0);
+        const baths = Number(item.bathrooms || 0);
+        const lotArea = _escPropHtml(item.lot_area || 0);
+        const floorArea = item.floor_area ? ` (${_escPropHtml(item.floor_area)} sqm Flr)` : '';
+        const specsText = `${beds} Beds &bull; ${baths} Baths &bull; ${lotArea} sqm Lot${floorArea}`;
 
         const rawStatus = String(item.status || 'Available').trim().toLowerCase();
         const isSold = rawStatus === 'sold' || rawStatus === 'sold out';
         const statusLabel = isSold ? 'Sold Out' : 'Available';
 
         return `
-        <article class="listing-card ${isSold ? 'card-sold' : ''}" onclick="location.href='property-detail.html?id=${item.id}'">
+        <article class="listing-card ${isSold ? 'card-sold' : ''}" onclick="location.href='property-detail.html?id=${_escPropHtml(safeId)}'">
             <div class="listing-image" style="position: relative;">
                 <span class="property-status-badge ${isSold ? 'badge-sold' : 'badge-available'}">
-                    ${statusLabel}
+                    ${_escPropHtml(statusLabel)}
                 </span>
-                <img src="${imgSrc}" alt="${item.title}" onerror="this.src='../../assets/images/property1.jpg'">
+                <img src="${_escPropHtml(imgSrc)}" alt="${safeTitle}" onerror="this.src='../../assets/images/property1.jpg'">
             </div>
             <div class="listing-info">
-                <h3>${item.title}</h3>
-                <p class="listing-location">${item.location}</p>
+                <h3>${safeTitle}</h3>
+                <p class="listing-location">${safeLocation}</p>
                 <div class="listing-specs">${specsText}</div>
-                <strong class="listing-price">₱${Number(item.price || 0).toLocaleString()}</strong>
+                <strong class="listing-price">₱${_escPropHtml(Number(item.price || 0).toLocaleString())}</strong>
             </div>
         </article>
         `;

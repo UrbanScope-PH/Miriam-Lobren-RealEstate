@@ -273,15 +273,178 @@
         return 'http://127.0.0.1:8000/api';
     }
 
-    function getLocalAuthHeaders(extra = {}) {
+    let cachedCsrfToken = '';
+
+    function escapeHtml(value) {
+        if (value === null || value === undefined) return '';
+        return String(value).replace(/[&<>"']/g, function (c) {
+            return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+        });
+    }
+
+    function sanitizeImageUrl(rawUrl, fallback = 'assets/images/agent.jpg') {
+        const val = String(rawUrl || '').trim();
+        if (!val) return fallback;
+        if (/^https?:\/\/[^\s<>"'`]+$/i.test(val)) return val;
+        if (/^data:image\/(?:png|jpeg|jpg|webp|gif);base64,[A-Za-z0-9+/=]+$/i.test(val)) return val;
+        const cleanRel = val.replace(/^\.?\//, '');
+        if (/^(?:\.\.\/){0,3}assets\/images\/[a-zA-Z0-9._\-\/]+$/i.test(val) && !val.includes('..') && !cleanRel.startsWith('/')) {
+            return val;
+        }
+        if (/^assets\/images\/[a-zA-Z0-9._\-\/]+$/i.test(cleanRel) && !cleanRel.includes('..')) {
+            return cleanRel;
+        }
+        return fallback;
+    }
+
+    function escapePostgrestFilter(val) {
+        return String(val || '').replace(/[(),*\\]/g, ' ').trim();
+    }
+
+    function getCookieValue(name) {
+        try {
+            const parts = String(document.cookie || '').split(';');
+            for (let i = 0; i < parts.length; i++) {
+                const item = parts[i].trim();
+                if (item.startsWith(name + '=')) {
+                    return decodeURIComponent(item.slice(name.length + 1));
+                }
+            }
+        } catch (_) {}
+        return '';
+    }
+
+    function buildBotFields(botData = {}, forLocal = false) {
+        const hp = String(botData.company_website || botData._hp || botData.hp || '');
+        const ft = botData._ft !== undefined ? botData._ft : botData.ft;
+        const turnstile = String(botData.turnstileToken || botData.turnstile_token || '').trim();
+        const out = {};
+        if (forLocal) {
+            if (hp) out.company_website = hp;
+            if (ft !== undefined && ft !== null) out.ft = Number(ft) || 0;
+            if (turnstile) out.turnstile_token = turnstile;
+        } else {
+            if (hp) out._hp = hp;
+            if (ft !== undefined && ft !== null) out._ft = Number(ft) || 0;
+            if (turnstile) out.turnstileToken = turnstile;
+        }
+        return out;
+    }
+
+    async function ensureCsrfToken(forceRefresh = false) {
+        const cookieToken = getCookieValue('urbanscope_csrf');
+        if (!forceRefresh && cookieToken) {
+            cachedCsrfToken = cookieToken;
+            return cookieToken;
+        }
+        if (!forceRefresh && cachedCsrfToken) {
+            return cachedCsrfToken;
+        }
+        try {
+            const url = isLocalBackendReachableHost()
+                ? `${getLocalApiBase()}/auth/csrf`
+                : '/api/session?action=csrf';
+            const res = await fetch(url, {
+                method: 'GET',
+                credentials: isLocalBackendReachableHost() ? 'include' : 'same-origin',
+                cache: 'no-store'
+            });
+            if (res.ok) {
+                const data = await res.json().catch(() => ({}));
+                const tok = getCookieValue('urbanscope_csrf') || String(data.csrfToken || data.csrf_token || '').trim();
+                if (tok) cachedCsrfToken = tok;
+                return cachedCsrfToken;
+            }
+        } catch (_) {}
+        return getCookieValue('urbanscope_csrf') || cachedCsrfToken || '';
+    }
+
+    function clearClientAuthStorage() {
+        try {
+            [
+                TOKEN_KEY,
+                'urbanscope_jwt_token',
+                'access_token',
+                'adminToken',
+                'supabase_token',
+                'adminSessionToken',
+                USER_KEY,
+                DEMO_KEY,
+                'adminUser',
+                'adminPassword',
+                'urbanscope_admin_password_updated'
+            ].forEach(k => localStorage.removeItem(k));
+        } catch (_) {}
+    }
+
+    function getStoredBearerToken() {
         const token = localStorage.getItem(TOKEN_KEY) ||
                       localStorage.getItem('urbanscope_jwt_token') ||
                       localStorage.getItem('access_token') ||
                       localStorage.getItem('adminToken') ||
                       localStorage.getItem('supabase_token') || '';
+        if (!token || token.startsWith('sb_session_') || token.startsWith('sb_google_')) {
+            return '';
+        }
+        return token;
+    }
+
+    function getLocalAuthHeaders(extra = {}) {
+        const token = getStoredBearerToken();
         const headers = { 'Content-Type': 'application/json', ...extra };
         if (token) headers['Authorization'] = `Bearer ${token}`;
         return headers;
+    }
+
+    async function localApiFetch(path, options = {}, timeoutMs = 10000) {
+        const method = String(options.method || 'GET').toUpperCase();
+        const url = path.startsWith('http') ? path : `${getLocalApiBase()}${path}`;
+        const sendOnce = async (forceCsrf = false) => {
+            const headers = getLocalAuthHeaders(options.headers || {});
+            if (options.body === undefined || options.body === null) {
+                delete headers['Content-Type'];
+            }
+            if (!['GET', 'HEAD', 'OPTIONS'].includes(method)) {
+                const csrf = await ensureCsrfToken(forceCsrf);
+                if (csrf) headers['X-CSRF-Token'] = csrf;
+            }
+            return fetchWithTimeout(url, {
+                ...options,
+                method,
+                headers,
+                credentials: 'include'
+            }, timeoutMs);
+        };
+        let res = await sendOnce(false);
+        if (res.status === 403 && !['GET', 'HEAD', 'OPTIONS'].includes(method)) {
+            res = await sendOnce(true);
+        }
+        return res;
+    }
+
+    async function hostedApiFetch(url, options = {}, timeoutMs = 10000) {
+        const method = String(options.method || 'GET').toUpperCase();
+        const sendOnce = async (forceCsrf = false) => {
+            const headers = { ...(options.headers || {}) };
+            if (options.body !== undefined && options.body !== null && !headers['Content-Type']) {
+                headers['Content-Type'] = 'application/json';
+            }
+            if (!['GET', 'HEAD', 'OPTIONS'].includes(method)) {
+                const csrf = await ensureCsrfToken(forceCsrf);
+                if (csrf) headers['X-CSRF-Token'] = csrf;
+            }
+            return fetchWithTimeout(url, {
+                ...options,
+                method,
+                headers,
+                credentials: 'same-origin'
+            }, timeoutMs);
+        };
+        let res = await sendOnce(false);
+        if (res.status === 403 && !['GET', 'HEAD', 'OPTIONS'].includes(method)) {
+            res = await sendOnce(true);
+        }
+        return res;
     }
 
     function normalizeAccountRole(role, email) {
@@ -321,24 +484,28 @@
                 } else if (t === 'house-lot' || t === 'house & lot') {
                     queryParts.push('or=(property_type.ilike.*townhouse*,property_type.ilike.*subdivision*,property_type.ilike.*single attached*,property_type.ilike.*triplex*,property_type.ilike.*villa*)');
                 } else {
-                    queryParts.push(`property_type=ilike.*${encodeURIComponent(filter.type)}*`);
+                    const safeType = escapePostgrestFilter(filter.type);
+                    if (safeType) queryParts.push(`property_type=ilike.*${encodeURIComponent(safeType)}*`);
                 }
             }
 
             // 2. Location Filter
             if (filter.location && filter.location !== 'all') {
-                const cleanLoc = filter.location.replace(/-/g, ' ').trim();
-                queryParts.push(`location=ilike.*${encodeURIComponent(cleanLoc)}*`);
+                const cleanLoc = escapePostgrestFilter(filter.location.replace(/-/g, ' '));
+                if (cleanLoc) queryParts.push(`location=ilike.*${encodeURIComponent(cleanLoc)}*`);
             }
 
             // 3. Search Keyword across title, location, description, amenities
             if (filter.search && filter.search.trim()) {
-                const s = encodeURIComponent(filter.search.trim());
-                queryParts.push(`or=(title.ilike.*${s}*,location.ilike.*${s}*,property_type.ilike.*${s}*,description.ilike.*${s}*,amenities.ilike.*${s}*)`);
+                const cleanedSearch = escapePostgrestFilter(filter.search);
+                if (cleanedSearch) {
+                    const s = encodeURIComponent(cleanedSearch);
+                    queryParts.push(`or=(title.ilike.*${s}*,location.ilike.*${s}*,property_type.ilike.*${s}*,description.ilike.*${s}*,amenities.ilike.*${s}*)`);
+                }
             }
 
-            if (filter.columns) {
-                queryParts.push(`select=${filter.columns}`);
+            if (filter.columns && /^[a-zA-Z0-9_,]+$/.test(String(filter.columns).trim())) {
+                queryParts.push(`select=${String(filter.columns).trim()}`);
             }
 
             queryParts.push('order=id.desc');
@@ -616,58 +783,56 @@
             carports: parseInt(property.carports, 10) || 1,
             storeys: parseInt(property.storeys, 10) || 2,
             status: validStatus,
-            image_url: property.image_url || (property.imageNames && property.imageNames[0] ? 'assets/images/' + property.imageNames[0] : 'assets/images/property1.jpg'),
+            image_url: sanitizeImageUrl(
+                property.image_url || (property.imageNames && property.imageNames[0] ? 'assets/images/' + property.imageNames[0] : 'assets/images/property1.jpg'),
+                'assets/images/property1.jpg'
+            ),
             description: property.description || '',
             amenities: property.amenities || ''
         };
 
         let created = null;
 
-        // 1. Insert into Supabase
-        try {
-            const res = await fetch(`${REST_BASE}/properties`, {
-                method: 'POST',
-                headers: getHeaders(),
-                body: JSON.stringify(payload)
-            });
-
-            if (res.ok) {
-                const data = await res.json();
-                created = Array.isArray(data) ? data[0] : data;
-            }
-        } catch (err) {
-            console.warn('Supabase property insert notice:', err.message);
-        }
-
-        // 2. Also sync to local Python backend when on local dev host
         if (isLocalBackendReachableHost()) {
             try {
-                const localBase = getLocalApiBase();
-                const localRes = await fetch(`${localBase}/properties`, {
+                const localRes = await localApiFetch('/properties', {
                     method: 'POST',
-                    headers: getLocalAuthHeaders(),
-                    credentials: 'include',
                     body: JSON.stringify(payload)
                 });
                 if (localRes.ok) {
-                    const localData = await localRes.json();
-                    if (!created) created = localData;
+                    created = await localRes.json();
+                } else {
+                    const errBody = await localRes.json().catch(() => ({}));
+                    console.warn('Local property insert rejected:', errBody.detail || errBody.error || localRes.status);
+                    return null;
                 }
             } catch (e) {
                 console.warn('Local backend property insert notice:', e);
+                return null;
+            }
+        } else {
+            try {
+                const res = await hostedApiFetch('/api/properties', {
+                    method: 'POST',
+                    body: JSON.stringify({ action: 'create', payload })
+                });
+                if (res.ok) {
+                    const data = await res.json().catch(() => ({}));
+                    created = (data && data.property) ? data.property : (Array.isArray(data) ? data[0] : data);
+                } else {
+                    const errBody = await res.json().catch(() => ({}));
+                    console.warn('Hosted property insert rejected:', errBody.error || res.status);
+                    return null;
+                }
+            } catch (err) {
+                console.warn('Hosted property insert notice:', err.message);
+                return null;
             }
         }
 
-        // If both failed over network, create in-memory object
-        if (!created) {
-            created = {
-                id: property.id || Date.now(),
-                ...payload,
-                created_at: new Date().toISOString()
-            };
-        }
+        if (!created) return null;
 
-        // 3. Immediately update all browser caches so frontend displays it instantly
+        // Immediately update local browser caches for snappy admin UI
         try {
             const cached = JSON.parse(localStorage.getItem('cached_live_properties') || '[]');
             cached.unshift(created);
@@ -701,56 +866,54 @@
 
     async function apiUpdateProperty(id, property) {
         let updated = null;
+        const safePayload = { ...(property || {}) };
+        if (safePayload.image_url !== undefined) {
+            safePayload.image_url = sanitizeImageUrl(safePayload.image_url, 'assets/images/property1.jpg');
+        }
 
-        // 1. Try local FastAPI backend first when on local dev host
         if (isLocalBackendReachableHost()) {
             try {
-                const localBase = getLocalApiBase();
-                const localRes = await fetch(`${localBase}/properties/${encodeURIComponent(id)}`, {
+                const localRes = await localApiFetch(`/properties/${encodeURIComponent(id)}`, {
                     method: 'PUT',
-                    credentials: 'include',
-                    headers: getLocalAuthHeaders(),
-                    body: JSON.stringify(property)
+                    body: JSON.stringify(safePayload)
                 });
-
                 if (localRes.ok) {
                     updated = await localRes.json();
+                } else {
+                    return null;
                 }
             } catch (e) {
                 console.warn('Local backend property update notice:', e);
+                return null;
+            }
+        } else {
+            try {
+                const res = await hostedApiFetch('/api/properties', {
+                    method: 'POST',
+                    body: JSON.stringify({ action: 'update', id, payload: safePayload })
+                });
+                if (res.ok) {
+                    const data = await res.json().catch(() => ({}));
+                    updated = (data && data.property) ? data.property : (Array.isArray(data) ? data[0] : data);
+                } else {
+                    return null;
+                }
+            } catch (err) {
+                console.warn(`Hosted update notice for property #${id}:`, err.message);
+                return null;
             }
         }
 
-        // 2. Also try live Supabase if available
-        try {
-            const res = await fetch(`${REST_BASE}/properties?id=eq.${encodeURIComponent(id)}`, {
-                method: 'PATCH',
-                headers: getHeaders(),
-                body: JSON.stringify(property)
-            });
+        if (!updated) return null;
 
-            if (res.ok) {
-                const data = await res.json();
-                const supaData = Array.isArray(data) ? data[0] : data;
-                if (!updated) updated = supaData;
-            }
-        } catch (err) {
-            console.warn(`Supabase update notice for property #${id}:`, err.message);
-        }
-
-        // 3. In-memory object fallback if network was unreachable
-        if (!updated) {
-            updated = { id: Number(id) || id, ...property };
-        }
-
-        // 4. Immediately sync all local storage property caches
+        // Immediately sync local storage property caches
         try {
             ['cached_live_properties', 'urbanScopeProperties', 'properties'].forEach(key => {
                 const list = JSON.parse(localStorage.getItem(key) || '[]');
                 if (Array.isArray(list) && list.length > 0) {
                     const idx = list.findIndex(p => String(p.id) === String(id));
                     if (idx !== -1) {
-                        list[idx] = { ...list[idx], ...property };
+                        list[idx] = { ...list[idx], ...safePayload };
                         localStorage.setItem(key, JSON.stringify(list));
                     }
                 }
@@ -763,39 +926,30 @@
     async function apiDeleteProperty(id) {
         let deleted = false;
 
-        // 1. Try local FastAPI backend first when on local dev host
         if (isLocalBackendReachableHost()) {
             try {
-                const localBase = getLocalApiBase();
-                const localRes = await fetch(`${localBase}/properties/${encodeURIComponent(id)}`, {
-                    method: 'DELETE',
-                    credentials: 'include',
-                    headers: getLocalAuthHeaders()
+                const localRes = await localApiFetch(`/properties/${encodeURIComponent(id)}`, {
+                    method: 'DELETE'
                 });
-
-                if (localRes.ok) {
-                    deleted = true;
-                }
+                if (localRes.ok) deleted = true;
             } catch (e) {
                 console.warn('Local backend property delete notice:', e);
             }
-        }
-
-        // 2. Also try Supabase if configured
-        try {
-            const res = await fetch(`${REST_BASE}/properties?id=eq.${encodeURIComponent(id)}`, {
-                method: 'DELETE',
-                headers: getHeaders()
-            });
-
-            if (res.ok) {
-                deleted = true;
+        } else {
+            try {
+                const res = await hostedApiFetch('/api/properties', {
+                    method: 'POST',
+                    body: JSON.stringify({ action: 'delete', id })
+                });
+                if (res.ok) deleted = true;
+            } catch (err) {
+                console.warn(`Hosted delete notice for property #${id}:`, err.message);
             }
-        } catch (err) {
-            console.warn(`Supabase delete notice for property #${id}:`, err.message);
         }
 
-        // 3. Immediately clean up all local storage property caches
+        if (!deleted) return false;
+
+        // Clean up local storage property caches
         try {
             ['cached_live_properties', 'urbanScopeProperties', 'properties'].forEach(key => {
                 const list = JSON.parse(localStorage.getItem(key) || '[]');
@@ -804,8 +958,6 @@
                     localStorage.setItem(key, JSON.stringify(filtered));
                 }
             });
-            // If offline, still treat as deleted locally
-            if (!deleted) deleted = true;
         } catch (e) {}
 
         return deleted;
@@ -977,41 +1129,38 @@
             }
         } catch (_) {}
 
-        if (isLocalDevHost()) {
-            try {
-                const localBase = (location.port === '8000') ? '/api' : 'http://127.0.0.1:8000/api';
-                const res = await fetch(`${localBase}/notifications?role=admin`, { method: 'GET' });
-                if (res.ok) {
-                    const rows = await res.json();
-                    if (Array.isArray(rows)) {
-                        rows.forEach(r => {
-                            const inqId = r.inquiry_id || r.id;
-                            const nType = (r.type || 'info').toLowerCase();
-                            // Admin should NEVER receive approval or completed notifications
-                            if (nType === 'approved' || nType === 'completed') return;
-                            const createdMs = r.created_at ? new Date(r.created_at).getTime() : Date.now();
-                            const notifKey = `${nType}_${inqId}`;
-                            if (!items.some(existing => String(existing.inquiryId) === String(inqId) && existing.type === nType)) {
-                                items.push({
-                                    id: `srv_${r.id}`,
-                                    notifKey: notifKey,
-                                    type: nType,
-                                    avatarClass: nType === 'cancelled' ? 'cancel' : 'user',
-                                    avatarIcon: nType === 'cancelled' ? '✕' : '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>',
-                                    inquiryId: inqId,
-                                    client_name: r.client_name || 'Client',
-                                    property_title: r.property_title || 'General Inquiry',
-                                    title: r.title,
-                                    subtitle: `${r.property_title || 'General Inquiry'}`,
-                                    created_at: r.created_at,
-                                    time: isNaN(createdMs) ? Date.now() : createdMs
-                                });
-                            }
+        try {
+            const res = isLocalBackendReachableHost()
+                ? await localApiFetch('/notifications?role=admin', { method: 'GET' })
+                : await hostedApiFetch('/api/inquiries?action=notifications&role=admin', { method: 'GET' });
+            if (res.ok) {
+                const body = await res.json().catch(() => []);
+                const rows = Array.isArray(body) ? body : (Array.isArray(body?.notifications) ? body.notifications : []);
+                rows.forEach(r => {
+                    const inqId = r.inquiry_id || r.reference_id || r.id;
+                    const nType = String(r.type || 'info').toLowerCase();
+                    if (nType === 'approved' || nType === 'completed') return;
+                    const createdMs = r.created_at ? new Date(r.created_at).getTime() : Date.now();
+                    const notifKey = `${nType}_${inqId}`;
+                    if (!items.some(existing => String(existing.inquiryId) === String(inqId) && existing.type === nType)) {
+                        items.push({
+                            id: `srv_${r.id}`,
+                            notifKey: notifKey,
+                            type: nType,
+                            avatarClass: nType === 'cancelled' ? 'cancel' : 'user',
+                            avatarIcon: nType === 'cancelled' ? '✕' : '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>',
+                            inquiryId: inqId,
+                            client_name: r.client_name || 'Client',
+                            property_title: r.property_title || 'General Inquiry',
+                            title: r.title,
+                            subtitle: `${r.property_title || 'General Inquiry'}`,
+                            created_at: r.created_at,
+                            time: isNaN(createdMs) ? Date.now() : createdMs
                         });
                     }
-                }
-            } catch (_) {}
-        }
+                });
+            }
+        } catch (_) {}
 
         items = items.filter(it => it && it.type !== 'approved' && it.type !== 'completed');
         items.sort((a, b) => (b.time || 0) - (a.time || 0));
@@ -1024,98 +1173,39 @@
 
         const mapByKey = new Map();
 
-        // 1. Local FastAPI backend notifications (persisted with is_read and is_seen)
-        if (isLocalDevHost()) {
-            try {
-                const localBase = (location.port === '8000') ? '/api' : 'http://127.0.0.1:8000/api';
-                const res = await fetch(`${localBase}/notifications?email=${encodeURIComponent(cleanEmail)}`, { method: 'GET' });
-                if (res.ok) {
-                    const rows = await res.json();
-                    if (Array.isArray(rows)) {
-                        rows.forEach(r => {
-                            const inqId = r.inquiry_id || r.id;
-                            const key = `${(r.type || 'approved').toLowerCase()}_${inqId}`;
-                            const createdMs = r.created_at ? new Date(r.created_at).getTime() : Date.now();
-                            mapByKey.set(key, {
-                                id: `srv_${r.id}`,
-                                db_id: r.id,
-                                notifKey: key,
-                                type: (r.type || 'approved').toLowerCase(),
-                                inquiryId: inqId,
-                                client_email: cleanEmail,
-                                property_title: r.property_title || 'General Inquiry',
-                                title: r.title || `Inquiry #${inqId} Approved!`,
-                                message: r.message || `Your inquiry for "${r.property_title || 'General Inquiry'}" has been approved by Miriam Lobren!`,
-                                is_read: Boolean(r.is_read),
-                                is_seen: Boolean(r.is_seen),
-                                created_at: r.created_at,
-                                time: isNaN(createdMs) ? Date.now() : createdMs
-                            });
-                        });
-                    }
-                }
-            } catch (_) {}
-        }
-
-        // 2. Try Supabase Cloud
+        // 1. Authenticated backend / Vercel notification feed
         try {
-            let userId = null;
-            try {
-                const cur = (typeof apiGetCurrentUser === 'function') ? apiGetCurrentUser() : null;
-                if (cur && cur.id && String(cur.email || '').trim().toLowerCase() === cleanEmail) {
-                    userId = cur.id;
-                }
-            } catch (_) {}
-
-            if (!userId) {
-                const uRes = await fetch(`${REST_BASE}/users?email=ilike.${encodeURIComponent(cleanEmail)}&select=id`, {
-                    method: 'GET',
-                    headers: getHeaders()
+            const res = isLocalBackendReachableHost()
+                ? await localApiFetch(`/notifications?email=${encodeURIComponent(cleanEmail)}`, { method: 'GET' })
+                : await hostedApiFetch('/api/inquiries?action=notifications', { method: 'GET' });
+            if (res.ok) {
+                const body = await res.json().catch(() => []);
+                const rows = Array.isArray(body) ? body : (Array.isArray(body?.notifications) ? body.notifications : []);
+                rows.forEach(r => {
+                    const inqId = r.inquiry_id || r.reference_id || r.id;
+                    const nType = (r.reference_type === 'inquiry' ? 'approved' : (r.type || 'approved')).toLowerCase();
+                    const key = `${nType}_${inqId}`;
+                    const createdMs = r.created_at ? new Date(r.created_at).getTime() : Date.now();
+                    mapByKey.set(key, {
+                        id: `srv_${r.id}`,
+                        db_id: r.id,
+                        notifKey: key,
+                        type: nType,
+                        inquiryId: inqId,
+                        client_email: cleanEmail,
+                        property_title: r.property_title || 'General Inquiry',
+                        title: r.title || `Inquiry #${inqId} Approved!`,
+                        message: r.message || `Your inquiry for "${r.property_title || 'General Inquiry'}" has been approved by Miriam Lobren!`,
+                        is_read: Boolean(r.is_read),
+                        is_seen: Boolean(r.is_seen),
+                        created_at: r.created_at,
+                        time: isNaN(createdMs) ? Date.now() : createdMs
+                    });
                 });
-                if (uRes.ok) {
-                    const uData = await uRes.json();
-                    if (Array.isArray(uData) && uData.length > 0 && uData[0].id) {
-                        userId = uData[0].id;
-                    }
-                }
-            }
-
-            if (userId) {
-                const res = await fetch(`${REST_BASE}/notifications?user_id=eq.${encodeURIComponent(userId)}&order=created_at.desc&limit=50`, {
-                    method: 'GET',
-                    headers: getHeaders()
-                });
-                if (res.ok) {
-                    const rows = await res.json();
-                    if (Array.isArray(rows)) {
-                        rows.forEach(r => {
-                            const inqId = r.reference_id || r.inquiry_id || r.id;
-                            const key = `approved_${inqId}`;
-                            if (!mapByKey.has(key)) {
-                                const createdMs = r.created_at ? new Date(r.created_at).getTime() : Date.now();
-                                mapByKey.set(key, {
-                                    id: `sb_${r.id}`,
-                                    db_id: r.id,
-                                    notifKey: key,
-                                    type: (r.reference_type === 'inquiry' ? 'approved' : (r.type || 'approved')).toLowerCase(),
-                                    inquiryId: inqId,
-                                    client_email: cleanEmail,
-                                    property_title: r.property_title || '',
-                                    title: r.title || `Inquiry #${inqId} Approved!`,
-                                    message: r.message || `Your inquiry has been approved by Miriam Lobren!`,
-                                    is_read: Boolean(r.is_read),
-                                    is_seen: Boolean(r.is_seen),
-                                    created_at: r.created_at,
-                                    time: isNaN(createdMs) ? Date.now() : createdMs
-                                });
-                            }
-                        });
-                    }
-                }
             }
         } catch (_) {}
 
-        // 3. Local stored client notifications (offline fallback)
+        // 2. Local stored client notifications (offline fallback)
         try {
             const localNotifs = JSON.parse(localStorage.getItem(CLIENT_NOTIFS_KEY) || '[]');
             if (Array.isArray(localNotifs)) {
@@ -1130,7 +1220,7 @@
             }
         } catch (_) {}
 
-        // 4. Derive from client's live inquiries with 'Approved' status
+        // 3. Derive from client's live inquiries with 'Approved' status
         let myInquiries = [];
         try {
             myInquiries = await apiGetMyInquiries(cleanEmail);
@@ -1179,7 +1269,7 @@
             }
         } catch (_) {}
 
-        // 5. Enforce referential integrity: any inquiry notification MUST belong to a live active inquiry
+        // 4. Enforce referential integrity: any inquiry notification MUST belong to a live active inquiry
         const validInquiryIds = new Set();
         if (Array.isArray(myInquiries)) {
             myInquiries.forEach(inq => {
@@ -1232,50 +1322,21 @@
         const inquiryId = data.inquiryId || data.inquiry_id;
         const notifId = data.notifId || data.id;
 
-        // 1. FastAPI backend
-        if (isLocalDevHost()) {
-            try {
-                const localBase = (location.port === '8000') ? '/api' : 'http://127.0.0.1:8000/api';
-                await fetch(`${localBase}/notifications/read`, {
+        try {
+            if (isLocalBackendReachableHost()) {
+                await localApiFetch('/notifications/read', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ email, inquiry_id: inquiryId, id: notifId, role: data.role })
                 });
-            } catch (_) {}
-        }
-
-        // 2. Supabase Cloud
-        try {
-            let sbUrl = '';
-            if (notifId && typeof notifId === 'number') {
-                sbUrl = `${REST_BASE}/notifications?id=eq.${encodeURIComponent(notifId)}`;
-            } else if (email) {
-                let userId = null;
-                const uRes = await fetch(`${REST_BASE}/users?email=ilike.${encodeURIComponent(email)}&select=id`, {
-                    method: 'GET',
-                    headers: getHeaders()
-                });
-                if (uRes.ok) {
-                    const uData = await uRes.json();
-                    if (Array.isArray(uData) && uData.length > 0) userId = uData[0].id;
-                }
-                if (userId) {
-                    sbUrl = `${REST_BASE}/notifications?user_id=eq.${encodeURIComponent(userId)}`;
-                    if (inquiryId) {
-                        sbUrl += `&reference_id=eq.${encodeURIComponent(inquiryId)}`;
-                    }
-                }
-            }
-            if (sbUrl) {
-                await fetch(sbUrl, {
-                    method: 'PATCH',
-                    headers: getHeaders(),
-                    body: JSON.stringify({ is_read: true })
+            } else {
+                await hostedApiFetch('/api/inquiries', {
+                    method: 'POST',
+                    body: JSON.stringify({ action: 'mark-notifications', mode: 'read', inquiry_id: inquiryId, id: notifId, role: data.role })
                 });
             }
         } catch (_) {}
 
-        // 3. Local sync
+        // Local sync
         if (email) {
             try {
                 const readKey = 'client_notifs_read_ids_' + email;
@@ -1298,19 +1359,21 @@
         const inquiryId = data.inquiryId || data.inquiry_id;
         const notifId = data.notifId || data.id;
 
-        // 1. FastAPI backend
-        if (isLocalDevHost()) {
-            try {
-                const localBase = (location.port === '8000') ? '/api' : 'http://127.0.0.1:8000/api';
-                await fetch(`${localBase}/notifications/seen`, {
+        try {
+            if (isLocalBackendReachableHost()) {
+                await localApiFetch('/notifications/seen', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ email, inquiry_id: inquiryId, id: notifId, role: data.role })
                 });
-            } catch (_) {}
-        }
+            } else {
+                await hostedApiFetch('/api/inquiries', {
+                    method: 'POST',
+                    body: JSON.stringify({ action: 'mark-notifications', mode: 'seen', inquiry_id: inquiryId, id: notifId, role: data.role })
+                });
+            }
+        } catch (_) {}
 
-        // 3. Local sync
+        // Local sync
         if (email) {
             try {
                 const toastKey = 'client_notifs_toasted_' + email;
@@ -1327,13 +1390,15 @@
     }
 
     async function apiSubmitInquiry(inquiry) {
+        const isLocal = isLocalBackendReachableHost();
         const payload = {
             property_title: inquiry.property_title || inquiry.propertyTitle || 'General Inquiry',
             client_name: (inquiry.client_name || inquiry.clientName || 'Client').trim(),
             client_email: (inquiry.client_email || inquiry.clientEmail || '').trim(),
             client_phone: (inquiry.client_phone || inquiry.clientPhone || '').trim(),
             message: (inquiry.message || '').trim(),
-            status: inquiry.status || 'Under Review'
+            status: 'Under Review',
+            ...buildBotFields(inquiry, isLocal)
         };
 
         const rawLookupTitle = String(payload.property_title || '').replace(/^specific\s+property\s+inquiry\s*:\s*/i, '');
@@ -1355,43 +1420,24 @@
         }
 
         let result = null;
-
-        // 1. Try Supabase Cloud
         try {
-            const res = await fetch(`${REST_BASE}/inquiries`, {
-                method: 'POST',
-                headers: getHeaders(),
-                body: JSON.stringify(payload)
-            });
-
-            if (res.ok) {
-                const data = await res.json();
-                result = { success: true, data: Array.isArray(data) ? data[0] : data };
+            const res = isLocal
+                ? await localApiFetch('/inquiries', { method: 'POST', body: JSON.stringify(payload) })
+                : await hostedApiFetch('/api/inquiries', { method: 'POST', body: JSON.stringify({ action: 'create', ...payload }) });
+            const body = await res.json().catch(() => ({}));
+            if (res.ok && body.success !== false) {
+                result = { success: true, data: body.data || body.inquiry || body };
+            } else {
+                return { success: false, error: body.detail || body.error || body.message || 'Unable to submit inquiry.' };
             }
         } catch (err) {
-            console.warn('Supabase inquiry save notice:', err.message);
-        }
-
-        // 2. Also sync to Local FastAPI Python backend when on local dev host
-        if (isLocalDevHost()) {
-            try {
-                const localBase = (location.port === '8000') ? '/api' : 'http://127.0.0.1:8000/api';
-                const localRes = await fetch(`${localBase}/inquiries`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                });
-                if (localRes.ok) {
-                    const localData = await localRes.json();
-                    if (!result) result = { success: true, data: localData.data || localData };
-                }
-            } catch (e) {}
+            return { success: false, error: err.message || 'Network error while submitting inquiry.' };
         }
 
         // Cache in localStorage & broadcast event for active admin listeners
         try {
             const cached = JSON.parse(localStorage.getItem('inquiries') || '[]');
-            const record = (result && result.data) ? result.data : {
+            const record = result.data || {
                 id: Date.now(),
                 ...payload,
                 created_at: new Date().toISOString()
@@ -1402,7 +1448,7 @@
             window.dispatchEvent(new CustomEvent('inquirySubmitted', { detail: record }));
         } catch (_) {}
 
-        return result || { success: true, data: payload };
+        return result;
     }
 
     async function apiGetInquiries(forceRefresh = false) {
@@ -1416,54 +1462,28 @@
 
         const runner = (async () => {
             let list = [];
+            let unauthorized = false;
 
-            // 1. Try Local FastAPI backend first on local dev host
-            if (isLocalDevHost()) {
-                try {
-                    const localBase = (location.port === '8000') ? '/api' : 'http://127.0.0.1:8000/api';
-                    const token = localStorage.getItem(TOKEN_KEY) || localStorage.getItem('adminToken') || localStorage.getItem('supabase_token') || '';
-                    const localRes = await fetch(`${localBase}/inquiries`, {
-                        method: 'GET',
-                        headers: token ? { 'Authorization': `Bearer ${token}` } : {},
-                        credentials: 'same-origin'
-                    });
-                    if (localRes.ok) {
-                        const localData = await localRes.json();
-                        if (Array.isArray(localData) && localData.length > 0) {
-                            list = localData;
-                        }
-                    }
-                } catch (e) {}
-            }
-
-            // 2. Try Supabase REST
             try {
-                const res = await fetch(`${REST_BASE}/inquiries?select=*&order=created_at.desc`, {
-                    method: 'GET',
-                    headers: getHeaders()
-                });
-
+                const res = isLocalBackendReachableHost()
+                    ? await localApiFetch('/inquiries', { method: 'GET' })
+                    : await hostedApiFetch('/api/inquiries?action=all', { method: 'GET' });
                 if (res.ok) {
-                    const data = await res.json();
-                    if (Array.isArray(data) && data.length > 0) {
-                        if (!list.length) {
-                            list = data;
-                        } else {
-                            const existingIds = new Set(list.map(i => String(i.id)));
-                            data.forEach(item => {
-                                if (!existingIds.has(String(item.id))) {
-                                    list.push(item);
-                                }
-                            });
-                        }
-                    }
+                    const body = await res.json().catch(() => []);
+                    const rows = Array.isArray(body) ? body : (Array.isArray(body?.inquiries) ? body.inquiries : []);
+                    list = rows;
+                } else if (res.status === 401 || res.status === 403) {
+                    unauthorized = true;
                 }
             } catch (err) {
-                console.warn('Supabase inquiries fetch notice:', err.message);
+                console.warn('Inquiries fetch notice:', err.message || err);
             }
 
-            // 3. Fallback: localStorage
-            if (!list.length) {
+            if (unauthorized) {
+                return [];
+            }
+
+            if (!list.length && typeof location !== 'undefined' && location.protocol === 'file:') {
                 try {
                     const cached = JSON.parse(localStorage.getItem('inquiries') || '[]');
                     if (Array.isArray(cached) && cached.length > 0) {
@@ -1474,19 +1494,15 @@
 
             list = applyLocalInquiryState(list);
 
-            if (list.length >= 0) {
-                try {
-                    const nextListJson = JSON.stringify(list);
-                    if (localStorage.getItem('inquiries') !== nextListJson) {
-                        localStorage.setItem('inquiries', nextListJson);
-                    }
-                } catch (_) {}
-                READ_CACHE.inquiries.data = list;
-                READ_CACHE.inquiries.ts = Date.now();
-                return list;
-            }
-
-            return null;
+            try {
+                const nextListJson = JSON.stringify(list);
+                if (localStorage.getItem('inquiries') !== nextListJson) {
+                    localStorage.setItem('inquiries', nextListJson);
+                }
+            } catch (_) {}
+            READ_CACHE.inquiries.data = list;
+            READ_CACHE.inquiries.ts = Date.now();
+            return list;
         })().finally(() => {
             if (READ_CACHE.inquiries.promise === runner) {
                 READ_CACHE.inquiries.promise = null;
@@ -1500,48 +1516,28 @@
     async function apiUpdateInquiryStatus(id, newStatus) {
         let updated = false;
         const nowIso = new Date().toISOString();
-        const token = localStorage.getItem(TOKEN_KEY) ||
-                      localStorage.getItem('urbanscope_jwt_token') ||
-                      localStorage.getItem('access_token') ||
-                      localStorage.getItem('adminToken') ||
-                      localStorage.getItem('supabase_token') || '';
 
-        // 1. Try FastAPI backend first
-        if (isLocalDevHost()) {
-            try {
-                const localBase = (location.port === '8000') ? '/api' : 'http://127.0.0.1:8000/api';
-                let adminEmail = '';
-                try {
-                    const adminUser = JSON.parse(localStorage.getItem('adminUser') || localStorage.getItem(USER_KEY) || '{}');
-                    adminEmail = adminUser.email || '';
-                } catch (_) {}
-
-                const res = await fetch(`${localBase}/inquiries/${encodeURIComponent(id)}`, {
+        try {
+            if (isLocalBackendReachableHost()) {
+                const res = await localApiFetch(`/inquiries/${encodeURIComponent(id)}`, {
                     method: 'PATCH',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        ...(token ? { 'Authorization': `Bearer ${token}` } : {})
-                    },
-                    credentials: 'same-origin',
-                    body: JSON.stringify({ status: newStatus, caller_email: adminEmail, admin_email: adminEmail })
+                    body: JSON.stringify({ status: newStatus })
                 });
                 if (res.ok) updated = true;
-            } catch (e) {
-                console.warn('FastAPI inquiry status update notice:', e);
+            } else {
+                const res = await hostedApiFetch('/api/inquiries', {
+                    method: 'POST',
+                    body: JSON.stringify({ action: 'update-status', id, status: newStatus })
+                });
+                if (res.ok) updated = true;
             }
+        } catch (e) {
+            console.warn('Inquiry status update notice:', e);
         }
 
-        // 2. Try Supabase Cloud
-        try {
-            const res = await fetch(`${REST_BASE}/inquiries?id=eq.${encodeURIComponent(id)}`, {
-                method: 'PATCH',
-                headers: getHeaders(),
-                body: JSON.stringify({ status: newStatus })
-            });
-            if (res.ok) updated = true;
-        } catch (e) {}
+        if (!updated) return false;
 
-        // 3. Always update localStorage cache & overrides
+        // Update localStorage cache & overrides after confirmed server mutation
         let targetInquiry = null;
         try {
             const cached = JSON.parse(localStorage.getItem('inquiries') || '[]');
@@ -1556,9 +1552,7 @@
 
         saveInquiryOverride(id, { status: newStatus, updated_at: nowIso });
 
-        // 4. If admin approved the inquiry, mark as read for admin and push notification for the user
         if (String(newStatus || '').toLowerCase().trim() === 'approved') {
-            // Mark as read in admin notification state immediately so no badge appears for admin
             try {
                 const existingRead = JSON.parse(localStorage.getItem("admin_notifs_read_ids") || "[]");
                 const readSet = new Set(Array.isArray(existingRead) ? existingRead.map(String) : []);
@@ -1596,38 +1590,6 @@
                     created_at: nowIso,
                     time: Date.now()
                 });
-
-                // Sync notification to Supabase Cloud if active
-                try {
-                    let clientUserId = targetInquiry.client_id || targetInquiry.user_id;
-                    if (!clientUserId && clientEmail) {
-                        const uRes = await fetch(`${REST_BASE}/users?email=ilike.${encodeURIComponent(clientEmail)}&select=id`, {
-                            method: 'GET',
-                            headers: getHeaders()
-                        });
-                        if (uRes.ok) {
-                            const uData = await uRes.json();
-                            if (Array.isArray(uData) && uData.length > 0 && uData[0].id) {
-                                clientUserId = uData[0].id;
-                            }
-                        }
-                    }
-
-                    if (clientUserId) {
-                        fetch(`${REST_BASE}/notifications`, {
-                            method: 'POST',
-                            headers: getHeaders(),
-                            body: JSON.stringify({
-                                user_id: clientUserId,
-                                title: notifTitle,
-                                message: notifMsg,
-                                reference_type: 'inquiry',
-                                reference_id: Number(id),
-                                is_read: false
-                            })
-                        }).catch(() => {});
-                    }
-                } catch (_) {}
             }
         }
 
@@ -1653,54 +1615,26 @@
 
         const runner = (async () => {
             let list = [];
-            const token = localStorage.getItem(TOKEN_KEY) ||
-                          localStorage.getItem('urbanscope_jwt_token') ||
-                          localStorage.getItem('access_token') ||
-                          localStorage.getItem('adminToken') ||
-                          localStorage.getItem('supabase_token') || '';
+            let unauthorized = false;
 
-            // 1. Try FastAPI backend
-            if (isLocalDevHost()) {
-                try {
-                    const localBase = (location.port === '8000') ? '/api' : 'http://127.0.0.1:8000/api';
-                    const url = cleanEmail ? `${localBase}/inquiries/my?email=${encodeURIComponent(cleanEmail)}` : `${localBase}/inquiries/my`;
-                    const res = await fetch(url, {
-                        method: 'GET',
-                        headers: token ? { 'Authorization': `Bearer ${token}` } : {},
-                        credentials: 'same-origin'
-                    });
-                    if (res.ok) {
-                        const data = await res.json();
-                        if (Array.isArray(data) && data.length > 0) list = data;
-                    }
-                } catch (e) {}
+            try {
+                const res = isLocalBackendReachableHost()
+                    ? await localApiFetch(cleanEmail ? `/inquiries/my?email=${encodeURIComponent(cleanEmail)}` : '/inquiries/my', { method: 'GET' })
+                    : await hostedApiFetch('/api/inquiries?action=my', { method: 'GET' });
+                if (res.ok) {
+                    const body = await res.json().catch(() => []);
+                    const rows = Array.isArray(body) ? body : (Array.isArray(body?.inquiries) ? body.inquiries : []);
+                    list = rows;
+                } else if (res.status === 401 || res.status === 403) {
+                    unauthorized = true;
+                }
+            } catch (e) {}
+
+            if (unauthorized) {
+                return [];
             }
 
-            // 2. Try Supabase Cloud
-            if (cleanEmail) {
-                try {
-                    const res = await fetch(`${REST_BASE}/inquiries?client_email=ilike.${encodeURIComponent(cleanEmail)}&order=created_at.desc`, {
-                        method: 'GET',
-                        headers: getHeaders()
-                    });
-                    if (res.ok) {
-                        const data = await res.json();
-                        if (Array.isArray(data) && data.length > 0) {
-                            if (!list.length) {
-                                list = data;
-                            } else {
-                                const existingIds = new Set(list.map(i => String(i.id)));
-                                data.forEach(item => {
-                                    if (!existingIds.has(String(item.id))) list.push(item);
-                                });
-                            }
-                        }
-                    }
-                } catch (err) {}
-            }
-
-            // 3. Fallback: filter cached inquiries in localStorage
-            if (!list.length && cleanEmail) {
+            if (!list.length && cleanEmail && typeof location !== 'undefined' && location.protocol === 'file:') {
                 try {
                     const cached = JSON.parse(localStorage.getItem('inquiries') || '[]');
                     if (Array.isArray(cached) && cached.length > 0) {
@@ -1737,7 +1671,6 @@
         const cleanEmail = (email || '').trim().toLowerCase();
         const nowIso = new Date().toISOString();
         const payload = { ...updates };
-        if (cleanEmail && !payload.client_email) payload.client_email = cleanEmail;
 
         // Guard: prevent modifying details if already approved (unless cancelling)
         const isCancelling = String(updates.status || '').toLowerCase().trim() === 'cancelled';
@@ -1757,50 +1690,28 @@
             } catch (_) {}
         }
 
-        const token = localStorage.getItem(TOKEN_KEY) ||
-                      localStorage.getItem('urbanscope_jwt_token') ||
-                      localStorage.getItem('access_token') ||
-                      localStorage.getItem('supabase_token') ||
-                      localStorage.getItem('adminToken') || '';
-
-        // 1. Try FastAPI
-        if (isLocalDevHost()) {
-            try {
-                const localBase = (location.port === '8000') ? '/api' : 'http://127.0.0.1:8000/api';
-                const res = await fetch(`${localBase}/inquiries/${encodeURIComponent(id)}`, {
+        try {
+            const res = isLocalBackendReachableHost()
+                ? await localApiFetch(`/inquiries/${encodeURIComponent(id)}`, {
                     method: 'PUT',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        ...(token ? { 'Authorization': `Bearer ${token}` } : {})
-                    },
-                    credentials: 'same-origin',
                     body: JSON.stringify(payload)
+                })
+                : await hostedApiFetch('/api/inquiries', {
+                    method: 'POST',
+                    body: JSON.stringify({ action: 'update-my', id, ...payload })
                 });
-                if (res.ok) {
-                    const data = await res.json();
-                    updated = true;
-                    updatedRecord = data.data || data;
-                } else if (res.status === 400) {
-                    return { success: false, error: 'Approved inquiries can no longer be modified.' };
-                }
-            } catch (e) {}
+            const data = await res.json().catch(() => ({}));
+            if (res.ok && data.success !== false) {
+                updated = true;
+                updatedRecord = data.data || data.inquiry || data;
+            } else {
+                return { success: false, error: data.detail || data.error || 'Unable to update inquiry.' };
+            }
+        } catch (e) {
+            return { success: false, error: e.message || 'Unable to reach inquiry service.' };
         }
 
-        // 2. Always sync to Supabase Cloud as well
-        try {
-            const supaUpdates = { ...updates };
-            delete supaUpdates.client_email;
-            const res = await fetch(`${REST_BASE}/inquiries?id=eq.${encodeURIComponent(id)}`, {
-                method: 'PATCH',
-                headers: getHeaders(),
-                body: JSON.stringify(supaUpdates)
-            });
-            if (res.ok) {
-                updated = true;
-            }
-        } catch (e) {}
-
-        // 3. Update localStorage cache & overrides
+        // Update localStorage cache & overrides
         try {
             const cached = JSON.parse(localStorage.getItem('inquiries') || '[]');
             const idx = cached.findIndex(i => String(i.id) === String(id));
@@ -1814,7 +1725,7 @@
         saveInquiryOverride(id, { ...updates, updated_at: nowIso });
         invalidateReadCache('inquiries');
 
-        return { success: updated || Boolean(updatedRecord), data: updatedRecord };
+        return { success: updated, data: updatedRecord };
     }
 
     async function apiDeleteMyInquiry(id, email, itemHint = null) {
@@ -1830,36 +1741,24 @@
             }
         } catch (_) {}
 
-        const token = localStorage.getItem(TOKEN_KEY) ||
-                      localStorage.getItem('urbanscope_jwt_token') ||
-                      localStorage.getItem('access_token') ||
-                      localStorage.getItem('supabase_token') ||
-                      localStorage.getItem('adminToken') || '';
-
-        // 1. Delete in FastAPI
-        if (isLocalDevHost()) {
-            try {
-                const localBase = (location.port === '8000') ? '/api' : 'http://127.0.0.1:8000/api';
-                const url = cleanEmail ? `${localBase}/inquiries/${encodeURIComponent(id)}?client_email=${encodeURIComponent(cleanEmail)}` : `${localBase}/inquiries/${encodeURIComponent(id)}`;
-                const res = await fetch(url, {
-                    method: 'DELETE',
-                    headers: token ? { 'Authorization': `Bearer ${token}` } : {},
-                    credentials: 'same-origin'
+        try {
+            const res = isLocalBackendReachableHost()
+                ? await localApiFetch(`/inquiries/${encodeURIComponent(id)}`, { method: 'DELETE' })
+                : await hostedApiFetch('/api/inquiries', {
+                    method: 'POST',
+                    body: JSON.stringify({ action: 'delete-my', id })
                 });
-                if (res.ok) deleted = true;
-            } catch (e) {}
+            const data = await res.json().catch(() => ({}));
+            if (res.ok && data.success !== false) {
+                deleted = true;
+            } else {
+                return { success: false, error: data.detail || data.error || 'Unable to delete inquiry.' };
+            }
+        } catch (e) {
+            return { success: false, error: e.message || 'Unable to delete inquiry.' };
         }
 
-        // 2. Always delete in Supabase Cloud as well
-        try {
-            const res = await fetch(`${REST_BASE}/inquiries?id=eq.${encodeURIComponent(id)}`, {
-                method: 'DELETE',
-                headers: getHeaders()
-            });
-            if (res.ok) deleted = true;
-        } catch (e) {}
-
-        // 3. Remove from localStorage cache & mark deleted
+        // Remove from localStorage cache & mark deleted
         markInquiryDeletedLocal(id);
         try {
             const cached = JSON.parse(localStorage.getItem('inquiries') || '[]');
@@ -1867,7 +1766,7 @@
             localStorage.setItem('inquiries', JSON.stringify(filtered));
         } catch (_) {}
 
-        // 4. Notify admin that the client cancelled/removed the inquiry
+        // Notify admin that the client cancelled/removed the inquiry
         const code = (targetInq && targetInq.inquiry_code) || `INQ-2026-${String(id).padStart(3, '0')}`;
         const clientName = (targetInq && (targetInq.client_name || targetInq.name)) || cleanEmail.split('@')[0] || 'Client';
         const propTitle = (targetInq && (targetInq.property_title || targetInq.propertyTitle)) || 'General Inquiry';
@@ -1892,7 +1791,7 @@
         window.dispatchEvent(new CustomEvent('inquiryStatusChanged', { detail: { id, status: 'Cancelled' } }));
         window.dispatchEvent(new CustomEvent('inquiriesUpdated', { detail: { id, status: 'Deleted' } }));
 
-        return { success: true };
+        return { success: deleted };
     }
 
     async function apiCancelMyInquiry(id, email, itemHint = null) {
@@ -1905,7 +1804,27 @@
             }
         } catch (_) {}
 
-        const res = await apiUpdateMyInquiry(id, { status: 'Cancelled' }, email);
+        let res;
+        if (isLocalBackendReachableHost()) {
+            res = await apiUpdateMyInquiry(id, { status: 'Cancelled' }, email);
+        } else {
+            try {
+                const hostedRes = await hostedApiFetch('/api/inquiries', {
+                    method: 'POST',
+                    body: JSON.stringify({ action: 'cancel-my', id })
+                });
+                const body = await hostedRes.json().catch(() => ({}));
+                res = hostedRes.ok && body.success !== false
+                    ? { success: true, data: body.data || body }
+                    : { success: false, error: body.error || 'Unable to cancel inquiry.' };
+                if (res.success) {
+                    saveInquiryOverride(id, { status: 'Cancelled', updated_at: new Date().toISOString() });
+                }
+            } catch (e) {
+                res = { success: false, error: e.message || 'Unable to cancel inquiry.' };
+            }
+        }
+
         if (res && res.success) {
             const code = (targetInq && targetInq.inquiry_code) || `INQ-2026-${String(id).padStart(3, '0')}`;
             const clientName = (targetInq && (targetInq.client_name || targetInq.name)) || cleanEmail.split('@')[0] || 'Client';
@@ -2076,35 +1995,26 @@
 
     async function apiGetUsers() {
         try {
-            const res = await fetch(`${REST_BASE}/users?select=id,email,full_name,phone,role,created_at,bio&order=created_at.desc`, {
-                method: 'GET',
-                headers: getHeaders()
-            });
-            if (res.ok) {
-                const data = await res.json();
-                if (Array.isArray(data) && data.length > 0) {
-                    return data.filter(u => !isUserRecordDeleted(u)).map(formatUserRecord);
+            if (isLocalBackendReachableHost()) {
+                let localRes = await localApiFetch('/superadmin/users', { method: 'GET' });
+                if (!localRes.ok) {
+                    localRes = await localApiFetch('/users', { method: 'GET' });
+                }
+                if (localRes.ok) {
+                    const body = await localRes.json().catch(() => []);
+                    const list = Array.isArray(body) ? body : (Array.isArray(body?.users) ? body.users : []);
+                    return list.filter(u => !isUserRecordDeleted(u)).map(formatUserRecord);
+                }
+            } else {
+                const res = await hostedApiFetch('/api/superadmin/users', { method: 'GET' });
+                if (res.ok) {
+                    const data = await res.json().catch(() => ({}));
+                    const list = Array.isArray(data) ? data : (Array.isArray(data?.users) ? data.users : []);
+                    return list.filter(u => !isUserRecordDeleted(u)).map(formatUserRecord);
                 }
             }
         } catch (err) {
-            console.warn('Supabase users fetch notice, trying local API:', err.message);
-        }
-
-        if (isLocalBackendReachableHost()) {
-            try {
-                const localBase = getLocalApiBase();
-                const localRes = await fetch(`${localBase}/users`, {
-                    method: 'GET',
-                    headers: getLocalAuthHeaders(),
-                    credentials: 'include'
-                });
-                if (localRes.ok) {
-                    const localUsers = await localRes.json();
-                    if (Array.isArray(localUsers)) {
-                        return localUsers.filter(u => !isUserRecordDeleted(u)).map(formatUserRecord);
-                    }
-                }
-            } catch (_) {}
+            console.warn('Users directory fetch notice:', err.message || err);
         }
 
         return [];
@@ -2122,55 +2032,19 @@
         const runner = (async () => {
             let users = null;
 
-            // 1. Try local FastAPI backend when running on local dev host (non-HTTPS)
-            if (isLocalBackendReachableHost()) {
-                try {
-                    const controller = (typeof AbortController !== 'undefined') ? new AbortController() : null;
-                    const timeoutId = controller ? setTimeout(() => controller.abort(), 3500) : null;
-                    const localRes = await fetch(`${getLocalApiBase()}/superadmin/users`, {
-                        method: 'GET',
-                        headers: getLocalAuthHeaders(),
-                        credentials: 'include',
-                        signal: controller ? controller.signal : undefined
-                    });
-                    if (timeoutId) clearTimeout(timeoutId);
-                    if (localRes.ok) {
-                        const localData = await localRes.json();
-                        if (Array.isArray(localData) && localData.length > 0) {
-                            users = localData;
-                        }
-                    }
-                } catch (localErr) {
-                    console.warn('Local superadmin users fetch notice, using Supabase Cloud:', localErr.message || localErr);
+            try {
+                const res = isLocalBackendReachableHost()
+                    ? await localApiFetch('/superadmin/users', { method: 'GET' }, 4500)
+                    : await hostedApiFetch('/api/superadmin/users', { method: 'GET' }, 8000);
+                if (res.ok) {
+                    const body = await res.json().catch(() => []);
+                    const list = Array.isArray(body) ? body : (Array.isArray(body?.users) ? body.users : null);
+                    if (Array.isArray(list)) users = list;
+                } else if (res.status === 401 || res.status === 403) {
+                    return [];
                 }
-            }
-
-            // 2. Fetch from live Supabase Cloud (primary on Vercel/remote, automatic fallback on local)
-            if (!users) {
-                try {
-                    const res = await fetch(`${REST_BASE}/users?select=id,email,full_name,phone,role,created_at,bio&order=id.asc`, {
-                        method: 'GET',
-                        headers: getHeaders()
-                    });
-                    if (res.ok) {
-                        const cloudData = await res.json();
-                        if (Array.isArray(cloudData)) {
-                            users = cloudData;
-                        }
-                    }
-                } catch (cloudErr) {
-                    console.warn('Supabase superadmin users fetch notice:', cloudErr.message || cloudErr);
-                }
-            }
-
-            // 3. Offline localStorage fallback if both network tiers are unreachable
-            if (!users) {
-                try {
-                    const cached = JSON.parse(localStorage.getItem('cached_superadmin_users') || '[]');
-                    if (Array.isArray(cached) && cached.length > 0) {
-                        users = cached;
-                    }
-                } catch (_) {}
+            } catch (err) {
+                console.warn('Superadmin users fetch notice:', err.message || err);
             }
 
             if (Array.isArray(users)) {
@@ -2179,9 +2053,6 @@
                     .map(formatUserRecord)
                     .sort((a, b) => (Number(a.id) || 0) - (Number(b.id) || 0));
 
-                try {
-                    localStorage.setItem('cached_superadmin_users', JSON.stringify(cleaned));
-                } catch (_) {}
                 READ_CACHE.superadminUsers.data = cleaned;
                 READ_CACHE.superadminUsers.ts = Date.now();
                 return cleaned;
@@ -2202,15 +2073,7 @@
         // 1. Try local FastAPI backend when running on local dev host (non-HTTPS)
         if (isLocalBackendReachableHost()) {
             try {
-                const controller = (typeof AbortController !== 'undefined') ? new AbortController() : null;
-                const timeoutId = controller ? setTimeout(() => controller.abort(), 3500) : null;
-                const localRes = await fetch(`${getLocalApiBase()}/superadmin/overview`, {
-                    method: 'GET',
-                    headers: getLocalAuthHeaders(),
-                    credentials: 'include',
-                    signal: controller ? controller.signal : undefined
-                });
-                if (timeoutId) clearTimeout(timeoutId);
+                const localRes = await localApiFetch('/superadmin/overview', { method: 'GET' }, 4500);
                 if (localRes.ok) {
                     const data = await localRes.json();
                     if (data && data.metrics) {
@@ -2220,33 +2083,11 @@
             } catch (_) {}
         }
 
-        // 2. Compute live executive metrics from Supabase Cloud using minimal column projections
-        const fetchInquirySummary = async () => {
-            if (READ_CACHE.inquiries.data && (Date.now() - READ_CACHE.inquiries.ts) < 5000) {
-                return READ_CACHE.inquiries.data;
-            }
-            try {
-                const res = await fetch(`${REST_BASE}/inquiries?select=id,status`, {
-                    method: 'GET',
-                    headers: getHeaders()
-                });
-                if (res.ok) {
-                    const rows = await res.json().catch(() => []);
-                    if (Array.isArray(rows)) return applyLocalInquiryState(rows);
-                }
-            } catch (_) {}
-            try {
-                const cached = JSON.parse(localStorage.getItem('inquiries') || '[]');
-                return Array.isArray(cached) ? applyLocalInquiryState(cached) : [];
-            } catch (_) {
-                return [];
-            }
-        };
-
+        // 2. Compute live executive metrics from authenticated API endpoints
         const [usersList, propsList, inqList] = await Promise.all([
             apiGetSuperadminUsers().catch(() => []),
-            apiGetProperties({ type: 'all', columns: 'id,title,status' }).catch(() => []),
-            fetchInquirySummary().catch(() => [])
+            apiGetProperties({ type: 'all' }).catch(() => []),
+            apiGetInquiries().catch(() => [])
         ]);
 
         const users = Array.isArray(usersList) ? usersList : [];
@@ -2317,16 +2158,14 @@
         if (!cleanName || !cleanEmail) {
             return { success: false, error: 'Full name and email address are required.' };
         }
-        if (plainPassword.length < 6) {
-            return { success: false, error: 'Password must be at least 6 characters long.' };
+        if (plainPassword.length < 8) {
+            return { success: false, error: 'Password must be at least 8 characters long.' };
         }
 
         if (!isLocalBackendReachableHost()) {
             try {
-                const response = await fetchWithTimeout('/api/superadmin/users', {
+                const response = await hostedApiFetch('/api/superadmin/users', {
                     method: 'POST',
-                    credentials: 'same-origin',
-                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ action: 'create', payload: { full_name: cleanName, email: cleanEmail, phone: cleanPhone, password: plainPassword, role: assignedRole } })
                 }, 10000);
                 const result = await response.json().catch(() => ({}));
@@ -2339,116 +2178,32 @@
             }
         }
 
-        let createdUser = null;
-        let localHandled = false;
-
-        // 1. Create on local FastAPI backend if running on local dev host
-        if (isLocalBackendReachableHost()) {
-            try {
-                const localRes = await fetch(`${getLocalApiBase()}/superadmin/users`, {
-                    method: 'POST',
-                    headers: getLocalAuthHeaders(),
-                    credentials: 'include',
-                    body: JSON.stringify({
-                        full_name: cleanName,
-                        email: cleanEmail,
-                        phone: cleanPhone,
-                        password: plainPassword,
-                        role: assignedRole
-                    })
-                });
-                const localData = await localRes.json().catch(() => ({}));
-                if (localRes.ok && localData.success) {
-                    createdUser = localData.user || null;
-                    localHandled = true;
-                } else if (localRes.status === 400 || localRes.status === 403) {
-                    return { success: false, error: localData.detail || 'Failed to create account.' };
-                }
-            } catch (localErr) {
-                console.warn('Local superadmin create user notice, syncing directly to Supabase Cloud:', localErr.message || localErr);
-            }
-        }
-
-        // 2. Create / synchronize in Supabase Cloud
-        const passwordHash = await hashPBKDF2(plainPassword);
         try {
-            const checkRes = await fetch(`${REST_BASE}/users?email=ilike.${encodeURIComponent(cleanEmail)}&select=id,email,bio`, {
-                method: 'GET',
-                headers: getHeaders()
+            const localRes = await localApiFetch('/superadmin/users', {
+                method: 'POST',
+                body: JSON.stringify({
+                    full_name: cleanName,
+                    email: cleanEmail,
+                    phone: cleanPhone,
+                    password: plainPassword,
+                    role: assignedRole
+                })
             });
-            const existingRows = checkRes.ok ? await checkRes.json().catch(() => []) : [];
-            const existing = Array.isArray(existingRows) && existingRows.length > 0 ? existingRows[0] : null;
-
-            if (existing && existing.id) {
-                const wasSoftDeleted = String(existing.bio || '').trim() === SOFT_DELETE_BIO_MARKER ||
-                                       getDeletedUserEmails().includes(cleanEmail) ||
-                                       getDeletedUserIds().includes(String(existing.id));
-
-                if (!wasSoftDeleted && !localHandled) {
-                    return { success: false, error: 'Email is already registered.' };
-                }
-
-                const patchRes = await fetch(`${REST_BASE}/users?id=eq.${encodeURIComponent(existing.id)}`, {
-                    method: 'PATCH',
-                    headers: getHeaders(),
-                    body: JSON.stringify({
-                        full_name: cleanName,
-                        phone: cleanPhone,
-                        password_hash: passwordHash,
-                        role: assignedRole,
-                        bio: '',
-                        updated_at: new Date().toISOString()
-                    })
-                });
-                if (patchRes.ok) {
-                    const patched = await patchRes.json().catch(() => []);
-                    const row = Array.isArray(patched) ? patched[0] : patched;
-                    if (!createdUser && row) createdUser = row;
-                }
-            } else {
-                const insertRes = await fetch(`${REST_BASE}/users`, {
-                    method: 'POST',
-                    headers: getHeaders(),
-                    body: JSON.stringify({
-                        email: cleanEmail,
-                        password_hash: passwordHash,
-                        full_name: cleanName,
-                        phone: cleanPhone,
-                        role: assignedRole,
-                        avatar_url: 'assets/images/agent.jpg',
-                        bio: ''
-                    })
-                });
-                if (insertRes.ok) {
-                    const inserted = await insertRes.json().catch(() => []);
-                    const row = Array.isArray(inserted) ? inserted[0] : inserted;
-                    if (!createdUser && row) createdUser = row;
-                } else if (!localHandled) {
-                    const errBody = await insertRes.json().catch(() => ({}));
-                    return { success: false, error: errBody.message || errBody.details || 'Failed to create account in cloud database.' };
-                }
+            const localData = await localRes.json().catch(() => ({}));
+            if (!localRes.ok || !localData.success) {
+                return { success: false, error: localData.detail || localData.error || 'Failed to create account.' };
             }
-        } catch (cloudErr) {
-            if (!localHandled) {
-                return { success: false, error: cloudErr.message || 'Network error while creating account.' };
-            }
+            const createdUser = localData.user || null;
+            clearUserDeletedLocal(createdUser && createdUser.id, cleanEmail);
+            invalidateReadCache('users');
+            return {
+                success: true,
+                message: 'Account created successfully.',
+                user: formatUserRecord(createdUser)
+            };
+        } catch (localErr) {
+            return { success: false, error: localErr.message || 'Unable to create account on backend server.' };
         }
-
-        clearUserDeletedLocal(createdUser && createdUser.id, cleanEmail);
-        invalidateReadCache('users');
-
-        return {
-            success: true,
-            message: 'Account created successfully.',
-            user: formatUserRecord(createdUser || {
-                id: Date.now(),
-                email: cleanEmail,
-                full_name: cleanName,
-                phone: cleanPhone,
-                role: assignedRole,
-                created_at: new Date().toISOString()
-            })
-        };
     }
 
     async function apiSuperadminUpdateUser(userId, payload = {}) {
@@ -2471,13 +2226,14 @@
         if (rawRole && !['user', 'admin', 'superadmin'].includes(rawRole)) {
             return { success: false, error: "Invalid role. Must be 'user', 'admin', or 'superadmin'." };
         }
+        if (rawPassword && rawPassword.length < 8) {
+            return { success: false, error: 'Password must be at least 8 characters long.' };
+        }
 
         if (!isLocalBackendReachableHost()) {
             try {
-                const response = await fetchWithTimeout('/api/superadmin/users', {
+                const response = await hostedApiFetch('/api/superadmin/users', {
                     method: 'POST',
-                    credentials: 'same-origin',
-                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ action: 'update', user_id: userId, payload })
                 }, 10000);
                 const result = await response.json().catch(() => ({}));
@@ -2490,106 +2246,31 @@
             }
         }
 
-        let updatedUser = null;
-        let localHandled = false;
-
-        // 1. Update on local FastAPI backend if running on local dev host
-        if (isLocalBackendReachableHost()) {
-            try {
-                const localBody = {};
-                if (cleanName) localBody.full_name = cleanName;
-                if (cleanEmail) localBody.email = cleanEmail;
-                if (cleanPhone !== undefined) localBody.phone = cleanPhone;
-                if (rawRole) localBody.role = rawRole;
-                if (rawPassword && rawPassword.length >= 6) localBody.password = rawPassword;
-
-                const localRes = await fetch(`${getLocalApiBase()}/superadmin/users/${encodeURIComponent(userId)}`, {
-                    method: 'PUT',
-                    headers: getLocalAuthHeaders(),
-                    credentials: 'include',
-                    body: JSON.stringify(localBody)
-                });
-                const localData = await localRes.json().catch(() => ({}));
-                if (localRes.ok && localData.success) {
-                    updatedUser = localData.user || null;
-                    localHandled = true;
-                } else if (localRes.status === 400 || localRes.status === 403) {
-                    return { success: false, error: localData.detail || 'Failed to update user account.' };
-                }
-            } catch (localErr) {
-                console.warn('Local superadmin update user notice, syncing directly to Supabase Cloud:', localErr.message || localErr);
-            }
-        }
-
-        // 2. Synchronize update to Supabase Cloud
         try {
-            if (!localHandled && cleanEmail && originalEmail && cleanEmail !== originalEmail) {
-                const dupRes = await fetch(`${REST_BASE}/users?email=ilike.${encodeURIComponent(cleanEmail)}&select=id,bio`, {
-                    method: 'GET',
-                    headers: getHeaders()
-                });
-                const dupRows = dupRes.ok ? await dupRes.json().catch(() => []) : [];
-                const activeDup = Array.isArray(dupRows)
-                    ? dupRows.find(r => String(r.id) !== String(userId) && String(r.bio || '').trim() !== SOFT_DELETE_BIO_MARKER)
-                    : null;
-                if (activeDup) {
-                    return { success: false, error: 'Email is already in use by another account.' };
-                }
-            }
+            const localBody = {};
+            if (cleanName) localBody.full_name = cleanName;
+            if (cleanEmail) localBody.email = cleanEmail;
+            if (cleanPhone !== undefined) localBody.phone = cleanPhone;
+            if (rawRole) localBody.role = rawRole;
+            if (rawPassword) localBody.password = rawPassword;
 
-            const patchBody = { updated_at: new Date().toISOString() };
-            if (cleanName) patchBody.full_name = cleanName;
-            if (cleanEmail) patchBody.email = cleanEmail;
-            if (cleanPhone !== undefined) patchBody.phone = cleanPhone;
-            if (rawRole) patchBody.role = rawRole;
-            if (rawPassword && rawPassword.length >= 6) {
-                patchBody.password_hash = await hashPBKDF2(rawPassword);
-            }
-
-            let cloudRows = [];
-            const byIdRes = await fetch(`${REST_BASE}/users?id=eq.${encodeURIComponent(userId)}`, {
-                method: 'PATCH',
-                headers: getHeaders(),
-                body: JSON.stringify(patchBody)
+            const localRes = await localApiFetch(`/superadmin/users/${encodeURIComponent(userId)}`, {
+                method: 'PUT',
+                body: JSON.stringify(localBody)
             });
-            if (byIdRes.ok) {
-                cloudRows = await byIdRes.json().catch(() => []);
+            const localData = await localRes.json().catch(() => ({}));
+            if (!localRes.ok || !localData.success) {
+                return { success: false, error: localData.detail || localData.error || 'Failed to update user account.' };
             }
-
-            if ((!Array.isArray(cloudRows) || cloudRows.length === 0) && (originalEmail || cleanEmail)) {
-                const lookupEmail = originalEmail || cleanEmail;
-                const byEmailRes = await fetch(`${REST_BASE}/users?email=ilike.${encodeURIComponent(lookupEmail)}`, {
-                    method: 'PATCH',
-                    headers: getHeaders(),
-                    body: JSON.stringify(patchBody)
-                });
-                if (byEmailRes.ok) {
-                    cloudRows = await byEmailRes.json().catch(() => []);
-                }
-            }
-
-            if (Array.isArray(cloudRows) && cloudRows.length > 0 && !updatedUser) {
-                updatedUser = cloudRows[0];
-            }
-        } catch (cloudErr) {
-            if (!localHandled) {
-                return { success: false, error: cloudErr.message || 'Network error while updating user account.' };
-            }
+            invalidateReadCache('users');
+            return {
+                success: true,
+                message: 'User account updated successfully.',
+                user: formatUserRecord(localData.user)
+            };
+        } catch (localErr) {
+            return { success: false, error: localErr.message || 'Network error while updating user account.' };
         }
-
-        invalidateReadCache('users');
-
-        return {
-            success: true,
-            message: 'User account updated successfully.',
-            user: formatUserRecord(updatedUser || {
-                id: userId,
-                full_name: cleanName,
-                email: cleanEmail || originalEmail,
-                phone: cleanPhone,
-                role: rawRole || 'user'
-            })
-        };
     }
 
     async function apiSuperadminUpdateUserRole(userId, newRole, email = '') {
@@ -2605,10 +2286,8 @@
 
         if (!isLocalBackendReachableHost()) {
             try {
-                const response = await fetchWithTimeout('/api/superadmin/users', {
+                const response = await hostedApiFetch('/api/superadmin/users', {
                     method: 'POST',
-                    credentials: 'same-origin',
-                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ action: 'update', user_id: userId, payload: { role: targetRole } })
                 }, 10000);
                 const result = await response.json().catch(() => ({}));
@@ -2621,70 +2300,24 @@
             }
         }
 
-        let updatedUser = null;
-        let localHandled = false;
-
-        // 1. Update on local FastAPI backend if running on local dev host
-        if (isLocalBackendReachableHost()) {
-            try {
-                const localRes = await fetch(`${getLocalApiBase()}/superadmin/users/${encodeURIComponent(userId)}/role`, {
-                    method: 'PUT',
-                    headers: getLocalAuthHeaders(),
-                    credentials: 'include',
-                    body: JSON.stringify({ role: targetRole })
-                });
-                const localData = await localRes.json().catch(() => ({}));
-                if (localRes.ok && localData.success) {
-                    updatedUser = localData.user || null;
-                    localHandled = true;
-                } else if (localRes.status === 400 || localRes.status === 403) {
-                    return { success: false, error: localData.detail || 'Failed to update role.' };
-                }
-            } catch (localErr) {
-                console.warn('Local superadmin role update notice, syncing directly to Supabase Cloud:', localErr.message || localErr);
-            }
-        }
-
-        // 2. Synchronize role update to Supabase Cloud
         try {
-            const patchBody = { role: targetRole, updated_at: new Date().toISOString() };
-            let cloudRows = [];
-            const byIdRes = await fetch(`${REST_BASE}/users?id=eq.${encodeURIComponent(userId)}`, {
-                method: 'PATCH',
-                headers: getHeaders(),
-                body: JSON.stringify(patchBody)
+            const localRes = await localApiFetch(`/superadmin/users/${encodeURIComponent(userId)}/role`, {
+                method: 'PUT',
+                body: JSON.stringify({ role: targetRole })
             });
-            if (byIdRes.ok) {
-                cloudRows = await byIdRes.json().catch(() => []);
+            const localData = await localRes.json().catch(() => ({}));
+            if (!localRes.ok || !localData.success) {
+                return { success: false, error: localData.detail || localData.error || 'Failed to update role.' };
             }
-
-            if ((!Array.isArray(cloudRows) || cloudRows.length === 0) && cleanEmail) {
-                const byEmailRes = await fetch(`${REST_BASE}/users?email=ilike.${encodeURIComponent(cleanEmail)}`, {
-                    method: 'PATCH',
-                    headers: getHeaders(),
-                    body: JSON.stringify(patchBody)
-                });
-                if (byEmailRes.ok) {
-                    cloudRows = await byEmailRes.json().catch(() => []);
-                }
-            }
-
-            if (Array.isArray(cloudRows) && cloudRows.length > 0 && !updatedUser) {
-                updatedUser = cloudRows[0];
-            }
-        } catch (cloudErr) {
-            if (!localHandled) {
-                return { success: false, error: cloudErr.message || 'Network error while updating role.' };
-            }
+            invalidateReadCache('users');
+            return {
+                success: true,
+                message: `Role updated to '${targetRole}'`,
+                user: formatUserRecord(localData.user || { id: userId, email: cleanEmail, role: targetRole })
+            };
+        } catch (localErr) {
+            return { success: false, error: localErr.message || 'Network error while updating role.' };
         }
-
-        invalidateReadCache('users');
-
-        return {
-            success: true,
-            message: `Role updated to '${targetRole}'`,
-            user: formatUserRecord(updatedUser || { id: userId, email: cleanEmail, role: targetRole })
-        };
     }
 
     async function apiSuperadminDeleteUser(userId, email = '') {
@@ -2701,39 +2334,28 @@
             return { success: false, error: 'Cannot delete primary Realty Admin account.' };
         }
 
-        let localHandled = false;
-        let hostedHandled = false;
-        let cloudHandled = false;
-        let hostedError = '';
-        let cloudError = '';
+        let deleted = false;
+        let errMsg = '';
         const isLocalBackend = isLocalBackendReachableHost();
 
-        // 1. Delete from local FastAPI backend if running on local dev host
         if (isLocalBackend) {
             try {
-                const localRes = await fetchWithTimeout(`${getLocalApiBase()}/superadmin/users/${encodeURIComponent(rawUserId || cleanEmail)}`, {
-                    method: 'DELETE',
-                    headers: getLocalAuthHeaders(),
-                    credentials: 'include'
+                const localRes = await localApiFetch(`/superadmin/users/${encodeURIComponent(rawUserId || cleanEmail)}`, {
+                    method: 'DELETE'
                 }, 8000);
                 const localData = await localRes.json().catch(() => ({}));
                 if (localRes.ok && localData.success) {
-                    localHandled = true;
-                } else if (localRes.status === 400 || localRes.status === 401 || localRes.status === 403) {
-                    return { success: false, error: localData.detail || 'Failed to delete account.' };
+                    deleted = true;
+                } else {
+                    errMsg = localData.detail || localData.error || 'Failed to delete account.';
                 }
             } catch (localErr) {
-                console.warn('Local superadmin delete user notice, syncing directly to Supabase Cloud:', localErr.message || localErr);
+                errMsg = localErr.message || 'Unable to reach local backend.';
             }
-        }
-
-        // 2. Call hosted Vercel serverless Superadmin endpoint when not on local dev host
-        if (!isLocalBackend) {
+        } else {
             try {
-                const hostedRes = await fetchWithTimeout('/api/superadmin/users', {
+                const hostedRes = await hostedApiFetch('/api/superadmin/users', {
                     method: 'POST',
-                    credentials: 'same-origin',
-                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         action: 'delete',
                         user_id: userId,
@@ -2742,176 +2364,31 @@
                 }, 10000);
                 const hostedData = await hostedRes.json().catch(() => ({}));
                 if (hostedRes.ok && hostedData.success) {
-                    hostedHandled = true;
-                    cloudHandled = true;
-                } else if (hostedRes.status === 400 || hostedRes.status === 401 || hostedRes.status === 403) {
-                    return { success: false, error: hostedData.error || 'Failed to delete account.' };
+                    deleted = true;
                 } else {
-                    hostedError = hostedData.error || `Server returned status ${hostedRes.status}.`;
+                    errMsg = hostedData.error || `Server returned status ${hostedRes.status}.`;
                 }
             } catch (hostedErr) {
-                hostedError = (hostedErr && hostedErr.message) || 'Unable to reach hosted account management.';
+                errMsg = (hostedErr && hostedErr.message) || 'Unable to reach hosted account management.';
             }
         }
 
-        // 3. Delete inquiries, appointments & notifications directly from Supabase Cloud if hosted handler did not complete it
-        if (!hostedHandled) {
-            const matchingCloudIds = new Set();
-            const activeCloudIds = new Set();
-
-            try {
-                if (cleanEmail) {
-                    const uRes = await fetchWithTimeout(
-                        `${REST_BASE}/users?or=(email.ilike.${encodeURIComponent(cleanEmail)},email.ilike.deleted_*_${encodeURIComponent(cleanEmail)})&select=id,email`,
-                        { headers: getHeaders() },
-                        8000
-                    );
-                    if (uRes.ok) {
-                        const uRows = await uRes.json().catch(() => []);
-                        if (Array.isArray(uRows)) {
-                            uRows.forEach(u => {
-                                if (!u || u.id === undefined || u.id === null) return;
-                                const uid = String(u.id);
-                                matchingCloudIds.add(uid);
-                                if (!String(u.email || '').toLowerCase().startsWith('deleted_')) {
-                                    activeCloudIds.add(uid);
-                                }
-                            });
-                        }
-                    }
-                } else if (rawUserId && /^\d+$/.test(rawUserId)) {
-                    const uRes = await fetchWithTimeout(
-                        `${REST_BASE}/users?id=eq.${encodeURIComponent(rawUserId)}&select=id,email`,
-                        { headers: getHeaders() },
-                        8000
-                    );
-                    if (uRes.ok) {
-                        const uRows = await uRes.json().catch(() => []);
-                        if (Array.isArray(uRows)) {
-                            uRows.forEach(u => {
-                                if (!u || u.id === undefined || u.id === null) return;
-                                const uid = String(u.id);
-                                matchingCloudIds.add(uid);
-                                activeCloudIds.add(uid);
-                            });
-                        }
-                    }
-                }
-
-                if (!localHandled && rawUserId && /^\d+$/.test(rawUserId)) {
-                    matchingCloudIds.add(rawUserId);
-                }
-
-                const cleanupTargets = [];
-                if (cleanEmail) {
-                    cleanupTargets.push(
-                        `${REST_BASE}/inquiries?client_email=ilike.${encodeURIComponent(cleanEmail)}`,
-                        `${REST_BASE}/appointments?client_email=ilike.${encodeURIComponent(cleanEmail)}`
-                    );
-                }
-                for (const uid of matchingCloudIds) {
-                    cleanupTargets.push(
-                        `${REST_BASE}/inquiries?client_id=eq.${encodeURIComponent(uid)}`,
-                        `${REST_BASE}/notifications?user_id=eq.${encodeURIComponent(uid)}`,
-                        `${REST_BASE}/saved_properties?user_id=eq.${encodeURIComponent(uid)}`,
-                        `${REST_BASE}/appointments?client_id=eq.${encodeURIComponent(uid)}`
-                    );
-                }
-                for (const targetUrl of cleanupTargets) {
-                    try {
-                        await fetchWithTimeout(targetUrl, {
-                            method: 'DELETE',
-                            headers: getHeaders()
-                        }, 8000);
-                    } catch (_) {}
-                }
-
-                // 4. Delete user record from Supabase Cloud (with email scramble fallback that preserves role trigger constraints)
-                let deletedRows = [];
-                if (rawUserId && /^\d+$/.test(rawUserId) && (!localHandled || activeCloudIds.has(rawUserId))) {
-                    const delById = await fetchWithTimeout(`${REST_BASE}/users?id=eq.${encodeURIComponent(rawUserId)}`, {
-                        method: 'DELETE',
-                        headers: getHeaders()
-                    }, 8000);
-                    if (delById.ok) {
-                        deletedRows = await delById.json().catch(() => []);
-                    } else {
-                        const errPayload = await delById.json().catch(() => ({}));
-                        cloudError = errPayload.message || errPayload.error || `Supabase delete error (${delById.status}).`;
-                    }
-                }
-
-                if ((!Array.isArray(deletedRows) || deletedRows.length === 0) && cleanEmail) {
-                    const delByEmail = await fetchWithTimeout(`${REST_BASE}/users?email=ilike.${encodeURIComponent(cleanEmail)}`, {
-                        method: 'DELETE',
-                        headers: getHeaders()
-                    }, 8000);
-                    if (delByEmail.ok) {
-                        deletedRows = await delByEmail.json().catch(() => []);
-                    } else if (!cloudError) {
-                        const errPayload = await delByEmail.json().catch(() => ({}));
-                        cloudError = errPayload.message || errPayload.error || `Supabase delete error (${delByEmail.status}).`;
-                    }
-                }
-
-                if (Array.isArray(deletedRows) && deletedRows.length > 0) {
-                    cloudHandled = true;
-                } else {
-                    const filterParam = cleanEmail
-                        ? `email=ilike.${encodeURIComponent(cleanEmail)}`
-                        : `id=eq.${encodeURIComponent(rawUserId)}`;
-                    const checkRes = await fetchWithTimeout(`${REST_BASE}/users?${filterParam}&select=id,email`, {
-                        headers: getHeaders()
-                    }, 8000);
-                    const remainingRows = checkRes.ok ? await checkRes.json().catch(() => null) : null;
-
-                    if (Array.isArray(remainingRows) && remainingRows.length === 0) {
-                        cloudHandled = true;
-                    } else {
-                        const scrambledEmail = `deleted_${Date.now()}_${cleanEmail || rawUserId}`;
-                        const softDeleteBody = {
-                            email: scrambledEmail,
-                            bio: SOFT_DELETE_BIO_MARKER,
-                            google_id: null,
-                            updated_at: new Date().toISOString()
-                        };
-                        const patchRes = await fetchWithTimeout(`${REST_BASE}/users?${filterParam}`, {
-                            method: 'PATCH',
-                            headers: getHeaders(),
-                            body: JSON.stringify(softDeleteBody)
-                        }, 8000);
-                        if (patchRes.ok) {
-                            const patchRows = await patchRes.json().catch(() => []);
-                            if (Array.isArray(patchRows) && patchRows.length > 0) {
-                                cloudHandled = true;
-                            }
-                        } else {
-                            const patchErr = await patchRes.json().catch(() => ({}));
-                            cloudError = patchErr.message || patchErr.error || cloudError || `Supabase soft-delete error (${patchRes.status}).`;
-                        }
-                    }
-                }
-            } catch (cloudErr) {
-                cloudError = (cloudErr && cloudErr.message) || 'Network error while deleting account.';
-            }
-        }
-
-        if (!localHandled && !hostedHandled && !cloudHandled) {
+        if (!deleted) {
             return {
                 success: false,
-                error: cloudError || hostedError || 'Unable to delete account. Please verify your permissions and try again.'
+                error: errMsg || 'Unable to delete account. Please verify your permissions and try again.'
             };
         }
 
-        // 5. Update local tracking of deleted accounts
+        // Update local tracking of deleted accounts
         markUserDeletedLocal(userId, cleanEmail);
         invalidateReadCache('users');
         invalidateReadCache('inquiries');
 
-        // 6. Purge deleted inquiries from local caches
+        // Purge deleted inquiries from local caches
         purgeInquiriesByEmailLocal(cleanEmail, userId);
 
-        // 7. Dispatch events so all open admin and inquiry tabs re-render immediately
+        // Dispatch events so all open admin and inquiry tabs re-render immediately
         try {
             window.dispatchEvent(new CustomEvent('inquiriesUpdated', { detail: { email: cleanEmail, status: 'Deleted' } }));
             window.dispatchEvent(new CustomEvent('inquiryListChanged', { detail: { email: cleanEmail } }));
@@ -2928,15 +2405,7 @@
         // 1. Try local SQLite PRAGMA integrity check on local dev host
         if (isLocalBackendReachableHost()) {
             try {
-                const controller = (typeof AbortController !== 'undefined') ? new AbortController() : null;
-                const timeoutId = controller ? setTimeout(() => controller.abort(), 3500) : null;
-                const localRes = await fetch(`${getLocalApiBase()}/superadmin/integrity`, {
-                    method: 'GET',
-                    headers: getLocalAuthHeaders(),
-                    credentials: 'include',
-                    signal: controller ? controller.signal : undefined
-                });
-                if (timeoutId) clearTimeout(timeoutId);
+                const localRes = await localApiFetch('/superadmin/integrity', { method: 'GET' }, 4500);
                 if (localRes.ok) {
                     const data = await localRes.json();
                     return { ...data, engine: 'sqlite' };
@@ -2944,28 +2413,24 @@
             } catch (_) {}
         }
 
-        // 2. Live Supabase Cloud relational & RBAC governance verification
+        // 2. Hosted relational & RBAC governance verification via authenticated endpoints
         try {
-            const [uRes, pRes, iRes] = await Promise.all([
-                fetch(`${REST_BASE}/users?select=id,email,role,bio`, { method: 'GET', headers: getHeaders() }),
-                fetch(`${REST_BASE}/properties?select=id,agent_id`, { method: 'GET', headers: getHeaders() }),
-                fetch(`${REST_BASE}/inquiries?select=id,client_id,property_id`, { method: 'GET', headers: getHeaders() })
+            const [users, props, inquiries] = await Promise.all([
+                apiGetSuperadminUsers(),
+                apiGetProperties({ type: 'all' }),
+                apiGetInquiries()
             ]);
 
-            if (!uRes.ok || !pRes.ok || !iRes.ok) {
+            if (!Array.isArray(users) || !Array.isArray(props) || !Array.isArray(inquiries)) {
                 return {
                     success: false,
                     engine: 'supabase',
-                    integrity: `HTTP Status (${uRes.status}/${pRes.status}/${iRes.status})`,
+                    integrity: 'Unable to fetch governance data',
                     foreign_key_violations: 0,
                     trigger_active: false,
                     table_count: 12
                 };
             }
-
-            const users = await uRes.json().catch(() => []);
-            const props = await pRes.json().catch(() => []);
-            const inquiries = await iRes.json().catch(() => []);
 
             const userIds = new Set(users.map(u => Number(u.id)));
             const propIds = new Set(props.map(p => Number(p.id)));
@@ -3013,9 +2478,7 @@
     async function apiUpdateAdminProfile(arg1, arg2) {
         try {
             let profileData = {};
-            let userId = null;
             if (arg2 !== undefined) {
-                userId = arg1;
                 profileData = arg2 || {};
             } else {
                 profileData = arg1 || {};
@@ -3023,186 +2486,105 @@
 
             const storedAdmin = JSON.parse(localStorage.getItem('adminUser') || localStorage.getItem(USER_KEY) || '{}');
             const savedProfile = JSON.parse(localStorage.getItem('urbanscope_admin_profile') || '{}');
-            const targetEmail = (profileData.email || storedAdmin.email || savedProfile.email || 'admin.realestate@gmail.com').trim().toLowerCase();
-            const originalEmail = (profileData.original_email || storedAdmin.email || savedProfile.email || 'admin.realestate@gmail.com').trim().toLowerCase();
+            const targetEmail = (profileData.email || storedAdmin.email || savedProfile.email || 'miriamalobren@gmail.com').trim().toLowerCase();
             const fullName = (profileData.full_name || profileData.name || profileData.fullName || storedAdmin.name || 'Miriam Lobren').trim();
             const phone = (profileData.phone !== undefined ? profileData.phone : (storedAdmin.phone || '')).trim();
             const license = (profileData.license_number || profileData.license || profileData.licenseNumber || storedAdmin.license || storedAdmin.license_number || '').trim();
             const title = (profileData.title !== undefined ? profileData.title : (storedAdmin.title || '')).trim();
             const brokerage = (profileData.brokerage !== undefined ? profileData.brokerage : (storedAdmin.brokerage || '')).trim();
             const bio = (profileData.bio !== undefined ? profileData.bio : (storedAdmin.bio || '')).trim();
-
-            const avatarUrl = profileData.avatar_url || storedAdmin.avatar_url || localStorage.getItem('urbanscope_profile_avatar') || 'assets/images/agent.jpg';
+            const avatarUrl = sanitizeImageUrl(
+                profileData.avatar_url || storedAdmin.avatar_url || localStorage.getItem('urbanscope_profile_avatar') || 'assets/images/agent.jpg',
+                'assets/images/agent.jpg'
+            );
 
             let updatedUser = null;
-
-            // 1. Sync to local backend if running in dev environment
-            if (isLocalDevHost()) {
-                try {
-                    const localBase = (location.port === '8000') ? '/api' : 'http://127.0.0.1:8000/api';
-                    const token = localStorage.getItem(TOKEN_KEY) || localStorage.getItem('adminToken') || localStorage.getItem('access_token');
-                    const localRes = await fetch(`${localBase}/admin/profile`, {
-                        method: 'PUT',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'Authorization': token ? ('Bearer ' + token) : ''
-                        },
-                        credentials: 'include',
-                        body: JSON.stringify({
-                            full_name: fullName,
-                            email: targetEmail,
-                            original_email: originalEmail,
-                            phone: phone,
-                            license_number: license,
-                            title: title,
-                            brokerage: brokerage,
-                            bio: bio,
-                            avatar_url: avatarUrl
-                        })
-                    });
-                    if (localRes.ok) {
-                        const localData = await localRes.json();
-                        if (localData && localData.id) {
-                            updatedUser = localData;
-                        }
-                    }
-                } catch (localErr) {
-                    console.warn('Local admin profile update notice:', localErr);
-                }
-            }
-
-            // 2. Sync to Supabase Cloud
-            const payload = {
-                full_name: fullName,
-                email: targetEmail,
-                phone: phone,
-                license_number: license,
-                title: title,
-                brokerage: brokerage,
-                bio: bio,
-                avatar_url: avatarUrl,
-                role: 'admin'
-            };
-            const corePayload = {
-                full_name: fullName,
-                email: targetEmail,
-                phone: phone,
-                license_number: license,
-                avatar_url: avatarUrl,
-                role: 'admin'
-            };
-
-            const safePayload = {
-                full_name: fullName,
-                phone: phone,
-                license_number: license,
-                title: title,
-                brokerage: brokerage,
-                bio: bio,
-                avatar_url: avatarUrl
-            };
-
-            const sendSupabasePatch = async (url, customBody = payload) => {
-                let res = await fetch(url, {
-                    method: 'PATCH',
-                    headers: getHeaders(),
-                    body: JSON.stringify(customBody)
+            if (isLocalBackendReachableHost()) {
+                const localRes = await localApiFetch('/admin/profile', {
+                    method: 'PUT',
+                    body: JSON.stringify({
+                        full_name: fullName,
+                        email: targetEmail,
+                        phone: phone,
+                        license_number: license,
+                        title: title,
+                        brokerage: brokerage,
+                        bio: bio,
+                        avatar_url: avatarUrl
+                    })
                 });
-                if (!res.ok && (res.status === 400 || res.status === 409)) {
-                    const fallback = (res.status === 409) ? safePayload : corePayload;
-                    res = await fetch(url, {
-                        method: 'PATCH',
-                        headers: getHeaders(),
-                        body: JSON.stringify(fallback)
-                    });
+                const localData = await localRes.json().catch(() => ({}));
+                if (!localRes.ok) {
+                    return { success: false, error: localData.detail || localData.error || 'Unable to update profile.' };
                 }
-                return res;
-            };
-
-            try {
-                let sbUpdated = false;
-
-                // A. Try updating by target email first (if target user row exists)
-                if (targetEmail) {
-                    const res = await sendSupabasePatch(`${REST_BASE}/users?email=ilike.${encodeURIComponent(targetEmail)}`);
-                    if (res.ok) {
-                        const updated = await res.json().catch(() => []);
-                        if (Array.isArray(updated) && updated.length > 0) {
-                            updatedUser = { ...(updatedUser || {}), ...updated[0] };
-                            sbUpdated = true;
-                        }
-                    }
+                updatedUser = localData.user || localData;
+            } else {
+                const res = await hostedApiFetch('/api/session', {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        action: 'update-profile',
+                        full_name: fullName,
+                        email: targetEmail,
+                        phone: phone,
+                        license_number: license,
+                        title: title,
+                        brokerage: brokerage,
+                        bio: bio,
+                        avatar_url: avatarUrl
+                    })
+                });
+                const body = await res.json().catch(() => ({}));
+                if (!res.ok || body.success === false) {
+                    return { success: false, error: body.error || 'Unable to update profile.' };
                 }
-
-                // B. If original email differs and not updated yet, try original email
-                if (!sbUpdated && originalEmail && originalEmail !== targetEmail) {
-                    const res = await sendSupabasePatch(`${REST_BASE}/users?email=ilike.${encodeURIComponent(originalEmail)}`);
-                    if (res.ok) {
-                        const updated = await res.json().catch(() => []);
-                        if (Array.isArray(updated) && updated.length > 0) {
-                            updatedUser = { ...(updatedUser || {}), ...updated[0] };
-                            sbUpdated = true;
-                        }
-                    }
-                }
-
-                // C. If original email is admin.realestate@gmail.com and targetEmail is custom, ensure target is admin
-                if (targetEmail && targetEmail !== 'admin.realestate@gmail.com') {
-                    await sendSupabasePatch(`${REST_BASE}/users?email=ilike.${encodeURIComponent(targetEmail)}`, { role: 'admin' }).catch(() => {});
-                }
-
-                // D. Synchronize all admin accounts in Supabase with safePayload (title, name, phone, avatar)
-                await sendSupabasePatch(`${REST_BASE}/users?role=eq.admin`, safePayload).catch(() => {});
-            } catch (sbErr) {
-                console.warn('Supabase profile sync notice:', sbErr);
+                updatedUser = body.user || body;
             }
 
-            // 3. Synchronize all local storage sessions
+            // Synchronize local storage session caches after server confirmation
             const current = JSON.parse(localStorage.getItem(USER_KEY) || '{}');
             const merged = {
                 ...current,
                 ...storedAdmin,
                 ...(updatedUser || {}),
-                ...profileData,
                 id: (updatedUser && updatedUser.id) || storedAdmin.id || current.id || 1,
-                name: fullName,
-                full_name: fullName,
-                email: targetEmail,
-                phone: phone,
-                license: license,
-                license_number: license,
-                title: title,
-                brokerage: brokerage,
-                bio: bio,
-                avatar_url: avatarUrl,
-                avatar: avatarUrl,
-                role: 'admin',
-                user_metadata: {
-                    name: fullName,
-                    full_name: fullName,
-                    email: targetEmail,
-                    phone: phone,
-                    license: license,
-                    license_number: license,
-                    title: title,
-                    brokerage: brokerage,
-                    bio: bio,
-                    avatar_url: avatarUrl
-                }
+                name: (updatedUser && updatedUser.full_name) || fullName,
+                full_name: (updatedUser && updatedUser.full_name) || fullName,
+                email: (updatedUser && updatedUser.email) || targetEmail,
+                phone: (updatedUser && updatedUser.phone !== undefined) ? updatedUser.phone : phone,
+                license: (updatedUser && updatedUser.license_number !== undefined) ? updatedUser.license_number : license,
+                license_number: (updatedUser && updatedUser.license_number !== undefined) ? updatedUser.license_number : license,
+                title: (updatedUser && updatedUser.title !== undefined) ? updatedUser.title : title,
+                brokerage: (updatedUser && updatedUser.brokerage !== undefined) ? updatedUser.brokerage : brokerage,
+                bio: (updatedUser && updatedUser.bio !== undefined) ? updatedUser.bio : bio,
+                avatar_url: sanitizeImageUrl((updatedUser && updatedUser.avatar_url) || avatarUrl, 'assets/images/agent.jpg'),
+                avatar: sanitizeImageUrl((updatedUser && updatedUser.avatar_url) || avatarUrl, 'assets/images/agent.jpg'),
+                role: normalizeAccountRole((updatedUser && updatedUser.role) || storedAdmin.role || 'admin', targetEmail)
+            };
+            merged.user_metadata = {
+                name: merged.full_name,
+                full_name: merged.full_name,
+                email: merged.email,
+                phone: merged.phone,
+                license: merged.license_number,
+                license_number: merged.license_number,
+                title: merged.title,
+                brokerage: merged.brokerage,
+                bio: merged.bio,
+                avatar_url: merged.avatar_url
             };
 
             invalidateReadCache('profile');
             const cachedProfile = {
-                name: fullName,
-                full_name: fullName,
-                email: targetEmail,
-                phone: phone,
-                license: license,
-                license_number: license,
-                title: title,
-                brokerage: brokerage,
-                bio: bio,
-                avatar_url: avatarUrl
+                name: merged.full_name,
+                full_name: merged.full_name,
+                email: merged.email,
+                phone: merged.phone,
+                license: merged.license_number,
+                license_number: merged.license_number,
+                title: merged.title,
+                brokerage: merged.brokerage,
+                bio: merged.bio,
+                avatar_url: merged.avatar_url
             };
             const profileTs = Date.now();
             localStorage.setItem(USER_KEY, JSON.stringify(merged));
@@ -3219,21 +2601,7 @@
             return { success: true, user: merged };
         } catch (err) {
             console.warn('apiUpdateAdminProfile notice:', err);
-            try {
-                const storedAdmin = JSON.parse(localStorage.getItem('adminUser') || '{}');
-                const merged = { ...storedAdmin, ...(arg1 || {}) };
-                invalidateReadCache('profile');
-                const profileTs = Date.now();
-                localStorage.setItem('adminUser', JSON.stringify(merged));
-                localStorage.setItem('urbanscope_admin_profile', JSON.stringify(merged));
-                localStorage.setItem('urbanscope_admin_profile_ts', String(profileTs));
-                READ_CACHE.leadProfile = { promise: null, data: merged, ts: profileTs };
-                try {
-                    window.dispatchEvent(new CustomEvent('urbanscope:profileUpdated', { detail: merged }));
-                } catch (ev) {}
-                return { success: true, user: merged };
-            } catch (e) {}
-            return { success: false, error: err.message };
+            return { success: false, error: err.message || 'Unable to update profile.' };
         }
     }
 
@@ -3249,15 +2617,6 @@
             return READ_CACHE.leadProfile.promise;
         }
 
-        const isRealAgentEmail = (em) => {
-            if (!em) return false;
-            const clean = String(em).trim().toLowerCase();
-            return clean &&
-                   clean !== 'admin.realestate@gmail.com' &&
-                   clean !== 'urbanscope.cvsu@gmail.com' &&
-                   !clean.endsWith('@example.com');
-        };
-
         let cached = null;
         let cachedTs = 0;
         try {
@@ -3268,12 +2627,6 @@
                 READ_CACHE.leadProfile.data = cached;
                 READ_CACHE.leadProfile.ts = cachedTs;
                 return cached;
-            }
-            if (!cached) {
-                const adminUser = JSON.parse(localStorage.getItem('adminUser') || 'null');
-                if (adminUser && (adminUser.role === 'admin' || isRealAgentEmail(adminUser.email))) {
-                    cached = adminUser;
-                }
             }
         } catch (e) {}
 
@@ -3291,101 +2644,32 @@
             return merged;
         };
 
-        const AGENT_SELECT_FIELDS = 'id,full_name,email,phone,license_number,title,brokerage,bio,avatar_url,role,updated_at';
-
         const runner = (async () => {
-            // 1. Query backend if on local dev host
-            if (isLocalDevHost()) {
-                const localBase = (typeof location !== 'undefined' && location.origin && location.port === '8000') ? `${location.origin}/api` : 'http://127.0.0.1:8000/api';
-                try {
-                    const res = await fetch(`${localBase}/agent/profile`);
-                    if (res.ok) {
-                        const data = await res.json();
-                        if (data && data.email && isRealAgentEmail(data.email)) {
-                            const cachedTitle = (cached && cached.title && cached.title.trim()) ? cached.title.trim() : null;
-                            const backendTitle = (data.title && data.title.trim()) ? data.title.trim() : null;
-                            const effectiveTitle = backendTitle || cachedTitle || 'Real Estate Salesperson';
-
-                            const merged = {
-                                name: data.full_name || data.name || (cached && cached.name) || 'Miriam Lobren',
-                                full_name: data.full_name || data.name || (cached && cached.full_name) || 'Miriam Lobren',
-                                email: data.email || (cached && cached.email) || 'miriamalobren@gmail.com',
-                                phone: data.phone || (cached && cached.phone) || '+63 918 964 5434',
-                                license: data.license_number || data.license || (cached && cached.license) || '',
-                                license_number: data.license_number || data.license || (cached && cached.license_number) || '',
-                                title: effectiveTitle,
-                                brokerage: data.brokerage || (cached && cached.brokerage) || 'CD Miranda Realty',
-                                bio: data.bio || (cached && cached.bio) || 'Serving Las Piñas, Cavite, and surrounding prime locations with high-integrity real estate solutions.',
-                                avatar_url: data.avatar_url || (cached && cached.avatar_url) || 'assets/images/agent.jpg'
-                            };
-                            return saveCachedProfile(merged);
-                        }
-                    }
-                } catch (err) {
-                    console.warn('Backend get agent profile notice:', err);
-                }
-            }
-
-            // 2. Query Supabase Cloud (explicit safe columns, never select=* with password_hash)
             try {
-                let res = await fetch(`${REST_BASE}/users?role=in.(admin,superadmin)&select=${AGENT_SELECT_FIELDS}`, { headers: getHeaders() });
-                let users = [];
+                const res = isLocalBackendReachableHost()
+                    ? await fetchWithTimeout(`${getLocalApiBase()}/agent/profile`, { method: 'GET' }, 5000)
+                    : await fetchWithTimeout('/api/session?action=lead-agent', { method: 'GET', credentials: 'same-origin' }, 5000);
                 if (res.ok) {
-                    users = await res.json().catch(() => []);
-                }
-                if (!Array.isArray(users) || users.length === 0) {
-                    const fallbackRes = await fetch(`${REST_BASE}/users?select=${AGENT_SELECT_FIELDS}&limit=10`, { headers: getHeaders() });
-                    if (fallbackRes.ok) {
-                        users = await fallbackRes.json().catch(() => []);
-                    }
-                }
-                if (Array.isArray(users) && users.length > 0) {
-                    let u = null;
-                    const customAdmins = users.filter(x => (x.role === 'admin' || x.role === 'superadmin') && isRealAgentEmail(x.email));
-                    if (customAdmins.length > 0) {
-                        customAdmins.sort((a, b) => {
-                            const dateA = a.updated_at ? new Date(a.updated_at).getTime() : 0;
-                            const dateB = b.updated_at ? new Date(b.updated_at).getTime() : 0;
-                            if (dateB !== dateA) return dateB - dateA;
-                            return (b.id || 0) - (a.id || 0);
-                        });
-                        u = customAdmins[0];
-                    }
-                    if (!u) {
-                        const anyCustom = users.filter(x => isRealAgentEmail(x.email)).sort((a, b) => (b.id || 0) - (a.id || 0));
-                        if (anyCustom.length > 0) {
-                            u = anyCustom[0];
-                        }
-                    }
-                    if (!u) {
-                        u = users.find(x => (x.email || '').trim().toLowerCase() === 'admin.realestate@gmail.com') || users[0];
-                    }
-
-                    if (u) {
-                        const cachedTitle = (cached && cached.title && cached.title.trim()) ? cached.title.trim() : null;
-                        const remoteTitle = (u.title && u.title.trim()) ? u.title.trim() : null;
-                        const effectiveTitle = remoteTitle || cachedTitle || 'Real Estate Salesperson';
-
-                        const effectiveEmail = u.email || 'miriamalobren@gmail.com';
-                        const effectivePhone = u.phone || (cached && cached.phone) || '+63 918 964 5434';
-
+                    const body = await res.json().catch(() => ({}));
+                    const data = body.agent || body.profile || body;
+                    if (data && (data.full_name || data.name || data.email)) {
                         const merged = {
-                            name: u.full_name || (cached && cached.name) || 'Miriam Lobren',
-                            full_name: u.full_name || (cached && cached.full_name) || 'Miriam Lobren',
-                            email: effectiveEmail,
-                            phone: effectivePhone,
-                            license: u.license_number || (cached && cached.license) || '',
-                            license_number: u.license_number || (cached && cached.license_number) || '',
-                            title: effectiveTitle,
-                            brokerage: u.brokerage || (cached && cached.brokerage) || 'CD Miranda Realty',
-                            bio: u.bio || (cached && cached.bio) || 'Serving Las Piñas, Cavite, and surrounding prime locations with high-integrity real estate solutions.',
-                            avatar_url: u.avatar_url || (cached && cached.avatar_url) || 'assets/images/agent.jpg'
+                            name: data.full_name || data.name || (cached && cached.name) || 'Miriam Lobren',
+                            full_name: data.full_name || data.name || (cached && cached.full_name) || 'Miriam Lobren',
+                            email: data.email || (cached && cached.email) || 'miriamalobren@gmail.com',
+                            phone: data.phone || (cached && cached.phone) || '+63 918 964 5434',
+                            license: data.license_number || data.license || (cached && cached.license) || '',
+                            license_number: data.license_number || data.license || (cached && cached.license_number) || '',
+                            title: (data.title && data.title.trim()) || (cached && cached.title && cached.title.trim()) || 'Real Estate Salesperson',
+                            brokerage: data.brokerage || (cached && cached.brokerage) || 'CD Miranda Realty',
+                            bio: data.bio || (cached && cached.bio) || 'Serving Las Piñas, Cavite, and surrounding prime locations with high-integrity real estate solutions.',
+                            avatar_url: sanitizeImageUrl(data.avatar_url || (cached && cached.avatar_url), 'assets/images/agent.jpg')
                         };
                         return saveCachedProfile(merged);
                     }
                 }
-            } catch (sbErr) {
-                console.warn('Supabase get agent profile notice:', sbErr);
+            } catch (err) {
+                console.warn('Get lead agent profile notice:', err.message || err);
             }
 
             if (cached) return cached;
@@ -3412,89 +2696,12 @@
         return runner;
     }
 
-    async function verifyPBKDF2(plainPassword, storedHash) {
-        if (!plainPassword || !storedHash) return false;
-        if (plainPassword === storedHash) return true;
-        if (!storedHash.includes('$')) return false;
-        try {
-            const [saltHex, keyHex] = storedHash.split('$');
-            if (!saltHex || !keyHex) return false;
-            if (typeof crypto === 'undefined' || !crypto.subtle) return false;
-
-            const enc = new TextEncoder();
-            const pwKey = await crypto.subtle.importKey(
-                'raw',
-                enc.encode(plainPassword),
-                { name: 'PBKDF2' },
-                false,
-                ['deriveBits']
-            );
-            const bits = await crypto.subtle.deriveBits(
-                {
-                    name: 'PBKDF2',
-                    salt: enc.encode(saltHex),
-                    iterations: 100000,
-                    hash: 'SHA-256'
-                },
-                pwKey,
-                256
-            );
-            const hex = Array.from(new Uint8Array(bits))
-                .map(b => b.toString(16).padStart(2, '0'))
-                .join('');
-            return hex.toLowerCase() === keyHex.toLowerCase();
-        } catch (e) {
-            console.warn('verifyPBKDF2 notice:', e);
-            return false;
-        }
-    }
-
-    async function hashPBKDF2(plainPassword) {
-        if (!plainPassword) return '';
-        try {
-            if (typeof crypto === 'undefined' || !crypto.subtle || !crypto.getRandomValues) {
-                return plainPassword;
-            }
-            const saltBytes = new Uint8Array(16);
-            crypto.getRandomValues(saltBytes);
-            const saltHex = Array.from(saltBytes).map(b => b.toString(16).padStart(2, '0')).join('');
-            const enc = new TextEncoder();
-
-            const pwKey = await crypto.subtle.importKey(
-                'raw',
-                enc.encode(plainPassword),
-                { name: 'PBKDF2' },
-                false,
-                ['deriveBits']
-            );
-            const bits = await crypto.subtle.deriveBits(
-                {
-                    name: 'PBKDF2',
-                    salt: enc.encode(saltHex),
-                    iterations: 100000,
-                    hash: 'SHA-256'
-                },
-                pwKey,
-                256
-            );
-            const hex = Array.from(new Uint8Array(bits))
-                .map(b => b.toString(16).padStart(2, '0'))
-                .join('');
-            return `${saltHex}$${hex}`;
-        } catch (e) {
-            console.warn('hashPBKDF2 notice:', e);
-            return plainPassword;
-        }
-    }
-
     async function apiUpdateAdminPassword(arg1, arg2, arg3) {
         try {
-            let targetUserId = null;
             let currentPassword = '';
             let newPassword = '';
 
             if (arg3 !== undefined) {
-                targetUserId = arg1;
                 currentPassword = arg2;
                 newPassword = arg3;
             } else {
@@ -3508,38 +2715,34 @@
             if (!currentPassword) {
                 return { success: false, error: 'Please enter your current password.' };
             }
-            if (!newPassword || newPassword.length < 6) {
-                return { success: false, error: 'New password must be at least 6 characters long.' };
+            if (!newPassword || newPassword.length < 8) {
+                return { success: false, error: 'New password must be at least 8 characters long.' };
             }
 
-            const storedAdmin = JSON.parse(localStorage.getItem('adminUser') || localStorage.getItem(USER_KEY) || '{}');
-            const adminEmail = (storedAdmin.email || 'miriamalobren@gmail.com').trim().toLowerCase();
-            if (!targetUserId && storedAdmin.id) {
-                targetUserId = storedAdmin.id;
-            }
+            try {
+                localStorage.removeItem('adminPassword');
+                localStorage.removeItem('urbanscope_admin_password_updated');
+            } catch (_) {}
 
             if (!isLocalBackendReachableHost()) {
                 const adminSessionToken = localStorage.getItem('adminSessionToken') || '';
-                let response = await fetch('/api/auth/admin-password/change', {
+                let response = await hostedApiFetch('/api/auth/admin-password/change', {
                     method: 'POST',
-                    credentials: 'same-origin',
                     headers: {
-                        'Content-Type': 'application/json',
                         ...(adminSessionToken ? { 'Authorization': `Bearer ${adminSessionToken}` } : {})
                     },
                     body: JSON.stringify({ current_password: currentPassword, new_password: newPassword })
                 });
 
-                // Auto re-authenticate with current password if session expired or missing
-                if (response.status === 401 && typeof apiCreateHostedAdminSession === 'function') {
+                const storedAdmin = JSON.parse(localStorage.getItem('adminUser') || localStorage.getItem(USER_KEY) || '{}');
+                const adminEmail = (storedAdmin.email || '').trim().toLowerCase();
+                if (response.status === 401 && adminEmail && typeof apiCreateHostedAdminSession === 'function') {
                     const sessionRes = await apiCreateHostedAdminSession({ email: adminEmail, password: currentPassword });
                     if (sessionRes && sessionRes.success) {
                         const freshToken = sessionRes.token || localStorage.getItem('adminSessionToken') || '';
-                        response = await fetch('/api/auth/admin-password/change', {
+                        response = await hostedApiFetch('/api/auth/admin-password/change', {
                             method: 'POST',
-                            credentials: 'same-origin',
                             headers: {
-                                'Content-Type': 'application/json',
                                 ...(freshToken ? { 'Authorization': `Bearer ${freshToken}` } : {})
                             },
                             body: JSON.stringify({ current_password: currentPassword, new_password: newPassword })
@@ -3552,186 +2755,28 @@
                     if (result.token) {
                         try { localStorage.setItem('adminSessionToken', result.token); } catch (_) {}
                     }
-                    localStorage.setItem('adminPassword', newPassword);
-                    localStorage.setItem('urbanscope_admin_password_updated', newPassword);
                     return { success: true, message: result.message || 'Password updated successfully.' };
                 }
 
-                if (result.error && !result.error.toLowerCase().includes('session')) {
-                    return { success: false, error: result.error };
-                }
+                return { success: false, error: result.error || 'The current password you entered is incorrect.' };
             }
 
-            let backendSucceeded = false;
+            const res = await localApiFetch('/admin/password', {
+                method: 'PUT',
+                body: JSON.stringify({
+                    current_password: currentPassword,
+                    new_password: newPassword
+                })
+            }, 8000);
 
-            // 1. Direct call to FastAPI backend if on local dev network and HTTP (avoids Mixed Content on HTTPS)
-            const isHttps = typeof location !== 'undefined' && location.protocol === 'https:';
-            if (isLocalDevHost() && !isHttps) {
-                let localBase = '/api';
-                if (typeof location !== 'undefined') {
-                    if (location.port === '8000') {
-                        localBase = `${location.origin}/api`;
-                    } else {
-                        const host = location.hostname || '127.0.0.1';
-                        localBase = `http://${host}:8000/api`;
-                    }
-                }
-
-                try {
-                    const token = localStorage.getItem(TOKEN_KEY) ||
-                                  localStorage.getItem('urbanscope_jwt_token') ||
-                                  localStorage.getItem('access_token') ||
-                                  localStorage.getItem('adminToken') ||
-                                  localStorage.getItem('supabase_token') || '';
-
-                    const controller = (typeof AbortController !== 'undefined') ? new AbortController() : null;
-                    const timeoutId = controller ? setTimeout(() => controller.abort(), 4000) : null;
-
-                    const res = await fetch(`${localBase}/admin/password`, {
-                        method: 'PUT',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            ...(token ? { 'Authorization': `Bearer ${token}` } : {})
-                        },
-                        credentials: (typeof location !== 'undefined' && location.port === '8000') ? 'same-origin' : 'include',
-                        body: JSON.stringify({
-                            current_password: currentPassword,
-                            new_password: newPassword,
-                            email: adminEmail
-                        }),
-                        signal: controller ? controller.signal : undefined
-                    });
-                    if (timeoutId) clearTimeout(timeoutId);
-
-                    if (res.ok) {
-                        backendSucceeded = true;
-                    } else if (res.status === 400) {
-                        const errData = await res.json().catch(() => ({}));
-                        return {
-                            success: false,
-                            error: errData.detail || 'The current password you entered is incorrect.'
-                        };
-                    }
-                } catch (backendErr) {
-                    console.warn('Backend password update notice, attempting cloud fallback:', backendErr);
-                }
+            const body = await res.json().catch(() => ({}));
+            if (res.ok) {
+                return { success: true, message: body.message || 'Password updated successfully!' };
             }
-
-            // Generate PBKDF2 hash for new password
-            const newHash = await hashPBKDF2(newPassword);
-
-            if (backendSucceeded) {
-                localStorage.setItem('urbanscope_admin_password_updated', newPassword);
-                localStorage.setItem('adminPassword', newPassword);
-
-                // Push new PBKDF2 hash to Supabase Cloud so phones and other devices immediately stay in sync
-                try {
-                    const checkRes = await fetch(`${REST_BASE}/users?email=ilike.${encodeURIComponent(adminEmail)}&select=*`, {
-                        headers: getHeaders()
-                    });
-                    const cloudUsers = await checkRes.json().catch(() => []);
-                    if (cloudUsers && cloudUsers.length > 0) {
-                        await fetch(`${REST_BASE}/users?id=eq.${cloudUsers[0].id}`, {
-                            method: 'PATCH',
-                            headers: getHeaders(),
-                            body: JSON.stringify({ password_hash: newHash, updated_at: new Date().toISOString() })
-                        });
-                    } else {
-                        await fetch(`${REST_BASE}/users`, {
-                            method: 'POST',
-                            headers: getHeaders(),
-                            body: JSON.stringify({
-                                email: adminEmail,
-                                password_hash: newHash,
-                                full_name: storedAdmin.full_name || storedAdmin.name || 'Miriam Lobren',
-                                phone: storedAdmin.phone || '+63 918 964 5434',
-                                role: storedAdmin.role || 'admin',
-                                avatar_url: storedAdmin.avatar_url || 'assets/images/agent.jpg',
-                                license_number: storedAdmin.license_number || '',
-                                title: storedAdmin.title || 'Real Estate Salesperson',
-                                brokerage: storedAdmin.brokerage || 'CD Miranda Realty'
-                            })
-                        });
-                    }
-                } catch (e) {}
-
-                return { success: true, message: 'Password updated successfully!' };
-            }
-
-            // 2. Cloud Supabase verification & update (for mobile devices, phones, Vercel, or disconnected sessions)
-            let user = null;
-            try {
-                const checkRes = await fetch(`${REST_BASE}/users?email=ilike.${encodeURIComponent(adminEmail)}&select=*`, {
-                    method: 'GET',
-                    headers: getHeaders()
-                });
-                const users = await checkRes.json().catch(() => []);
-                user = users && users.length > 0 ? users[0] : null;
-            } catch (e) {}
-
-            const stored = user ? (user.password_hash || '') : '';
-            const locallyUpdated = localStorage.getItem('urbanscope_admin_password_updated') || '';
-            const activePass = localStorage.getItem('adminPassword') || '';
-
-            let isMatch = false;
-
-            if (stored && stored.includes('$')) {
-                isMatch = await verifyPBKDF2(currentPassword, stored);
-            } else if (stored) {
-                isMatch = (currentPassword === stored);
-            }
-
-            // Fallback ONLY when no remote stored hash exists in cloud
-            if (!stored) {
-                const effectivePass = locallyUpdated || activePass;
-                if (effectivePass) {
-                    isMatch = (currentPassword === effectivePass);
-                } else if (adminEmail === 'miriamalobren@gmail.com' && currentPassword === '111112') {
-                    isMatch = true;
-                } else if (adminEmail === 'admin.realestate@gmail.com' && currentPassword === 'realestate2026') {
-                    isMatch = true;
-                } else if (adminEmail === 'urbanscope.cvsu@gmail.com' && (currentPassword === 'urbanscope2026' || currentPassword === 'urbanscope')) {
-                    isMatch = true;
-                }
-            }
-
-            if (!isMatch) {
-                return { success: false, error: 'The current password you entered is incorrect.' };
-            }
-
-            // Update or insert password in Supabase Cloud
-            try {
-                if (user && user.id) {
-                    await fetch(`${REST_BASE}/users?id=eq.${user.id}`, {
-                        method: 'PATCH',
-                        headers: getHeaders(),
-                        body: JSON.stringify({ password_hash: newHash, updated_at: new Date().toISOString() })
-                    });
-                } else {
-                    await fetch(`${REST_BASE}/users`, {
-                        method: 'POST',
-                        headers: getHeaders(),
-                        body: JSON.stringify({
-                            email: adminEmail,
-                            password_hash: newHash,
-                            full_name: storedAdmin.full_name || storedAdmin.name || 'Miriam Lobren',
-                            phone: storedAdmin.phone || '+63 918 964 5434',
-                            role: storedAdmin.role || 'admin',
-                            avatar_url: storedAdmin.avatar_url || 'assets/images/agent.jpg',
-                            license_number: storedAdmin.license_number || '',
-                            title: storedAdmin.title || 'Real Estate Salesperson',
-                            brokerage: storedAdmin.brokerage || 'CD Miranda Realty'
-                        })
-                    });
-                }
-            } catch (patchErr) {
-                console.warn('Supabase password patch error:', patchErr);
-            }
-
-            localStorage.setItem('urbanscope_admin_password_updated', newPassword);
-            localStorage.setItem('adminPassword', newPassword);
-
-            return { success: true, message: 'Password has been successfully updated!' };
+            return {
+                success: false,
+                error: body.detail || body.error || 'The current password you entered is incorrect.'
+            };
         } catch (err) {
             console.error('Password update failure:', err);
             return { success: false, error: err.message || 'An error occurred while changing password.' };
@@ -3740,13 +2785,9 @@
 
     async function postAuthFlow(path, payload) {
         try {
-            const base = isLocalBackendReachableHost() ? `${getLocalApiBase()}/auth` : '/api/auth';
-            const response = await fetch(`${base}/${path}`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                credentials: 'same-origin',
-                body: JSON.stringify(payload)
-            });
+            const response = isLocalBackendReachableHost()
+                ? await localApiFetch(`/auth/${path}`, { method: 'POST', body: JSON.stringify(payload) }, 12000)
+                : await hostedApiFetch(`/api/auth/${path}`, { method: 'POST', body: JSON.stringify(payload) }, 12000);
             const result = await response.json().catch(() => ({}));
             if (!response.ok || result.success === false) {
                 return { success: false, code: result.code || '', error: result.detail || result.error || 'Unable to complete the request. Please try again.' };
@@ -3757,111 +2798,106 @@
         }
     }
 
-    async function apiStartRegistrationOtp(email) {
+    async function apiStartRegistrationOtp(email, botData = {}) {
         const cleanEmail = String(email || '').trim().toLowerCase();
         if (!cleanEmail || !cleanEmail.includes('@')) {
             return { success: false, error: 'Please enter a valid email address.' };
         }
 
-        // 1. Check if an active account already exists in Supabase Cloud
-        try {
-            const res = await fetch(`${REST_BASE}/users?email=ilike.${encodeURIComponent(cleanEmail)}&select=id,email,bio,password_hash`, {
-                headers: getHeaders()
-            });
-            if (res.ok) {
-                const users = await res.json().catch(() => []);
-                if (Array.isArray(users) && users.length > 0) {
-                    const u = users[0];
-                    const wasSoftDeleted = String(u.bio || '').trim() === SOFT_DELETE_BIO_MARKER ||
-                                           getDeletedUserEmails().includes(cleanEmail);
-                    if (!wasSoftDeleted && u.password_hash) {
-                        return { success: false, error: 'An account with this email already exists. Please log in.' };
-                    }
-                }
-            }
-        } catch (_) {}
-
-        // 2. Dispatch OTP via serverless function (emails code using Resend)
-        let serverRes = null;
-        try {
-            serverRes = await postAuthFlow('register/start', { email: cleanEmail });
-            if (!serverRes || serverRes.success === false) {
-                return { success: false, error: serverRes?.error || 'Unable to deliver verification email. Please check your email and try again.' };
-            }
-        } catch (e) {
-            return { success: false, error: e.message || 'Unable to contact email delivery service.' };
+        const isLocal = isLocalBackendReachableHost();
+        const serverRes = await postAuthFlow('register/start', {
+            email: cleanEmail,
+            ...buildBotFields(botData, isLocal)
+        });
+        if (!serverRes || serverRes.success === false) {
+            return { success: false, error: serverRes?.error || 'Unable to deliver verification email. Please check your email and try again.' };
         }
 
-        // 3. Store active registration challenge in sessionStorage
-        const activeCode = serverRes.codeHash;
-        const challenge = {
-            email: cleanEmail,
-            code: activeCode,
-            expires_at: Date.now() + 10 * 60 * 1000
-        };
-        sessionStorage.setItem('urbanscope_register_challenge', JSON.stringify(challenge));
+        try { sessionStorage.removeItem('urbanscope_register_challenge'); } catch (_) {}
 
         return {
             success: true,
-            message: `A six-digit verification code has been sent to ${cleanEmail}. Please check your inbox and spam folder.`
+            message: serverRes.message || `A six-digit verification code has been sent to ${cleanEmail}. Please check your inbox and spam folder.`
         };
     }
 
-    async function apiCompleteRegistrationOtp(email, code, password, fullName, phone) {
+    async function apiCompleteRegistrationOtp(email, code, password, fullName, phone, botData = {}) {
         const cleanEmail = String(email || '').trim().toLowerCase();
         const cleanCode = String(code || '').trim();
         const cleanName = String(fullName || '').trim();
         const cleanPhone = String(phone || '').trim();
+        const rawPassword = String(password || '');
 
         if (!cleanCode || !/^[0-9]{6}$/.test(cleanCode)) {
             return { success: false, error: 'Please enter a valid 6-digit verification code.' };
         }
+        if (rawPassword.length < 8) {
+            return { success: false, error: 'Password must be at least 8 characters long.' };
+        }
 
-        // 1. Verify code against active challenge in sessionStorage
-        let codeValid = false;
-        try {
-            const raw = sessionStorage.getItem('urbanscope_register_challenge');
-            if (raw) {
-                const challenge = JSON.parse(raw);
-                if (challenge.email === cleanEmail) {
-                    if (Date.now() > challenge.expires_at) {
-                        return { success: false, error: 'Verification code has expired. Please request a new code.' };
-                    }
-                    if (challenge.code === cleanCode) {
-                        codeValid = true;
-                    }
-                }
+        const isLocal = isLocalBackendReachableHost();
+        const serverRes = await postAuthFlow('register/verify', {
+            email: cleanEmail,
+            code: cleanCode,
+            password: rawPassword,
+            full_name: cleanName,
+            phone: cleanPhone,
+            terms_accepted: botData.terms_accepted !== false,
+            ...buildBotFields(botData, isLocal)
+        });
+
+        if (!serverRes || serverRes.success === false) {
+            return { success: false, error: serverRes?.error || 'Verification failed. Please check your code.' };
+        }
+
+        try { sessionStorage.removeItem('urbanscope_register_challenge'); } catch (_) {}
+        const u = serverRes.user || {};
+        const role = normalizeAccountRole(u.role, u.email || cleanEmail);
+        const sessionUser = {
+            id: u.id,
+            email: u.email || cleanEmail,
+            name: u.full_name || cleanName,
+            full_name: u.full_name || cleanName,
+            phone: u.phone || cleanPhone,
+            role: role,
+            avatar_url: sanitizeImageUrl(u.avatar_url || '', ''),
+            user_metadata: {
+                full_name: u.full_name || cleanName,
+                phone: u.phone || cleanPhone,
+                avatar_url: sanitizeImageUrl(u.avatar_url || '', '')
             }
-        } catch (_) {}
+        };
 
-        // 2. Fallback to server verification if sessionStorage was unavailable or cleared
-        if (!codeValid) {
-            try {
-                const serverRes = await postAuthFlow('register/verify', {
-                    email: cleanEmail,
-                    code: cleanCode,
-                    password: String(password || ''),
-                    full_name: cleanName,
-                    phone: cleanPhone
-                });
-                if (serverRes && serverRes.success) {
-                    codeValid = true;
-                }
-            } catch (_) {}
+        if (isLocal && serverRes.token) {
+            localStorage.setItem(TOKEN_KEY, serverRes.token);
         }
-
-        if (!codeValid) {
-            return { success: false, error: 'The verification code you entered is incorrect. Please check your email.' };
+        localStorage.setItem(USER_KEY, JSON.stringify(sessionUser));
+        localStorage.setItem(DEMO_KEY, JSON.stringify(sessionUser));
+        if (role === 'admin' || role === 'superadmin') {
+            localStorage.setItem('adminUser', JSON.stringify(sessionUser));
+        } else {
+            localStorage.removeItem('adminUser');
         }
+        clearUserDeletedLocal(u.id, cleanEmail);
+        purgeInquiriesByEmailLocal(cleanEmail, u.id);
 
-        // 3. Code verified! Remove challenge and complete user registration via apiSignUp
-        sessionStorage.removeItem('urbanscope_register_challenge');
-        purgeInquiriesByEmailLocal(cleanEmail);
-        return await apiSignUp(cleanEmail, password, cleanName, cleanPhone);
+        return {
+            success: true,
+            data: {
+                session: true,
+                user: sessionUser,
+                token: serverRes.token || '',
+                redirect_url: serverRes.redirect_url || (role === 'superadmin' ? '/pages/superadmin/dashboard.html' : (role === 'admin' ? '/pages/admin/dashboard.html' : '/index.html'))
+            }
+        };
     }
 
-    async function apiRequestPasswordReset(email) {
-        return postAuthFlow('password/reset/request', { email: String(email || '').trim().toLowerCase() });
+    async function apiRequestPasswordReset(email, botData = {}) {
+        const isLocal = isLocalBackendReachableHost();
+        return postAuthFlow('password/reset/request', {
+            email: String(email || '').trim().toLowerCase(),
+            ...buildBotFields(botData, isLocal)
+        });
     }
 
     async function apiCompletePasswordReset(email, code, password) {
@@ -3872,56 +2908,20 @@
         });
     }
 
-    async function apiSendPasswordResetEmail(email) {
+    async function apiSendPasswordResetEmail(email, botData = {}) {
         const cleanEmail = String(email || '').trim().toLowerCase();
         if (!cleanEmail || !cleanEmail.includes('@')) {
             return { success: false, error: 'Please enter a valid email address.' };
         }
-        try {
-            // 1. Verify user exists in Supabase Cloud
-            const res = await fetch(`${REST_BASE}/users?email=ilike.${encodeURIComponent(cleanEmail)}&select=id,email,full_name,bio`, {
-                headers: getHeaders()
-            });
-            if (!res.ok) {
-                return { success: false, error: 'Unable to check account. Please try again.' };
-            }
-            const users = await res.json().catch(() => []);
-            if (!Array.isArray(users) || users.length === 0) {
-                return { success: false, error: 'No account found with that email address.' };
-            }
-            const user = users[0];
-            if (user.bio === SOFT_DELETE_BIO_MARKER || getDeletedUserEmails().includes(cleanEmail)) {
-                return { success: false, error: 'This account has been deactivated.' };
-            }
-
-            // 2. Try server-side OTP dispatch
-            let serverRes = null;
-            try {
-                serverRes = await apiRequestPasswordReset(cleanEmail);
-                if (!serverRes || serverRes.success === false) {
-                    return { success: false, error: serverRes?.error || 'Unable to send recovery email.' };
-                }
-            } catch (err) {
-                return { success: false, error: err.message || 'Unable to reach the email recovery service.' };
-            }
-
-            // 3. Store active reset challenge in sessionStorage
-            const activeCode = serverRes.codeHash;
-            const challenge = {
-                email: cleanEmail,
-                code: activeCode,
-                expires_at: Date.now() + 10 * 60 * 1000,
-                userId: user.id
-            };
-            sessionStorage.setItem('urbanscope_reset_challenge', JSON.stringify(challenge));
-
-            return {
-                success: true,
-                message: `A six-digit verification code has been sent to ${cleanEmail}. Please check your inbox and spam folder.`
-            };
-        } catch (err) {
-            return { success: false, error: err.message || 'An error occurred while requesting recovery code.' };
+        const serverRes = await apiRequestPasswordReset(cleanEmail, botData);
+        if (!serverRes || serverRes.success === false) {
+            return { success: false, error: serverRes?.error || 'Unable to send recovery email.' };
         }
+        try { sessionStorage.removeItem('urbanscope_reset_challenge'); } catch (_) {}
+        return {
+            success: true,
+            message: serverRes.message || `If an account exists for ${cleanEmail}, a six-digit verification code has been sent.`
+        };
     }
 
     async function apiVerifyPasswordResetCode(email, code) {
@@ -3930,75 +2930,32 @@
         if (!cleanCode || !/^[0-9]{6}$/.test(cleanCode)) {
             return { success: false, error: 'Please enter the 6-digit verification code.' };
         }
-        try {
-            const raw = sessionStorage.getItem('urbanscope_reset_challenge');
-            if (!raw) {
-                return { success: false, error: 'Verification session expired. Please request a new code.' };
-            }
-            const challenge = JSON.parse(raw);
-            if (challenge.email !== cleanEmail) {
-                return { success: false, error: 'Verification email mismatch. Please request a new code.' };
-            }
-            if (Date.now() > challenge.expires_at) {
-                return { success: false, error: 'Verification code has expired. Please request a new one.' };
-            }
-            if (challenge.code !== cleanCode) {
-                return { success: false, error: 'The verification code you entered is incorrect. Please check your email.' };
-            }
-            challenge.verified = true;
-            sessionStorage.setItem('urbanscope_reset_challenge', JSON.stringify(challenge));
-            return { success: true, message: 'Code verified successfully.' };
-        } catch (err) {
-            return { success: false, error: 'Unable to verify code. Please try again.' };
+        const res = isLocalBackendReachableHost()
+            ? await postAuthFlow('password/reset/check-code', { email: cleanEmail, code: cleanCode, purpose: 'password_reset' })
+            : await postAuthFlow('password/reset/confirm', { email: cleanEmail, code: cleanCode, verifyOnly: true });
+        if (!res || res.success === false) {
+            return { success: false, error: res?.error || 'Invalid or expired verification code.' };
         }
+        return { success: true, message: res.message || 'Code verified successfully.' };
     }
 
-    async function apiResetPasswordWithVerifiedCode(email, newPassword) {
+    async function apiResetPasswordWithVerifiedCode(email, codeOrPassword, maybeNewPassword) {
         const cleanEmail = String(email || '').trim().toLowerCase();
+        const cleanCode = maybeNewPassword !== undefined ? String(codeOrPassword || '').trim() : '';
+        const newPassword = maybeNewPassword !== undefined ? String(maybeNewPassword || '') : String(codeOrPassword || '');
+
+        if (!cleanCode || !/^[0-9]{6}$/.test(cleanCode)) {
+            return { success: false, error: 'Missing or invalid verification code. Please restart password reset.' };
+        }
         if (!newPassword || newPassword.length < 8) {
             return { success: false, error: 'Password must be at least 8 characters long.' };
         }
-        try {
-            const raw = sessionStorage.getItem('urbanscope_reset_challenge');
-            if (!raw) {
-                return { success: false, error: 'Session expired. Please request a new verification code.' };
-            }
-            const challenge = JSON.parse(raw);
-            if (challenge.email !== cleanEmail || !challenge.verified) {
-                return { success: false, error: 'Please verify the email code first before setting a new password.' };
-            }
-
-            const passwordHash = await hashPBKDF2(newPassword);
-
-            // Update Supabase Cloud
-            const patchRes = await fetch(`${REST_BASE}/users?id=eq.${encodeURIComponent(challenge.userId)}`, {
-                method: 'PATCH',
-                headers: getHeaders(),
-                body: JSON.stringify({
-                    password_hash: passwordHash,
-                    updated_at: new Date().toISOString()
-                })
-            });
-            if (!patchRes.ok) {
-                return { success: false, error: 'Failed to update password in database. Please try again.' };
-            }
-
-            // Sync with local backend if running
-            if (isLocalBackendReachableHost()) {
-                try {
-                    await fetch(`${getLocalApiBase()}/auth/reset-password-direct`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ email: cleanEmail, password: newPassword })
-                    });
-                } catch (_) {}
-            }
-
-            sessionStorage.removeItem('urbanscope_reset_challenge');
-            return { success: true, message: 'Password updated successfully! You can now log in.' };
-        } catch (err) {
-            return { success: false, error: err.message || 'An error occurred while updating your password.' };
+        const res = await apiCompletePasswordReset(cleanEmail, cleanCode, newPassword);
+        if (!res || res.success === false) {
+            return { success: false, error: res?.error || 'Unable to update password. Please try again.' };
         }
+        try { sessionStorage.removeItem('urbanscope_reset_challenge'); } catch (_) {}
+        return { success: true, message: res.message || 'Password updated successfully! You can now log in.' };
     }
 
     function normalizePhoneDigits(p) {
@@ -4009,796 +2966,285 @@
         return digits;
     }
 
-    async function apiVerifyAccountForPasswordReset(email, phone) {
-        const cleanEmail = String(email || '').trim().toLowerCase();
-        const cleanPhone = normalizePhoneDigits(phone);
-        if (!cleanEmail || !cleanPhone) {
-            return { success: false, error: 'Please enter both your registered email and phone number.' };
-        }
-        try {
-            const res = await fetch(`${REST_BASE}/users?email=ilike.${encodeURIComponent(cleanEmail)}&select=id,email,phone,full_name,bio`, {
-                headers: getHeaders()
-            });
-            if (!res.ok) {
-                return { success: false, error: 'Account verification could not be completed. Please try again.' };
-            }
-            const users = await res.json().catch(() => []);
-            if (!Array.isArray(users) || users.length === 0) {
-                return { success: false, error: 'No account found with that email address.' };
-            }
-            const user = users[0];
-            if (user.bio === SOFT_DELETE_BIO_MARKER || getDeletedUserEmails().includes(cleanEmail)) {
-                return { success: false, error: 'This account has been deactivated.' };
-            }
-            const userPhone = normalizePhoneDigits(user.phone || '');
-            if (!userPhone || userPhone !== cleanPhone) {
-                return { success: false, error: 'The phone number does not match our records for this account.' };
-            }
-            return { success: true, user: { id: user.id, email: user.email, name: user.full_name } };
-        } catch (err) {
-            return { success: false, error: err.message || 'An error occurred during account verification.' };
-        }
+    async function apiVerifyAccountForPasswordReset() {
+        return {
+            success: false,
+            error: 'Phone-based password reset is disabled for security. Please use email verification.'
+        };
     }
 
-    async function apiResetPasswordByPhone(email, phone, newPassword) {
+    async function apiResetPasswordByPhone() {
+        return {
+            success: false,
+            error: 'Phone-based password reset is disabled for security. Please use email verification.'
+        };
+    }
+
+    async function apiSignUp(email, password, fullName, phone, botData = {}) {
         const cleanEmail = String(email || '').trim().toLowerCase();
-        const cleanPhone = normalizePhoneDigits(phone);
-        if (!cleanEmail || !cleanPhone) {
-            return { success: false, error: 'Please provide your registered email and phone number.' };
+        const cleanName = String(fullName || '').trim();
+        const cleanPhone = String(phone || '').trim();
+        const rawPassword = String(password || '');
+
+        if (!cleanEmail || !cleanEmail.includes('@')) {
+            return { success: false, error: 'Please enter a valid email address.' };
         }
-        if (!newPassword || newPassword.length < 8) {
+        if (!rawPassword || rawPassword.length < 8) {
             return { success: false, error: 'Password must be at least 8 characters long.' };
         }
-        const verifyRes = await apiVerifyAccountForPasswordReset(cleanEmail, cleanPhone);
-        if (!verifyRes.success) return verifyRes;
 
-        const userId = verifyRes.user.id;
-        try {
-            const passwordHash = await hashPBKDF2(newPassword);
-            const patchRes = await fetch(`${REST_BASE}/users?id=eq.${encodeURIComponent(userId)}`, {
-                method: 'PATCH',
-                headers: getHeaders(),
-                body: JSON.stringify({
-                    password_hash: passwordHash,
-                    updated_at: new Date().toISOString()
-                })
+        if (botData && botData.code) {
+            return apiCompleteRegistrationOtp(cleanEmail, botData.code, rawPassword, cleanName, cleanPhone, botData);
+        }
+
+        if (isLocalBackendReachableHost()) {
+            const res = await postAuthFlow('register', {
+                email: cleanEmail,
+                password: rawPassword,
+                full_name: cleanName,
+                phone: cleanPhone,
+                ...buildBotFields(botData, true)
             });
-            if (!patchRes.ok) {
-                return { success: false, error: 'Unable to update password. Please try again.' };
+            if (!res || res.success === false || !res.user) {
+                return { success: false, error: res?.error || 'Registration requires email OTP verification.' };
+            }
+            const u = res.user;
+            const role = normalizeAccountRole(u.role, u.email || cleanEmail);
+            const sessionUser = {
+                id: u.id,
+                email: u.email,
+                name: u.full_name,
+                full_name: u.full_name,
+                phone: u.phone || '',
+                role: role,
+                avatar_url: sanitizeImageUrl(u.avatar_url || '', ''),
+                user_metadata: { full_name: u.full_name, phone: u.phone || '', avatar_url: sanitizeImageUrl(u.avatar_url || '', '') }
+            };
+            if (res.token) localStorage.setItem(TOKEN_KEY, res.token);
+            localStorage.setItem(USER_KEY, JSON.stringify(sessionUser));
+            localStorage.setItem(DEMO_KEY, JSON.stringify(sessionUser));
+            return {
+                success: true,
+                data: { session: true, user: sessionUser, token: res.token || '', redirect_url: res.redirect_url }
+            };
+        }
+
+        return { success: false, error: 'Email verification is required to register an account.' };
+    }
+
+    async function apiSignIn(email, password, botData = {}) {
+        try {
+            const cleanEmail = String(email || '').trim().toLowerCase();
+            const rawPassword = String(password || '');
+            const isLocal = isLocalBackendReachableHost();
+
+            if (!cleanEmail || !rawPassword) {
+                return { success: false, error: 'Please enter both your email address and password.' };
             }
 
-            // Sync with local backend if reachable
-            if (isLocalBackendReachableHost()) {
-                try {
-                    await fetch(`${getLocalApiBase()}/auth/reset-password-direct`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ email: cleanEmail, password: newPassword })
-                    });
-                } catch (_) {}
+            try {
+                localStorage.removeItem('adminPassword');
+                localStorage.removeItem('urbanscope_admin_password_updated');
+            } catch (_) {}
+
+            const res = isLocal
+                ? await localApiFetch('/auth/login', {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        email: cleanEmail,
+                        password: rawPassword,
+                        ...buildBotFields(botData, true)
+                    })
+                }, 10000)
+                : await hostedApiFetch('/api/session', {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        action: 'login',
+                        email: cleanEmail,
+                        password: rawPassword,
+                        ...buildBotFields(botData, false)
+                    })
+                }, 10000);
+
+            const authRes = await res.json().catch(() => ({}));
+            if (!res.ok || authRes.success === false) {
+                return {
+                    success: false,
+                    error: authRes.detail || authRes.error || authRes.message || 'Invalid email or password.'
+                };
             }
 
-            return { success: true, message: 'Password updated successfully! You can now log in with your new password.' };
+            if (authRes.requires_verification) {
+                return {
+                    success: true,
+                    requires_verification: true,
+                    email: authRes.email,
+                    full_name: authRes.full_name,
+                    avatar_url: sanitizeImageUrl(authRes.avatar_url || '', ''),
+                    message: authRes.message
+                };
+            }
+
+            const u = authRes.user;
+            if (!u) {
+                return { success: false, error: 'Authentication response was incomplete. Please try again.' };
+            }
+
+            const role = normalizeAccountRole(u.role, u.email || cleanEmail);
+            const sessionUser = {
+                id: u.id,
+                email: u.email || cleanEmail,
+                name: u.full_name || u.name || cleanEmail.split('@')[0],
+                full_name: u.full_name || u.name || cleanEmail.split('@')[0],
+                phone: u.phone || '',
+                role: role,
+                avatar_url: sanitizeImageUrl(u.avatar_url || '', ''),
+                user_metadata: {
+                    full_name: u.full_name || u.name || '',
+                    phone: u.phone || '',
+                    avatar_url: sanitizeImageUrl(u.avatar_url || '', '')
+                }
+            };
+
+            if (isLocal && authRes.token) {
+                localStorage.setItem(TOKEN_KEY, authRes.token);
+            }
+            localStorage.setItem(USER_KEY, JSON.stringify(sessionUser));
+            localStorage.setItem(DEMO_KEY, JSON.stringify(sessionUser));
+            if (role === 'admin' || role === 'superadmin') {
+                localStorage.setItem('adminUser', JSON.stringify(sessionUser));
+                if (!isLocal) {
+                    await apiCreateHostedAdminSession({ email: cleanEmail, password: rawPassword }).catch(() => {});
+                }
+            } else {
+                localStorage.removeItem('adminUser');
+            }
+
+            const redirectUrl = authRes.redirect_url || (
+                role === 'superadmin'
+                    ? '/pages/superadmin/dashboard.html'
+                    : (role === 'admin' ? '/pages/admin/dashboard.html' : '/index.html')
+            );
+
+            return {
+                success: true,
+                data: {
+                    user: sessionUser,
+                    token: authRes.token || '',
+                    redirect_url: redirectUrl
+                }
+            };
         } catch (err) {
-            return { success: false, error: err.message || 'An error occurred while resetting your password.' };
+            return { success: false, error: err.message || 'Unable to sign in right now.' };
         }
     }
 
-    async function apiSignUp(email, password, fullName, phone) {
+    async function apiGetGoogleConfig() {
         try {
-            const cleanEmail = String(email || '').trim().toLowerCase();
-            const cleanName = String(fullName || '').trim();
-            const cleanPhone = String(phone || '').trim();
-
-            if (!cleanEmail || !cleanEmail.includes('@')) {
-                return { success: false, error: 'Please enter a valid email address.' };
-            }
-            if (!password || password.length < 8) {
-                return { success: false, error: 'Password must be at least 8 characters long.' };
-            }
-
-            // 1. Direct registration with FastAPI backend when on local dev host
-            if (isLocalBackendReachableHost()) {
-                try {
-                    const localBase = getLocalApiBase();
-                    const res = await fetch(`${localBase}/auth/register`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            email: cleanEmail,
-                            password: password,
-                            full_name: cleanName,
-                            phone: cleanPhone
-                        })
-                    });
-
-                    if (res.ok) {
-                        const regData = await res.json();
-                        if (regData.success && regData.user) {
-                            const u = regData.user;
-                            const sessionUser = {
-                                id: u.id,
-                                email: u.email,
-                                name: u.full_name,
-                                full_name: u.full_name,
-                                phone: u.phone || '',
-                                role: u.role || 'user',
-                                avatar_url: u.avatar_url || '',
-                                user_metadata: { full_name: u.full_name, phone: u.phone, avatar_url: u.avatar_url || '' }
-                            };
-
-                            localStorage.setItem(TOKEN_KEY, regData.token);
-                            localStorage.setItem(USER_KEY, JSON.stringify(sessionUser));
-                            localStorage.setItem(DEMO_KEY, JSON.stringify(sessionUser));
-                            if (sessionUser.role === 'admin' || sessionUser.role === 'superadmin') {
-                                localStorage.setItem('adminUser', JSON.stringify(sessionUser));
-                            }
-                            clearUserDeletedLocal(u.id, cleanEmail);
-                            purgeInquiriesByEmailLocal(cleanEmail, u.id);
-                            if (cleanEmail) {
-                                try {
-                                    fetch(`${REST_BASE}/inquiries?client_email=ilike.${encodeURIComponent(cleanEmail)}`, { method: 'DELETE', headers: getHeaders() }).catch(() => {});
-                                } catch (_) {}
-                            }
-
-                            return {
-                                success: true,
-                                data: {
-                                    session: true,
-                                    user: sessionUser,
-                                    token: regData.token,
-                                    redirect_url: regData.redirect_url
-                                }
-                            };
-                        }
-                    } else {
-                        const err = await res.json().catch(() => ({}));
-                        return { success: false, error: err.detail || 'Registration failed' };
-                    }
-                } catch (err) {
-                    console.warn('Backend register attempt notice, syncing to Supabase Cloud:', err);
+            const res = isLocalBackendReachableHost()
+                ? await fetchWithTimeout(`${getLocalApiBase()}/auth/google/config`, { method: 'GET' }, 4000)
+                : await fetchWithTimeout('/api/session?action=config', { method: 'GET', credentials: 'same-origin' }, 4000);
+            if (res.ok) {
+                const cfg = await res.json().catch(() => ({}));
+                const cid = String(cfg.client_id || cfg.googleClientId || '').trim();
+                const turnstileSiteKey = String(cfg.turnstile_site_key || cfg.turnstileSiteKey || '').trim();
+                if (turnstileSiteKey && typeof window !== 'undefined') {
+                    window.URBANSCOPE_TURNSTILE_SITE_KEY = turnstileSiteKey;
+                }
+                if (cid && !cid.toLowerCase().startsWith('your_google_client_id')) {
+                    return { enabled: true, client_id: cid, turnstile_site_key: turnstileSiteKey };
                 }
             }
+        } catch (e) {}
 
-            // 2. Cloud registration in Supabase PostgreSQL (Vercel / remote / offline backend)
-            let role = 'user';
-            if (cleanEmail === 'urbanscope.cvsu@gmail.com') role = 'superadmin';
-            else if (cleanEmail === 'admin.realestate@gmail.com' || cleanEmail === 'miriamalobren@gmail.com' || cleanEmail === 'miriam@gmail.com') role = 'admin';
+        const fallbackCid = (window.URBANSCOPE_GOOGLE_CLIENT_ID || GOOGLE_CLIENT_ID || '').trim();
+        if (fallbackCid && !fallbackCid.toLowerCase().startsWith('your_google_client_id')) {
+            return { enabled: true, client_id: fallbackCid, turnstile_site_key: String(window.URBANSCOPE_TURNSTILE_SITE_KEY || '') };
+        }
+        return { enabled: false, client_id: '', turnstile_site_key: '' };
+    }
 
-            let createdId = Date.now();
-            try {
-                const checkRes = await fetch(`${REST_BASE}/users?email=ilike.${encodeURIComponent(cleanEmail)}&select=id,email,bio,password_hash,role,full_name,phone`, {
-                    method: 'GET',
-                    headers: getHeaders()
-                });
-                const existingRows = checkRes.ok ? await checkRes.json().catch(() => []) : [];
-                const existing = Array.isArray(existingRows) && existingRows.length > 0 ? existingRows[0] : null;
-                const passwordHash = await hashPBKDF2(password);
-
-                if (existing && existing.id) {
-                    const wasSoftDeleted = String(existing.bio || '').trim() === SOFT_DELETE_BIO_MARKER ||
-                                           getDeletedUserEmails().includes(cleanEmail);
-                    if (wasSoftDeleted) {
-                        const patchRes = await fetch(`${REST_BASE}/users?id=eq.${encodeURIComponent(existing.id)}`, {
-                            method: 'PATCH',
-                            headers: getHeaders(),
-                            body: JSON.stringify({
-                                full_name: cleanName || existing.full_name,
-                                phone: cleanPhone || existing.phone,
-                                password_hash: passwordHash,
-                                role: role,
-                                bio: '',
-                                updated_at: new Date().toISOString()
-                            })
-                        });
-                        if (patchRes.ok) {
-                            const patched = await patchRes.json().catch(() => []);
-                            const row = Array.isArray(patched) ? patched[0] : patched;
-                            if (row && row.id) createdId = row.id;
-                            try {
-                                fetch(`${REST_BASE}/inquiries?client_email=ilike.${encodeURIComponent(cleanEmail)}`, { method: 'DELETE', headers: getHeaders() }).catch(() => {});
-                                if (existing && existing.id) {
-                                    fetch(`${REST_BASE}/notifications?user_id=eq.${encodeURIComponent(existing.id)}`, { method: 'DELETE', headers: getHeaders() }).catch(() => {});
-                                }
-                            } catch (_) {}
-                        }
-                    } else if (!existing.password_hash) {
-                        // User previously signed in via Google and is setting a password
-                        const patchRes = await fetch(`${REST_BASE}/users?id=eq.${encodeURIComponent(existing.id)}`, {
-                            method: 'PATCH',
-                            headers: getHeaders(),
-                            body: JSON.stringify({
-                                full_name: cleanName || existing.full_name,
-                                phone: cleanPhone || existing.phone,
-                                password_hash: passwordHash,
-                                updated_at: new Date().toISOString()
-                            })
-                        });
-                        if (patchRes.ok) {
-                            createdId = existing.id;
-                            role = existing.role || 'user';
-                        }
-                    } else {
-                        return {
-                            success: false,
-                            error: 'An account with this email address already exists. Please log in or use "Forgot Password".'
-                        };
-                    }
-                } else {
-                    const insertRes = await fetch(`${REST_BASE}/users`, {
-                        method: 'POST',
-                        headers: getHeaders(),
-                        body: JSON.stringify({
-                            email: cleanEmail,
-                            password_hash: passwordHash,
-                            full_name: cleanName,
-                            phone: cleanPhone,
-                            role: role,
-                            avatar_url: 'assets/images/agent.jpg',
-                            bio: ''
-                        })
-                    });
-                    if (insertRes.ok) {
-                        const inserted = await insertRes.json().catch(() => []);
-                        const row = Array.isArray(inserted) ? inserted[0] : inserted;
-                        if (row && row.id) createdId = row.id;
-                    }
-                }
-            } catch (cloudErr) {
-                console.warn('Supabase registration sync notice:', cloudErr);
-            }
-
-            clearUserDeletedLocal(createdId, cleanEmail);
-            purgeInquiriesByEmailLocal(cleanEmail, createdId);
-
-            const sessionUser = {
-                id: createdId,
-                email: cleanEmail,
-                name: cleanName,
-                full_name: cleanName,
-                phone: cleanPhone,
-                role: role,
-                user_metadata: { full_name: cleanName, phone: cleanPhone }
+    async function apiSignInWithGoogle(googlePayload = {}) {
+        try {
+            const isLocal = isLocalBackendReachableHost();
+            const body = {
+                credential: googlePayload.credential || null,
+                access_token: googlePayload.access_token || null,
+                ...buildBotFields(googlePayload, isLocal)
             };
 
-            const simulatedToken = 'sb_session_' + sessionUser.id + '_' + Date.now();
-            localStorage.setItem(TOKEN_KEY, simulatedToken);
+            const res = isLocal
+                ? await localApiFetch('/auth/google', { method: 'POST', body: JSON.stringify(body) }, 10000)
+                : await hostedApiFetch('/api/session', { method: 'POST', body: JSON.stringify({ action: 'google', ...body }) }, 10000);
+
+            const authRes = await res.json().catch(() => ({}));
+            if (!res.ok || authRes.success === false) {
+                return {
+                    success: false,
+                    error: authRes.detail || authRes.error || authRes.message || 'Google authentication failed.'
+                };
+            }
+
+            if (authRes.requires_verification) {
+                return {
+                    success: true,
+                    requires_verification: true,
+                    email: authRes.email,
+                    full_name: authRes.full_name,
+                    avatar_url: sanitizeImageUrl(authRes.avatar_url || '', ''),
+                    message: authRes.message
+                };
+            }
+
+            const u = authRes.user;
+            if (!u) {
+                return { success: false, error: 'Google login returned an incomplete profile.' };
+            }
+
+            const resolvedRole = normalizeAccountRole(u.role, u.email);
+            const sessionUser = {
+                id: u.id,
+                email: u.email,
+                name: u.full_name || u.name,
+                full_name: u.full_name || u.name,
+                phone: u.phone || '',
+                role: resolvedRole,
+                avatar_url: sanitizeImageUrl(u.avatar_url || '', ''),
+                user_metadata: {
+                    full_name: u.full_name || u.name,
+                    phone: u.phone || '',
+                    avatar_url: sanitizeImageUrl(u.avatar_url || '', '')
+                }
+            };
+
+            if (isLocal && authRes.token) {
+                localStorage.setItem(TOKEN_KEY, authRes.token);
+            }
             localStorage.setItem(USER_KEY, JSON.stringify(sessionUser));
             localStorage.setItem(DEMO_KEY, JSON.stringify(sessionUser));
+            if (resolvedRole === 'admin' || resolvedRole === 'superadmin') {
+                localStorage.setItem('adminUser', JSON.stringify(sessionUser));
+                if (!isLocal) {
+                    await apiCreateHostedAdminSession({ credential: body.credential, access_token: body.access_token }).catch(() => {});
+                }
+            } else {
+                localStorage.removeItem('adminUser');
+            }
+
+            const redirectUrl = authRes.redirect_url || (
+                resolvedRole === 'superadmin'
+                    ? '/pages/superadmin/dashboard.html'
+                    : (resolvedRole === 'admin' ? '/pages/admin/dashboard.html' : '/index.html')
+            );
 
             return {
                 success: true,
                 data: {
                     session: true,
                     user: sessionUser,
-                    token: simulatedToken,
-                    redirect_url: role === 'superadmin'
-                        ? '/pages/superadmin/dashboard.html'
-                        : (role === 'admin' ? '/pages/admin/dashboard.html' : '/index.html')
+                    token: authRes.token || '',
+                    redirect_url: redirectUrl
                 }
-            };
-        } catch (err) {
-            return { success: false, error: err.message };
-        }
-    }
-
-    async function apiSignIn(email, password) {
-        try {
-            const cleanEmail = email.trim().toLowerCase();
-
-            // 1. Direct authentication with FastAPI Backend if reachable
-            const isHttps = typeof location !== 'undefined' && location.protocol === 'https:';
-            if (isLocalDevHost() && !isHttps) {
-                let localBase = '/api';
-                if (typeof location !== 'undefined') {
-                    if (location.port === '8000') {
-                        localBase = `${location.origin}/api`;
-                    } else {
-                        const host = location.hostname || '127.0.0.1';
-                        localBase = `http://${host}:8000/api`;
-                    }
-                }
-
-                try {
-                    const controller = (typeof AbortController !== 'undefined') ? new AbortController() : null;
-                    const timeoutId = controller ? setTimeout(() => controller.abort(), 4000) : null;
-
-                    const res = await fetch(`${localBase}/auth/login`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ email: cleanEmail, password: password }),
-                        signal: controller ? controller.signal : undefined
-                    });
-                    if (timeoutId) clearTimeout(timeoutId);
-
-                    if (res.ok) {
-                        const authRes = await res.json();
-                        if (authRes.requires_verification) {
-                            return {
-                                success: true,
-                                requires_verification: true,
-                                email: authRes.email,
-                                full_name: authRes.full_name,
-                                avatar_url: authRes.avatar_url,
-                                google_id: authRes.google_id,
-                                message: authRes.message
-                            };
-                        }
-                        if (authRes.success && authRes.user) {
-                            const u = authRes.user;
-                            const sessionUser = {
-                                id: u.id,
-                                email: u.email,
-                                name: u.full_name,
-                                full_name: u.full_name,
-                                phone: u.phone || '',
-                                role: u.role || 'user',
-                                avatar_url: u.avatar_url || '',
-                                user_metadata: { full_name: u.full_name, phone: u.phone, avatar_url: u.avatar_url || '' }
-                            };
-
-                            localStorage.setItem(TOKEN_KEY, authRes.token);
-                            localStorage.setItem(USER_KEY, JSON.stringify(sessionUser));
-                            localStorage.setItem(DEMO_KEY, JSON.stringify(sessionUser));
-                            if (sessionUser.role === 'admin' || sessionUser.role === 'superadmin') {
-                                localStorage.setItem('adminUser', JSON.stringify(sessionUser));
-                                localStorage.setItem('adminPassword', password);
-                                localStorage.setItem('urbanscope_admin_password_updated', password);
-                            }
-
-                            return {
-                                success: true,
-                                data: {
-                                    user: sessionUser,
-                                    token: authRes.token,
-                                    redirect_url: authRes.redirect_url
-                                }
-                            };
-                        }
-                    } else if (res.status === 401) {
-                        const errData = await res.json().catch(() => ({}));
-                        return {
-                            success: false,
-                            error: errData.detail || 'Invalid email or password.'
-                        };
-                    }
-                } catch (backendErr) {
-                    console.warn('Backend login attempt notice, falling back:', backendErr);
-                }
-            }
-
-            // 2. Cloud Supabase authentication if remote or offline
-            try {
-                const sbRes = await fetch(`${REST_BASE}/users?email=ilike.${encodeURIComponent(cleanEmail)}&select=*`, {
-                    headers: getHeaders()
-                });
-                const sbUsers = await sbRes.json().catch(() => []);
-                const remoteUser = sbUsers && sbUsers.length > 0 ? sbUsers[0] : null;
-
-                if (remoteUser) {
-                    const storedHash = remoteUser.password_hash || '';
-                    if (String(remoteUser.bio || '').trim() === SOFT_DELETE_BIO_MARKER || storedHash === SOFT_DELETE_HASH_MARKER) {
-                        return { success: false, error: 'This account has been removed.' };
-                    }
-                    if (Object.prototype.hasOwnProperty.call(remoteUser, 'email_verified_at') && !remoteUser.email_verified_at) {
-                        return { success: false, error: 'Verify your email address first, or use Forgot password to prove account ownership.' };
-                    }
-                    let passValid = false;
-                    if (storedHash && storedHash.includes('$')) {
-                        passValid = await verifyPBKDF2(password, storedHash);
-                    }
-                    if (!passValid && storedHash && password === storedHash) {
-                        passValid = true;
-                    }
-                    // Only check offline/fallback passwords if remoteUser has no stored password_hash
-                    if (!storedHash) {
-                        const locallyUpdated = localStorage.getItem('urbanscope_admin_password_updated') || '';
-                        const activePass = localStorage.getItem('adminPassword') || '';
-                        const effectiveAdminPass = locallyUpdated || activePass;
-                        if (effectiveAdminPass) {
-                            passValid = (password === effectiveAdminPass);
-                        } else if (cleanEmail === 'urbanscope.cvsu@gmail.com' && (password === 'urbanscope2026' || password === 'urbanscope')) {
-                            passValid = true;
-                        } else if (cleanEmail === 'miriamalobren@gmail.com' && password === '111112') {
-                            passValid = true;
-                        } else if (cleanEmail === 'admin.realestate@gmail.com' && password === 'realestate2026') {
-                            passValid = true;
-                        }
-                    }
-
-                    if (!passValid) {
-                        return { success: false, error: 'Incorrect email or password.' };
-                    }
-
-                    const role = normalizeAccountRole(remoteUser.role, cleanEmail);
-                    const sessionUser = {
-                        id: remoteUser.id,
-                        email: remoteUser.email,
-                        name: remoteUser.full_name || cleanEmail.split('@')[0],
-                        full_name: remoteUser.full_name || cleanEmail.split('@')[0],
-                        phone: remoteUser.phone || '',
-                        role: role,
-                        avatar_url: remoteUser.avatar_url || 'assets/images/agent.jpg',
-                        license_number: remoteUser.license_number || '',
-                        user_metadata: {
-                            full_name: remoteUser.full_name,
-                            phone: remoteUser.phone,
-                            avatar_url: remoteUser.avatar_url
-                        }
-                    };
-
-                    const simulatedToken = 'sb_session_' + sessionUser.id + '_' + Date.now();
-                    localStorage.setItem(TOKEN_KEY, simulatedToken);
-                    localStorage.setItem(USER_KEY, JSON.stringify(sessionUser));
-                    localStorage.setItem(DEMO_KEY, JSON.stringify(sessionUser));
-                    if (sessionUser.role === 'admin' || sessionUser.role === 'superadmin') {
-                        localStorage.setItem('adminUser', JSON.stringify(sessionUser));
-                        if (isLocalBackendReachableHost()) {
-                            localStorage.setItem('adminPassword', password);
-                            localStorage.setItem('urbanscope_admin_password_updated', password);
-                        }
-                    }
-
-                    const redirectUrl = (role === 'superadmin') 
-                        ? '/pages/superadmin/dashboard.html' 
-                        : (role === 'admin' ? '/pages/admin/dashboard.html' : '/index.html');
-
-                    return {
-                        success: true,
-                        data: { user: sessionUser, token: simulatedToken, redirect_url: redirectUrl }
-                    };
-                }
-            } catch (cloudErr) {
-                console.warn('Supabase sign-in lookup notice:', cloudErr);
-            }
-
-            // 3. Fallback for offline or static demo sessions
-            let role = 'user';
-            const locallyUpdated = localStorage.getItem('urbanscope_admin_password_updated') || '';
-            const activePass = localStorage.getItem('adminPassword') || '';
-            const effectiveAdminPass = locallyUpdated || activePass;
-
-            const savedProfile = JSON.parse(localStorage.getItem('urbanscope_admin_profile') || '{}');
-            const leadAdminEmail = (savedProfile.email || 'miriamalobren@gmail.com').toLowerCase();
-
-            if (cleanEmail === 'urbanscope.cvsu@gmail.com') {
-                const isValid = effectiveAdminPass
-                    ? (password === effectiveAdminPass)
-                    : (password === 'urbanscope2026' || password === 'urbanscope');
-                if (!isValid) return { success: false, error: 'Incorrect admin password.' };
-                role = 'superadmin';
-            } else if (cleanEmail === 'miriamalobren@gmail.com' || cleanEmail === leadAdminEmail) {
-                const isValid = effectiveAdminPass
-                    ? (password === effectiveAdminPass)
-                    : (password === '111112');
-                if (!isValid) return { success: false, error: 'Incorrect admin password.' };
-                role = 'admin';
-            } else if (cleanEmail === 'admin.realestate@gmail.com') {
-                const isValid = effectiveAdminPass
-                    ? (password === effectiveAdminPass)
-                    : (password === 'realestate2026');
-                if (!isValid) return { success: false, error: 'Incorrect admin password.' };
-                role = 'admin';
-            } else {
-                return { success: false, error: 'Invalid email or password.' };
-            }
-
-            const name = cleanEmail.split('@')[0].replace(/[._-]+/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
-            const sessionUser = {
-                id: (role === 'superadmin' ? 1 : (role === 'admin' ? 2 : 10)),
-                email: cleanEmail,
-                name: name,
-                full_name: name,
-                phone: '',
-                role: role,
-                user_metadata: { full_name: name }
-            };
-
-            const simulatedToken = 'sb_session_' + sessionUser.id + '_' + Date.now();
-            localStorage.setItem(TOKEN_KEY, simulatedToken);
-            localStorage.setItem(USER_KEY, JSON.stringify(sessionUser));
-            localStorage.setItem(DEMO_KEY, JSON.stringify(sessionUser));
-            if (sessionUser.role === 'admin' || sessionUser.role === 'superadmin') {
-                localStorage.setItem('adminUser', JSON.stringify(sessionUser));
-            }
-
-            const redirectUrl = (role === 'superadmin') 
-                ? '/pages/superadmin/dashboard.html' 
-                : (role === 'admin' ? '/pages/admin/dashboard.html' : '/index.html');
-
-            return {
-                success: true,
-                data: { user: sessionUser, token: simulatedToken, redirect_url: redirectUrl }
-            };
-        } catch (err) {
-            return { success: false, error: err.message };
-        }
-    }
-
-    async function apiGetGoogleConfig() {
-        if (isLocalDevHost()) {
-            const localBase = (location.port === '8000') ? '/api' : 'http://127.0.0.1:8000/api';
-            try {
-                const res = await fetch(`${localBase}/auth/google/config`, { method: 'GET' });
-                if (res.ok) {
-                    const cfg = await res.json();
-                    const cid = (cfg.client_id || '').trim();
-                    if (cid && !cid.toLowerCase().startsWith('your_google_client_id')) {
-                        return { enabled: true, client_id: cid };
-                    }
-                }
-            } catch (e) {}
-        }
-
-        const fallbackCid = (window.URBANSCOPE_GOOGLE_CLIENT_ID || GOOGLE_CLIENT_ID || '').trim();
-        if (fallbackCid && !fallbackCid.toLowerCase().startsWith('your_google_client_id')) {
-            return { enabled: true, client_id: fallbackCid };
-        }
-        return { enabled: false, client_id: '' };
-    }
-
-    async function syncGoogleUserToSupabase(userObj) {
-        if (!userObj || !userObj.email) return null;
-        try {
-            const cleanEmail = userObj.email.trim().toLowerCase();
-            if (cleanEmail.startsWith('deleted_') || getDeletedUserEmails().includes(cleanEmail)) {
-                return null;
-            }
-            const checkRes = await fetch(
-                `${REST_BASE}/users?email=ilike.${encodeURIComponent(cleanEmail)}&select=id,google_id,avatar_url,role,bio,password_hash`,
-                { method: 'GET', headers: getHeaders() }
-            );
-            if (!checkRes.ok) return null;
-            const rows = await checkRes.json().catch(() => []);
-            const existing = Array.isArray(rows) && rows.length > 0 ? rows[0] : null;
-
-            if (existing && isUserRecordDeleted(existing)) {
-                return null;
-            }
-
-            if (existing && existing.id) {
-                const patchBody = {};
-                if (userObj.google_id && !existing.google_id) {
-                    patchBody.google_id = userObj.google_id;
-                }
-                const isRegular = existing.role === 'user' || existing.role === 'client';
-                if (userObj.avatar_url && (!existing.avatar_url || (isRegular && existing.avatar_url === 'assets/images/agent.jpg'))) {
-                    patchBody.avatar_url = userObj.avatar_url;
-                }
-                if (Object.keys(patchBody).length > 0) {
-                    await fetch(`${REST_BASE}/users?id=eq.${encodeURIComponent(existing.id)}`, {
-                        method: 'PATCH',
-                        headers: getHeaders(),
-                        body: JSON.stringify(patchBody)
-                    }).catch(() => {});
-                }
-                return existing;
-            } else {
-                const supaRole = userObj.role === 'superadmin'
-                    ? 'superadmin'
-                    : (userObj.role === 'admin' ? 'admin' : 'user');
-                const insertRes = await fetch(`${REST_BASE}/users`, {
-                    method: 'POST',
-                    headers: getHeaders({ Prefer: 'return=representation' }),
-                    body: JSON.stringify({
-                        email: cleanEmail,
-                        full_name: userObj.full_name || userObj.name || cleanEmail.split('@')[0],
-                        phone: userObj.phone || '',
-                        role: supaRole,
-                        avatar_url: userObj.avatar_url || 'assets/images/agent.jpg',
-                        google_id: userObj.google_id || null
-                    })
-                });
-                if (insertRes.ok) {
-                    const created = await insertRes.json().catch(() => []);
-                    return Array.isArray(created) ? created[0] : created;
-                }
-            }
-        } catch (err) {
-            console.warn('Supabase Google user sync notice:', err.message);
-        }
-        return null;
-    }
-
-    async function apiSignInWithGoogle(googlePayload = {}) {
-        try {
-            const localBase = (location.port === '8000') ? '/api' : 'http://127.0.0.1:8000/api';
-            const body = {
-                credential: googlePayload.credential || null,
-                access_token: googlePayload.access_token || null
-            };
-
-            // 1. Authoritative server-side verification & session creation via FastAPI (local dev only)
-            if (isLocalDevHost()) {
-                try {
-                    const res = await fetch(`${localBase}/auth/google`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(body)
-                    });
-
-                    if (res.ok) {
-                        const authRes = await res.json();
-                        if (authRes.requires_verification) {
-                            return {
-                                success: true,
-                                requires_verification: true,
-                                email: authRes.email,
-                                full_name: authRes.full_name,
-                                avatar_url: authRes.avatar_url,
-                                google_id: authRes.google_id,
-                                message: authRes.message
-                            };
-                        }
-                        if (authRes.success && authRes.user) {
-                            const u = authRes.user;
-                            const sessionUser = {
-                                id: u.id,
-                                email: u.email,
-                                name: u.full_name,
-                                full_name: u.full_name,
-                                phone: u.phone || '',
-                                role: u.role || 'user',
-                                avatar_url: u.avatar_url || '',
-                                google_id: u.google_id || null,
-                                user_metadata: {
-                                    full_name: u.full_name,
-                                    phone: u.phone || '',
-                                    avatar_url: u.avatar_url || ''
-                                }
-                            };
-
-                            localStorage.setItem(TOKEN_KEY, authRes.token);
-                            localStorage.setItem(USER_KEY, JSON.stringify(sessionUser));
-                            localStorage.setItem(DEMO_KEY, JSON.stringify(sessionUser));
-                            if (sessionUser.role === 'admin' || sessionUser.role === 'superadmin') {
-                                localStorage.setItem('adminUser', JSON.stringify(sessionUser));
-                            } else {
-                                localStorage.removeItem('adminUser');
-                            }
-
-                            // Sync verified Google profile to Supabase Cloud users table
-                            syncGoogleUserToSupabase(u).catch(() => {});
-
-                            return {
-                                success: true,
-                                data: {
-                                    session: true,
-                                    user: sessionUser,
-                                    token: authRes.token,
-                                    redirect_url: authRes.redirect_url
-                                }
-                            };
-                        }
-                    } else {
-                        const errData = await res.json().catch(() => ({}));
-                        return {
-                            success: false,
-                            error: errData.detail || 'Google authentication failed.'
-                        };
-                    }
-                } catch (networkErr) {
-                    console.warn('Local FastAPI Google auth unreachable, attempting static cloud verification:', networkErr);
-                }
-            }
-
-            // 2. Static deployment fallback (e.g. Vercel without Python server)
-            const cfg = await apiGetGoogleConfig();
-            if (!cfg.enabled || !cfg.client_id) {
-                return {
-                    success: false,
-                    error: 'Google Sign-In is not configured. Add GOOGLE_CLIENT_ID to your .env file.'
-                };
-            }
-
-            let profile = null;
-            if (body.access_token) {
-                const tRes = await fetch(`https://oauth2.googleapis.com/tokeninfo?access_token=${encodeURIComponent(body.access_token)}`);
-                if (!tRes.ok) return { success: false, error: 'Invalid or expired Google access token.' };
-                const tInfo = await tRes.json();
-                if (tInfo.aud !== cfg.client_id && tInfo.azp !== cfg.client_id) {
-                    return { success: false, error: 'Google token client ID mismatch.' };
-                }
-                const uRes = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
-                    headers: { 'Authorization': `Bearer ${body.access_token}` }
-                });
-                if (!uRes.ok) return { success: false, error: 'Unable to fetch Google account profile.' };
-                profile = await uRes.json();
-            } else if (body.credential) {
-                const idRes = await fetch(`https://oauth2.googleapis.com/tokeninfo?id_token=${encodeURIComponent(body.credential)}`);
-                if (!idRes.ok) return { success: false, error: 'Invalid or expired Google ID token.' };
-                profile = await idRes.json();
-                if (profile.aud !== cfg.client_id) {
-                    return { success: false, error: 'Google token client ID mismatch.' };
-                }
-            } else {
-                return { success: false, error: 'Missing Google authentication token.' };
-            }
-
-            const cleanEmail = (profile.email || '').trim().toLowerCase();
-            const isVerified = profile.email_verified === true || String(profile.email_verified).toLowerCase() === 'true';
-            if (!cleanEmail || !isVerified) {
-                return { success: false, error: 'Google account email is not verified.' };
-            }
-
-            const fullName = (profile.name || cleanEmail.split('@')[0]).trim();
-            const avatarUrl = (profile.picture || '').trim();
-            const googleSub = (profile.sub || '').trim();
-
-            // Check if user is registered in Supabase Cloud
-            let existingRecord = null;
-            try {
-                const checkRes = await fetch(
-                    `${REST_BASE}/users?email=ilike.${encodeURIComponent(cleanEmail)}&select=id,email,full_name,phone,role,avatar_url,bio,password_hash,google_id`,
-                    { method: 'GET', headers: getHeaders() }
-                );
-                if (checkRes.ok) {
-                    const rows = await checkRes.json().catch(() => []);
-                    if (Array.isArray(rows) && rows.length > 0) {
-                        existingRecord = rows[0];
-                    }
-                }
-            } catch (_) {}
-
-            const isDeleted = !existingRecord || isUserRecordDeleted(existingRecord) || getDeletedUserEmails().includes(cleanEmail) || String(existingRecord.email || '').startsWith('deleted_');
-
-            // If account is not registered or was deleted, require OTP verification + Terms acceptance
-            if (isDeleted) {
-                return {
-                    success: true,
-                    requires_verification: true,
-                    email: cleanEmail,
-                    full_name: fullName,
-                    avatar_url: avatarUrl,
-                    google_id: googleSub,
-                    message: 'Account not yet registered. Please verify your email and accept Terms.'
-                };
-            }
-
-            let role = existingRecord.role || 'user';
-            if (cleanEmail === 'urbanscope.cvsu@gmail.com') role = 'superadmin';
-            else if (cleanEmail === 'admin.realestate@gmail.com' || cleanEmail === 'miriamalobren@gmail.com' || cleanEmail === 'miriam@gmail.com') role = 'admin';
-
-            const supaRecord = await syncGoogleUserToSupabase({
-                email: cleanEmail,
-                full_name: fullName,
-                phone: existingRecord.phone || '',
-                role: role,
-                avatar_url: avatarUrl,
-                google_id: googleSub
-            });
-
-            const resolvedRole = normalizeAccountRole(supaRecord?.role || role, cleanEmail);
-
-            const sessionUser = {
-                id: (supaRecord && supaRecord.id) ? supaRecord.id : existingRecord.id,
-                email: cleanEmail,
-                name: fullName,
-                full_name: fullName,
-                phone: existingRecord.phone || '',
-                role: resolvedRole,
-                avatar_url: avatarUrl,
-                google_id: googleSub,
-                user_metadata: { full_name: fullName, avatar_url: avatarUrl }
-            };
-
-            const simulatedToken = 'sb_google_' + sessionUser.id + '_' + Date.now();
-            localStorage.setItem(TOKEN_KEY, simulatedToken);
-            localStorage.setItem(USER_KEY, JSON.stringify(sessionUser));
-            localStorage.setItem(DEMO_KEY, JSON.stringify(sessionUser));
-            if (resolvedRole === 'admin' || resolvedRole === 'superadmin') {
-                localStorage.setItem('adminUser', JSON.stringify(sessionUser));
-            } else {
-                localStorage.removeItem('adminUser');
-            }
-
-            const redirectUrl = (resolvedRole === 'superadmin')
-                ? '/pages/superadmin/dashboard.html'
-                : (resolvedRole === 'admin' ? '/pages/admin/dashboard.html' : '/index.html');
-
-            return {
-                success: true,
-                data: { session: true, user: sessionUser, token: simulatedToken, redirect_url: redirectUrl }
             };
         } catch (err) {
             return { success: false, error: err.message || 'Google authentication failed.' };
@@ -4806,12 +3252,11 @@
     }
 
     async function apiVerifyGoogleRegistration(payload = {}) {
-        const localBase = (location.port === '8000') ? '/api' : 'http://127.0.0.1:8000/api';
+        const isLocal = isLocalBackendReachableHost();
         const cleanEmail = (payload.email || '').trim().toLowerCase();
         const cleanCode = (payload.code || '').trim();
         const fullName = (payload.full_name || '').trim() || cleanEmail.split('@')[0];
-        const avatarUrl = (payload.avatar_url || '').trim();
-        const googleId = payload.google_id || null;
+        const avatarUrl = sanitizeImageUrl(payload.avatar_url || '', '');
         const phone = (payload.phone || '').trim();
 
         const body = {
@@ -4822,196 +3267,68 @@
             access_token: payload.access_token || null,
             full_name: fullName,
             avatar_url: avatarUrl,
-            google_id: googleId,
-            phone: phone
+            phone: phone,
+            ...buildBotFields(payload, isLocal)
         };
 
-        if (isLocalDevHost()) {
-            try {
-                const res = await fetch(`${localBase}/auth/google/verify`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(body)
-                });
-                const authRes = await res.json().catch(() => ({}));
-                if (!res.ok || !authRes.success) {
-                    return {
-                        success: false,
-                        error: authRes.detail || authRes.message || 'Verification failed. Please check your code.'
-                    };
-                }
-                if (authRes.user) {
-                    const u = authRes.user;
-                    clearUserDeletedLocal(u.id, cleanEmail);
-                    purgeInquiriesByEmailLocal(cleanEmail, u.id);
-                    if (cleanEmail) {
-                        try {
-                            fetch(`${REST_BASE}/inquiries?client_email=ilike.${encodeURIComponent(cleanEmail)}`, { method: 'DELETE', headers: getHeaders() }).catch(() => {});
-                        } catch (_) {}
-                    }
-                    const sessionUser = {
-                        id: u.id,
-                        email: u.email,
-                        name: u.full_name,
-                        full_name: u.full_name,
-                        phone: u.phone || '',
-                        role: u.role || 'user',
-                        avatar_url: u.avatar_url || '',
-                        google_id: u.google_id || null,
-                        user_metadata: {
-                            full_name: u.full_name,
-                            phone: u.phone || '',
-                            avatar_url: u.avatar_url || ''
-                        }
-                    };
-                    localStorage.setItem(TOKEN_KEY, authRes.token);
-                    localStorage.setItem(USER_KEY, JSON.stringify(sessionUser));
-                    localStorage.setItem(DEMO_KEY, JSON.stringify(sessionUser));
-                    syncGoogleUserToSupabase(u).catch(() => {});
-                    return {
-                        success: true,
-                        data: {
-                            session: true,
-                            user: sessionUser,
-                            token: authRes.token,
-                            redirect_url: authRes.redirect_url
-                        }
-                    };
-                }
-                return { success: true, data: authRes };
-            } catch (err) {
-                return { success: false, error: err.message || 'Unable to connect to verification service.' };
-            }
-        }
-
-        // Hosted / Vercel static registration verification
         try {
-            let challengeValid = false;
-            try {
-                const raw = sessionStorage.getItem('urbanscope_register_challenge');
-                if (raw) {
-                    const ch = JSON.parse(raw);
-                    if (ch.email === cleanEmail && Date.now() <= ch.expires_at && ch.code === cleanCode) {
-                        challengeValid = true;
-                    }
-                }
-            } catch (_) {}
+            const res = isLocal
+                ? await localApiFetch('/auth/google/verify', { method: 'POST', body: JSON.stringify(body) })
+                : await hostedApiFetch('/api/session', { method: 'POST', body: JSON.stringify({ action: 'google-verify', ...body }) });
 
-            if (!challengeValid) {
-                try {
-                    const chRes = await fetch('/api/auth/challenge', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ action: 'consume', email: cleanEmail, purpose: 'register', code: cleanCode })
-                    });
-                    if (chRes.ok) {
-                        const chData = await chRes.json().catch(() => ({}));
-                        if (chData.success) challengeValid = true;
-                    }
-                } catch (_) {}
-            }
-
-            if (!challengeValid) {
+            const authRes = await res.json().catch(() => ({}));
+            if (!res.ok || authRes.success === false) {
                 return {
                     success: false,
-                    error: 'Invalid or expired verification code. Please check your email or request a new code.'
+                    error: authRes.detail || authRes.error || authRes.message || 'Verification failed. Please check your code.'
                 };
             }
 
-            clearUserDeletedLocal(null, cleanEmail);
-            sessionStorage.removeItem('urbanscope_register_challenge');
-
-            let role = 'user';
-            if (cleanEmail === 'urbanscope.cvsu@gmail.com') role = 'superadmin';
-            else if (['admin.realestate@gmail.com', 'miriamalobren@gmail.com', 'miriam@gmail.com'].includes(cleanEmail)) role = 'admin';
-
-            let createdUser = null;
-            try {
-                createdUser = await syncGoogleUserToSupabase({
-                    email: cleanEmail,
-                    full_name: fullName,
-                    phone: phone,
+            if (authRes.user) {
+                const u = authRes.user;
+                clearUserDeletedLocal(u.id, cleanEmail);
+                purgeInquiriesByEmailLocal(cleanEmail, u.id);
+                const role = normalizeAccountRole(u.role, u.email || cleanEmail);
+                const sessionUser = {
+                    id: u.id,
+                    email: u.email || cleanEmail,
+                    name: u.full_name || fullName,
+                    full_name: u.full_name || fullName,
+                    phone: u.phone || phone,
                     role: role,
-                    avatar_url: avatarUrl || 'assets/images/agent.jpg',
-                    google_id: googleId
-                });
-            } catch (_) {}
-
-            if (!createdUser) {
-                try {
-                    const insertRes = await fetch(`${REST_BASE}/users`, {
-                        method: 'POST',
-                        headers: getHeaders({ Prefer: 'return=representation' }),
-                        body: JSON.stringify({
-                            email: cleanEmail,
-                            full_name: fullName,
-                            phone: phone,
-                            role: role,
-                            avatar_url: avatarUrl || 'assets/images/agent.jpg',
-                            google_id: googleId
-                        })
-                    });
-                    if (insertRes.ok) {
-                        const rows = await insertRes.json().catch(() => []);
-                        createdUser = Array.isArray(rows) && rows.length > 0 ? rows[0] : null;
+                    avatar_url: sanitizeImageUrl(u.avatar_url || avatarUrl, ''),
+                    user_metadata: {
+                        full_name: u.full_name || fullName,
+                        phone: u.phone || phone,
+                        avatar_url: sanitizeImageUrl(u.avatar_url || avatarUrl, '')
                     }
-                } catch (_) {}
+                };
+                if (authRes.token && isLocal) {
+                    localStorage.setItem(TOKEN_KEY, authRes.token);
+                }
+                localStorage.setItem(USER_KEY, JSON.stringify(sessionUser));
+                localStorage.setItem(DEMO_KEY, JSON.stringify(sessionUser));
+                if (role === 'admin' || role === 'superadmin') {
+                    localStorage.setItem('adminUser', JSON.stringify(sessionUser));
+                    if (!isLocal) {
+                        await apiCreateHostedAdminSession({ credential: payload.credential, access_token: payload.access_token }).catch(() => {});
+                    }
+                } else {
+                    localStorage.removeItem('adminUser');
+                }
+                return {
+                    success: true,
+                    data: {
+                        session: true,
+                        user: sessionUser,
+                        token: authRes.token || '',
+                        redirect_url: authRes.redirect_url || (role === 'superadmin' ? '/pages/superadmin/dashboard.html' : (role === 'admin' ? '/pages/admin/dashboard.html' : '/index.html'))
+                    }
+                };
             }
-
-            if (createdUser && createdUser.id) {
-                clearUserDeletedLocal(createdUser.id, cleanEmail);
-            }
-            purgeInquiriesByEmailLocal(cleanEmail, createdUser?.id);
-            if (cleanEmail) {
-                try {
-                    fetch(`${REST_BASE}/inquiries?client_email=ilike.${encodeURIComponent(cleanEmail)}`, { method: 'DELETE', headers: getHeaders() }).catch(() => {});
-                    fetch(`${REST_BASE}/users?email=ilike.deleted_*_${encodeURIComponent(cleanEmail)}&select=id`, { headers: getHeaders() })
-                        .then(r => r.json())
-                        .then(oldRows => {
-                            if (Array.isArray(oldRows)) {
-                                oldRows.forEach(oldU => {
-                                    if (oldU && oldU.id) {
-                                        fetch(`${REST_BASE}/notifications?user_id=eq.${encodeURIComponent(oldU.id)}`, { method: 'DELETE', headers: getHeaders() }).catch(() => {});
-                                        fetch(`${REST_BASE}/inquiries?client_id=eq.${encodeURIComponent(oldU.id)}`, { method: 'DELETE', headers: getHeaders() }).catch(() => {});
-                                    }
-                                });
-                            }
-                        }).catch(() => {});
-                } catch (_) {}
-            }
-
-            const sessionUser = {
-                id: createdUser?.id || Date.now(),
-                email: cleanEmail,
-                name: fullName,
-                full_name: fullName,
-                phone: phone,
-                role: role,
-                avatar_url: avatarUrl || 'assets/images/agent.jpg',
-                google_id: googleId,
-                user_metadata: { full_name: fullName, avatar_url: avatarUrl }
-            };
-
-            const simulatedToken = 'sb_google_' + sessionUser.id + '_' + Date.now();
-            localStorage.setItem(TOKEN_KEY, simulatedToken);
-            localStorage.setItem(USER_KEY, JSON.stringify(sessionUser));
-            localStorage.setItem(DEMO_KEY, JSON.stringify(sessionUser));
-            if (role === 'admin' || role === 'superadmin') {
-                localStorage.setItem('adminUser', JSON.stringify(sessionUser));
-            } else {
-                localStorage.removeItem('adminUser');
-            }
-
-            const redirectUrl = (role === 'superadmin')
-                ? '/pages/superadmin/dashboard.html'
-                : (role === 'admin' ? '/pages/admin/dashboard.html' : '/index.html');
-
-            return {
-                success: true,
-                data: { session: true, user: sessionUser, token: simulatedToken, redirect_url: redirectUrl }
-            };
+            return { success: true, data: authRes };
         } catch (err) {
-            return { success: false, error: err.message || 'Registration verification failed.' };
+            return { success: false, error: err.message || 'Unable to connect to verification service.' };
         }
     }
 
@@ -5026,72 +3343,34 @@
             return { success: false, error: 'Please enter a valid 6-digit verification code.' };
         }
 
-        const localBase = (location.port === '8000') ? '/api' : 'http://127.0.0.1:8000/api';
-
-        if (isLocalDevHost()) {
-            try {
-                const res = await fetch(`${localBase}/auth/register/check-code`, {
+        try {
+            const res = isLocalBackendReachableHost()
+                ? await localApiFetch('/auth/register/check-code', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email: cleanEmail, code: cleanCode, purpose: 'register' })
+                })
+                : await hostedApiFetch('/api/auth/register/check', {
+                    method: 'POST',
                     body: JSON.stringify({ email: cleanEmail, code: cleanCode, purpose: 'register' })
                 });
-                const data = await res.json().catch(() => ({}));
-                if (!res.ok || !data.success) {
-                    return {
-                        success: false,
-                        error: data.detail || data.error || data.message || 'The verification code is incorrect or has expired. Please check your email or request a new code.'
-                    };
-                }
-                return { success: true, message: 'Verification code is valid.' };
-            } catch (err) {
-                return { success: false, error: err.message || 'Unable to connect to verification service.' };
+            const data = await res.json().catch(() => ({}));
+            if (!res.ok || !data.success) {
+                return {
+                    success: false,
+                    error: data.detail || data.error || data.message || 'The verification code is incorrect or has expired. Please check your email or request a new code.'
+                };
             }
+            return { success: true, message: 'Verification code is valid.' };
+        } catch (err) {
+            return { success: false, error: err.message || 'Unable to connect to verification service.' };
         }
-
-        // Hosted / Vercel client verification
-        try {
-            const raw = sessionStorage.getItem('urbanscope_register_challenge');
-            if (raw) {
-                const ch = JSON.parse(raw);
-                if (ch.email === cleanEmail) {
-                    if (Date.now() > ch.expires_at) {
-                        return { success: false, error: 'Verification code has expired. Please request a new code.' };
-                    }
-                    if (ch.code !== cleanCode) {
-                        return { success: false, error: 'The verification code is incorrect. Please check your email.' };
-                    }
-                    return { success: true, message: 'Verification code is valid.' };
-                }
-            }
-        } catch (_) {}
-
-        // Fallback: server check endpoint on hosted environment
-        try {
-            const res = await fetch('/api/auth/register/check', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email: cleanEmail, code: cleanCode })
-            });
-            if (res.ok) {
-                const data = await res.json().catch(() => ({}));
-                if (data.success) return { success: true, message: 'Verification code is valid.' };
-                return { success: false, error: data.error || 'The verification code is incorrect or has expired.' };
-            }
-        } catch (_) {}
-
-        return {
-            success: false,
-            error: 'The verification code is incorrect or has expired. Please check your email or request a new code.'
-        };
     }
 
     async function apiCreateHostedAdminSession(credentials = {}) {
-        if (isLocalDevHost()) return { success: true, local: true };
+        if (isLocalBackendReachableHost()) return { success: true, local: true };
         try {
-            const response = await fetch('/api/auth/edge-session', {
+            const response = await hostedApiFetch('/api/auth/edge-session', {
                 method: 'POST',
-                credentials: 'same-origin',
-                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(credentials)
             });
             const result = await response.json().catch(() => ({}));
@@ -5121,7 +3400,7 @@
     }
 
     async function apiGetHostedAdminSession() {
-        if (isLocalDevHost()) return null;
+        if (isLocalBackendReachableHost()) return null;
         try {
             const response = await fetch('/api/auth/edge-session', {
                 method: 'GET',
@@ -5137,53 +3416,94 @@
     }
 
     async function apiSignOut() {
-        if (isLocalDevHost()) {
+        if (isLocalBackendReachableHost()) {
             try {
-                const localBase = (location.port === '8000') ? '/api' : 'http://127.0.0.1:8000/api';
-                await fetch(`${localBase}/auth/logout`, { method: 'POST' }).catch(() => {});
+                await localApiFetch('/auth/logout', { method: 'POST' }).catch(() => {});
             } catch (e) {}
         } else {
-            await fetch('/api/auth/edge-session', {
-                method: 'DELETE',
-                credentials: 'same-origin'
-            }).catch(() => {});
+            await Promise.all([
+                hostedApiFetch('/api/session', { method: 'POST', body: JSON.stringify({ action: 'logout' }) }).catch(() => {}),
+                hostedApiFetch('/api/auth/edge-session', { method: 'DELETE' }).catch(() => {})
+            ]);
         }
-        localStorage.removeItem(TOKEN_KEY);
-        localStorage.removeItem(USER_KEY);
-        localStorage.removeItem(DEMO_KEY);
-        localStorage.removeItem('adminUser');
+        clearClientAuthStorage();
     }
 
     async function apiGetCurrentUser() {
         try {
-            const token = localStorage.getItem(TOKEN_KEY);
-            if (token && isLocalDevHost()) {
+            if (isLocalBackendReachableHost()) {
                 try {
-                    const localBase = (location.port === '8000') ? '/api' : 'http://127.0.0.1:8000/api';
-                    const res = await fetch(`${localBase}/auth/me`, {
-                        method: 'GET',
-                        headers: { 'Authorization': 'Bearer ' + token }
-                    });
+                    const res = await localApiFetch('/auth/me', { method: 'GET' }, 5000);
                     if (res.ok) {
                         const u = await res.json();
-                        return {
+                        const userObj = {
                             id: u.id,
                             email: u.email,
                             name: u.full_name,
                             full_name: u.full_name,
                             phone: u.phone || '',
-                            role: u.role || 'user',
-                            avatar_url: u.avatar_url || '',
-                            google_id: u.google_id || null,
+                            role: normalizeAccountRole(u.role, u.email),
+                            avatar_url: sanitizeImageUrl(u.avatar_url || '', ''),
                             user_metadata: {
                                 full_name: u.full_name,
                                 phone: u.phone || '',
-                                avatar_url: u.avatar_url || ''
+                                avatar_url: sanitizeImageUrl(u.avatar_url || '', '')
                             }
                         };
+                        localStorage.setItem(USER_KEY, JSON.stringify(userObj));
+                        localStorage.setItem(DEMO_KEY, JSON.stringify(userObj));
+                        return userObj;
+                    }
+                    if (res.status === 401 || res.status === 403) {
+                        clearClientAuthStorage();
+                        return null;
+                    }
+                } catch (e) {}
+            } else if (typeof location === 'undefined' || location.protocol !== 'file:') {
+                try {
+                    const res = await hostedApiFetch('/api/session?action=me', { method: 'GET', cache: 'no-store' }, 5000);
+                    if (res.ok) {
+                        const body = await res.json().catch(() => ({}));
+                        if (body && body.authenticated && body.user) {
+                            const u = body.user;
+                            const userObj = {
+                                id: u.id,
+                                email: u.email,
+                                name: u.full_name || u.name,
+                                full_name: u.full_name || u.name,
+                                phone: u.phone || '',
+                                role: normalizeAccountRole(u.role, u.email),
+                                avatar_url: sanitizeImageUrl(u.avatar_url || '', ''),
+                                user_metadata: {
+                                    full_name: u.full_name || u.name,
+                                    phone: u.phone || '',
+                                    avatar_url: sanitizeImageUrl(u.avatar_url || '', '')
+                                }
+                            };
+                            localStorage.setItem(USER_KEY, JSON.stringify(userObj));
+                            localStorage.setItem(DEMO_KEY, JSON.stringify(userObj));
+                            return userObj;
+                        }
+                    }
+                    if (res.status === 401 || res.status === 403) {
+                        const adminSess = await apiGetHostedAdminSession();
+                        if (adminSess && adminSess.email) {
+                            return {
+                                id: adminSess.id || null,
+                                email: adminSess.email,
+                                name: adminSess.name || adminSess.full_name || adminSess.email,
+                                full_name: adminSess.full_name || adminSess.name || adminSess.email,
+                                role: normalizeAccountRole(adminSess.role, adminSess.email),
+                                avatar_url: sanitizeImageUrl(adminSess.avatar_url || '', ''),
+                                user_metadata: { full_name: adminSess.full_name || adminSess.name || '' }
+                            };
+                        }
+                        clearClientAuthStorage();
+                        return null;
                     }
                 } catch (e) {}
             }
+
             const cached = JSON.parse(localStorage.getItem(USER_KEY)) || JSON.parse(localStorage.getItem(DEMO_KEY));
             return cached || null;
         } catch (e) {
@@ -5195,43 +3515,52 @@
     // 5. DASHBOARD & APPOINTMENTS SERVICES
     // ----------------------------------------------------------
     async function apiGetDashboardKPIs() {
-        try {
-            const res = await fetch(`${REST_BASE}/view_dashboard_kpis?select=*`, {
-                method: 'GET',
-                headers: getHeaders()
-            });
-            if (res.ok) {
-                const data = await res.json();
-                return data && data.length > 0 ? data[0] : null;
-            }
-        } catch (e) {
-            console.warn('Dashboard KPIs view query error:', e);
-        }
-
         if (isLocalBackendReachableHost()) {
             try {
-                const localBase = getLocalApiBase();
-                const localRes = await fetch(`${localBase}/view_dashboard_kpis`, {
-                    method: 'GET',
-                    headers: getLocalAuthHeaders()
-                });
+                const localRes = await localApiFetch('/view_dashboard_kpis', { method: 'GET' });
                 if (localRes.ok) {
                     const localData = await localRes.json();
-                    return localData && localData.length > 0 ? localData[0] : null;
+                    return Array.isArray(localData) ? localData[0] : localData;
                 }
-            } catch (_) {}
+            } catch (e) {}
         }
 
-        return null;
+        try {
+            const [props, inquiries] = await Promise.all([
+                apiGetProperties({ type: 'all' }).catch(() => []),
+                apiGetInquiries().catch(() => [])
+            ]);
+            const pList = Array.isArray(props) ? props : [];
+            const iList = Array.isArray(inquiries) ? inquiries : [];
+            return {
+                total_properties: pList.length,
+                available_properties: pList.filter(p => String(p.status || 'Available').toLowerCase() === 'available').length,
+                total_inquiries: iList.length,
+                pending_inquiries: iList.filter(i => {
+                    const s = String(i.status || 'Under Review').toLowerCase();
+                    return s.includes('review') || s.includes('pending');
+                }).length
+            };
+        } catch (e) {
+            return null;
+        }
     }
 
     async function apiGetAppointments() {
         try {
-            const res = await fetch(`${REST_BASE}/appointments?select=*&order=appointment_date.asc`, {
-                method: 'GET',
-                headers: getHeaders()
-            });
-            if (res.ok) return await res.json();
+            if (isLocalBackendReachableHost()) {
+                const res = await localApiFetch('/appointments', { method: 'GET' });
+                if (res.ok) return await res.json();
+                const inqs = await apiGetInquiries().catch(() => []);
+                return Array.isArray(inqs)
+                    ? inqs.filter(i => ['approved', 'scheduled'].includes(String(i.status || '').toLowerCase().trim()))
+                    : [];
+            }
+            const res = await hostedApiFetch('/api/inquiries?action=appointments', { method: 'GET' });
+            if (res.ok) {
+                const body = await res.json().catch(() => []);
+                return Array.isArray(body) ? body : (Array.isArray(body?.appointments) ? body.appointments : []);
+            }
         } catch (e) {
             console.warn('Appointments query error:', e);
         }
@@ -5244,6 +3573,10 @@
     window.SUPABASE_URL = SUPABASE_URL;
     window.SUPABASE_ANON_KEY = SUPABASE_ANON_KEY;
     window.supabaseClient = supabaseClient;
+    window.escapeHtml = escapeHtml;
+    window.sanitizeImageUrl = sanitizeImageUrl;
+    window.ensureCsrfToken = ensureCsrfToken;
+    window.clearClientAuthStorage = clearClientAuthStorage;
 
     window.apiGetProperties = apiGetProperties;
     window.apiGetPropertyById = apiGetPropertyById;
@@ -5273,7 +3606,7 @@
         }
 
         toast.className = 'urban-feedback-toast';
-        toast.innerHTML = `${iconHtml} <span>${msg}</span>`;
+        toast.innerHTML = `${iconHtml} <span>${escapeHtml(msg)}</span>`;
 
         requestAnimationFrame(() => {
             toast.classList.add('show');

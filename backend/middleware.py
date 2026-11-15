@@ -95,7 +95,7 @@ FORBIDDEN_HTML = """<!DOCTYPE html>
     <div class="error-box">
         <span class="badge">403 FORBIDDEN</span>
         <h1>Access Restricted</h1>
-        <p>Your account does not have administrator privileges to view this portal. Access is strictly limited to authorized administrators (<code>miriamalobren@gmail.com</code>, <code>admin.realestate@gmail.com</code>, and <code>urbanscope.cvsu@gmail.com</code>).</p>
+        <p>Your account does not have administrator privileges to view this portal.</p>
         <a href="/" class="btn-home">Return to Home Page</a>
     </div>
 </body>
@@ -198,7 +198,7 @@ FORBIDDEN_SUPERADMIN_HTML = """<!DOCTYPE html>
     <div class="error-box">
         <span class="badge">403 SUPERADMIN CLEARANCE REQUIRED</span>
         <h1>Executive Access Restricted</h1>
-        <p>Access to the UrbanScope Superadmin Console is strictly restricted to the primary superadministrator (<code>urbanscope.cvsu@gmail.com</code>). Regular administrator and client accounts are forbidden from accessing this console.</p>
+        <p>Access to the UrbanScope Superadmin Console is restricted to authorized superadministrators.</p>
         <div class="btn-group">
             <a href="/pages/admin/dashboard.html" class="btn-admin">Go to Admin Portal</a>
         </div>
@@ -212,36 +212,34 @@ FORBIDDEN_SUPERADMIN_HTML = """<!DOCTYPE html>
 # ==========================================================
 
 def extract_token_from_request(request: Request) -> Optional[str]:
-    """Extracts JWT bearer token from Authorization header, access_token cookie, or query param."""
+    """Extracts JWT bearer token from Authorization header or access_token cookie (never URL query)."""
     auth_header = request.headers.get("authorization")
     if auth_header and auth_header.lower().startswith("bearer "):
         return auth_header.split(" ", 1)[1].strip()
     if "access_token" in request.cookies:
         return request.cookies.get("access_token")
-    if "token" in request.query_params:
-        return request.query_params.get("token")
     return None
 
 
 def get_authenticated_user_role(token: str) -> Optional[tuple[str, str]]:
-    """Returns (email, role) if token is valid and user exists in database, else None."""
+    """Returns live DB (email, role) if token is valid and user exists/active, else None."""
     payload = decode_access_token(token)
     if not payload:
         return None
     user_id = payload.get("sub") or payload.get("id")
-    user_role = payload.get("role")
-    user_email = (payload.get("email") or "").lower().strip()
-    if user_role and user_email:
-        return user_email, user_role
+    if not user_id:
+        return None
 
     conn = get_db_connection()
     cursor = conn.cursor()
-    cursor.execute("SELECT email, role FROM users WHERE id = ?", (user_id,))
+    cursor.execute("SELECT email, role, bio, password_hash FROM users WHERE id = ?", (user_id,))
     row = cursor.fetchone()
     conn.close()
-    if row:
-        return row["email"].lower().strip(), row["role"]
-    return None
+    if not row:
+        return None
+    if row["bio"] == "__URBANSCOPE_DELETED__" or row["password_hash"] == "__DELETED_ACCOUNT__":
+        return None
+    return row["email"].lower().strip(), row["role"]
 
 
 # ==========================================================

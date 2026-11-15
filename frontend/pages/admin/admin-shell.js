@@ -336,7 +336,7 @@
                             avatarClass: 'cancel',
                             avatarIcon: '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>',
                             title: `Inquiry ${code} cancelled by ${clientName}`,
-                            subtitle: `${propTitle} &bull; ${evTimeAgo}`,
+                            subtitle: `${propTitle} • ${evTimeAgo}`,
                             time: evTime,
                             inquiryId: id
                         });
@@ -350,7 +350,7 @@
                             avatarClass: 'user',
                             avatarIcon: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>',
                             title: `New inquiry submitted by ${clientName}`,
-                            subtitle: `${code} &bull; ${formatTimeAgo(createdDate)}`,
+                            subtitle: `${code} • ${formatTimeAgo(createdDate)}`,
                             time: new Date(createdDate).getTime(),
                             inquiryId: id
                         });
@@ -372,7 +372,7 @@
                     avatarClass: ev.avatarClass || 'cancel',
                     avatarIcon: ev.avatarIcon || '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>',
                     title: ev.title || `Inquiry ${code} cancelled by ${ev.client_name || 'Client'}`,
-                    subtitle: `${propTitle} &bull; ${timeAgo}`,
+                    subtitle: `${propTitle} • ${timeAgo}`,
                     time: evTime,
                     inquiryId: ev.inquiryId
                 });
@@ -398,19 +398,29 @@
                     </div>
                 `;
             }
-            const targetUrl = getInquiryPageUrl();
+            const targetUrl = escShellHtml(getInquiryPageUrl());
             return items.slice(0, 6).map(item => `
                 <a href="${targetUrl}" class="notif-item" role="menuitem">
-                    <div class="notif-avatar ${item.avatarClass}">
+                    <div class="notif-avatar ${escShellHtml(item.avatarClass)}">
                         ${item.avatarIcon}
                     </div>
                     <div class="notif-text">
-                        <strong>${item.title}</strong>
-                        <small>${item.subtitle}</small>
+                        <strong>${escShellHtml(item.title)}</strong>
+                        <small>${escShellHtml(item.subtitle)}</small>
                     </div>
                 </a>
             `).join('');
         }
+
+    function escShellHtml(val) {
+        if (typeof window.escapeHtml === "function") return window.escapeHtml(val);
+        return String(val == null ? "" : val)
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#39;");
+    }
 
     function playAdminNotificationChime() {
         try {
@@ -456,8 +466,8 @@
             <div style="display:flex;align-items:flex-start;gap:12px;">
                 <div style="margin-top:2px;flex-shrink:0;">${iconSvg}</div>
                 <div style="flex:1;min-width:0;">
-                    <div style="font-weight:800;font-size:13.5px;color:#ffffff;line-height:1.3;">${title}</div>
-                    ${subtitle ? `<div style="font-size:12px;color:rgba(255,255,255,0.85);margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${subtitle}</div>` : ''}
+                    <div style="font-weight:800;font-size:13.5px;color:#ffffff;line-height:1.3;">${escShellHtml(title)}</div>
+                    ${subtitle ? `<div style="font-size:12px;color:rgba(255,255,255,0.85);margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escShellHtml(subtitle)}</div>` : ''}
                 </div>
                 <button type="button" class="admin-toast-close" style="background:none;border:none;color:rgba(255,255,255,0.6);font-size:18px;cursor:pointer;padding:0 0 0 8px;line-height:1;">&times;</button>
             </div>

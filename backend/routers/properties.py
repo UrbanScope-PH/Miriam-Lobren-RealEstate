@@ -131,6 +131,24 @@ def create_property(payload: PropertyCreate, admin_user: dict = Depends(require_
     return new_prop
 
 
+_ALLOWED_PROPERTY_COLUMNS = {
+    "title",
+    "location",
+    "property_type",
+    "price",
+    "bedrooms",
+    "bathrooms",
+    "lot_area",
+    "floor_area",
+    "carports",
+    "storeys",
+    "status",
+    "image_url",
+    "description",
+    "amenities",
+}
+
+
 @router.put("/api/properties/{property_id}", response_model=PropertyResponse, tags=["Properties"])
 def update_property(property_id: int, payload: PropertyUpdate, admin_user: dict = Depends(require_admin)):
     """Updates an existing property listing (strictly admin only)."""
@@ -148,6 +166,8 @@ def update_property(property_id: int, payload: PropertyUpdate, admin_user: dict 
     data = payload.model_dump(exclude_unset=True)
 
     for field, val in data.items():
+        if field not in _ALLOWED_PROPERTY_COLUMNS:
+            continue
         updates.append(f"{field} = ?")
         params.append(val)
 

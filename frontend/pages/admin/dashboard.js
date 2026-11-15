@@ -661,7 +661,7 @@ function renderInquiryRows(inquiries) {
                     <button
                         class="action-view-btn"
                         type="button"
-                        data-raw-id="${inquiry.id}"
+                        data-raw-id="${escapeHTML(inquiry.id)}"
                         data-inquiry-id="${inquiryId}"
                         data-client-name="${clientName}"
                         data-property-title="${propertyTitle}"
@@ -704,7 +704,7 @@ function renderInquiryRows(inquiries) {
                     <button
                         class="action-view-btn"
                         type="button"
-                        data-raw-id="${inquiry.id}"
+                        data-raw-id="${escapeHTML(inquiry.id)}"
                         data-inquiry-id="${inquiryId}"
                         data-client-name="${clientName}"
                         data-property-title="${propertyTitle}"
@@ -1204,6 +1204,18 @@ async function _loadDashboardDataInner(options = {}) {
     }
 }
 
+function sanitizeAdminPropImg(rawUrl, fallback = '../../assets/images/property1.jpg') {
+    const raw = String(rawUrl || '').trim();
+    if (!raw) return fallback;
+    if (/^https?:\/\//i.test(raw)) return raw;
+    if (/^data:image\/(png|jpeg|jpg|webp|gif);base64,[A-Za-z0-9+/=]+$/i.test(raw)) return raw;
+    const cleaned = raw.replace(/^(\.\.\/)+/, '').replace(/^\/+/, '');
+    if (cleaned.startsWith('assets/images/') && !cleaned.includes('..')) {
+        return '../../' + cleaned;
+    }
+    return fallback;
+}
+
 function renderDashboardProperties(list) {
     const tbody = document.getElementById("dashboardPropertyTableBody");
     if (!tbody) return;
@@ -1222,44 +1234,49 @@ function renderDashboardProperties(list) {
         const isSold = rawStatus.toLowerCase() === 'sold' || rawStatus.toLowerCase() === 'sold out';
         const displayStatus = isSold ? 'Sold' : 'Available';
 
-        const imgSrc = p.image_url ? 
-            (p.image_url.startsWith('http') || p.image_url.startsWith('data:') ? p.image_url : '../../' + p.image_url.replace(/^(\.\.\/)+/, '')) : 
-            '../../assets/images/property1.jpg';
+        const safeTitle = escapeHTML(title);
+        const safeLoc = escapeHTML(loc);
+        const safeType = escapeHTML(type);
+        const safePrice = escapeHTML(price);
+        const safeStatus = escapeHTML(displayStatus);
+        const safeId = escapeHTML(String(p.id ?? ''));
+        const safeEncodedId = escapeHTML(encodeURIComponent(String(p.id ?? '')));
+        const imgSrc = sanitizeAdminPropImg(p.image_url, '../../assets/images/property1.jpg');
 
         return `
         <tr class="${isSold ? 'row-sold' : ''}">
             <td>
                 <div style="display:flex; align-items:center; gap:12px;">
-                    <img src="${imgSrc}" alt="${title}" style="width:44px; height:44px; border-radius:6px; object-fit:cover; ${isSold ? 'filter:grayscale(1); opacity:0.8;' : ''}" onerror="this.src='../../assets/images/property1.jpg'">
+                    <img src="${escapeHTML(imgSrc)}" alt="${safeTitle}" style="width:44px; height:44px; border-radius:6px; object-fit:cover; ${isSold ? 'filter:grayscale(1); opacity:0.8;' : ''}" onerror="this.src='../../assets/images/property1.jpg'">
                     <div>
-                        <strong style="${isSold ? 'color:var(--text-muted, #64748b);' : 'color:var(--text-dark, #1b2e21);'} font-size:0.92rem;">${title}</strong><br>
-                        <small style="color:var(--text-muted, #6b7f70);">ID #${p.id}</small>
+                        <strong style="${isSold ? 'color:var(--text-muted, #64748b);' : 'color:var(--text-dark, #1b2e21);'} font-size:0.92rem;">${safeTitle}</strong><br>
+                        <small style="color:var(--text-muted, #6b7f70);">ID #${safeId}</small>
                     </div>
                 </div>
             </td>
-            <td style="color:var(--text-dark, #2d3748); font-size:0.9rem;">${loc}</td>
-            <td><span style="padding:4px 9px; border-radius:4px; background:var(--light-green, #eef5ef); color:var(--dark-green, #1a3b23); font-size:0.8rem; font-weight:600;">${type}</span></td>
-            <td style="font-weight:700; color:var(--text-dark, #1b2e21);">${price}</td>
+            <td style="color:var(--text-dark, #2d3748); font-size:0.9rem;">${safeLoc}</td>
+            <td><span style="padding:4px 9px; border-radius:4px; background:var(--light-green, #eef5ef); color:var(--dark-green, #1a3b23); font-size:0.8rem; font-weight:600;">${safeType}</span></td>
+            <td style="font-weight:700; color:var(--text-dark, #1b2e21);">${safePrice}</td>
             <td>
                 <span class="status-badge-table ${isSold ? 'status-badge-sold' : 'status-badge-available'}">
                     <span class="status-badge-dot"></span>
-                    ${displayStatus}
+                    ${safeStatus}
                 </span>
             </td>
             <td>
                 <div class="dash-prop-actions">
-                    <a href="../properties/property-detail.html?id=${p.id}" target="_blank" class="prop-action-btn prop-action-view">
+                    <a href="../properties/property-detail.html?id=${safeEncodedId}" target="_blank" rel="noopener noreferrer" class="prop-action-btn prop-action-view">
                         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
                         View
                     </a>
-                    <a href="edit-property.html?id=${p.id}" class="prop-action-btn prop-action-edit">
+                    <a href="edit-property.html?id=${safeEncodedId}" class="prop-action-btn prop-action-edit">
                         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
                         Edit
                     </a>
-                    <button type="button" onclick="togglePropertyStatus(${p.id}, '${displayStatus}')" class="prop-action-btn ${isSold ? 'prop-action-available' : 'prop-action-sold'}">
+                    <button type="button" data-dash-prop-action="toggle" data-prop-id="${safeId}" data-prop-status="${safeStatus}" class="prop-action-btn ${isSold ? 'prop-action-available' : 'prop-action-sold'}">
                         ${isSold ? 'Mark Available' : 'Mark Sold'}
                     </button>
-                    <button type="button" onclick="deletePropertyListing(${p.id}, '${title.replace(/'/g, "\\'")}')" class="prop-action-btn prop-action-delete">
+                    <button type="button" data-dash-prop-action="delete" data-prop-id="${safeId}" data-prop-title="${safeTitle}" class="prop-action-btn prop-action-delete">
                         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
                         Delete
                     </button>
@@ -1268,6 +1285,21 @@ function renderDashboardProperties(list) {
         </tr>
         `;
     }).join('');
+
+    if (!tbody.dataset.dashPropBound) {
+        tbody.dataset.dashPropBound = '1';
+        tbody.addEventListener('click', (event) => {
+            const btn = event.target.closest('button[data-dash-prop-action]');
+            if (!btn) return;
+            const action = btn.getAttribute('data-dash-prop-action');
+            const id = btn.getAttribute('data-prop-id');
+            if (action === 'toggle' && typeof window.togglePropertyStatus === 'function') {
+                window.togglePropertyStatus(id, btn.getAttribute('data-prop-status') || '');
+            } else if (action === 'delete' && typeof window.deletePropertyListing === 'function') {
+                window.deletePropertyListing(id, btn.getAttribute('data-prop-title') || '');
+            }
+        });
+    }
 }
 
 window.togglePropertyStatus = async function(id, currentStatus) {
