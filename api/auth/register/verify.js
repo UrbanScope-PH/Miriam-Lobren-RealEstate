@@ -64,9 +64,10 @@ export default async function handler(req, res) {
         if (existing && existing.bio !== '__URBANSCOPE_DELETED__' && existing.password_hash !== '__DELETED_ACCOUNT__') {
             return jsonResponse({ success: false, error: 'That code is invalid or expired. Request a new code and try again.' }, 400, res);
         }
-        const consumed = await consumeOtp(email, 'register', code);
+        const otpCtx = { req, cookies: [] };
+        const consumed = await consumeOtp(email, 'register', code, otpCtx);
         if (!consumed) {
-            return jsonResponse({ success: false, error: 'That code is invalid or expired. Request a new code and try again.' }, 400, res);
+            return jsonWithCookies({ success: false, error: 'That code is invalid or expired. Request a new code and try again.' }, 400, res, { cookies: otpCtx.cookies });
         }
 
         const user = await insertCloudUser({
@@ -88,7 +89,7 @@ export default async function handler(req, res) {
         return jsonWithCookies({
             success: true,
             user: cleanUser
-        }, 200, res, { cookies });
+        }, 200, res, { cookies: [...cookies, ...otpCtx.cookies] });
     } catch (error) {
         console.error('Verified registration could not be completed:', error?.message || 'unknown error');
         return jsonResponse({

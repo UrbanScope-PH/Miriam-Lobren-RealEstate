@@ -13,6 +13,7 @@ import {
     checkRateLimit,
     getClientIp,
     isStrictSameOrigin,
+    jsonWithCookies,
     verifyBotDefense
 } from '../../../lib/server-security.js';
 
@@ -59,12 +60,13 @@ export default async function handler(req, res) {
             return jsonResponse({ success: true, code: 'OTP_SENT', message: GENERIC_REGISTER_MSG }, 200, res);
         }
 
-        await issueOtp(email, 'register', ip);
-        return jsonResponse({
+        const otpCtx = { req, cookies: [] };
+        await issueOtp(email, 'register', ip, otpCtx);
+        return jsonWithCookies({
             success: true,
             code: 'OTP_SENT',
             message: GENERIC_REGISTER_MSG
-        }, 200, res);
+        }, 200, res, { cookies: otpCtx.cookies });
     } catch (error) {
         console.error('Registration email dispatch error:', error?.message || 'unknown error');
         return jsonResponse({

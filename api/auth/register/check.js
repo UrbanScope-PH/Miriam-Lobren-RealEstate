@@ -10,7 +10,8 @@ import {
 import {
     checkRateLimit,
     getClientIp,
-    isStrictSameOrigin
+    isStrictSameOrigin,
+    jsonWithCookies
 } from '../../../lib/server-security.js';
 
 export default async function handler(req, res) {
@@ -38,14 +39,15 @@ export default async function handler(req, res) {
     }
 
     try {
-        const valid = await checkOtp(email, purpose, code);
+        const otpCtx = { req, cookies: [] };
+        const valid = await checkOtp(email, purpose, code, otpCtx);
         if (!valid) {
-            return jsonResponse({
+            return jsonWithCookies({
                 success: false,
                 error: 'The verification code is incorrect or has expired. Please check your email or request a new code.'
-            }, 400, res);
+            }, 400, res, { cookies: otpCtx.cookies });
         }
-        return jsonResponse({ success: true, message: 'Verification code is valid.' }, 200, res);
+        return jsonWithCookies({ success: true, message: 'Verification code is valid.' }, 200, res, { cookies: otpCtx.cookies });
     } catch (error) {
         console.error('OTP check error:', error?.message || 'unknown error');
         return jsonResponse({
