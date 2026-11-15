@@ -18,7 +18,7 @@ from backend.auth import (
     require_admin,
     require_user,
 )
-from backend.auth_otp import send_email_message
+from backend.auth_otp import send_email_message, wrap_email_html_document
 from backend.database import get_db_connection, row_to_dict
 from backend.models import InquiryCreate, InquiryResponse
 from backend.security import check_rate_limit, get_client_ip, verify_bot_defense
@@ -37,20 +37,25 @@ def _dispatch_approval_email_async(to_email: str, code: str, prop_title: str, cl
     safe_name = client_name or "Client"
     safe_prop = prop_title or "General Inquiry"
     subject = f"Inquiry {code} Approved - Miriam Lobren / UrbanScope"
-    text_body = (
-        f"Hi {safe_name},\n\n"
-        f"Good news! Your inquiry ({code}) for \"{safe_prop}\" has been approved by Miriam Lobren.\n"
-        "Sign in to your UrbanScope Inquiry History to view the updated status and schedule details.\n"
+    text_body = "\n".join([
+        f"Hi {safe_name},",
+        "",
+        f'Good news! Your inquiry ({code}) for "{safe_prop}" has been approved by Miriam Lobren.',
+        "View details anytime in your UrbanScope Inquiry History: https://miriamlobren.site/pages/inquiry/history.html",
+        "",
+        "UrbanScope | Miriam Lobren Real Estate",
+        "Las Pinas City & Cavite, Philippines | https://miriamlobren.site",
+    ])
+    body_html = (
+        '<h1 style="margin:0 0 12px;font-size:20px;line-height:1.3;color:#1e5c33;">Inquiry Approved</h1>'
+        f'<p style="margin:0 0 12px;">Hi {html.escape(safe_name)},</p>'
+        f'<p style="margin:0 0 16px;">Good news! Your inquiry (<strong>{html.escape(code)}</strong>) for '
+        f'<strong>{html.escape(safe_prop)}</strong> has been approved by Miriam Lobren.</p>'
+        '<p style="margin:0 0 8px;"><a href="https://miriamlobren.site/pages/inquiry/history.html" '
+        'style="display:inline-block;padding:10px 18px;background-color:#1e5c33;color:#ffffff;text-decoration:none;border-radius:6px;font-weight:700;">'
+        "View Inquiry History</a></p>"
     )
-    html_body = (
-        "<div style=\"font-family:Arial,sans-serif;max-width:560px;margin:auto;color:#20352a\">"
-        "<h2 style=\"color:#1e5c33\">UrbanScope &mdash; Inquiry Approved</h2>"
-        f"<p>Hi {html.escape(safe_name)},</p>"
-        f"<p>Good news! Your inquiry (<strong>{html.escape(code)}</strong>) for "
-        f"<strong>{html.escape(safe_prop)}</strong> has been approved by Miriam Lobren.</p>"
-        "<p>Our team will coordinate next steps with you shortly.</p>"
-        "</div>"
-    )
+    html_body = wrap_email_html_document(subject, body_html)
 
     def _runner() -> None:
         try:

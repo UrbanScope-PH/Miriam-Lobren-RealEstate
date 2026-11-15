@@ -1,5 +1,5 @@
 import { isAuthorizedAdminRole, readAdminSession } from '../lib/admin-session.js';
-import { parseJsonBody, sendEmailWithFallback } from '../lib/email-auth.js';
+import { parseJsonBody, sendEmailWithFallback, wrapEmailHtmlDocument } from '../lib/email-auth.js';
 import {
     checkRateLimit,
     escapePostgrestFilterValue,
@@ -125,11 +125,28 @@ async function sendApprovalEmailBestEffort({ email, code, propertyTitle, clientN
     if (!email) return;
     const safeName = String(clientName || 'Client').trim() || 'Client';
     const safeProp = String(propertyTitle || 'General Inquiry').trim() || 'General Inquiry';
+    const subject = `Inquiry ${code} Approved - Miriam Lobren / UrbanScope`;
+    const text = [
+        `Hi ${safeName},`,
+        '',
+        `Good news! Your inquiry (${code}) for "${safeProp}" has been approved by Miriam Lobren.`,
+        'View details anytime in your UrbanScope Inquiry History: https://miriamlobren.site/pages/inquiry/history.html',
+        '',
+        'UrbanScope | Miriam Lobren Real Estate',
+        'Las Pinas City & Cavite, Philippines | https://miriamlobren.site'
+    ].join('\n');
+    const html = wrapEmailHtmlDocument(
+        subject,
+        `<h1 style="margin:0 0 12px;font-size:20px;line-height:1.3;color:#1e5c33;">Inquiry Approved</h1>`
+        + `<p style="margin:0 0 12px;">Hi ${escapeHtmlText(safeName)},</p>`
+        + `<p style="margin:0 0 16px;">Good news! Your inquiry (<strong>${escapeHtmlText(code)}</strong>) for <strong>${escapeHtmlText(safeProp)}</strong> has been approved by Miriam Lobren.</p>`
+        + '<p style="margin:0 0 8px;"><a href="https://miriamlobren.site/pages/inquiry/history.html" style="display:inline-block;padding:10px 18px;background-color:#1e5c33;color:#ffffff;text-decoration:none;border-radius:6px;font-weight:700;">View Inquiry History</a></p>'
+    );
     const sendPromise = sendEmailWithFallback({
         to: email,
-        subject: `Inquiry ${code} Approved - Miriam Lobren / UrbanScope`,
-        text: `Hi ${safeName},\n\nGood news! Your inquiry (${code}) for "${safeProp}" has been approved by Miriam Lobren.\nView details anytime in your UrbanScope Inquiry History: https://miriamlobren.site/pages/inquiry/history.html\n`,
-        html: `<div style="font-family:Arial,sans-serif;max-width:560px;margin:auto;color:#20352a"><h2 style="color:#1e5c33">UrbanScope &mdash; Inquiry Approved</h2><p>Hi ${escapeHtmlText(safeName)},</p><p>Good news! Your inquiry (<strong>${escapeHtmlText(code)}</strong>) for <strong>${escapeHtmlText(safeProp)}</strong> has been approved by Miriam Lobren.</p><p><a href="https://miriamlobren.site/pages/inquiry/history.html" style="display:inline-block;padding:10px 18px;background:#1e5c33;color:#fff;text-decoration:none;border-radius:6px;font-weight:700">View Inquiry History</a></p></div>`
+        subject,
+        text,
+        html
     }).catch(() => null);
     let timerId;
     const timeoutPromise = new Promise((resolve) => {
