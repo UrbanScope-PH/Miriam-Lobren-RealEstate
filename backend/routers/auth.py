@@ -14,7 +14,7 @@ from datetime import datetime, timezone
 from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
-from fastapi.responses import RedirectResponse
+from fastapi.responses import JSONResponse, RedirectResponse
 
 from backend.auth import (
     AUTHORIZED_ADMIN_EMAILS,
@@ -74,7 +74,6 @@ router = APIRouter()
 SUPABASE_URL = "https://vfspjuqymfbagesjxjmc.supabase.co"
 SUPABASE_ANON_KEY = "sb_publishable_96sfQ4F18ypajf6bitBRqg_JtWTL4__"
 OTP_GENERIC_REGISTER_MESSAGE = "If registration can proceed, a verification code has been sent to that email address."
-OTP_GENERIC_RESET_MESSAGE = "If an account can be recovered with that email, a verification code has been sent."
 
 
 def _supabase_service_role_key() -> str:
@@ -612,7 +611,7 @@ def complete_email_registration(payload: EmailOtpRegistrationComplete, request: 
 
 @router.post("/api/auth/password/reset/request", tags=["Auth"])
 def request_password_reset(payload: PasswordResetRequest, request: Request):
-    """Send a password-recovery code using the same response for known and unknown emails."""
+    """Send a password-recovery code only for active registered accounts with a password."""
     if not _request_origin_allowed(request):
         raise HTTPException(status_code=403, detail="This request is not allowed.")
     clean_email = payload.email.strip().lower()
@@ -638,15 +637,37 @@ def request_password_reset(payload: PasswordResetRequest, request: Request):
     finally:
         conn.close()
     cloud_user = _cloud_user_by_email(clean_email)
-    has_password = bool((local_user and local_user["password_hash"]) or (cloud_user and cloud_user.get("password_hash")))
     deleted = bool(
         (local_user and (local_user["bio"] == "__URBANSCOPE_DELETED__" or local_user["password_hash"] == "__DELETED_ACCOUNT__"))
         or (cloud_user and (cloud_user.get("bio") == "__URBANSCOPE_DELETED__" or cloud_user.get("password_hash") == "__DELETED_ACCOUNT__"))
     )
-    cloud_only_reset_needs_service_key = bool(cloud_user and not local_user and not _supabase_service_role_key())
-    if has_password and not deleted and not cloud_only_reset_needs_service_key:
-        _issue_otp_for_local_request(clean_email, "password_reset", request)
-    return {"success": True, "message": OTP_GENERIC_RESET_MESSAGE}
+    if (not local_user and not cloud_user) or deleted:
+        msg = "This email is not registered yet. Please register first."
+        return JSONResponse(
+            status_code=404,
+            content={"success": False, "code": "EMAIL_NOT_REGISTERED", "detail": msg, "error": msg},
+        )
+
+    has_password = bool((local_user and local_user["password_hash"]) or (cloud_user and cloud_user.get("password_hash")))
+    if not has_password:
+        msg = "This account uses Google Sign-In and does not have a password. Please log in with Google instead."
+        return JSONResponse(
+            status_code=400,
+            content={"success": False, "code": "GOOGLE_ACCOUNT_NO_PASSWORD", "detail": msg, "error": msg},
+        )
+
+    if cloud_user and not local_user and not _supabase_service_role_key():
+        raise HTTPException(
+            status_code=503,
+            detail="Unable to deliver recovery email right now. Please try again shortly.",
+        )
+
+    _issue_otp_for_local_request(clean_email, "password_reset", request)
+    return {
+        "success": True,
+        "code": "OTP_SENT",
+        "message": f"A six-digit verification code has been sent to {clean_email}.",
+    }
 
 
 @router.post("/api/auth/password/reset/confirm", tags=["Auth"])

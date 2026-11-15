@@ -16,25 +16,26 @@
     let verifiedCode = '';
     let resendTimer = null;
 
-    function showStatus(message, type) {
+    function showStatus(message, type, actionLink = null) {
         if (!statusBox) return;
-        statusBox.textContent = message || '';
+        statusBox.textContent = '';
         statusBox.hidden = !message;
         statusBox.classList.remove('auth-notice-success', 'auth-notice-error', 'is-error', 'is-success');
         if (type === 'error') {
             statusBox.classList.add('is-error');
-            statusBox.style.background = '#fce8e6';
-            statusBox.style.borderColor = '#ea4335';
-            statusBox.style.color = '#c5221f';
         } else if (type === 'success') {
             statusBox.classList.add('is-success', 'auth-notice-success');
-            statusBox.style.background = '#e6f4ea';
-            statusBox.style.borderColor = '#34a853';
-            statusBox.style.color = '#137333';
-        } else {
-            statusBox.style.background = '';
-            statusBox.style.borderColor = '';
-            statusBox.style.color = '';
+        }
+        if (message) {
+            statusBox.appendChild(document.createTextNode(message));
+            if (actionLink && actionLink.href && actionLink.label) {
+                const linkEl = document.createElement('a');
+                linkEl.className = 'reset-notice-link';
+                linkEl.href = actionLink.href;
+                linkEl.textContent = actionLink.label;
+                statusBox.appendChild(document.createTextNode(' '));
+                statusBox.appendChild(linkEl);
+            }
         }
     }
 
@@ -97,7 +98,16 @@
                 }
             } else {
                 if (window.UrbanBotGuard) window.UrbanBotGuard.reset('resetTurnstile');
-                showStatus((result && result.error) || 'Unable to find an account with that email. Please check and try again.', 'error');
+                const errMsg = (result && result.error) || 'Unable to find an account with that email. Please check and try again.';
+                const errCode = String(result?.code || '');
+                let actionLink = null;
+                if (errCode === 'EMAIL_NOT_REGISTERED' || /not registered/i.test(errMsg)) {
+                    actionLink = { label: 'Create an account', href: 'register.html' };
+                } else if (errCode === 'GOOGLE_ACCOUNT_NO_PASSWORD') {
+                    actionLink = { label: 'Go to Log In', href: 'login.html' };
+                }
+                showStatus(errMsg, 'error', actionLink);
+                emailInput?.focus();
             }
 
             if (button) { button.disabled = false; button.textContent = originalLabel; }
@@ -163,6 +173,7 @@
             } else {
                 resendButton.disabled = false;
                 if (resendStatus) resendStatus.textContent = 'Failed to resend. Please try again.';
+                if (result && result.error) showStatus(result.error, 'error');
             }
         });
     }

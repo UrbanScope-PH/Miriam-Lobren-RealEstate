@@ -3088,12 +3088,16 @@
         }
         const serverRes = await apiRequestPasswordReset(cleanEmail, botData);
         if (!serverRes || serverRes.success === false) {
-            return { success: false, error: serverRes?.error || 'Unable to send recovery email.' };
+            return {
+                success: false,
+                code: serverRes?.code || '',
+                error: serverRes?.error || 'Unable to send recovery email.'
+            };
         }
         try { sessionStorage.removeItem('urbanscope_reset_challenge'); } catch (_) {}
         return {
             success: true,
-            message: serverRes.message || `If an account exists for ${cleanEmail}, a six-digit verification code has been sent.`
+            message: serverRes.message || `A six-digit verification code has been sent to ${cleanEmail}.`
         };
     }
 
