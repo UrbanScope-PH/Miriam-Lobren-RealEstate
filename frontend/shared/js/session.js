@@ -397,20 +397,21 @@
         if (!currentUser || !currentUser.email) return Promise.resolve();
         var opts = options || {};
         var forceRefresh = Boolean(opts.force);
+        var prefetchedInquiries = Array.isArray(opts.prefetchedInquiries) ? opts.prefetchedInquiries : null;
         var now = Date.now();
-        if (!forceRefresh && (now - lastClientNotifAt) < 8000) {
+        if (!forceRefresh && (now - lastClientNotifAt) < 1500) {
             return clientNotifPromise || Promise.resolve();
         }
         if (!forceRefresh && clientNotifPromise) return clientNotifPromise;
         lastClientNotifAt = now;
-        var p = _loadClientNotificationsInner(forceRefresh).finally(function () {
+        var p = _loadClientNotificationsInner(forceRefresh, prefetchedInquiries).finally(function () {
             if (clientNotifPromise === p) clientNotifPromise = null;
         });
         clientNotifPromise = p;
         return p;
     }
 
-    async function _loadClientNotificationsInner(forceRefresh) {
+    async function _loadClientNotificationsInner(forceRefresh, prefetchedInquiries) {
         if (!currentUser || !currentUser.email) return;
         var cleanEmail = String(currentUser.email).toLowerCase().trim();
         if (!cleanEmail) return;
@@ -418,7 +419,10 @@
         try {
             var list = [];
             if (typeof window.apiGetClientNotifications === 'function') {
-                list = await window.apiGetClientNotifications(cleanEmail, Boolean(forceRefresh));
+                var arg2 = prefetchedInquiries
+                    ? { forceRefresh: Boolean(forceRefresh), prefetchedInquiries: prefetchedInquiries }
+                    : Boolean(forceRefresh);
+                list = await window.apiGetClientNotifications(cleanEmail, arg2);
             }
             if (!Array.isArray(list)) list = [];
             cachedClientNotifs = list;
@@ -1008,6 +1012,9 @@
             initMobileNav(optimisticClientUser);
             root.classList.remove('auth-pending');
             optimisticRendered = true;
+            if (optimisticClientUser.email && typeof window.apiGetClientNotifications === 'function') {
+                Promise.resolve(window.apiGetClientNotifications(String(optimisticClientUser.email).toLowerCase().trim(), true)).catch(function () { });
+            }
         }
 
         currentUser = await getUser();
@@ -1146,10 +1153,10 @@
             syncGlobalFooterContact({ skipFetch: true, profileOverride: overrideProfile });
         }
         if (e.key === 'inquiries' ||
-            e.key === 'urbanscope_client_notifs' ||
+            e.key === 'urbanscope_client_notifications' ||
             e.key === 'urbanscope_inquiry_overrides' ||
             (e.key && e.key.indexOf('client_notifs_read_ids_') === 0)) {
-            loadClientNotifications();
+            loadClientNotifications({ force: true });
         }
     });
 
@@ -1173,15 +1180,27 @@
         loadClientNotifications({ force: true });
     });
 
+    if (typeof BroadcastChannel === 'function') {
+        try {
+            var notifBroadcast = new BroadcastChannel('urbanscope_notifications');
+            notifBroadcast.addEventListener('message', function (ev) {
+                var msg = ev && ev.data ? ev.data : {};
+                if (msg.type === 'inquiry-status-changed' || msg.type === 'client-notifications-updated') {
+                    loadClientNotifications({ force: true });
+                }
+            });
+        } catch (e) { }
+    }
+
     window.addEventListener('focus', function () {
         syncGlobalFooterContact({ skipFetch: true });
-        if ((Date.now() - lastClientNotifAt) >= 8000) {
+        if ((Date.now() - lastClientNotifAt) >= 1000) {
             loadClientNotifications({ force: true });
         }
     });
 
     document.addEventListener('visibilitychange', function () {
-        if (!document.hidden && (Date.now() - lastClientNotifAt) >= 8000) {
+        if (!document.hidden && (Date.now() - lastClientNotifAt) >= 1000) {
             loadClientNotifications({ force: true });
         }
     });
@@ -1190,7 +1209,7 @@
         if (!document.hidden && currentUser) {
             loadClientNotifications({ force: true });
         }
-    }, 25000);
+    }, 5000);
 
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
     else init();

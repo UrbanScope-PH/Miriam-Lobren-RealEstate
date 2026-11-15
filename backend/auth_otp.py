@@ -185,29 +185,16 @@ def get_valid_from_sender(sender: str) -> str:
     return f"{s} <noreply@miriamlobren.site>"
 
 
-def send_otp_email(email: str, purpose: str, code: str) -> None:
-    """Send an OTP using the Resend API."""
-    is_registration = purpose == "register"
-    subject = "Verify your UrbanScope email" if is_registration else "Your UrbanScope password reset code"
-    action = "verify your email address" if is_registration else "reset your password"
-    text_content = f"Your UrbanScope code to {action} is {code}. It expires in 10 minutes. If you did not request this, ignore this email."
-    html_content = (
-        "<div style=\"font-family:Arial,sans-serif;max-width:520px;margin:auto;color:#20352a\">"
-        "<h2>UrbanScope</h2>"
-        f"<p>Use this code to {action}:</p>"
-        f"<p style=\"font-size:32px;font-weight:700;letter-spacing:8px;color:#245b37\">{code}</p>"
-        "<p>This code expires in 10 minutes and can be used once.</p>"
-        "<p>If you did not request this, you can ignore this email.</p></div>"
-    )
-
+def send_email_message(to_email: str, subject: str, text_content: str, html_content: str) -> None:
+    """Send an email using the Resend API."""
     api_key = os.environ.get("RESEND_API_KEY", "").strip()
     if not api_key:
-        raise RuntimeError("RESEND_API_KEY is required to send authentication email.")
+        raise RuntimeError("RESEND_API_KEY is required to send email.")
 
     sender = get_valid_from_sender(os.environ.get("RESEND_FROM_EMAIL", "") or DEFAULT_RESEND_FROM_EMAIL)
     payload = json.dumps({
         "from": sender,
-        "to": [email],
+        "to": [to_email],
         "subject": subject,
         "text": text_content,
         "html": html_content
@@ -238,4 +225,21 @@ def send_otp_email(email: str, purpose: str, code: str) -> None:
         raise RuntimeError(f"Resend delivery failed ({exc.code}): {err_body}") from exc
     except (urllib.error.URLError, TimeoutError) as exc:
         raise RuntimeError("The email provider could not be reached.") from exc
+
+
+def send_otp_email(email: str, purpose: str, code: str) -> None:
+    """Send an OTP using the Resend API."""
+    is_registration = purpose == "register"
+    subject = "Verify your UrbanScope email" if is_registration else "Your UrbanScope password reset code"
+    action = "verify your email address" if is_registration else "reset your password"
+    text_content = f"Your UrbanScope code to {action} is {code}. It expires in 10 minutes. If you did not request this, ignore this email."
+    html_content = (
+        "<div style=\"font-family:Arial,sans-serif;max-width:520px;margin:auto;color:#20352a\">"
+        "<h2>UrbanScope</h2>"
+        f"<p>Use this code to {action}:</p>"
+        f"<p style=\"font-size:32px;font-weight:700;letter-spacing:8px;color:#245b37\">{code}</p>"
+        "<p>This code expires in 10 minutes and can be used once.</p>"
+        "<p>If you did not request this, you can ignore this email.</p></div>"
+    )
+    send_email_message(email, subject, text_content, html_content)
 

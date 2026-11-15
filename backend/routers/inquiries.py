@@ -3,7 +3,10 @@ UrbanScope - Client & Admin Inquiry Lifecycle Router
 Handles inquiry submission, admin listing, client history, modifications, cancellations, and notifications.
 """
 
+import html
+import os
 import re
+import threading
 from typing import List, Optional
 
 from fastapi import APIRouter, Body, Depends, HTTPException, Query, Request, status
@@ -15,6 +18,7 @@ from backend.auth import (
     require_admin,
     require_user,
 )
+from backend.auth_otp import send_email_message
 from backend.database import get_db_connection, row_to_dict
 from backend.models import InquiryCreate, InquiryResponse
 from backend.security import check_rate_limit, get_client_ip, verify_bot_defense
@@ -22,6 +26,39 @@ from backend.security import check_rate_limit, get_client_ip, verify_bot_defense
 router = APIRouter()
 
 _ALLOWED_ADMIN_STATUSES = {"Under Review", "Pending", "Approved", "Scheduled", "Contacted", "Completed", "Cancelled"}
+
+
+def _dispatch_approval_email_async(to_email: str, code: str, prop_title: str, client_name: str) -> None:
+    """Send a best-effort client approval email via Resend without blocking the HTTP response."""
+    clean_email = (to_email or "").strip()
+    if not clean_email or not os.environ.get("RESEND_API_KEY", "").strip():
+        return
+
+    safe_name = client_name or "Client"
+    safe_prop = prop_title or "General Inquiry"
+    subject = f"Inquiry {code} Approved - Miriam Lobren / UrbanScope"
+    text_body = (
+        f"Hi {safe_name},\n\n"
+        f"Good news! Your inquiry ({code}) for \"{safe_prop}\" has been approved by Miriam Lobren.\n"
+        "Sign in to your UrbanScope Inquiry History to view the updated status and schedule details.\n"
+    )
+    html_body = (
+        "<div style=\"font-family:Arial,sans-serif;max-width:560px;margin:auto;color:#20352a\">"
+        "<h2 style=\"color:#1e5c33\">UrbanScope &mdash; Inquiry Approved</h2>"
+        f"<p>Hi {html.escape(safe_name)},</p>"
+        f"<p>Good news! Your inquiry (<strong>{html.escape(code)}</strong>) for "
+        f"<strong>{html.escape(safe_prop)}</strong> has been approved by Miriam Lobren.</p>"
+        "<p>Our team will coordinate next steps with you shortly.</p>"
+        "</div>"
+    )
+
+    def _runner() -> None:
+        try:
+            send_email_message(clean_email, subject, text_body, html_body)
+        except Exception:
+            pass
+
+    threading.Thread(target=_runner, daemon=True).start()
 
 
 def _is_staff_user(user: dict) -> bool:
@@ -333,6 +370,9 @@ def modify_inquiry(
     conn.commit()
     conn.close()
 
+    if requested_status and requested_status.lower() == "approved" and current_status != "approved":
+        _dispatch_approval_email_async(inq_email, code, prop_title, client_name)
+
     return {"success": True, "data": updated_inq}
 
 
@@ -491,11 +531,24 @@ def _update_notification_flags(payload: Optional[dict], current_user: dict, *, s
     requested_email = str(data.get("email") or "").strip().lower()
     notif_id = data.get("id") or data.get("notif_id")
     inquiry_id = data.get("inquiry_id") or data.get("inquiryId")
+    raw_inquiry_ids = data.get("inquiry_ids") or data.get("inquiryIds")
+    scoped_inquiry_ids = []
+    if isinstance(raw_inquiry_ids, list):
+        for raw_val in raw_inquiry_ids:
+            try:
+                val = int(raw_val)
+            except (TypeError, ValueError):
+                continue
+            if val > 0:
+                scoped_inquiry_ids.append(val)
 
     if requested_role == "admin" and not is_admin:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Admin access required.")
     if requested_email and requested_email != caller_email and not is_admin:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Cannot update notifications for another user.")
+
+    if isinstance(raw_inquiry_ids, list) and not scoped_inquiry_ids:
+        return {"success": True}
 
     target_email = requested_email if (requested_email and is_admin) else caller_email
     set_clause = "is_read = 1, is_seen = 1" if set_read else "is_seen = 1"
@@ -512,6 +565,12 @@ def _update_notification_flags(payload: Optional[dict], current_user: dict, *, s
                 f"UPDATE notifications SET {set_clause} WHERE id = ? AND LOWER(recipient_email) = ?",
                 (notif_id, caller_email),
             )
+    elif scoped_inquiry_ids and target_email:
+        placeholders = ",".join("?" for _ in scoped_inquiry_ids)
+        cursor.execute(
+            f"UPDATE notifications SET {set_clause} WHERE LOWER(recipient_email) = ? AND inquiry_id IN ({placeholders})",
+            (target_email, *scoped_inquiry_ids),
+        )
     elif inquiry_id is not None and target_email:
         cursor.execute(
             f"UPDATE notifications SET {set_clause} WHERE LOWER(recipient_email) = ? AND inquiry_id = ?",

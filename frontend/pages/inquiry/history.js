@@ -106,12 +106,19 @@
             }
         }
 
-        // When viewing inquiry history interactively, mark notifications as read after a short delay
-        // so approval toasts have time to display and background polls do not swallow notifications
-        if (!silent && typeof window.apiMarkNotificationsRead === 'function') {
+        // When viewing inquiry history interactively, mark only currently displayed approved
+        // notifications as read after a short delay so newly approved alerts are never swallowed
+        const displayedApprovedIds = allInquiries
+            .filter(i => {
+                const s = String(i && i.status ? i.status : '').toLowerCase().trim();
+                return s === 'approved' || s === 'scheduled';
+            })
+            .map(i => i.id)
+            .filter(Boolean);
+        if (!silent && displayedApprovedIds.length > 0 && typeof window.apiMarkNotificationsRead === 'function') {
             setTimeout(function () {
                 if (document.visibilityState === 'visible') {
-                    window.apiMarkNotificationsRead({ email });
+                    window.apiMarkNotificationsRead({ email, inquiryIds: displayedApprovedIds });
                 }
             }, 6000);
         }
@@ -130,7 +137,10 @@
         renderInquiries();
 
         if ((!silent || foundNewlyApproved) && typeof window.loadClientNotifications === 'function') {
-            window.loadClientNotifications({ force: Boolean(foundNewlyApproved) });
+            window.loadClientNotifications({
+                force: Boolean(foundNewlyApproved),
+                prefetchedInquiries: allInquiries
+            });
         }
     }
 
@@ -652,23 +662,70 @@ window.addEventListener('inquiriesUpdated', function () {
     loadInquiries(true, true);
 });
 
+let historyPollTimer = null;
+let lastHistoryFocusAt = 0;
+
+function getHistoryPollDelayMs() {
+    const hasPending = Array.isArray(allInquiries) && allInquiries.some(item => isInquiryUnderReview(item && item.status));
+    return hasPending ? 4000 : 10000;
+}
+
+function scheduleHistoryPoll() {
+    if (historyPollTimer) {
+        clearTimeout(historyPollTimer);
+        historyPollTimer = null;
+    }
+    if (document.visibilityState !== 'visible' || !currentUser) return;
+    historyPollTimer = setTimeout(async function () {
+        historyPollTimer = null;
+        if (document.visibilityState === 'visible' && currentUser) {
+            await loadInquiries(true, true);
+            scheduleHistoryPoll();
+        }
+    }, getHistoryPollDelayMs());
+}
+
 document.addEventListener('visibilitychange', function () {
     if (document.visibilityState === 'visible') {
-        loadInquiries(true, true);
+        lastHistoryFocusAt = Date.now();
+        loadInquiries(true, true).finally(scheduleHistoryPoll);
+    } else if (historyPollTimer) {
+        clearTimeout(historyPollTimer);
+        historyPollTimer = null;
     }
 });
 
-// Poll periodically for remote backend/Supabase updates while history page is open
-setInterval(function () {
-    if (document.visibilityState === 'visible' && currentUser) {
-        loadInquiries(true, true);
+window.addEventListener('focus', function () {
+    const now = Date.now();
+    if ((now - lastHistoryFocusAt) >= 1000) {
+        lastHistoryFocusAt = now;
+        loadInquiries(true, true).finally(scheduleHistoryPoll);
     }
-}, 20000);
+});
+
+if (typeof BroadcastChannel === 'function') {
+    try {
+        const bc = new BroadcastChannel('urbanscope_notifications');
+        bc.addEventListener('message', function (ev) {
+            const msg = ev && ev.data ? ev.data : {};
+            if (msg.type === 'inquiry-status-changed' || msg.type === 'client-notifications-updated') {
+                loadInquiries(true, true).finally(scheduleHistoryPoll);
+            }
+        });
+    } catch (_) { }
+}
+
+// Start adaptive periodic polling for remote backend/Supabase updates while history page is open
+document.addEventListener('urbanscope:user', function (e) {
+    if (e && e.detail) scheduleHistoryPoll();
+});
 
 // Start initialization
 if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initHistoryPage);
+    document.addEventListener('DOMContentLoaded', function () {
+        Promise.resolve(initHistoryPage()).finally(scheduleHistoryPoll);
+    });
 } else {
-    initHistoryPage();
+    Promise.resolve(initHistoryPage()).finally(scheduleHistoryPoll);
 }
 }) ();
