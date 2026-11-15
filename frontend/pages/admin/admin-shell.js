@@ -530,15 +530,15 @@
         const forceRefresh = Boolean(prefetchedOrOpts && !isPrefetched && prefetchedOrOpts.force);
         const now = Date.now();
 
-        if (!isPrefetched && !forceRefresh && (now - lastAdminNotifAt) < 15000) {
+        if (!isPrefetched && !forceRefresh && (now - lastAdminNotifAt) < 5000) {
             return adminNotifPromise || Promise.resolve();
         }
-        if (!isPrefetched && adminNotifPromise) {
+        if (!isPrefetched && !forceRefresh && adminNotifPromise) {
             return adminNotifPromise;
         }
 
         lastAdminNotifAt = now;
-        const p = _loadNotificationsInner(isPrefetched ? prefetchedOrOpts : null).finally(() => {
+        const p = _loadNotificationsInner(isPrefetched ? prefetchedOrOpts : null, forceRefresh).finally(() => {
             if (adminNotifPromise === p) adminNotifPromise = null;
         });
         if (!isPrefetched) {
@@ -547,23 +547,9 @@
         return p;
     }
 
-    async function _loadNotificationsInner(prefetchedInquiries = null) {
+    async function _loadNotificationsInner(prefetchedInquiries = null, forceRefresh = false) {
         let inquiries = [];
         let adminEvents = [];
-
-        if (Array.isArray(prefetchedInquiries)) {
-            inquiries = prefetchedInquiries;
-        } else if (typeof window.apiGetInquiries === "function") {
-            try {
-                const res = await window.apiGetInquiries();
-                if (Array.isArray(res)) inquiries = res;
-            } catch (_) {}
-        }
-        if (!inquiries.length) {
-            try {
-                inquiries = JSON.parse(localStorage.getItem("inquiries") || "[]");
-            } catch (_) {}
-        }
 
         // Purge any legacy approved/completed events from local storage cache
         try {
@@ -579,11 +565,29 @@
             }
         } catch (_) {}
 
-        if (typeof window.apiGetAdminNotifications === "function") {
+        const inquiriesPromise = Array.isArray(prefetchedInquiries)
+            ? Promise.resolve(prefetchedInquiries)
+            : (typeof window.apiGetInquiries === "function"
+                ? window.apiGetInquiries(forceRefresh).catch(() => [])
+                : Promise.resolve([]));
+
+        const eventsPromise = (typeof window.apiGetAdminNotifications === "function")
+            ? window.apiGetAdminNotifications(forceRefresh).catch(() => null)
+            : Promise.resolve(null);
+
+        const [resolvedInquiries, resolvedEvents] = await Promise.all([inquiriesPromise, eventsPromise]);
+
+        if (Array.isArray(resolvedInquiries)) {
+            inquiries = resolvedInquiries;
+        }
+        if (!inquiries.length) {
             try {
-                const evs = await window.apiGetAdminNotifications();
-                if (Array.isArray(evs)) adminEvents = evs.filter(ev => ev && ev.type !== 'approved' && ev.type !== 'completed');
+                inquiries = JSON.parse(localStorage.getItem("inquiries") || "[]");
             } catch (_) {}
+        }
+
+        if (Array.isArray(resolvedEvents)) {
+            adminEvents = resolvedEvents.filter(ev => ev && ev.type !== 'approved' && ev.type !== 'completed');
         } else {
             try {
                 adminEvents = JSON.parse(localStorage.getItem("urbanscope_admin_event_notifs") || "[]");
@@ -808,10 +812,10 @@
         };
         loadNotifications();
         setInterval(() => {
-            if (document.visibilityState === "visible") {
-                loadNotifications();
+            if (document.visibilityState === "visible" && (Date.now() - lastAdminNotifAt) >= 18000) {
+                loadNotifications({ force: true });
             }
-        }, 180000);
+        }, 20000);
         window.addEventListener("inquirySubmitted", handleExternalInquiryEvent);
         window.addEventListener("inquiryCancelled", handleExternalInquiryEvent);
         window.addEventListener("inquiryStatusChanged", handleExternalInquiryEvent);
@@ -824,12 +828,12 @@
                 e.key === "urbanscope_inquiry_overrides" ||
                 e.key === "urbanscope_deleted_inquiry_ids"
             ) {
-                loadNotifications();
+                loadNotifications({ force: true });
             }
         });
         document.addEventListener("visibilitychange", () => {
-            if (document.visibilityState === "visible") {
-                loadNotifications();
+            if (document.visibilityState === "visible" && (Date.now() - lastAdminNotifAt) >= 5000) {
+                loadNotifications({ force: true });
             }
         });
     }

@@ -1082,19 +1082,21 @@ async function _loadDashboardDataInner(options = {}) {
     const opts = (typeof options === "boolean") ? { isPoll: options } : (options || {});
     const isPoll = Boolean(opts.isPoll);
     const forceProperties = Boolean(opts.forceProperties);
+    const forceInquiries = Boolean(opts.forceInquiries || isPoll);
     const forceUsers = Boolean(opts.forceUsers);
     try {
         hydrateDashboardKPIs();
 
         const now = Date.now();
         const shouldFetchProps = forceProperties || !cachedDashboardProperties || (now - lastDashboardPropertiesAt) > 120000;
+        const shouldFetchKpis = (typeof isLocalBackendReachableHost === "function" && isLocalBackendReachableHost()) && typeof apiGetDashboardKPIs === "function";
 
         const [inquiriesRes, propertiesRes, kpisRes] = await Promise.allSettled([
-            (typeof apiGetInquiries === "function") ? apiGetInquiries() : Promise.resolve(null),
+            (typeof apiGetInquiries === "function") ? apiGetInquiries(forceInquiries) : Promise.resolve(null),
             shouldFetchProps
                 ? ((typeof apiGetProperties === "function") ? apiGetProperties() : Promise.resolve(null))
                 : Promise.resolve(cachedDashboardProperties),
-            (typeof apiGetDashboardKPIs === "function") ? apiGetDashboardKPIs() : Promise.resolve(null)
+            shouldFetchKpis ? apiGetDashboardKPIs() : Promise.resolve(null)
         ]);
 
         let inquiries = [];
@@ -1440,7 +1442,7 @@ document.addEventListener('visibilitychange', () => {
     if (!document.hidden) {
         syncCalendarToToday();
         loadCalendarAppointments();
-        loadDashboardData();
+        loadDashboardData({ forceInquiries: true });
     }
 });
 
@@ -1448,9 +1450,9 @@ window.addEventListener("focus", () => {
     syncCalendarToToday();
 });
 
-// Periodic live polling so admin dashboard automatically reflects new inquiries without hammering Supabase
+// Periodic live polling so admin dashboard automatically reflects new inquiries quickly on visible tabs
 setInterval(() => {
     if (document.visibilityState === 'visible') {
-        loadDashboardData({ isPoll: true });
+        loadDashboardData({ isPoll: true, forceInquiries: true });
     }
-}, 180000);
+}, 20000);

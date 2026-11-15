@@ -16,6 +16,7 @@
     var root = document.documentElement;
     var requiresAuth = root.hasAttribute('data-require-auth');
     var currentUser = null;
+    var userLookupPromise = null;
     var optimisticClientUser = null;
     var renderedNavIdentityKey = '';
     var resolved = false;
@@ -145,61 +146,67 @@
     // Session lookup
     // ------------------------------------------------------------------
     async function getUser() {
-        try {
-            if (usingSupabase() && typeof apiGetCurrentUser === 'function') {
-                var u = await apiGetCurrentUser();
-                if (!u) return null;
-                var role = String(u.role || '').toLowerCase();
-                var email = String(u.email || '').toLowerCase().trim();
-                var isStaff = (role === 'admin' || role === 'superadmin' || email === 'urbanscope.cvsu@gmail.com' || email === 'miriamalobren@gmail.com' || email === 'admin.realestate@gmail.com');
+        if (userLookupPromise) return userLookupPromise;
+        userLookupPromise = (async function () {
+            try {
+                if (usingSupabase() && typeof apiGetCurrentUser === 'function') {
+                    var u = await apiGetCurrentUser();
+                    if (!u) return null;
+                    var role = String(u.role || '').toLowerCase();
+                    var email = String(u.email || '').toLowerCase().trim();
+                    var isStaff = (role === 'admin' || role === 'superadmin' || email === 'urbanscope.cvsu@gmail.com' || email === 'miriamalobren@gmail.com' || email === 'admin.realestate@gmail.com');
 
-                // Administrators and superadmin must NEVER be signed in as clients on the public website!
-                if (isStaff) {
-                    var inAdmin = location.pathname.includes('/pages/admin/') || location.pathname.includes('/pages/superadmin/');
-                    if (!inAdmin) {
-                        var activeAdminSession = null;
-                        if (typeof apiGetHostedAdminSession === 'function') {
-                            activeAdminSession = await apiGetHostedAdminSession();
+                    // Administrators and superadmin must NEVER be signed in as clients on the public website!
+                    if (isStaff) {
+                        var inAdmin = location.pathname.includes('/pages/admin/') || location.pathname.includes('/pages/superadmin/');
+                        if (!inAdmin) {
+                            var activeAdminSession = null;
+                            if (typeof apiGetHostedAdminSession === 'function') {
+                                activeAdminSession = await apiGetHostedAdminSession();
+                            }
+                            if (activeAdminSession || (typeof isLocalDevHost === 'function' && isLocalDevHost())) {
+                                var isSuper = (role === 'superadmin' || email === 'urbanscope.cvsu@gmail.com');
+                                var target = isSuper ? (getBasePath() + 'pages/superadmin/dashboard.html') : (getBasePath() + 'pages/admin/dashboard.html');
+                                location.replace(target);
+                                return null;
+                            } else {
+                                // Cookie is expired or missing: purge stale admin cache so device acts as clean guest
+                                localStorage.removeItem('adminUser');
+                                localStorage.removeItem('urbanscope_user');
+                                localStorage.removeItem('adminSessionToken');
+                                localStorage.removeItem('urbanscope_admin_profile');
+                                return null;
+                            }
                         }
-                        if (activeAdminSession || (typeof isLocalDevHost === 'function' && isLocalDevHost())) {
-                            var isSuper = (role === 'superadmin' || email === 'urbanscope.cvsu@gmail.com');
-                            var target = isSuper ? (getBasePath() + 'pages/superadmin/dashboard.html') : (getBasePath() + 'pages/admin/dashboard.html');
-                            location.replace(target);
-                            return null;
-                        } else {
-                            // Cookie is expired or missing: purge stale admin cache so device acts as clean guest
-                            localStorage.removeItem('adminUser');
-                            localStorage.removeItem('urbanscope_user');
-                            localStorage.removeItem('adminSessionToken');
-                            localStorage.removeItem('urbanscope_admin_profile');
-                            return null;
-                        }
+                        return null;
                     }
+
+                    var meta = u.user_metadata || {};
+                    return {
+                        name: meta.full_name || u.full_name || u.name || (u.email || 'User').split('@')[0],
+                        email: u.email || '',
+                        phone: meta.phone || u.phone || '',
+                        role: u.role || 'user',
+                        avatar_url: u.avatar_url || meta.avatar_url || ''
+                    };
+                }
+            } catch (err) {
+                console.error('Session lookup failed:', err);
+            }
+            if (typeof location !== 'undefined' && location.protocol === 'file:') {
+                try {
+                    var demo = JSON.parse(localStorage.getItem(DEMO_USER_KEY));
+                    if (demo && (demo.role === 'admin' || demo.role === 'superadmin')) return null;
+                    return demo;
+                } catch (e) {
                     return null;
                 }
-
-                var meta = u.user_metadata || {};
-                return {
-                    name: meta.full_name || u.full_name || u.name || (u.email || 'User').split('@')[0],
-                    email: u.email || '',
-                    phone: meta.phone || u.phone || '',
-                    role: u.role || 'user',
-                    avatar_url: u.avatar_url || meta.avatar_url || ''
-                };
             }
-        } catch (err) {
-            console.error('Session lookup failed:', err);
-        }
-        if (typeof location !== 'undefined' && location.protocol === 'file:') {
-            try {
-                var demo = JSON.parse(localStorage.getItem(DEMO_USER_KEY));
-                if (demo && (demo.role === 'admin' || demo.role === 'superadmin')) return null;
-                return demo;
-            } catch (e) {
-                return null;
-            }
-        }
-        return null;
+            return null;
+        })().finally(function () {
+            userLookupPromise = null;
+        });
+        return userLookupPromise;
     }
 
     function hasCustomClientAvatar(user) {
@@ -244,6 +251,8 @@
     }
 
     async function logout() {
+        currentUser = null;
+        userLookupPromise = null;
         try {
             if (usingSupabase() && typeof apiSignOut === 'function') await apiSignOut();
         } catch (err) { console.error(err); }
@@ -387,19 +396,21 @@
     function loadClientNotifications(options) {
         if (!currentUser || !currentUser.email) return Promise.resolve();
         var opts = options || {};
+        var forceRefresh = Boolean(opts.force);
         var now = Date.now();
-        if (!opts.force && (now - lastClientNotifAt) < 30000) {
+        if (!forceRefresh && (now - lastClientNotifAt) < 8000) {
             return clientNotifPromise || Promise.resolve();
         }
-        if (clientNotifPromise) return clientNotifPromise;
+        if (!forceRefresh && clientNotifPromise) return clientNotifPromise;
         lastClientNotifAt = now;
-        clientNotifPromise = _loadClientNotificationsInner().finally(function () {
-            clientNotifPromise = null;
+        var p = _loadClientNotificationsInner(forceRefresh).finally(function () {
+            if (clientNotifPromise === p) clientNotifPromise = null;
         });
-        return clientNotifPromise;
+        clientNotifPromise = p;
+        return p;
     }
 
-    async function _loadClientNotificationsInner() {
+    async function _loadClientNotificationsInner(forceRefresh) {
         if (!currentUser || !currentUser.email) return;
         var cleanEmail = String(currentUser.email).toLowerCase().trim();
         if (!cleanEmail) return;
@@ -407,7 +418,7 @@
         try {
             var list = [];
             if (typeof window.apiGetClientNotifications === 'function') {
-                list = await window.apiGetClientNotifications(cleanEmail);
+                list = await window.apiGetClientNotifications(cleanEmail, Boolean(forceRefresh));
             }
             if (!Array.isArray(list)) list = [];
             cachedClientNotifs = list;
@@ -1147,37 +1158,39 @@
     });
 
     window.addEventListener('inquiryStatusChanged', function () {
-        loadClientNotifications();
+        loadClientNotifications({ force: true });
     });
 
     window.addEventListener('inquiriesUpdated', function () {
-        loadClientNotifications();
+        loadClientNotifications({ force: true });
     });
 
     window.addEventListener('clientNotificationAdded', function () {
-        loadClientNotifications();
+        loadClientNotifications({ force: true });
     });
 
     window.addEventListener('clientNotificationsUpdated', function () {
-        loadClientNotifications();
+        loadClientNotifications({ force: true });
     });
 
     window.addEventListener('focus', function () {
         syncGlobalFooterContact({ skipFetch: true });
-        loadClientNotifications({ force: false });
+        if ((Date.now() - lastClientNotifAt) >= 8000) {
+            loadClientNotifications({ force: true });
+        }
     });
 
     document.addEventListener('visibilitychange', function () {
-        if (!document.hidden) {
-            loadClientNotifications({ force: false });
+        if (!document.hidden && (Date.now() - lastClientNotifAt) >= 8000) {
+            loadClientNotifications({ force: true });
         }
     });
 
     setInterval(function () {
         if (!document.hidden && currentUser) {
-            loadClientNotifications({ force: false });
+            loadClientNotifications({ force: true });
         }
-    }, 180000);
+    }, 25000);
 
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);
     else init();
