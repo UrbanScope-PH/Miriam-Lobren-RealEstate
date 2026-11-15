@@ -51,21 +51,118 @@ function getActiveSession(req) {
     return readUserSession(req) || readAdminSession(req);
 }
 
-async function fetchUserByEmail(email) {
-    const cleanEmail = normalizeEmail(email);
-    if (!cleanEmail || !getServiceRoleKey()) return null;
-    const res = await fetch(restUrl('users', {
-        email: `eq.${cleanEmail}`,
-        select: 'id,email,password_hash,full_name,phone,role,avatar_url,google_id,license_number,title,brokerage,bio,email_verified_at,created_at,updated_at',
-        limit: '1'
-    }), { headers: serviceHeaders({}, true) });
-    if (!res.ok) return null;
-    const rows = await res.json().catch(() => []);
-    const row = Array.isArray(rows) && rows.length > 0 ? rows[0] : null;
-    if (!row || row.bio === '__URBANSCOPE_DELETED__' || row.password_hash === '__DELETED_ACCOUNT__') {
-        return null;
+function parseMissingColumnFromPostgrestError(errText) {
+    const match = String(errText || '').match(/Could not find the '([A-Za-z0-9_]+)' column/);
+    return match ? match[1] : null;
+}
+
+const PROTECTED_USER_COLUMNS = new Set(['id', 'email', 'password_hash', 'role', 'google_id']);
+
+async function writeUserMutation(url, method, payload, extraHeaders = {}) {
+    const mutablePayload = { ...payload };
+    for (let attempt = 0; attempt < 8; attempt += 1) {
+        if (Object.keys(mutablePayload).length === 0) {
+            return { ok: false, noOp: true, data: null };
+        }
+        let res;
+        try {
+            res = await fetch(url, {
+                method,
+                headers: serviceHeaders(extraHeaders, true),
+                body: JSON.stringify(mutablePayload)
+            });
+        } catch (_) {
+            return { ok: false, noOp: false, data: null };
+        }
+        if (res.ok) {
+            const data = await res.json().catch(() => null);
+            return { ok: true, res, data };
+        }
+        const errText = await res.text().catch(() => '');
+        const missingCol = (res.status === 400 && (errText.includes('PGRST204') || errText.includes('Could not find the')))
+            ? parseMissingColumnFromPostgrestError(errText)
+            : null;
+        if (missingCol && !PROTECTED_USER_COLUMNS.has(missingCol) && Object.prototype.hasOwnProperty.call(mutablePayload, missingCol)) {
+            delete mutablePayload[missingCol];
+            continue;
+        }
+        return { ok: false, res, noOp: false, data: null };
     }
-    return row;
+    return { ok: false, noOp: false, data: null };
+}
+
+function isDeletedUserRow(row) {
+    return !row || row.bio === '__URBANSCOPE_DELETED__' || row.password_hash === '__DELETED_ACCOUNT__';
+}
+
+async function fetchUserByEmailResult(email, preferredId = null) {
+    const cleanEmail = normalizeEmail(email);
+    if (!cleanEmail || !getServiceRoleKey()) {
+        return { row: null, notFound: false, dbError: true };
+    }
+
+    const runQuery = async (query) => {
+        try {
+            const res = await fetch(restUrl('users', query), { headers: serviceHeaders({}, true) });
+            if (!res.ok) return { ok: false, rows: [] };
+            const rows = await res.json().catch(() => []);
+            return { ok: true, rows: Array.isArray(rows) ? rows : [] };
+        } catch (_) {
+            return { ok: false, rows: [] };
+        }
+    };
+
+    const exact = await runQuery({
+        email: `eq.${cleanEmail}`,
+        select: '*',
+        limit: '1'
+    });
+    if (!exact.ok) {
+        return { row: null, notFound: false, dbError: true };
+    }
+    if (exact.rows.length > 0) {
+        const row = exact.rows[0];
+        return isDeletedUserRow(row)
+            ? { row: null, notFound: true, dbError: false }
+            : { row, notFound: false, dbError: false };
+    }
+
+    // Fallback for legacy mixed-case emails in Supabase or ID-matched sessions
+    if (preferredId !== undefined && preferredId !== null && String(preferredId) !== cleanEmail && /^\d+$/.test(String(preferredId))) {
+        const byId = await runQuery({
+            id: `eq.${String(preferredId)}`,
+            select: '*',
+            limit: '1'
+        });
+        if (!byId.ok) {
+            return { row: null, notFound: false, dbError: true };
+        }
+        const idRow = byId.rows[0] || null;
+        if (idRow && normalizeEmail(idRow.email) === cleanEmail) {
+            return isDeletedUserRow(idRow)
+                ? { row: null, notFound: true, dbError: false }
+                : { row: idRow, notFound: false, dbError: false };
+        }
+    }
+
+    const ci = await runQuery({
+        email: `ilike.${escapePostgrestFilterValue(cleanEmail)}`,
+        select: '*',
+        limit: '10'
+    });
+    if (!ci.ok) {
+        return { row: null, notFound: false, dbError: true };
+    }
+    const matched = ci.rows.find((r) => normalizeEmail(r.email) === cleanEmail) || null;
+    if (!matched || isDeletedUserRow(matched)) {
+        return { row: null, notFound: true, dbError: false };
+    }
+    return { row: matched, notFound: false, dbError: false };
+}
+
+async function fetchUserByEmail(email) {
+    const result = await fetchUserByEmailResult(email);
+    return result.row;
 }
 
 async function verifyGoogleCredentials({ credential, access_token }) {
@@ -203,15 +300,18 @@ export default async function handler(req, res) {
                     user: sanitizeUser({ id: session.id, email: session.email, role: session.role, email_verified_at: true })
                 }, 200, res);
             }
-            const userRow = await fetchUserByEmail(session.email).catch(() => null);
-            if (!userRow) {
+            const lookup = await fetchUserByEmailResult(session.email, session.id);
+            if (lookup.dbError) {
+                return jsonWithCookies({ authenticated: false, error: 'Temporarily unable to verify session.' }, 503, res);
+            }
+            if (!lookup.row) {
                 return jsonWithCookies({ authenticated: false, error: 'Session no longer valid.' }, 401, res, {
                     cookies: buildClearSessionCookies(req)
                 });
             }
             return jsonWithCookies({
                 authenticated: true,
-                user: sanitizeUser(userRow)
+                user: sanitizeUser(lookup.row)
             }, 200, res);
         }
 
@@ -267,13 +367,18 @@ export default async function handler(req, res) {
             return jsonWithCookies({ success: false, error: 'Enter a valid email and password.' }, 400, res);
         }
 
-        const userRow = await fetchUserByEmail(cleanEmail);
+        const lookup = await fetchUserByEmailResult(cleanEmail);
+        if (lookup.dbError) {
+            return jsonWithCookies({ success: false, error: 'Unable to verify credentials right now. Please try again.' }, 503, res);
+        }
+        const userRow = lookup.row;
         if (!userRow || !userRow.password_hash || !verifyPBKDF2Password(password, userRow.password_hash)) {
             return jsonWithCookies({ success: false, error: 'Invalid email or password.' }, 401, res);
         }
 
         const normRole = normalizeAccountRole(userRow.role, cleanEmail);
-        if (!userRow.email_verified_at && normRole === 'user') {
+        const hasEmailVerifiedCol = Object.prototype.hasOwnProperty.call(userRow, 'email_verified_at');
+        if (hasEmailVerifiedCol && !userRow.email_verified_at && normRole === 'user') {
             return jsonWithCookies({ success: false, error: 'Verify your email address before logging in.' }, 403, res);
         }
 
@@ -309,7 +414,14 @@ export default async function handler(req, res) {
         }
 
         const rows = await lookupRes.json().catch(() => []);
-        const existing = Array.isArray(rows) ? rows[0] : null;
+        let existing = Array.isArray(rows) ? rows[0] : null;
+        if (!existing) {
+            const emailFallback = await fetchUserByEmailResult(cleanEmail);
+            if (emailFallback.dbError) {
+                return jsonWithCookies({ success: false, error: 'Unable to verify Google account.' }, 502, res);
+            }
+            existing = emailFallback.row;
+        }
         if (existing) {
             if (existing.bio === '__URBANSCOPE_DELETED__' || existing.password_hash === '__DELETED_ACCOUNT__') {
                 return jsonWithCookies({ success: false, error: 'This account has been deactivated.' }, 403, res);
@@ -329,11 +441,7 @@ export default async function handler(req, res) {
                 if (avatarCheck.ok && avatarCheck.value) patch.avatar_url = avatarCheck.value;
             }
 
-            await fetch(restUrl('users', { id: `eq.${existing.id}` }), {
-                method: 'PATCH',
-                headers: serviceHeaders({}, true),
-                body: JSON.stringify(patch)
-            }).catch(() => {});
+            await writeUserMutation(restUrl('users', { id: `eq.${existing.id}` }), 'PATCH', patch);
 
             const merged = { ...existing, ...patch };
             const { cookies, role } = issueCookiesForUser(req, merged);
@@ -393,27 +501,32 @@ export default async function handler(req, res) {
         }
 
         const safeAvatarCheck = sanitizeImageUrl(googleInfo.avatar_url || body.avatar_url, { defaultValue: 'assets/images/agent.jpg' });
-        const existing = await fetchUserByEmail(cleanEmail);
+        const existingLookup = await fetchUserByEmailResult(cleanEmail);
+        if (existingLookup.dbError) {
+            return jsonWithCookies({ success: false, error: 'Unable to complete registration right now.' }, 503, res);
+        }
+        const existing = existingLookup.row;
         let savedUser = existing;
 
         if (existing) {
-            const patchRes = await fetch(restUrl('users', { id: `eq.${existing.id}` }), {
-                method: 'PATCH',
-                headers: serviceHeaders({ Prefer: 'return=representation' }, true),
-                body: JSON.stringify({
+            const patchRes = await writeUserMutation(
+                restUrl('users', { id: `eq.${existing.id}` }),
+                'PATCH',
+                {
                     email_verified_at: new Date().toISOString(),
                     google_id: existing.google_id || googleInfo.google_id,
                     updated_at: new Date().toISOString()
-                })
-            });
-            const patched = await patchRes.json().catch(() => []);
+                },
+                { Prefer: 'return=representation' }
+            );
+            const patched = patchRes.ok ? patchRes.data : [];
             if (Array.isArray(patched) && patched[0]) savedUser = patched[0];
         } else {
             const randomPwdHash = await createPasswordHash(randomBytes(24).toString('hex'));
-            const insertRes = await fetch(restUrl('users'), {
-                method: 'POST',
-                headers: serviceHeaders({ Prefer: 'return=representation' }, true),
-                body: JSON.stringify({
+            const insertRes = await writeUserMutation(
+                restUrl('users'),
+                'POST',
+                {
                     email: cleanEmail,
                     password_hash: randomPwdHash,
                     full_name: googleInfo.full_name || String(body.full_name || cleanEmail.split('@')[0]).trim(),
@@ -423,12 +536,13 @@ export default async function handler(req, res) {
                     google_id: googleInfo.google_id,
                     bio: '',
                     email_verified_at: new Date().toISOString()
-                })
-            });
+                },
+                { Prefer: 'return=representation' }
+            );
             if (!insertRes.ok) {
                 return jsonWithCookies({ success: false, error: 'Unable to complete registration right now.' }, 503, res);
             }
-            const inserted = await insertRes.json().catch(() => []);
+            const inserted = insertRes.data;
             savedUser = Array.isArray(inserted) ? inserted[0] : inserted;
         }
 
@@ -450,7 +564,11 @@ export default async function handler(req, res) {
             return jsonWithCookies({ success: false, error: 'Authentication required.' }, 401, res);
         }
 
-        const currentUser = await fetchUserByEmail(session.email);
+        const currentLookup = await fetchUserByEmailResult(session.email, session.id);
+        if (currentLookup.dbError) {
+            return jsonWithCookies({ success: false, error: 'Unable to update profile right now.' }, 503, res);
+        }
+        const currentUser = currentLookup.row;
         if (!currentUser) {
             return jsonWithCookies({ success: false, error: 'Account not found.' }, 404, res);
         }
@@ -510,15 +628,16 @@ export default async function handler(req, res) {
             }
         }
 
-        const updateRes = await fetch(restUrl('users', { id: `eq.${currentUser.id}` }), {
-            method: 'PATCH',
-            headers: serviceHeaders({ Prefer: 'return=representation' }, true),
-            body: JSON.stringify(patch)
-        });
+        const updateRes = await writeUserMutation(
+            restUrl('users', { id: `eq.${currentUser.id}` }),
+            'PATCH',
+            patch,
+            { Prefer: 'return=representation' }
+        );
         if (!updateRes.ok) {
             return jsonWithCookies({ success: false, error: 'Unable to update profile right now.' }, 503, res);
         }
-        const rows = await updateRes.json().catch(() => []);
+        const rows = updateRes.data;
         const updatedUser = Array.isArray(rows) && rows[0] ? rows[0] : { ...currentUser, ...patch };
         const { cookies } = issueCookiesForUser(req, updatedUser);
         return jsonWithCookies({
