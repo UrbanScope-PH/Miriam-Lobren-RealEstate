@@ -94,20 +94,40 @@ def get_client_ip(request: Optional[Request]) -> str:
     return request.client.host if request.client else "unknown"
 
 
+def _clean_secret_value(raw: str, anon_key: str = "") -> str:
+    val = (raw or "").strip()
+    if (val.startswith('"') and val.endswith('"')) or (val.startswith("'") and val.endswith("'")):
+        val = val[1:-1].strip()
+    if not val or val == anon_key or val.startswith("sb_publishable_"):
+        return ""
+    return val
+
+
 def get_supabase_service_key(anon_key: str = "") -> str:
     """Resolve the Supabase privileged server key across supported env var names, rejecting publishable keys."""
-    for env_name in (
+    preferred = (
         "SUPABASE_SERVICE_ROLE_KEY",
         "SUPABASE_SECRET_KEY",
         "SUPABASE_SERVICE_KEY",
+        "SUPABASE_SERVICE_ROLE",
         "STORAGE_SUPABASE_SERVICE_ROLE_KEY",
-    ):
-        raw = os.environ.get(env_name, "").strip()
-        if (raw.startswith('"') and raw.endswith('"')) or (raw.startswith("'") and raw.endswith("'")):
-            raw = raw[1:-1].strip()
-        if not raw or raw == anon_key or raw.startswith("sb_publishable_"):
-            continue
-        return raw
+        "STORAGE_SUPABASE_SECRET_KEY",
+        "STORAGE_SUPABASE_SERVICE_KEY",
+    )
+    for env_name in preferred:
+        val = _clean_secret_value(os.environ.get(env_name, ""), anon_key)
+        if val:
+            return val
+
+    dynamic_names = sorted(
+        name for name in os.environ
+        if re.fullmatch(r"(?:[A-Z0-9_]+_)?SUPABASE_(?:SERVICE_ROLE_KEY|SECRET_KEY|SERVICE_KEY|SERVICE_ROLE)", name, re.IGNORECASE)
+        and not re.search(r"(?:^|_)(?:PUBLIC|ANON|PUBLISHABLE)(?:_|$)", name, re.IGNORECASE)
+    )
+    for env_name in dynamic_names:
+        val = _clean_secret_value(os.environ.get(env_name, ""), anon_key)
+        if val:
+            return val
     return ""
 
 
