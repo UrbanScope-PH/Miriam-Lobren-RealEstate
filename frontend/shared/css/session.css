@@ -7,6 +7,14 @@ html.auth-pending .user-profile-badge {
     visibility: hidden;
 }
 
+/* Immediately hide guest Log In / Sign Up buttons when a cached session exists to prevent navbar flicker */
+html.logged-in #loginBtn,
+html.logged-in #signupBtn,
+html[data-auth-state="logged-in"] #loginBtn,
+html[data-auth-state="logged-in"] #signupBtn {
+    display: none !important;
+}
+
 /* Pages that require login stay hidden until the check passes */
 html.auth-checking body {
     visibility: hidden;

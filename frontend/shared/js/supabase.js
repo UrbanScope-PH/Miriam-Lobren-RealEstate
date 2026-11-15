@@ -818,7 +818,7 @@
                 });
                 if (res.ok) {
                     const data = await res.json().catch(() => ({}));
-                    created = (data && data.property) ? data.property : (Array.isArray(data) ? data[0] : data);
+                    created = extractApiObjectPayload(data, 'property');
                 } else {
                     const errBody = await res.json().catch(() => ({}));
                     console.warn('Hosted property insert rejected:', errBody.error || res.status);
@@ -894,7 +894,7 @@
                 });
                 if (res.ok) {
                     const data = await res.json().catch(() => ({}));
-                    updated = (data && data.property) ? data.property : (Array.isArray(data) ? data[0] : data);
+                    updated = extractApiObjectPayload(data, 'property');
                 } else {
                     return null;
                 }
@@ -1120,6 +1120,23 @@
         } catch (_) {}
     }
 
+    function extractApiArrayPayload(body, fallbackKey, fallbackValue = []) {
+        if (Array.isArray(body)) return body;
+        if (body && Array.isArray(body.data)) return body.data;
+        if (body && fallbackKey && Array.isArray(body[fallbackKey])) return body[fallbackKey];
+        return fallbackValue;
+    }
+
+    function extractApiObjectPayload(body, fallbackKey) {
+        if (Array.isArray(body)) return body[0] || null;
+        if (!body || typeof body !== 'object') return body || null;
+        if (fallbackKey && body[fallbackKey] && typeof body[fallbackKey] === 'object') return body[fallbackKey];
+        if (body.data !== undefined && body.data !== null) {
+            return Array.isArray(body.data) ? (body.data[0] || null) : body.data;
+        }
+        return body;
+    }
+
     async function apiGetAdminNotifications() {
         let items = [];
         try {
@@ -1135,7 +1152,7 @@
                 : await hostedApiFetch('/api/inquiries?action=notifications&role=admin', { method: 'GET' });
             if (res.ok) {
                 const body = await res.json().catch(() => []);
-                const rows = Array.isArray(body) ? body : (Array.isArray(body?.notifications) ? body.notifications : []);
+                const rows = extractApiArrayPayload(body, 'notifications');
                 rows.forEach(r => {
                     const inqId = r.inquiry_id || r.reference_id || r.id;
                     const nType = String(r.type || 'info').toLowerCase();
@@ -1180,7 +1197,7 @@
                 : await hostedApiFetch('/api/inquiries?action=notifications', { method: 'GET' });
             if (res.ok) {
                 const body = await res.json().catch(() => []);
-                const rows = Array.isArray(body) ? body : (Array.isArray(body?.notifications) ? body.notifications : []);
+                const rows = extractApiArrayPayload(body, 'notifications');
                 rows.forEach(r => {
                     const inqId = r.inquiry_id || r.reference_id || r.id;
                     const nType = (r.reference_type === 'inquiry' ? 'approved' : (r.type || 'approved')).toLowerCase();
@@ -1470,7 +1487,7 @@
                     : await hostedApiFetch('/api/inquiries?action=all', { method: 'GET' });
                 if (res.ok) {
                     const body = await res.json().catch(() => []);
-                    const rows = Array.isArray(body) ? body : (Array.isArray(body?.inquiries) ? body.inquiries : []);
+                    const rows = extractApiArrayPayload(body, 'inquiries');
                     list = rows;
                 } else if (res.status === 401 || res.status === 403) {
                     unauthorized = true;
@@ -1623,7 +1640,7 @@
                     : await hostedApiFetch('/api/inquiries?action=my', { method: 'GET' });
                 if (res.ok) {
                     const body = await res.json().catch(() => []);
-                    const rows = Array.isArray(body) ? body : (Array.isArray(body?.inquiries) ? body.inquiries : []);
+                    const rows = extractApiArrayPayload(body, 'inquiries');
                     list = rows;
                 } else if (res.status === 401 || res.status === 403) {
                     unauthorized = true;
@@ -2009,7 +2026,7 @@
                 const res = await hostedApiFetch('/api/superadmin/users', { method: 'GET' });
                 if (res.ok) {
                     const data = await res.json().catch(() => ({}));
-                    const list = Array.isArray(data) ? data : (Array.isArray(data?.users) ? data.users : []);
+                    const list = extractApiArrayPayload(data, 'users');
                     return list.filter(u => !isUserRecordDeleted(u)).map(formatUserRecord);
                 }
             }
@@ -2038,7 +2055,7 @@
                     : await hostedApiFetch('/api/superadmin/users', { method: 'GET' }, 8000);
                 if (res.ok) {
                     const body = await res.json().catch(() => []);
-                    const list = Array.isArray(body) ? body : (Array.isArray(body?.users) ? body.users : null);
+                    const list = extractApiArrayPayload(body, 'users', null);
                     if (Array.isArray(list)) users = list;
                 } else if (res.status === 401 || res.status === 403) {
                     return [];
@@ -3559,7 +3576,7 @@
             const res = await hostedApiFetch('/api/inquiries?action=appointments', { method: 'GET' });
             if (res.ok) {
                 const body = await res.json().catch(() => []);
-                return Array.isArray(body) ? body : (Array.isArray(body?.appointments) ? body.appointments : []);
+                return extractApiArrayPayload(body, 'appointments');
             }
         } catch (e) {
             console.warn('Appointments query error:', e);

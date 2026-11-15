@@ -2,6 +2,7 @@ import { isAuthorizedAdminRole, readAdminSession } from '../lib/admin-session.js
 import { parseJsonBody } from '../lib/email-auth.js';
 import {
     checkRateLimit,
+    escapePostgrestFilterValue,
     getClientIp,
     getServiceRoleKey,
     isStrictSameOrigin,
@@ -16,6 +17,52 @@ import {
     verifyBotDefense,
     verifyCsrfIfAuthenticated
 } from '../lib/server-security.js';
+
+async function fetchRowsByNormalizedEmail(table, col, targetEmail, extraQuery = {}) {
+    const cleanEmail = normalizeEmail(targetEmail);
+    if (!cleanEmail) return { ok: true, status: 200, rows: [] };
+
+    const escaped = escapePostgrestFilterValue(cleanEmail);
+    const useDirectIlike = Boolean(escaped && escaped === cleanEmail);
+    const query = {
+        ...extraQuery,
+        [col]: useDirectIlike ? `ilike.${escaped}` : `eq.${cleanEmail}`
+    };
+    if (query.select && query.select !== '*') {
+        const parts = String(query.select).split(',').map((s) => s.trim()).filter(Boolean);
+        if (!parts.includes(col)) query.select = [...parts, col].join(',');
+    }
+
+    const res = await fetch(restUrl(table, query), {
+        headers: serviceHeaders({}, true)
+    }).catch(() => null);
+    if (!res) return { ok: false, status: 502, rows: [] };
+    if (!res.ok) return { ok: false, status: res.status, rows: [] };
+
+    const rawRows = await res.json().catch(() => []);
+    const matched = (Array.isArray(rawRows) ? rawRows : []).filter(
+        (row) => row && normalizeEmail(row[col]) === cleanEmail
+    );
+    if (matched.length > 0 || useDirectIlike || !escaped) {
+        return { ok: true, status: 200, rows: matched };
+    }
+
+    const fallbackQuery = { ...query, [col]: `ilike.${escaped}` };
+    const fallbackRes = await fetch(restUrl(table, fallbackQuery), {
+        headers: serviceHeaders({}, true)
+    }).catch(() => null);
+    if (!fallbackRes || !fallbackRes.ok) {
+        return { ok: true, status: 200, rows: [] };
+    }
+    const fallbackRows = await fallbackRes.json().catch(() => []);
+    return {
+        ok: true,
+        status: 200,
+        rows: (Array.isArray(fallbackRows) ? fallbackRows : []).filter(
+            (row) => row && normalizeEmail(row[col]) === cleanEmail
+        )
+    };
+}
 
 function resolveSession(req) {
     const admin = readAdminSession(req);
@@ -61,13 +108,12 @@ async function notifyAdminCancelled(inquiry) {
 
 async function ensureClientApprovalNotifications(clientEmail, approvedInquiries) {
     if (!approvedInquiries.length) return;
-    const existingRes = await fetch(restUrl('notifications', {
-        recipient_email: `eq.${clientEmail}`,
+    const existingResult = await fetchRowsByNormalizedEmail('notifications', 'recipient_email', clientEmail, {
         type: 'eq.approved',
-        select: 'inquiry_id'
-    }), { headers: serviceHeaders({}, true) }).catch(() => null);
-    const existingRows = existingRes && existingRes.ok ? await existingRes.json().catch(() => []) : [];
-    const seenIds = new Set((Array.isArray(existingRows) ? existingRows : []).map((n) => String(n.inquiry_id)));
+        select: 'inquiry_id,recipient_email'
+    }).catch(() => ({ ok: false, rows: [] }));
+    const existingRows = existingResult.ok ? existingResult.rows : [];
+    const seenIds = new Set(existingRows.map((n) => String(n.inquiry_id)));
 
     const missing = approvedInquiries.filter((inq) => !seenIds.has(String(inq.id)));
     for (const inq of missing) {
@@ -124,14 +170,12 @@ export default async function handler(req, res) {
                 return jsonWithCookies({ success: false, error: 'Forbidden: cannot access another client history.' }, 403, res);
             }
             const targetEmail = (requestedEmail && session.isStaff) ? requestedEmail : session.email;
-            const r = await fetch(restUrl('inquiries', {
-                client_email: `eq.${targetEmail}`,
+            const myResult = await fetchRowsByNormalizedEmail('inquiries', 'client_email', targetEmail, {
                 select: '*',
                 order: 'created_at.desc'
-            }), { headers: serviceHeaders({}, true) });
-            if (!r.ok) return jsonWithCookies({ success: false, error: 'Failed to load inquiry history.' }, 502, res);
-            const data = await r.json().catch(() => []);
-            return jsonWithCookies({ success: true, data: Array.isArray(data) ? data : [] }, 200, res);
+            });
+            if (!myResult.ok) return jsonWithCookies({ success: false, error: 'Failed to load inquiry history.' }, 502, res);
+            return jsonWithCookies({ success: true, data: myResult.rows }, 200, res);
         }
 
         if (queryAction === 'notifications') {
@@ -156,26 +200,22 @@ export default async function handler(req, res) {
             }
 
             const targetEmail = (requestedEmail && session.isStaff) ? requestedEmail : session.email;
-            const inqRes = await fetch(restUrl('inquiries', {
-                client_email: `eq.${targetEmail}`,
-                select: 'id,property_title,client_name,status'
-            }), { headers: serviceHeaders({}, true) }).catch(() => null);
-            if (inqRes && inqRes.ok) {
-                const clientInqs = await inqRes.json().catch(() => []);
-                const approved = (Array.isArray(clientInqs) ? clientInqs : []).filter((item) => {
+            const inqResult = await fetchRowsByNormalizedEmail('inquiries', 'client_email', targetEmail, {
+                select: 'id,client_email,property_title,client_name,status'
+            }).catch(() => ({ ok: false, rows: [] }));
+            if (inqResult.ok && inqResult.rows.length > 0) {
+                const approved = inqResult.rows.filter((item) => {
                     const st = String(item.status || '').toLowerCase();
                     return st === 'approved' || st === 'scheduled';
                 });
                 await ensureClientApprovalNotifications(targetEmail, approved);
             }
 
-            const r = await fetch(restUrl('notifications', {
-                recipient_email: `eq.${targetEmail}`,
+            const notifResult = await fetchRowsByNormalizedEmail('notifications', 'recipient_email', targetEmail, {
                 order: 'id.desc',
                 limit: '50'
-            }), { headers: serviceHeaders({}, true) });
-            const rows = r.ok ? await r.json().catch(() => []) : [];
-            return jsonWithCookies({ success: true, data: Array.isArray(rows) ? rows : [] }, 200, res);
+            }).catch(() => ({ ok: false, rows: [] }));
+            return jsonWithCookies({ success: true, data: notifResult.ok ? notifResult.rows : [] }, 200, res);
         }
 
         if (queryAction === 'appointments') {
