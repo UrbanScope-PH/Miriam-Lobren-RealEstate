@@ -1256,13 +1256,20 @@
         return runner;
     }
 
-    async function apiGetClientNotifications(email, forceRefresh = false) {
+    async function apiGetClientNotifications(email, forceRefreshOrOpts = false) {
         const cleanEmail = (email || '').trim().toLowerCase();
         if (!cleanEmail || getDeletedUserEmails().includes(cleanEmail)) return [];
 
+        const forceRefresh = (typeof forceRefreshOrOpts === 'object' && forceRefreshOrOpts !== null)
+            ? Boolean(forceRefreshOrOpts.forceRefresh)
+            : Boolean(forceRefreshOrOpts);
+        const prefetchedInquiries = (typeof forceRefreshOrOpts === 'object' && forceRefreshOrOpts !== null && Array.isArray(forceRefreshOrOpts.prefetchedInquiries))
+            ? forceRefreshOrOpts.prefetchedInquiries
+            : null;
+
         const cacheEntry = READ_CACHE.clientNotifications.get(cleanEmail);
         const now = Date.now();
-        if (!forceRefresh && cacheEntry && cacheEntry.data && (now - cacheEntry.ts) < 5000) {
+        if (!forceRefresh && cacheEntry && cacheEntry.data && (now - cacheEntry.ts) < 1500) {
             return cacheEntry.data;
         }
         if (!forceRefresh && cacheEntry && cacheEntry.promise) {
@@ -1271,6 +1278,7 @@
 
         const runner = (async () => {
             const mapByKey = new Map();
+            let inlineInquiries = null;
 
             // 1. Fetch authenticated notification feed and client's live inquiries in parallel
             const notifFetchPromise = (async () => {
@@ -1280,16 +1288,29 @@
                         : await hostedApiFetch('/api/inquiries?action=notifications', { method: 'GET' });
                     if (res.ok) {
                         const body = await res.json().catch(() => []);
+                        if (body && !Array.isArray(body) && Array.isArray(body.inquiries)) {
+                            inlineInquiries = applyLocalInquiryState(body.inquiries);
+                            READ_CACHE.myInquiries.set(cleanEmail, {
+                                promise: null,
+                                data: inlineInquiries,
+                                ts: Date.now()
+                            });
+                        }
                         return extractApiArrayPayload(body, 'notifications');
                     }
                 } catch (_) {}
                 return [];
             })();
 
-            const [serverRows, myInquiries] = await Promise.all([
+            const [serverRows, fetchedMyInquiries] = await Promise.all([
                 notifFetchPromise,
-                apiGetMyInquiries(cleanEmail, forceRefresh).catch(() => [])
+                prefetchedInquiries
+                    ? Promise.resolve(prefetchedInquiries)
+                    : apiGetMyInquiries(cleanEmail, forceRefresh).catch(() => [])
             ]);
+            const myInquiries = (inlineInquiries && inlineInquiries.length >= fetchedMyInquiries.length)
+                ? inlineInquiries
+                : fetchedMyInquiries;
 
             if (Array.isArray(serverRows)) {
                 serverRows.forEach(r => {
@@ -1440,18 +1461,26 @@
         const data = payload || {};
         const email = (data.email || '').trim().toLowerCase();
         const inquiryId = data.inquiryId || data.inquiry_id;
+        const rawInquiryIds = data.inquiryIds || data.inquiry_ids;
+        const inquiryIds = Array.isArray(rawInquiryIds)
+            ? rawInquiryIds.map(v => String(v || '').trim()).filter(v => /^\d+$/.test(v))
+            : null;
         const notifId = data.notifId || data.id;
+
+        if (Array.isArray(rawInquiryIds) && inquiryIds.length === 0) {
+            return true;
+        }
 
         try {
             if (isLocalBackendReachableHost()) {
                 await localApiFetch('/notifications/read', {
                     method: 'POST',
-                    body: JSON.stringify({ email, inquiry_id: inquiryId, id: notifId, role: data.role })
+                    body: JSON.stringify({ email, inquiry_id: inquiryId, inquiry_ids: inquiryIds || undefined, id: notifId, role: data.role })
                 });
             } else {
                 await hostedApiFetch('/api/inquiries', {
                     method: 'POST',
-                    body: JSON.stringify({ action: 'mark-notifications', mode: 'read', inquiry_id: inquiryId, id: notifId, role: data.role })
+                    body: JSON.stringify({ action: 'mark-notifications', mode: 'read', inquiry_id: inquiryId, inquiry_ids: inquiryIds || undefined, id: notifId, role: data.role })
                 });
             }
         } catch (_) {}
@@ -1461,7 +1490,12 @@
             try {
                 const readKey = 'client_notifs_read_ids_' + email;
                 const readIds = JSON.parse(localStorage.getItem(readKey) || '[]');
-                if (inquiryId) {
+                if (inquiryIds && inquiryIds.length > 0) {
+                    inquiryIds.forEach(rawId => {
+                        const k = 'approved_' + rawId;
+                        if (!readIds.includes(k)) readIds.push(k);
+                    });
+                } else if (inquiryId) {
                     const k = 'approved_' + inquiryId;
                     if (!readIds.includes(k)) readIds.push(k);
                 }
@@ -1718,6 +1752,18 @@
         invalidateReadCache('inquiries');
         window.dispatchEvent(new CustomEvent('inquiryStatusChanged', { detail: { id, status: newStatus } }));
         window.dispatchEvent(new CustomEvent('inquiriesUpdated', { detail: { id, status: newStatus } }));
+        try {
+            if (typeof BroadcastChannel === 'function') {
+                const bc = new BroadcastChannel('urbanscope_notifications');
+                bc.postMessage({
+                    type: 'inquiry-status-changed',
+                    id,
+                    status: newStatus,
+                    clientEmail: targetInquiry ? (targetInquiry.client_email || targetInquiry.email || '').trim().toLowerCase() : ''
+                });
+                bc.close();
+            }
+        } catch (_) {}
 
         return updated;
     }
@@ -1728,7 +1774,7 @@
 
         const entry = READ_CACHE.myInquiries.get(cleanEmail);
         const now = Date.now();
-        if (!forceRefresh && entry && entry.data && (now - entry.ts) < 8000) {
+        if (!forceRefresh && entry && entry.data && (now - entry.ts) < 2000) {
             return entry.data;
         }
         if (!forceRefresh && entry && entry.promise) {

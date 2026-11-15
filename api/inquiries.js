@@ -1,5 +1,5 @@
 import { isAuthorizedAdminRole, readAdminSession } from '../lib/admin-session.js';
-import { parseJsonBody } from '../lib/email-auth.js';
+import { parseJsonBody, sendEmailWithFallback } from '../lib/email-auth.js';
 import {
     checkRateLimit,
     escapePostgrestFilterValue,
@@ -84,26 +84,78 @@ async function fetchInquiryById(id) {
     return Array.isArray(rows) && rows[0] ? rows[0] : null;
 }
 
+function escapeHtmlText(str) {
+    return String(str ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+
+const OPTIONAL_NOTIFICATION_COLS = ['is_seen', 'client_name', 'property_title', 'inquiry_id', 'type', 'recipient_role'];
+
+async function insertNotificationSafe(payload, prefer = 'return=representation') {
+    const candidate = { ...(payload || {}) };
+    for (let attempt = 0; attempt < 4; attempt += 1) {
+        const res = await fetch(restUrl('notifications'), {
+            method: 'POST',
+            headers: serviceHeaders(prefer ? { Prefer: prefer } : {}, true),
+            body: JSON.stringify(candidate)
+        }).catch(() => null);
+        if (!res) return null;
+        if (res.ok) {
+            const rows = await res.json().catch(() => []);
+            return Array.isArray(rows) ? (rows[0] || candidate) : candidate;
+        }
+        if (res.status !== 400) return null;
+        const errText = await res.text().catch(() => '');
+        const colMatch = errText.match(/Could not find the ['"]?([a-zA-Z0-9_]+)['"]? column/i);
+        const missingCol = colMatch?.[1];
+        if (missingCol && OPTIONAL_NOTIFICATION_COLS.includes(missingCol) && Object.prototype.hasOwnProperty.call(candidate, missingCol)) {
+            delete candidate[missingCol];
+            continue;
+        }
+        return null;
+    }
+    return null;
+}
+
+async function sendApprovalEmailBestEffort({ email, code, propertyTitle, clientName }) {
+    if (!email) return;
+    const safeName = String(clientName || 'Client').trim() || 'Client';
+    const safeProp = String(propertyTitle || 'General Inquiry').trim() || 'General Inquiry';
+    const sendPromise = sendEmailWithFallback({
+        to: email,
+        subject: `Inquiry ${code} Approved - Miriam Lobren / UrbanScope`,
+        text: `Hi ${safeName},\n\nGood news! Your inquiry (${code}) for "${safeProp}" has been approved by Miriam Lobren.\nView details anytime in your UrbanScope Inquiry History: https://miriamlobren.site/pages/inquiry/history.html\n`,
+        html: `<div style="font-family:Arial,sans-serif;max-width:560px;margin:auto;color:#20352a"><h2 style="color:#1e5c33">UrbanScope &mdash; Inquiry Approved</h2><p>Hi ${escapeHtmlText(safeName)},</p><p>Good news! Your inquiry (<strong>${escapeHtmlText(code)}</strong>) for <strong>${escapeHtmlText(safeProp)}</strong> has been approved by Miriam Lobren.</p><p><a href="https://miriamlobren.site/pages/inquiry/history.html" style="display:inline-block;padding:10px 18px;background:#1e5c33;color:#fff;text-decoration:none;border-radius:6px;font-weight:700">View Inquiry History</a></p></div>`
+    }).catch(() => null);
+    let timerId;
+    const timeoutPromise = new Promise((resolve) => {
+        timerId = setTimeout(resolve, 2500);
+    });
+    await Promise.race([sendPromise, timeoutPromise]).finally(() => {
+        if (timerId) clearTimeout(timerId);
+    });
+}
+
 async function notifyAdminCancelled(inquiry) {
     const code = `INQ-2026-${String(inquiry.id).padStart(3, '0')}`;
     const clientName = String(inquiry.client_name || 'Client').trim();
     const propTitle = String(inquiry.property_title || 'General Inquiry').trim();
-    await fetch(restUrl('notifications'), {
-        method: 'POST',
-        headers: serviceHeaders({}, true),
-        body: JSON.stringify({
-            recipient_role: 'admin',
-            recipient_email: 'miriamalobren@gmail.com',
-            type: 'cancelled',
-            inquiry_id: inquiry.id,
-            property_title: propTitle,
-            client_name: clientName,
-            title: `Inquiry ${code} cancelled by ${clientName}`,
-            message: `${clientName} cancelled their inquiry for ${propTitle}.`,
-            is_read: false,
-            is_seen: false
-        })
-    }).catch(() => {});
+    await insertNotificationSafe({
+        recipient_role: 'admin',
+        recipient_email: 'miriamalobren@gmail.com',
+        type: 'cancelled',
+        inquiry_id: inquiry.id,
+        property_title: propTitle,
+        client_name: clientName,
+        title: `Inquiry ${code} cancelled by ${clientName}`,
+        message: `${clientName} cancelled their inquiry for ${propTitle}.`,
+        is_read: false,
+        is_seen: false
+    }, 'return=minimal');
 }
 
 async function ensureClientApprovalNotifications(clientEmail, approvedInquiries, prefetchedNotifications = null) {
@@ -138,16 +190,8 @@ async function ensureClientApprovalNotifications(clientEmail, approvedInquiries,
             is_read: false,
             is_seen: false
         };
-        const r = await fetch(restUrl('notifications'), {
-            method: 'POST',
-            headers: serviceHeaders({}, true),
-            body: JSON.stringify(payload)
-        }).catch(() => null);
-        if (r && r.ok) {
-            const rows = await r.json().catch(() => []);
-            if (Array.isArray(rows) && rows[0]) return rows[0];
-        }
-        return payload;
+        const created = await insertNotificationSafe(payload, 'return=representation');
+        return created || payload;
     }));
 
     return createdResults.filter(Boolean);
@@ -217,7 +261,8 @@ export default async function handler(req, res) {
             const targetEmail = (requestedEmail && session.isStaff) ? requestedEmail : session.email;
             const [inqResult, notifResult] = await Promise.all([
                 fetchRowsByNormalizedEmail('inquiries', 'client_email', targetEmail, {
-                    select: 'id,client_email,property_title,client_name,status'
+                    select: '*',
+                    order: 'id.desc'
                 }).catch(() => ({ ok: false, rows: [] })),
                 fetchRowsByNormalizedEmail('notifications', 'recipient_email', targetEmail, {
                     order: 'id.desc',
@@ -243,7 +288,11 @@ export default async function handler(req, res) {
                 }
             }
 
-            return jsonWithCookies({ success: true, data: rows }, 200, res);
+            return jsonWithCookies({
+                success: true,
+                data: rows,
+                inquiries: inqResult.ok ? inqResult.rows : []
+            }, 200, res);
         }
 
         if (queryAction === 'appointments') {
@@ -389,7 +438,11 @@ export default async function handler(req, res) {
         const requestedEmail = normalizeEmail(body.email || '');
         const notifId = body.id ?? body.notif_id;
         const inquiryId = body.inquiry_id ?? body.inquiryId;
-        const setSeenOnly = body.seenOnly === true;
+        const rawInquiryIds = body.inquiry_ids ?? body.inquiryIds;
+        const scopedInquiryIds = Array.isArray(rawInquiryIds)
+            ? rawInquiryIds.map((v) => String(v || '').trim()).filter((v) => /^\d+$/.test(v))
+            : [];
+        const setSeenOnly = body.seenOnly === true || body.mode === 'seen';
 
         if (requestedRole === 'admin' && !session.isStaff) {
             return jsonWithCookies({ success: false, error: 'Admin access required.' }, 403, res);
@@ -397,21 +450,28 @@ export default async function handler(req, res) {
         if (requestedEmail && requestedEmail !== session.email && !session.isStaff) {
             return jsonWithCookies({ success: false, error: 'Cannot update another user notifications.' }, 403, res);
         }
+        if (Array.isArray(rawInquiryIds) && scopedInquiryIds.length === 0) {
+            return jsonWithCookies({ success: true }, 200, res);
+        }
 
         const patchBody = JSON.stringify(setSeenOnly ? { is_seen: true } : { is_read: true, is_seen: true });
+        const target = (requestedEmail && session.isStaff) ? requestedEmail : session.email;
+        const escapedTarget = escapePostgrestFilterValue(target);
+        const emailFilter = (escapedTarget && escapedTarget === target) ? `ilike.${escapedTarget}` : `eq.${target}`;
+
         let query = null;
         if (requestedRole === 'admin' && session.isStaff) {
             query = { recipient_role: 'eq.admin' };
         } else if (notifId !== undefined && /^\d+$/.test(String(notifId))) {
             query = session.isStaff
                 ? { id: `eq.${notifId}` }
-                : { id: `eq.${notifId}`, recipient_email: `eq.${session.email}` };
+                : { id: `eq.${notifId}`, recipient_email: emailFilter };
+        } else if (scopedInquiryIds.length > 0) {
+            query = { inquiry_id: `in.(${scopedInquiryIds.join(',')})`, recipient_email: emailFilter };
         } else if (inquiryId !== undefined && /^\d+$/.test(String(inquiryId))) {
-            const target = (requestedEmail && session.isStaff) ? requestedEmail : session.email;
-            query = { inquiry_id: `eq.${inquiryId}`, recipient_email: `eq.${target}` };
+            query = { inquiry_id: `eq.${inquiryId}`, recipient_email: emailFilter };
         } else {
-            const target = (requestedEmail && session.isStaff) ? requestedEmail : session.email;
-            query = { recipient_email: `eq.${target}` };
+            query = { recipient_email: emailFilter };
         }
 
         await fetch(restUrl('notifications', query), {
@@ -461,28 +521,32 @@ export default async function handler(req, res) {
 
         if (newStatus.toLowerCase() === 'approved' && ownerEmail) {
             const code = `INQ-2026-${String(inquiryId).padStart(3, '0')}`;
+            const propTitle = updated.property_title || 'General Inquiry';
+            const clientName = updated.client_name || 'Client';
             await Promise.all([
-                fetch(restUrl('notifications'), {
-                    method: 'POST',
-                    headers: serviceHeaders({}, true),
-                    body: JSON.stringify({
-                        recipient_role: 'client',
-                        recipient_email: ownerEmail,
-                        type: 'approved',
-                        inquiry_id: Number(inquiryId),
-                        property_title: updated.property_title || 'General Inquiry',
-                        client_name: updated.client_name || 'Client',
-                        title: `Inquiry ${code} Approved!`,
-                        message: `Your inquiry for "${updated.property_title || 'General Inquiry'}" has been approved by Miriam Lobren!`,
-                        is_read: false,
-                        is_seen: false
-                    })
-                }).catch(() => {}),
+                insertNotificationSafe({
+                    recipient_role: 'client',
+                    recipient_email: ownerEmail,
+                    type: 'approved',
+                    inquiry_id: Number(inquiryId),
+                    property_title: propTitle,
+                    client_name: clientName,
+                    title: `Inquiry ${code} Approved!`,
+                    message: `Your inquiry for "${propTitle}" has been approved by Miriam Lobren!`,
+                    is_read: false,
+                    is_seen: false
+                }, 'return=minimal'),
                 fetch(restUrl('notifications', { inquiry_id: `eq.${inquiryId}`, recipient_role: 'eq.admin' }), {
                     method: 'PATCH',
                     headers: serviceHeaders({}, true),
                     body: JSON.stringify({ is_read: true, is_seen: true })
-                }).catch(() => {})
+                }).catch(() => {}),
+                sendApprovalEmailBestEffort({
+                    email: ownerEmail,
+                    code,
+                    propertyTitle: propTitle,
+                    clientName
+                })
             ]);
         }
 
