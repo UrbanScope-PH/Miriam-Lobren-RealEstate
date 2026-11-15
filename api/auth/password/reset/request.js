@@ -17,8 +17,6 @@ import {
     verifyBotDefense
 } from '../../../../lib/server-security.js';
 
-const GENERIC_RESET_MSG = 'If an account can be recovered with that email, a verification code has been sent.';
-
 export default async function handler(req, res) {
     if (req.method !== 'POST') return jsonResponse({ success: false, error: 'Method not allowed.' }, 405, res);
     if (!isStrictSameOrigin(req)) return jsonResponse({ success: false, error: 'This request is not allowed.' }, 403, res);
@@ -52,21 +50,31 @@ export default async function handler(req, res) {
 
     try {
         const user = await getCloudUser(email);
-        const activeUser = Boolean(
+        const isDeleted = Boolean(
             user &&
-            user.password_hash &&
-            user.bio !== '__URBANSCOPE_DELETED__' &&
-            user.password_hash !== '__DELETED_ACCOUNT__'
+            (user.bio === '__URBANSCOPE_DELETED__' || user.password_hash === '__DELETED_ACCOUNT__')
         );
-        const otpCtx = { req, cookies: [] };
-        if (activeUser) {
-            otpCtx.bindValue = getOtpBindFingerprint(user.password_hash);
-            await issueOtp(email, 'password_reset', ip, otpCtx);
+        if (!user || isDeleted) {
+            return jsonResponse({
+                success: false,
+                code: 'EMAIL_NOT_REGISTERED',
+                error: 'This email is not registered yet. Please register first.'
+            }, 404, res);
         }
+        if (!user.password_hash) {
+            return jsonResponse({
+                success: false,
+                code: 'GOOGLE_ACCOUNT_NO_PASSWORD',
+                error: 'This account uses Google Sign-In and does not have a password. Please log in with Google instead.'
+            }, 400, res);
+        }
+
+        const otpCtx = { req, cookies: [], bindValue: getOtpBindFingerprint(user.password_hash) };
+        await issueOtp(email, 'password_reset', ip, otpCtx);
         return jsonWithCookies({
             success: true,
             code: 'OTP_SENT',
-            message: GENERIC_RESET_MSG
+            message: `A six-digit verification code has been sent to ${email}.`
         }, 200, res, { cookies: otpCtx.cookies });
     } catch (error) {
         console.error('Password reset email dispatch error:', error?.message || 'unknown error');
