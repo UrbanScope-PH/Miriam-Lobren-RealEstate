@@ -1,6 +1,27 @@
 {
+  "$schema": "https://openapi.vercel.sh/vercel.json",
   "cleanUrls": false,
   "trailingSlash": false,
+  "proxy": {
+    "entrypoint": "proxy.js",
+    "matcher": [
+      "/",
+      "/index.html",
+      "/frontend/index.html",
+      "/pages/admin",
+      "/pages/admin/:path*",
+      "/pages/superadmin",
+      "/pages/superadmin/:path*",
+      "/frontend/pages/admin",
+      "/frontend/pages/admin/:path*",
+      "/frontend/pages/superadmin",
+      "/frontend/pages/superadmin/:path*",
+      "/admin",
+      "/admin/:path*",
+      "/superadmin",
+      "/superadmin/:path*"
+    ]
+  },
   "headers": [
     {
       "source": "/(.*)",
@@ -23,7 +44,28 @@
       ]
     },
     {
-      "source": "/(pages/admin|pages/superadmin|frontend/pages/admin|frontend/pages/superadmin)/(.*)",
+      "source": "/pages/admin/:path*",
+      "headers": [
+        { "key": "Cache-Control", "value": "private, no-store, max-age=0" },
+        { "key": "X-Robots-Tag", "value": "noindex, nofollow" }
+      ]
+    },
+    {
+      "source": "/pages/superadmin/:path*",
+      "headers": [
+        { "key": "Cache-Control", "value": "private, no-store, max-age=0" },
+        { "key": "X-Robots-Tag", "value": "noindex, nofollow" }
+      ]
+    },
+    {
+      "source": "/frontend/pages/admin/:path*",
+      "headers": [
+        { "key": "Cache-Control", "value": "private, no-store, max-age=0" },
+        { "key": "X-Robots-Tag", "value": "noindex, nofollow" }
+      ]
+    },
+    {
+      "source": "/frontend/pages/superadmin/:path*",
       "headers": [
         { "key": "Cache-Control", "value": "private, no-store, max-age=0" },
         { "key": "X-Robots-Tag", "value": "noindex, nofollow" }
@@ -31,8 +73,6 @@
     }
   ],
   "redirects": [
-    { "source": "/", "destination": "/frontend/index.html", "permanent": false },
-    { "source": "/index.html", "destination": "/frontend/index.html", "permanent": false },
     { "source": "/admin", "destination": "/pages/admin/dashboard.html", "permanent": false },
     { "source": "/superadmin", "destination": "/pages/superadmin/dashboard.html", "permanent": false },
     { "source": "/properties/:path*", "destination": "/pages/properties/:path*", "permanent": true },
@@ -47,24 +87,16 @@
     { "source": "/frontend/pages/admin/properties.html", "destination": "/pages/admin/propertylist.html", "permanent": true },
     { "source": "/frontend/pages/admin/manage-properties.html", "destination": "/pages/admin/propertylist.html", "permanent": true }
   ],
-  "proxy": [
-    { "source": "/admin" },
-    { "source": "/admin/:path*" },
-    { "source": "/superadmin" },
-    { "source": "/superadmin/:path*" },
-    { "source": "/pages/admin/:path*" },
-    { "source": "/pages/superadmin/:path*" },
-    { "source": "/frontend/pages/admin/:path*" },
-    { "source": "/frontend/pages/superadmin/:path*" }
-  ],
   "rewrites": [
-    { "source": "/pages/:path*", "destination": "/frontend/pages/:path*" },
-    { "source": "/shared/:path*", "destination": "/frontend/shared/:path*" },
-    { "source": "/assets/:path*", "destination": "/frontend/assets/:path*" },
+    { "source": "/", "destination": "/frontend/index.html" },
+    { "source": "/index.html", "destination": "/frontend/index.html" },
     { "source": "/index.css", "destination": "/frontend/index.css" },
     { "source": "/index.js", "destination": "/frontend/index.js" },
-    { "source": "/manifest.json", "destination": "/frontend/manifest.json" },
-    { "source": "/favicon.ico", "destination": "/frontend/assets/images/logo.png" },
-    { "source": "/:path((?!frontend/|api/|\\.well-known/).*)", "destination": "/frontend/:path" }
+    { "source": "/favicon.ico", "destination": "/frontend/assets/images/favicon.jpg" },
+    { "source": "/robots.txt", "destination": "/frontend/robots.txt" },
+    { "source": "/sitemap.xml", "destination": "/frontend/sitemap.xml" },
+    { "source": "/pages/:path*", "destination": "/frontend/pages/:path*" },
+    { "source": "/shared/:path*", "destination": "/frontend/shared/:path*" },
+    { "source": "/assets/:path*", "destination": "/frontend/assets/:path*" }
   ]
 }
