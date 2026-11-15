@@ -3298,11 +3298,18 @@
                 ? await localApiFetch('/auth/google', { method: 'POST', body: JSON.stringify(body) }, 10000)
                 : await hostedApiFetch('/api/session', { method: 'POST', body: JSON.stringify({ action: 'google', ...body }) }, 10000);
 
-            const authRes = await res.json().catch(() => ({}));
+            const rawText = await res.text().catch(() => '');
+            let authRes = {};
+            if (rawText) {
+                try { authRes = JSON.parse(rawText); } catch (_) { authRes = {}; }
+            }
             if (!res.ok || authRes.success === false) {
+                const fallbackError = res.ok
+                    ? 'Google authentication failed.'
+                    : `Google authentication failed (HTTP ${res.status}). Please try again.`;
                 return {
                     success: false,
-                    error: authRes.detail || authRes.error || authRes.message || 'Google authentication failed.'
+                    error: authRes.detail || authRes.error || authRes.message || fallbackError
                 };
             }
 
@@ -3310,6 +3317,7 @@
                 return {
                     success: true,
                     requires_verification: true,
+                    otp_sent: authRes.otp_sent !== false,
                     email: authRes.email,
                     full_name: authRes.full_name,
                     avatar_url: sanitizeImageUrl(authRes.avatar_url || '', ''),
@@ -3368,7 +3376,13 @@
                 }
             };
         } catch (err) {
-            return { success: false, error: err.message || 'Google authentication failed.' };
+            const isTimeout = err && err.name === 'AbortError';
+            return {
+                success: false,
+                error: isTimeout
+                    ? 'Google authentication timed out. Please try again.'
+                    : ((err && err.message) || 'Google authentication failed.')
+            };
         }
     }
 

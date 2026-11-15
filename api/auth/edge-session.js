@@ -10,6 +10,7 @@ import {
     createUserSessionToken,
     generateCsrfToken,
     getClientIp,
+    getGoogleClientId,
     getServiceRoleKey,
     isStrictSameOrigin,
     jsonWithCookies,
@@ -23,25 +24,32 @@ import {
     verifyPBKDF2Password
 } from '../../lib/server-security.js';
 
-const DEFAULT_GOOGLE_CLIENT_ID = '981770655747-t222jr0ias09rl7aga3302p9am64so43.apps.googleusercontent.com';
-
 async function verifyGoogleAccessToken(accessToken) {
-    const clientId = String(process.env.GOOGLE_CLIENT_ID || DEFAULT_GOOGLE_CLIENT_ID).trim();
-    const tokenInfoResponse = await fetch(
-        `https://oauth2.googleapis.com/tokeninfo?access_token=${encodeURIComponent(accessToken)}`
-    );
-    if (!tokenInfoResponse.ok) return null;
-    const tokenInfo = await tokenInfoResponse.json();
-    if (tokenInfo.aud !== clientId && tokenInfo.azp !== clientId) return null;
+    const clientId = getGoogleClientId();
+    const signal = typeof AbortSignal !== 'undefined' && typeof AbortSignal.timeout === 'function'
+        ? AbortSignal.timeout(6500)
+        : undefined;
+    try {
+        const tokenInfoResponse = await fetch(
+            `https://oauth2.googleapis.com/tokeninfo?access_token=${encodeURIComponent(accessToken)}`,
+            signal ? { signal } : undefined
+        );
+        if (!tokenInfoResponse.ok) return null;
+        const tokenInfo = await tokenInfoResponse.json().catch(() => ({}));
+        if (tokenInfo.aud !== clientId && tokenInfo.azp !== clientId) return null;
 
-    const profileResponse = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
-        headers: { Authorization: `Bearer ${accessToken}` }
-    });
-    if (!profileResponse.ok) return null;
-    const profile = await profileResponse.json();
-    const email = normalizeEmail(profile.email);
-    const verified = profile.email_verified === true || String(profile.email_verified).toLowerCase() === 'true';
-    return email && verified && profile.sub ? { email, id: profile.sub } : null;
+        const profileResponse = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+            headers: { Authorization: `Bearer ${accessToken}` },
+            ...(signal ? { signal } : {})
+        });
+        if (!profileResponse.ok) return null;
+        const profile = await profileResponse.json().catch(() => ({}));
+        const email = normalizeEmail(profile.email);
+        const verified = profile.email_verified === true || String(profile.email_verified).toLowerCase() === 'true';
+        return email && verified && profile.sub ? { email, id: profile.sub } : null;
+    } catch (_) {
+        return null;
+    }
 }
 
 async function fetchCloudStaffUser(cleanEmail) {

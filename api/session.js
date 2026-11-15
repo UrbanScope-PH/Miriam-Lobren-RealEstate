@@ -22,6 +22,7 @@ import {
     escapePostgrestFilterValue,
     generateCsrfToken,
     getClientIp,
+    getGoogleClientId,
     getServiceRoleKey,
     getSessionSecret,
     isStrictSameOrigin,
@@ -41,12 +42,6 @@ import {
     verifyPBKDF2Password
 } from '../lib/server-security.js';
 
-const DEFAULT_GOOGLE_CLIENT_ID = '981770655747-t222jr0ias09rl7aga3302p9am64so43.apps.googleusercontent.com';
-
-function getGoogleClientId() {
-    return String(process.env.GOOGLE_CLIENT_ID || DEFAULT_GOOGLE_CLIENT_ID).trim();
-}
-
 function getActiveSession(req) {
     return readUserSession(req) || readAdminSession(req);
 }
@@ -58,8 +53,9 @@ function parseMissingColumnFromPostgrestError(errText) {
 
 const PROTECTED_USER_COLUMNS = new Set(['id', 'email', 'password_hash', 'role', 'google_id']);
 
-async function writeUserMutation(url, method, payload, extraHeaders = {}) {
+async function writeUserMutation(url, method, payload, extraHeaders = {}, options = {}) {
     const mutablePayload = { ...payload };
+    const optionalProtected = new Set(Array.isArray(options.optionalProtectedColumns) ? options.optionalProtectedColumns : []);
     for (let attempt = 0; attempt < 8; attempt += 1) {
         if (Object.keys(mutablePayload).length === 0) {
             return { ok: false, noOp: true, data: null };
@@ -82,7 +78,11 @@ async function writeUserMutation(url, method, payload, extraHeaders = {}) {
         const missingCol = (res.status === 400 && (errText.includes('PGRST204') || errText.includes('Could not find the')))
             ? parseMissingColumnFromPostgrestError(errText)
             : null;
-        if (missingCol && !PROTECTED_USER_COLUMNS.has(missingCol) && Object.prototype.hasOwnProperty.call(mutablePayload, missingCol)) {
+        if (
+            missingCol &&
+            (!PROTECTED_USER_COLUMNS.has(missingCol) || optionalProtected.has(missingCol)) &&
+            Object.prototype.hasOwnProperty.call(mutablePayload, missingCol)
+        ) {
             delete mutablePayload[missingCol];
             continue;
         }
@@ -166,48 +166,96 @@ async function fetchUserByEmail(email) {
 }
 
 async function verifyGoogleCredentials({ credential, access_token }) {
+    if (!credential && !access_token) {
+        return { ok: false, reason: 'missing' };
+    }
+
     const clientId = getGoogleClientId();
+    const signal = typeof AbortSignal !== 'undefined' && typeof AbortSignal.timeout === 'function'
+        ? AbortSignal.timeout(6500)
+        : undefined;
+
     if (credential) {
-        const res = await fetch(`https://oauth2.googleapis.com/tokeninfo?id_token=${encodeURIComponent(String(credential))}`);
-        if (!res.ok) return null;
+        let res;
+        try {
+            res = await fetch(
+                `https://oauth2.googleapis.com/tokeninfo?id_token=${encodeURIComponent(String(credential))}`,
+                signal ? { signal } : undefined
+            );
+        } catch (_) {
+            return { ok: false, reason: 'network_error' };
+        }
+        if (res.status >= 500) return { ok: false, reason: 'network_error' };
+        if (!res.ok) return { ok: false, reason: 'invalid_token' };
         const info = await res.json().catch(() => ({}));
-        if (info.aud !== clientId && info.azp !== clientId) return null;
+        if (info.aud !== clientId && info.azp !== clientId) {
+            return { ok: false, reason: 'invalid_token' };
+        }
         const email = normalizeEmail(info.email);
         const verified = info.email_verified === true || String(info.email_verified).toLowerCase() === 'true';
-        if (!email || !verified || !info.sub) return null;
+        if (!email || !verified || !info.sub) {
+            return { ok: false, reason: 'invalid_token' };
+        }
         return {
-            google_id: String(info.sub),
-            email,
-            full_name: String(info.name || info.given_name || email.split('@')[0]).trim(),
-            avatar_url: String(info.picture || '').trim()
+            ok: true,
+            data: {
+                google_id: String(info.sub),
+                email,
+                full_name: String(info.name || info.given_name || email.split('@')[0]).trim(),
+                avatar_url: String(info.picture || '').trim()
+            }
         };
     }
 
     if (access_token) {
         const token = String(access_token);
-        if (token.length > 8192) return null;
-        const infoRes = await fetch(`https://oauth2.googleapis.com/tokeninfo?access_token=${encodeURIComponent(token)}`);
-        if (!infoRes.ok) return null;
-        const info = await infoRes.json().catch(() => ({}));
-        if (info.aud !== clientId && info.azp !== clientId) return null;
+        if (token.length > 8192) return { ok: false, reason: 'invalid_token' };
 
-        const profileRes = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
-            headers: { Authorization: `Bearer ${token}` }
-        });
-        if (!profileRes.ok) return null;
+        let infoRes;
+        try {
+            infoRes = await fetch(
+                `https://oauth2.googleapis.com/tokeninfo?access_token=${encodeURIComponent(token)}`,
+                signal ? { signal } : undefined
+            );
+        } catch (_) {
+            return { ok: false, reason: 'network_error' };
+        }
+        if (infoRes.status >= 500) return { ok: false, reason: 'network_error' };
+        if (!infoRes.ok) return { ok: false, reason: 'invalid_token' };
+        const info = await infoRes.json().catch(() => ({}));
+        if (info.aud !== clientId && info.azp !== clientId) {
+            return { ok: false, reason: 'invalid_token' };
+        }
+
+        let profileRes;
+        try {
+            profileRes = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+                headers: { Authorization: `Bearer ${token}` },
+                ...(signal ? { signal } : {})
+            });
+        } catch (_) {
+            return { ok: false, reason: 'network_error' };
+        }
+        if (profileRes.status >= 500) return { ok: false, reason: 'network_error' };
+        if (!profileRes.ok) return { ok: false, reason: 'invalid_token' };
         const profile = await profileRes.json().catch(() => ({}));
         const email = normalizeEmail(profile.email);
         const verified = profile.email_verified === true || String(profile.email_verified).toLowerCase() === 'true';
-        if (!email || !verified || !profile.sub) return null;
+        if (!email || !verified || !profile.sub) {
+            return { ok: false, reason: 'invalid_token' };
+        }
         return {
-            google_id: String(profile.sub),
-            email,
-            full_name: String(profile.name || profile.given_name || email.split('@')[0]).trim(),
-            avatar_url: String(profile.picture || '').trim()
+            ok: true,
+            data: {
+                google_id: String(profile.sub),
+                email,
+                full_name: String(profile.name || profile.given_name || email.split('@')[0]).trim(),
+                avatar_url: String(profile.picture || '').trim()
+            }
         };
     }
 
-    return null;
+    return { ok: false, reason: 'missing' };
 }
 
 function issueCookiesForUser(req, userRow) {
@@ -235,7 +283,7 @@ function redirectForRole(email, role) {
     return '/index.html';
 }
 
-export default async function handler(req, res) {
+async function handleSessionRequest(req, res) {
     const reqUrl = new URL(req.url, 'https://urbanscope.local');
     const queryAction = String(reqUrl.searchParams.get('action') || '').trim().toLowerCase();
 
@@ -396,25 +444,41 @@ export default async function handler(req, res) {
             return jsonWithCookies({ success: false, error: 'Too many requests. Please wait before trying again.' }, 429, res);
         }
 
-        const googleInfo = await verifyGoogleCredentials(body);
-        if (!googleInfo) {
+        const googleCheck = await verifyGoogleCredentials(body);
+        if (!googleCheck.ok) {
+            if (googleCheck.reason === 'missing') {
+                return jsonWithCookies({ success: false, error: 'Missing Google sign-in token. Please try again.' }, 400, res);
+            }
+            if (googleCheck.reason === 'network_error') {
+                return jsonWithCookies({ success: false, error: 'Unable to reach Google verification service. Please try again.' }, 502, res);
+            }
             return jsonWithCookies({ success: false, error: 'Google token verification failed.' }, 401, res);
         }
+        const googleInfo = googleCheck.data;
 
         const cleanEmail = googleInfo.email;
         const safeSub = escapePostgrestFilterValue(googleInfo.google_id);
         const safeEmail = escapePostgrestFilterValue(cleanEmail);
-        const lookupRes = await fetch(restUrl('users', {
-            or: `(google_id.eq.${safeSub},email.eq.${safeEmail})`,
-            select: '*'
-        }), { headers: serviceHeaders({}, true) });
-
-        if (!lookupRes.ok) {
-            return jsonWithCookies({ success: false, error: 'Unable to verify Google account.' }, 502, res);
+        let existing = null;
+        let lookupFailed = false;
+        try {
+            const signal = typeof AbortSignal !== 'undefined' && typeof AbortSignal.timeout === 'function'
+                ? AbortSignal.timeout(5000)
+                : undefined;
+            const lookupRes = await fetch(restUrl('users', {
+                or: `(google_id.eq.${safeSub},email.eq.${safeEmail})`,
+                select: '*'
+            }), { headers: serviceHeaders({}, true), ...(signal ? { signal } : {}) });
+            if (lookupRes.ok) {
+                const rows = await lookupRes.json().catch(() => []);
+                existing = Array.isArray(rows) ? rows[0] : null;
+            } else {
+                lookupFailed = true;
+            }
+        } catch (_) {
+            lookupFailed = true;
         }
 
-        const rows = await lookupRes.json().catch(() => []);
-        let existing = Array.isArray(rows) ? rows[0] : null;
         if (!existing) {
             const emailFallback = await fetchUserByEmailResult(cleanEmail);
             if (emailFallback.dbError) {
@@ -422,6 +486,7 @@ export default async function handler(req, res) {
             }
             existing = emailFallback.row;
         }
+
         if (existing) {
             if (existing.bio === '__URBANSCOPE_DELETED__' || existing.password_hash === '__DELETED_ACCOUNT__') {
                 return jsonWithCookies({ success: false, error: 'This account has been deactivated.' }, 403, res);
@@ -441,7 +506,13 @@ export default async function handler(req, res) {
                 if (avatarCheck.ok && avatarCheck.value) patch.avatar_url = avatarCheck.value;
             }
 
-            await writeUserMutation(restUrl('users', { id: `eq.${existing.id}` }), 'PATCH', patch);
+            await writeUserMutation(
+                restUrl('users', { id: `eq.${existing.id}` }),
+                'PATCH',
+                patch,
+                {},
+                { optionalProtectedColumns: ['google_id'] }
+            );
 
             const merged = { ...existing, ...patch };
             const { cookies, role } = issueCookiesForUser(req, merged);
@@ -457,11 +528,29 @@ export default async function handler(req, res) {
         if (!otpEnvironmentReady()) {
             return jsonWithCookies({ success: false, error: 'Email verification is not configured on the server.' }, 503, res);
         }
-        await issueOtp(cleanEmail, 'register', ip);
+        try {
+            const issued = await issueOtp(cleanEmail, 'register', ip);
+            if (!issued) {
+                return jsonWithCookies({
+                    success: false,
+                    error: 'Too many verification codes requested. Please wait a few minutes and try again.'
+                }, 429, res);
+            }
+        } catch (otpErr) {
+            console.error('[session] Google signup OTP error:', otpErr?.message || otpErr);
+            const isStorageErr = /challenge storage/i.test(String(otpErr?.message || ''));
+            return jsonWithCookies({
+                success: false,
+                error: isStorageErr
+                    ? 'Verification service storage is temporarily unavailable. Please try again shortly.'
+                    : 'Unable to send the verification code to your Gmail right now. Please try again shortly.'
+            }, 503, res);
+        }
         const safeAvatarCheck = sanitizeImageUrl(googleInfo.avatar_url, { defaultValue: 'assets/images/agent.jpg' });
         return jsonWithCookies({
             success: true,
             requires_verification: true,
+            otp_sent: true,
             email: cleanEmail,
             full_name: googleInfo.full_name,
             avatar_url: safeAvatarCheck.ok ? safeAvatarCheck.value : 'assets/images/agent.jpg',
@@ -487,15 +576,28 @@ export default async function handler(req, res) {
             return jsonWithCookies({ success: false, error: 'This email cannot be registered through the client sign-up flow.' }, 400, res);
         }
 
-        const googleInfo = await verifyGoogleCredentials(body);
-        if (!googleInfo || googleInfo.email !== cleanEmail) {
+        const googleCheck = await verifyGoogleCredentials(body);
+        if (!googleCheck.ok) {
+            if (googleCheck.reason === 'network_error') {
+                return jsonWithCookies({ success: false, error: 'Unable to reach Google verification service. Please try again.' }, 502, res);
+            }
+            return jsonWithCookies({ success: false, error: 'Google authentication token could not be verified.' }, 401, res);
+        }
+        const googleInfo = googleCheck.data;
+        if (googleInfo.email !== cleanEmail) {
             return jsonWithCookies({ success: false, error: 'Google authentication token could not be verified.' }, 401, res);
         }
 
         if (!otpEnvironmentReady()) {
             return jsonWithCookies({ success: false, error: 'Email verification is not configured on the server.' }, 503, res);
         }
-        const consumed = await consumeOtp(cleanEmail, 'register', code);
+        let consumed = false;
+        try {
+            consumed = await consumeOtp(cleanEmail, 'register', code);
+        } catch (otpErr) {
+            console.error('[session] Google verify OTP consume error:', otpErr?.message || otpErr);
+            return jsonWithCookies({ success: false, error: 'Unable to verify your code right now. Please try again.' }, 503, res);
+        }
         if (!consumed) {
             return jsonWithCookies({ success: false, error: 'That verification code is invalid or expired.' }, 400, res);
         }
@@ -517,7 +619,8 @@ export default async function handler(req, res) {
                     google_id: existing.google_id || googleInfo.google_id,
                     updated_at: new Date().toISOString()
                 },
-                { Prefer: 'return=representation' }
+                { Prefer: 'return=representation' },
+                { optionalProtectedColumns: ['google_id'] }
             );
             const patched = patchRes.ok ? patchRes.data : [];
             if (Array.isArray(patched) && patched[0]) savedUser = patched[0];
@@ -537,7 +640,8 @@ export default async function handler(req, res) {
                     bio: '',
                     email_verified_at: new Date().toISOString()
                 },
-                { Prefer: 'return=representation' }
+                { Prefer: 'return=representation' },
+                { optionalProtectedColumns: ['google_id'] }
             );
             if (!insertRes.ok) {
                 return jsonWithCookies({ success: false, error: 'Unable to complete registration right now.' }, 503, res);
@@ -647,6 +751,19 @@ export default async function handler(req, res) {
     }
 
     return jsonWithCookies({ success: false, error: 'Unsupported session action.' }, 400, res);
+}
+
+export default async function handler(req, res) {
+    try {
+        return await handleSessionRequest(req, res);
+    } catch (err) {
+        console.error('[session] Unhandled exception:', err?.message || err);
+        if (res && (res.headersSent || res.writableEnded)) return;
+        return jsonWithCookies({
+            success: false,
+            error: 'Authentication service encountered a temporary error. Please try again.'
+        }, 500, res);
+    }
 }
 
 export { handler as fetch };
