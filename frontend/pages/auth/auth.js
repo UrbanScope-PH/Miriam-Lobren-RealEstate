@@ -634,7 +634,7 @@ document.addEventListener("DOMContentLoaded", () => {
         document.body.classList.add("otp-modal-open");
         window.setTimeout(() => { if (otpInput) otpInput.focus(); }, 120);
 
-        if (typeof apiStartRegistrationOtp === "function") {
+        if (!googleData.otp_already_sent && typeof apiStartRegistrationOtp === "function") {
             const botData = window.UrbanBotGuard ? window.UrbanBotGuard.collect() : {};
             apiStartRegistrationOtp(googleData.email, botData).catch(() => {});
         }
@@ -1018,7 +1018,8 @@ document.addEventListener("DOMContentLoaded", () => {
                             avatar_url: res.avatar_url,
                             google_id: res.google_id,
                             access_token: tokenResponse.access_token,
-                            credential: tokenResponse.credential || null
+                            credential: tokenResponse.credential || null,
+                            otp_already_sent: res.otp_sent !== false
                         }, btn);
                         return;
                     }
