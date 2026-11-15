@@ -8,6 +8,7 @@ import {
     consumeOtp,
     createPasswordHash,
     issueOtp,
+    mapOtpErrorMessage,
     otpEnvironmentReady,
     parseJsonBody
 } from '../lib/email-auth.js';
@@ -538,12 +539,12 @@ async function handleSessionRequest(req, res) {
             }
         } catch (otpErr) {
             console.error('[session] Google signup OTP error:', otpErr?.message || otpErr);
-            const isStorageErr = /challenge storage/i.test(String(otpErr?.message || ''));
             return jsonWithCookies({
                 success: false,
-                error: isStorageErr
-                    ? 'Verification service storage is temporarily unavailable. Please try again shortly.'
-                    : 'Unable to send the verification code to your Gmail right now. Please try again shortly.'
+                error: mapOtpErrorMessage(
+                    otpErr,
+                    'Unable to send the verification code to your Gmail right now. Please try again shortly.'
+                )
             }, 503, res);
         }
         const safeAvatarCheck = sanitizeImageUrl(googleInfo.avatar_url, { defaultValue: 'assets/images/agent.jpg' });
@@ -596,7 +597,10 @@ async function handleSessionRequest(req, res) {
             consumed = await consumeOtp(cleanEmail, 'register', code);
         } catch (otpErr) {
             console.error('[session] Google verify OTP consume error:', otpErr?.message || otpErr);
-            return jsonWithCookies({ success: false, error: 'Unable to verify your code right now. Please try again.' }, 503, res);
+            return jsonWithCookies({
+                success: false,
+                error: mapOtpErrorMessage(otpErr, 'Unable to verify your code right now. Please try again.')
+            }, 503, res);
         }
         if (!consumed) {
             return jsonWithCookies({ success: false, error: 'That verification code is invalid or expired.' }, 400, res);

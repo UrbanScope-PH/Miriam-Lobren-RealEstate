@@ -5,6 +5,7 @@ import {
     insertCloudUser,
     isValidEmail,
     jsonResponse,
+    mapOtpErrorMessage,
     normalizeEmail,
     otpEnvironmentReady,
     parseJsonBody
@@ -90,7 +91,10 @@ export default async function handler(req, res) {
         }, 200, res, { cookies });
     } catch (error) {
         console.error('Verified registration could not be completed:', error?.message || 'unknown error');
-        return jsonResponse({ success: false, error: 'Unable to finish registration right now. Please request a new code and try again.' }, 503, res);
+        return jsonResponse({
+            success: false,
+            error: mapOtpErrorMessage(error, 'Unable to finish registration right now. Please request a new code and try again.')
+        }, 503, res);
     }
 }
 

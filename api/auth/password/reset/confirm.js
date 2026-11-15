@@ -5,6 +5,7 @@ import {
     getCloudUser,
     isValidEmail,
     jsonResponse,
+    mapOtpErrorMessage,
     normalizeEmail,
     otpEnvironmentReady,
     parseJsonBody,
@@ -51,7 +52,10 @@ export default async function handler(req, res) {
             return jsonResponse({ success: true, message: 'Verification code is valid.' }, 200, res);
         } catch (error) {
             console.error('Password reset code check failed:', error?.message || 'unknown error');
-            return jsonResponse({ success: false, error: 'Unable to verify recovery code right now.' }, 503, res);
+            return jsonResponse({
+                success: false,
+                error: mapOtpErrorMessage(error, 'Unable to verify recovery code right now.')
+            }, 503, res);
         }
     }
 
@@ -76,7 +80,10 @@ export default async function handler(req, res) {
         return jsonResponse({ success: true, message: 'Password updated. You can now log in with your new password.' }, 200, res);
     } catch (error) {
         console.error('Password recovery could not be completed:', error?.message || 'unknown error');
-        return jsonResponse({ success: false, error: 'Unable to update the password right now. Please try again.' }, 503, res);
+        return jsonResponse({
+            success: false,
+            error: mapOtpErrorMessage(error, 'Unable to update the password right now. Please try again.')
+        }, 503, res);
     }
 }
 
