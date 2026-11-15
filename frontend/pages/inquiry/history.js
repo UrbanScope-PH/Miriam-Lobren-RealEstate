@@ -182,7 +182,7 @@
                 } catch (e) { }
             }
             const propTitle = newlyApproved.property_title || newlyApproved.propertyTitle || 'General Consultation';
-            showToast(`✓ Good news! Your inquiry for "${propTitle}" has been approved by Miriam Lobren!`);
+            showToast(`Good news! Your inquiry for "${propTitle}" has been approved by Miriam Lobren!`);
             window.dispatchEvent(new CustomEvent('inquiryStatusChanged', { detail: { ...newlyApproved, source: 'history' } }));
         }
         return Boolean(newlyApproved);
@@ -436,7 +436,7 @@
             }
             closeModifyModal();
             renderInquiries();
-            showToast('✓ Inquiry details successfully updated');
+            showToast('Inquiry details successfully updated');
         } else {
             if (typeof window.showFeedbackToast === 'function') {
                 window.showFeedbackToast('Failed to update inquiry. It may have already been approved or processed.', 'error');
@@ -495,7 +495,7 @@
             closeCancelModal();
             updateStats();
             renderInquiries();
-            showToast('✓ Inquiry cancelled. Admin has been notified.');
+            showToast('Inquiry cancelled. Admin has been notified.');
         } else {
             if (typeof window.showFeedbackToast === 'function') {
                 window.showFeedbackToast('Failed to cancel inquiry. Please try again.', 'error');
@@ -541,7 +541,7 @@
             closeDeleteModal();
             updateStats();
             renderInquiries();
-            showToast('✓ Inquiry deleted. Admin has been notified of your cancellation.');
+            showToast('Inquiry deleted. Admin has been notified of your cancellation.');
         } else {
             if (typeof window.showFeedbackToast === 'function') {
                 window.showFeedbackToast('Failed to delete inquiry. Please try again.', 'error');
@@ -554,14 +554,17 @@
     // ==========================================
     // TOAST HELPER
     // ==========================================
+    let toastTimer = null;
     function showToast(message) {
-        if (!toastNotice) return;
-        toastMessage.textContent = message;
+        if (!toastNotice || !toastMessage) return;
+        // #toastNotice already renders a leading SVG checkmark icon in history.html.
+        toastMessage.textContent = String(message || '').replace(/^\s*✓+\s*/u, '');
         toastNotice.classList.add('show');
-        setTimeout(() => {
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(() => {
             toastNotice.classList.remove('show');
-    }, 3800);
-}
+        }, 3800);
+    }
 
     // ==========================================
     // FILTER & SEARCH LISTENERS

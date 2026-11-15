@@ -3816,7 +3816,8 @@
         }
 
         toast.className = 'urban-feedback-toast';
-        toast.innerHTML = `${iconHtml} <span>${escapeHtml(msg)}</span>`;
+        const cleanMsg = String(msg).replace(/^\s*[✓✕ℹ⚠]+\s*/u, '');
+        toast.innerHTML = `${iconHtml} <span>${escapeHtml(cleanMsg)}</span>`;
 
         requestAnimationFrame(() => {
             toast.classList.add('show');

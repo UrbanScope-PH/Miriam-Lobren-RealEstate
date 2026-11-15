@@ -1643,7 +1643,8 @@
             }
 
             toast.className = 'urban-feedback-toast';
-            toast.innerHTML = iconHtml + ' <span>' + esc(msg) + '</span>';
+            var cleanMsg = String(msg).replace(/^\s*[✓✕ℹ⚠]+\s*/u, '');
+            toast.innerHTML = iconHtml + ' <span>' + esc(cleanMsg) + '</span>';
 
             requestAnimationFrame(function () {
                 toast.classList.add('show');

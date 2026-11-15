@@ -298,7 +298,7 @@ if (confirmDelete) {
             selectedPropertyId = null;
             await loadSavedProperties();
             if (typeof window.showFeedbackToast === 'function') {
-                window.showFeedbackToast("✓ Property deleted successfully.", "success");
+                window.showFeedbackToast("Property deleted successfully.", "success");
             }
         } catch (err) {
             console.error("Delete notice:", err);
@@ -396,7 +396,7 @@ document.addEventListener(
 
                 await loadSavedProperties();
                 if (typeof window.showFeedbackToast === 'function') {
-                    window.showFeedbackToast("✓ Property status updated successfully.", "success");
+                    window.showFeedbackToast("Property status updated successfully.", "success");
                 }
             } catch (err) {
                 console.error("Status toggle notice:", err);
@@ -457,7 +457,7 @@ document.addEventListener(
                         if (success) {
                             await loadSavedProperties();
                             if (typeof window.showFeedbackToast === 'function') {
-                                window.showFeedbackToast("✓ Property deleted successfully.", "success");
+                                window.showFeedbackToast("Property deleted successfully.", "success");
                             }
                         } else {
                             if (typeof window.showFeedbackToast === 'function') {

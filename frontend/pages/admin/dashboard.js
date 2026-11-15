@@ -1324,7 +1324,7 @@ window.togglePropertyStatus = async function(id, currentStatus) {
         cachedDashboardProperties = null;
         await loadDashboardData({ forceProperties: true });
         if (typeof window.showFeedbackToast === 'function') {
-            window.showFeedbackToast('✓ Property status updated successfully.', 'success');
+            window.showFeedbackToast('Property status updated successfully.', 'success');
         }
     } catch (err) {
         console.error("Dashboard toggle status error:", err);
@@ -1359,7 +1359,7 @@ window.deletePropertyListing = async function(id, title) {
             cachedDashboardProperties = null;
         await loadDashboardData({ forceProperties: true });
             if (typeof window.showFeedbackToast === 'function') {
-                window.showFeedbackToast("✓ Property deleted successfully.", "success");
+                window.showFeedbackToast("Property deleted successfully.", "success");
             }
         } else {
             if (typeof window.showFeedbackToast === 'function') {

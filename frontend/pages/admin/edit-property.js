@@ -369,7 +369,7 @@ document.addEventListener("DOMContentLoaded", async () => {
             } catch (e) {}
 
             if (typeof window.showFeedbackToast === 'function') {
-                window.showFeedbackToast("✓ Property updated successfully!", "success");
+                window.showFeedbackToast("Property updated successfully!", "success");
             }
             setTimeout(() => {
                 window.location.href = "propertylist.html";
