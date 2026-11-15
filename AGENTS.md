@@ -1396,6 +1396,9 @@ path when rendering from a page.
   - **Navbar Polling, Pre-Warming & Inquiry History Speedups:**
     - `session.js` lowers `loadClientNotifications` throttle (`1500 ms`), starts notification pre-warming in `init()` concurrently before `await getUser()`, fixes the `storage` event key to `'urbanscope_client_notifications'` with `{ force: true }`, listens on `BroadcastChannel('urbanscope_notifications')`, lowers `focus`/`visibilitychange` cooldown to `1000 ms`, and polls visible tabs every `5000 ms`.
     - `history.js` scopes its 6-second auto-mark-read call strictly to `displayedApprovedIds`, passes `prefetchedInquiries` into `loadClientNotifications`, adds `focus` (`1000 ms` cooldown) and `BroadcastChannel('urbanscope_notifications')` listeners, and uses adaptive polling (`4000 ms` while any inquiry is `Under Review`/`Pending`, `10000 ms` otherwise while visible).
+136. **Single-Checkmark Toast Deduplication (`frontend/pages/inquiry/history.js`, `frontend/shared/js/supabase.js`, `frontend/shared/js/api.js`, `frontend/shared/js/session.js`, `frontend/pages/admin/{properties,edit-property,dashboard,add-property}.js`):**
+  - Removed redundant literal `✓ ` prefixes from `showToast(...)` calls in `history.js` (because `#toastNotice` in `history.html` already renders an SVG polyline checkmark icon) and from `showFeedbackToast(...)` callers across `admin/*.js` (because `.urban-feedback-toast` already prepends `<span class="toast-icon-success">✓</span>`).
+  - Hardened `showToast` (`history.js`, also clearing `toastTimer` on consecutive toasts) and `showFeedbackToast` (`supabase.js`, `api.js`, `session.js`) to strip accidental leading `✓`/`✕`/`ℹ`/`⚠` characters from toast message text so icons never duplicate.
 
 ---
 

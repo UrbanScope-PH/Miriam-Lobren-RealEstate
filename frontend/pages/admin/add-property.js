@@ -357,7 +357,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 }
 
                 if (typeof window.showFeedbackToast === 'function') {
-                    window.showFeedbackToast("✓ Property \"" + property.propertyName + "\" successfully published!", "success");
+                    window.showFeedbackToast("Property \"" + property.propertyName + "\" successfully published!", "success");
                 }
                 propertyForm.reset();
                 setTimeout(() => {
