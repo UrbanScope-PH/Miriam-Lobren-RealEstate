@@ -16,6 +16,8 @@
     var root = document.documentElement;
     var requiresAuth = root.hasAttribute('data-require-auth');
     var currentUser = null;
+    var optimisticClientUser = null;
+    var renderedNavIdentityKey = '';
     var resolved = false;
     var cachedClientNotifs = [];
     var themeTransitionTimer = null;
@@ -48,15 +50,24 @@
     root.classList.add('auth-pending');
     if (requiresAuth) root.classList.add('auth-checking');
 
-    // Early synchronous check from localStorage to immediately hide guest reminders
+    // Early synchronous check from localStorage to prevent Log In / Sign Up flicker
     try {
-        var quickUser = localStorage.getItem('urbanscope_user') || localStorage.getItem(DEMO_USER_KEY) || localStorage.getItem('adminUser');
+        var isFileDemo = typeof location !== 'undefined' && location.protocol === 'file:';
+        var quickUser = localStorage.getItem('urbanscope_user') || (isFileDemo ? localStorage.getItem(DEMO_USER_KEY) : null) || localStorage.getItem('adminUser');
         if (quickUser) {
             var qParsed = JSON.parse(quickUser);
-            var qRole = String(qParsed.role || '').toLowerCase();
-            var qEmail = String(qParsed.email || '').toLowerCase().trim();
+            var qRole = String((qParsed && qParsed.role) || '').toLowerCase();
+            var qEmail = String((qParsed && qParsed.email) || '').toLowerCase().trim();
             var qIsStaff = (qRole === 'admin' || qRole === 'superadmin' || qEmail === 'urbanscope.cvsu@gmail.com' || qEmail === 'miriamalobren@gmail.com' || qEmail === 'admin.realestate@gmail.com' || qEmail === 'miriam@gmail.com');
-            if (!qIsStaff) {
+            if (!qIsStaff && qParsed && qEmail) {
+                var qMeta = qParsed.user_metadata || {};
+                optimisticClientUser = {
+                    name: qMeta.full_name || qParsed.full_name || qParsed.name || qEmail.split('@')[0],
+                    email: qParsed.email || qEmail,
+                    phone: qMeta.phone || qParsed.phone || '',
+                    role: qParsed.role || 'user',
+                    avatar_url: qParsed.avatar_url || qMeta.avatar_url || ''
+                };
                 root.classList.add('logged-in');
                 root.setAttribute('data-auth-state', 'logged-in');
             }
@@ -531,7 +542,37 @@
             '</div>';
     }
 
-    function renderNavProfile(user) {
+    function navIdentityKey(user) {
+        if (!user) return '';
+        return [
+            String(user.email || '').trim().toLowerCase(),
+            String(user.name || '').trim(),
+            String(user.avatar_url || '').trim(),
+            String(user.role || '').trim().toLowerCase()
+        ].join('|');
+    }
+
+    function restoreGuestNav() {
+        updateInquiryNoteVisibility(false);
+        renderedNavIdentityKey = '';
+        var acts = document.querySelector('.navbar .nav-acts, .inquiry-topbar .nav-acts, .history-topbar .nav-acts, .nav-acts');
+        if (acts) {
+            var oldMenu = acts.querySelector('#profileMenu');
+            if (oldMenu) oldMenu.remove();
+            var oldClientNotif = acts.querySelector('#clientNotifWrap');
+            if (oldClientNotif) oldClientNotif.remove();
+            ['loginBtn', 'signupBtn'].forEach(function (id) {
+                var b = document.getElementById(id);
+                if (b) {
+                    b.hidden = false;
+                    b.removeAttribute('aria-hidden');
+                }
+            });
+        }
+    }
+
+    function renderNavProfile(user, options) {
+        var opts = options || {};
         var path = location.pathname.toLowerCase().replace(/\\/g, '/');
         var inAdmin = path.includes('/pages/admin/') || path.includes('/pages/superadmin/');
         var role = (user && user.role ? String(user.role) : '').toLowerCase();
@@ -541,9 +582,18 @@
 
         var acts = document.querySelector('.navbar .nav-acts, .inquiry-topbar .nav-acts, .history-topbar .nav-acts, .nav-acts');
         if (acts) {
+            var nextKey = navIdentityKey(user);
+            if (renderedNavIdentityKey === nextKey && acts.querySelector('#profileMenu')) {
+                if (!opts.skipNotifications) loadClientNotifications();
+                return;
+            }
+
             ['loginBtn', 'signupBtn'].forEach(function (id) {
                 var b = document.getElementById(id);
-                if (b) b.remove();
+                if (b) {
+                    b.hidden = true;
+                    b.setAttribute('aria-hidden', 'true');
+                }
             });
             var oldMenu = acts.querySelector('#profileMenu');
             if (oldMenu) oldMenu.remove();
@@ -596,6 +646,7 @@
                 '</button>' + dropdownHtml(user);
             wireAvatarFallbacks(wrap);
             acts.appendChild(wrap);
+            renderedNavIdentityKey = nextKey;
 
             function closeMobileDrawerIfOpen() {
                 var navEl = document.getElementById('mainNav');
@@ -644,7 +695,9 @@
                 });
             }
 
-            loadClientNotifications();
+            if (!opts.skipNotifications) {
+                loadClientNotifications();
+            }
         }
     }
 
@@ -936,6 +989,16 @@
     // ------------------------------------------------------------------
     async function init() {
         initThemeToggle();
+        var optimisticRendered = false;
+        if (!requiresAuth && optimisticClientUser) {
+            updateInquiryNoteVisibility(true);
+            renderNavProfile(optimisticClientUser, { skipNotifications: true });
+            prefillInquiryForm(optimisticClientUser);
+            initMobileNav(optimisticClientUser);
+            root.classList.remove('auth-pending');
+            optimisticRendered = true;
+        }
+
         currentUser = await getUser();
         resolved = true;
 
@@ -948,12 +1011,16 @@
             updateInquiryNoteVisibility(true);
             renderNavProfile(currentUser);
             prefillInquiryForm(currentUser);
+            if (!optimisticRendered || navIdentityKey(optimisticClientUser) !== navIdentityKey(currentUser)) {
+                initMobileNav(currentUser);
+            }
         } else {
-            updateInquiryNoteVisibility(false);
+            restoreGuestNav();
+            if (optimisticRendered || !document.querySelector('.mobile-drawer-auth')) {
+                initMobileNav(null);
+            }
         }
 
-        initThemeToggle();
-        initMobileNav(currentUser);
         syncGlobalFooterContact();
 
         root.classList.remove('auth-pending', 'auth-checking');
@@ -1119,7 +1186,7 @@
     setTimeout(function () {
         if (!requiresAuth) root.classList.remove('auth-pending');
         else if (!resolved) location.replace(loginUrl(currentPage(), 'inquiry'));
-    }, 5000);
+    }, 8000);
 
     // Floating Contact Action Button (Messenger, Call, SMS)
     var CONTACT_CONFIG = {
