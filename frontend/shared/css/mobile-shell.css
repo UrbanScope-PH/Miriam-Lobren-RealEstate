@@ -1,5 +1,65 @@
 /* Shared responsive frame and navigation for client, admin, and superadmin pages. */
 
+/* Enforce active page color-scheme & branded sleek scrollbars site-wide
+   so OS dark mode never paints gray native controls/scrollbars over light pages. */
+:root,
+html {
+    color-scheme: light;
+    --us-scroll-track: #f1f5f2;
+    --us-scroll-thumb: #bdd4c2;
+    --us-scroll-thumb-hover: #7aa384;
+}
+
+html.dark-mode,
+html[data-theme="dark"] {
+    color-scheme: dark;
+    --us-scroll-track: #111b15;
+    --us-scroll-thumb: #2b4533;
+    --us-scroll-thumb-hover: #3ea35d;
+}
+
+* {
+    scrollbar-width: thin;
+    scrollbar-color: var(--us-scroll-thumb) var(--us-scroll-track);
+}
+
+*::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+*::-webkit-scrollbar-button {
+    display: none;
+    width: 0;
+    height: 0;
+}
+
+*::-webkit-scrollbar-track,
+*::-webkit-scrollbar-corner {
+    background: var(--us-scroll-track);
+}
+
+*::-webkit-scrollbar-thumb {
+    background: var(--us-scroll-thumb);
+    border-radius: 999px;
+    border: 2px solid var(--us-scroll-track);
+}
+
+@media (hover: hover) and (pointer: fine) {
+    *::-webkit-scrollbar-thumb:hover {
+        background: var(--us-scroll-thumb-hover);
+    }
+}
+
+.admin-sidebar,
+.sa-sidebar,
+.sidebar-nav,
+.sa-nav {
+    --us-scroll-track: transparent;
+    --us-scroll-thumb: rgba(155, 211, 165, 0.34);
+    --us-scroll-thumb-hover: rgba(155, 211, 165, 0.62);
+}
+
 .mobile-nav-toggle {
     display: none;
     width: 44px;

@@ -135,7 +135,35 @@ html.auth-checking body {
 .client-notif-list {
     max-height: 330px;
     overflow-y: auto;
-    divide-y: 1px solid #eef3ef;
+    overscroll-behavior-y: contain;
+    scrollbar-width: thin;
+    scrollbar-color: #c2d8c7 #f1f5f2;
+}
+
+.client-notif-list::-webkit-scrollbar {
+    width: 6px;
+}
+
+.client-notif-list::-webkit-scrollbar-button {
+    display: none;
+    width: 0;
+    height: 0;
+}
+
+.client-notif-list::-webkit-scrollbar-track {
+    background: #f1f5f2;
+    border-radius: 10px;
+}
+
+.client-notif-list::-webkit-scrollbar-thumb {
+    background: #c2d8c7;
+    border-radius: 10px;
+}
+
+@media (hover: hover) and (pointer: fine) {
+    .client-notif-list::-webkit-scrollbar-thumb:hover {
+        background: #7aa384;
+    }
 }
 
 .client-notif-item {
@@ -842,6 +870,24 @@ html.dark-mode .client-notif-item {
 
 html.dark-mode .client-notif-item {
     border-bottom-color: #223327;
+}
+
+html.dark-mode .client-notif-list {
+    scrollbar-color: #2b4533 #142018;
+}
+
+html.dark-mode .client-notif-list::-webkit-scrollbar-track {
+    background: #142018;
+}
+
+html.dark-mode .client-notif-list::-webkit-scrollbar-thumb {
+    background: #2b4533;
+}
+
+@media (hover: hover) and (pointer: fine) {
+    html.dark-mode .client-notif-list::-webkit-scrollbar-thumb:hover {
+        background: #3ea35d;
+    }
 }
 
 html.dark-mode .client-notif-item.unread {

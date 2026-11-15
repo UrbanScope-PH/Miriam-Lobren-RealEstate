@@ -4,6 +4,7 @@
  */
 
 :root {
+    color-scheme: light;
     /* Admin Design Tokens */
     --green: #2d5c39;
     --dark-green: #1a3b23;
