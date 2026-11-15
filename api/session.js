@@ -23,6 +23,7 @@ import {
     generateCsrfToken,
     getClientIp,
     getServiceRoleKey,
+    getSessionSecret,
     isStrictSameOrigin,
     isValidEmail,
     jsonWithCookies,
@@ -240,6 +241,10 @@ export default async function handler(req, res) {
 
     if (!getServiceRoleKey()) {
         return jsonWithCookies({ success: false, error: 'Server database credentials are not configured.' }, 503, res);
+    }
+
+    if (getSessionSecret().length < 32) {
+        return jsonWithCookies({ success: false, error: 'Server session secret is not configured. Set VERCEL_ADMIN_SESSION_SECRET (or URBANSCOPE_SECRET_KEY) in environment variables.' }, 503, res);
     }
 
     if (action === 'login') {
