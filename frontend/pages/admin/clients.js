@@ -101,7 +101,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
 
             // Load inquiries
-            let data = (typeof apiGetInquiries === 'function') ? await apiGetInquiries() : null;
+            const forceInquiries = Boolean(options && options.forceInquiries);
+            let data = (typeof apiGetInquiries === 'function') ? await apiGetInquiries(forceInquiries) : null;
             if (!data || !Array.isArray(data)) {
                 data = JSON.parse(localStorage.getItem('inquiries') || '[]');
             }
@@ -765,18 +766,18 @@ document.addEventListener('DOMContentLoaded', async () => {
     window.addEventListener('newInquiryReceived', handleExternalInquiryEvent);
     window.addEventListener('propertiesUpdated', () => loadData({ forceProperties: true }));
     document.addEventListener('visibilitychange', () => {
-        if (!document.hidden && (Date.now() - lastClientsVisibilityAt) > 10000) {
+        if (!document.hidden && (Date.now() - lastClientsVisibilityAt) > 6000) {
             lastClientsVisibilityAt = Date.now();
-            loadData();
+            loadData({ forceInquiries: true });
         }
     });
 
-    // Periodic live polling so inquiries table reflects new submissions without hammering Supabase
+    // Periodic live polling so inquiries table reflects new submissions quickly while visible
     setInterval(() => {
         if (document.visibilityState === 'visible') {
-            loadData();
+            loadData({ forceInquiries: true });
         }
-    }, 180000);
+    }, 20000);
 
     // Initial load
     await loadData();

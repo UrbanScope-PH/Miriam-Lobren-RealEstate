@@ -106,36 +106,51 @@ async function notifyAdminCancelled(inquiry) {
     }).catch(() => {});
 }
 
-async function ensureClientApprovalNotifications(clientEmail, approvedInquiries) {
-    if (!approvedInquiries.length) return;
-    const existingResult = await fetchRowsByNormalizedEmail('notifications', 'recipient_email', clientEmail, {
-        type: 'eq.approved',
-        select: 'inquiry_id,recipient_email'
-    }).catch(() => ({ ok: false, rows: [] }));
-    const existingRows = existingResult.ok ? existingResult.rows : [];
+async function ensureClientApprovalNotifications(clientEmail, approvedInquiries, prefetchedNotifications = null) {
+    if (!approvedInquiries.length) return [];
+    let existingRows = Array.isArray(prefetchedNotifications)
+        ? prefetchedNotifications.filter((n) => String(n && n.type ? n.type : '').toLowerCase() === 'approved')
+        : null;
+    if (!existingRows) {
+        const existingResult = await fetchRowsByNormalizedEmail('notifications', 'recipient_email', clientEmail, {
+            type: 'eq.approved',
+            select: 'inquiry_id,recipient_email'
+        }).catch(() => ({ ok: false, rows: [] }));
+        existingRows = existingResult.ok ? existingResult.rows : [];
+    }
     const seenIds = new Set(existingRows.map((n) => String(n.inquiry_id)));
 
     const missing = approvedInquiries.filter((inq) => !seenIds.has(String(inq.id)));
-    for (const inq of missing) {
+    if (!missing.length) return [];
+
+    const createdResults = await Promise.all(missing.map(async (inq) => {
         const code = `INQ-2026-${String(inq.id).padStart(3, '0')}`;
         const propTitle = String(inq.property_title || 'General Inquiry').trim();
-        await fetch(restUrl('notifications'), {
+        const payload = {
+            recipient_role: 'client',
+            recipient_email: clientEmail,
+            type: 'approved',
+            inquiry_id: inq.id,
+            property_title: propTitle,
+            client_name: String(inq.client_name || 'Client').trim(),
+            title: `Inquiry ${code} Approved!`,
+            message: `Your inquiry for "${propTitle}" has been approved by Miriam Lobren!`,
+            is_read: false,
+            is_seen: false
+        };
+        const r = await fetch(restUrl('notifications'), {
             method: 'POST',
             headers: serviceHeaders({}, true),
-            body: JSON.stringify({
-                recipient_role: 'client',
-                recipient_email: clientEmail,
-                type: 'approved',
-                inquiry_id: inq.id,
-                property_title: propTitle,
-                client_name: String(inq.client_name || 'Client').trim(),
-                title: `Inquiry ${code} Approved!`,
-                message: `Your inquiry for "${propTitle}" has been approved by Miriam Lobren!`,
-                is_read: false,
-                is_seen: false
-            })
-        }).catch(() => {});
-    }
+            body: JSON.stringify(payload)
+        }).catch(() => null);
+        if (r && r.ok) {
+            const rows = await r.json().catch(() => []);
+            if (Array.isArray(rows) && rows[0]) return rows[0];
+        }
+        return payload;
+    }));
+
+    return createdResults.filter(Boolean);
 }
 
 export default async function handler(req, res) {
@@ -200,22 +215,35 @@ export default async function handler(req, res) {
             }
 
             const targetEmail = (requestedEmail && session.isStaff) ? requestedEmail : session.email;
-            const inqResult = await fetchRowsByNormalizedEmail('inquiries', 'client_email', targetEmail, {
-                select: 'id,client_email,property_title,client_name,status'
-            }).catch(() => ({ ok: false, rows: [] }));
+            const [inqResult, notifResult] = await Promise.all([
+                fetchRowsByNormalizedEmail('inquiries', 'client_email', targetEmail, {
+                    select: 'id,client_email,property_title,client_name,status'
+                }).catch(() => ({ ok: false, rows: [] })),
+                fetchRowsByNormalizedEmail('notifications', 'recipient_email', targetEmail, {
+                    order: 'id.desc',
+                    limit: '50'
+                }).catch(() => ({ ok: false, rows: [] }))
+            ]);
+
+            let rows = notifResult.ok ? notifResult.rows : [];
             if (inqResult.ok && inqResult.rows.length > 0) {
                 const approved = inqResult.rows.filter((item) => {
                     const st = String(item.status || '').toLowerCase();
                     return st === 'approved' || st === 'scheduled';
                 });
-                await ensureClientApprovalNotifications(targetEmail, approved);
+                if (approved.length > 0) {
+                    const created = await ensureClientApprovalNotifications(
+                        targetEmail,
+                        approved,
+                        notifResult.ok ? rows : null
+                    );
+                    if (created.length > 0) {
+                        rows = [...created, ...rows].sort((a, b) => Number(b.id || 0) - Number(a.id || 0));
+                    }
+                }
             }
 
-            const notifResult = await fetchRowsByNormalizedEmail('notifications', 'recipient_email', targetEmail, {
-                order: 'id.desc',
-                limit: '50'
-            }).catch(() => ({ ok: false, rows: [] }));
-            return jsonWithCookies({ success: true, data: notifResult.ok ? notifResult.rows : [] }, 200, res);
+            return jsonWithCookies({ success: true, data: rows }, 200, res);
         }
 
         if (queryAction === 'appointments') {
@@ -256,15 +284,6 @@ export default async function handler(req, res) {
     const ip = getClientIp(req);
 
     if (action === 'create') {
-        if (!await checkRateLimit({ key: `inq_create:ip:${ip}`, limit: 8, windowSeconds: 300, blockSeconds: 600 })) {
-            return jsonWithCookies({ success: false, error: 'Too many inquiries submitted. Please try again shortly.' }, 429, res);
-        }
-
-        const botCheck = await verifyBotDefense(req, body);
-        if (!botCheck.ok) {
-            return jsonWithCookies({ success: false, error: botCheck.error || 'Submission rejected.' }, 400, res);
-        }
-
         const clientName = String(body.client_name || body.name || '').trim();
         const clientEmail = normalizeEmail(body.client_email || body.email || '');
         const clientPhone = String(body.client_phone || body.phone || '').trim();
@@ -276,9 +295,25 @@ export default async function handler(req, res) {
         }
 
         const lookupTitle = propertyTitle.replace(/^specific\s+property\s+inquiry\s*:\s*/i, '').trim();
-        const propRes = await fetch(restUrl('properties', { select: 'title,status' }), {
-            headers: serviceHeaders({}, true)
-        }).catch(() => null);
+        const isGeneralLookup = !lookupTitle || /^general\s+(?:inquiry|consultation)/i.test(lookupTitle);
+
+        const [allowed, botCheck, propRes] = await Promise.all([
+            checkRateLimit({ key: `inq_create:ip:${ip}`, limit: 8, windowSeconds: 300, blockSeconds: 600 }),
+            verifyBotDefense(req, body),
+            isGeneralLookup
+                ? Promise.resolve(null)
+                : fetch(restUrl('properties', { select: 'title,status' }), {
+                    headers: serviceHeaders({}, true)
+                }).catch(() => null)
+        ]);
+
+        if (!allowed) {
+            return jsonWithCookies({ success: false, error: 'Too many inquiries submitted. Please try again shortly.' }, 429, res);
+        }
+        if (!botCheck.ok) {
+            return jsonWithCookies({ success: false, error: botCheck.error || 'Submission rejected.' }, 400, res);
+        }
+
         if (propRes && propRes.ok) {
             const props = await propRes.json().catch(() => []);
             const matched = (Array.isArray(props) ? props : []).find(
@@ -426,27 +461,29 @@ export default async function handler(req, res) {
 
         if (newStatus.toLowerCase() === 'approved' && ownerEmail) {
             const code = `INQ-2026-${String(inquiryId).padStart(3, '0')}`;
-            await fetch(restUrl('notifications'), {
-                method: 'POST',
-                headers: serviceHeaders({}, true),
-                body: JSON.stringify({
-                    recipient_role: 'client',
-                    recipient_email: ownerEmail,
-                    type: 'approved',
-                    inquiry_id: Number(inquiryId),
-                    property_title: updated.property_title || 'General Inquiry',
-                    client_name: updated.client_name || 'Client',
-                    title: `Inquiry ${code} Approved!`,
-                    message: `Your inquiry for "${updated.property_title || 'General Inquiry'}" has been approved by Miriam Lobren!`,
-                    is_read: false,
-                    is_seen: false
-                })
-            }).catch(() => {});
-            await fetch(restUrl('notifications', { inquiry_id: `eq.${inquiryId}`, recipient_role: 'eq.admin' }), {
-                method: 'PATCH',
-                headers: serviceHeaders({}, true),
-                body: JSON.stringify({ is_read: true, is_seen: true })
-            }).catch(() => {});
+            await Promise.all([
+                fetch(restUrl('notifications'), {
+                    method: 'POST',
+                    headers: serviceHeaders({}, true),
+                    body: JSON.stringify({
+                        recipient_role: 'client',
+                        recipient_email: ownerEmail,
+                        type: 'approved',
+                        inquiry_id: Number(inquiryId),
+                        property_title: updated.property_title || 'General Inquiry',
+                        client_name: updated.client_name || 'Client',
+                        title: `Inquiry ${code} Approved!`,
+                        message: `Your inquiry for "${updated.property_title || 'General Inquiry'}" has been approved by Miriam Lobren!`,
+                        is_read: false,
+                        is_seen: false
+                    })
+                }).catch(() => {}),
+                fetch(restUrl('notifications', { inquiry_id: `eq.${inquiryId}`, recipient_role: 'eq.admin' }), {
+                    method: 'PATCH',
+                    headers: serviceHeaders({}, true),
+                    body: JSON.stringify({ is_read: true, is_seen: true })
+                }).catch(() => {})
+            ]);
         }
 
         return jsonWithCookies({ success: true, data: updated }, 200, res);

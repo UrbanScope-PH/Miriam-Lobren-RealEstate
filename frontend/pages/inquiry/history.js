@@ -67,15 +67,15 @@
     // ==========================================
     // FETCH INQUIRIES
     // ==========================================
-    function loadInquiries(silent = false) {
+    function loadInquiries(silent = false, forceRefresh = false) {
         if (!currentUser || isHistoryLoading) return Promise.resolve();
         isHistoryLoading = true;
-        return _loadInquiriesInner(silent).finally(function () {
+        return _loadInquiriesInner(silent, forceRefresh).finally(function () {
             isHistoryLoading = false;
         });
     }
 
-    async function _loadInquiriesInner(silent = false) {
+    async function _loadInquiriesInner(silent = false, forceRefresh = false) {
         if (!currentUser) return;
         if (!silent && allInquiries.length === 0) {
             inquiriesListEl.innerHTML = `
@@ -91,7 +91,7 @@
         const email = (currentUser.email || '').trim().toLowerCase();
         if (typeof window.apiGetMyInquiries === 'function') {
             try {
-                allInquiries = await window.apiGetMyInquiries(email);
+                allInquiries = await window.apiGetMyInquiries(email, forceRefresh);
             } catch (err) {
                 console.warn('Notice loading inquiries:', err);
                 allInquiries = [];
@@ -639,31 +639,31 @@ window.addEventListener('storage', function (e) {
             e.key === 'urbanscope_inquiry_overrides' ||
             e.key === 'urbanscope_client_notifications'
         ) {
-            loadInquiries(true);
+            loadInquiries(true, true);
         }
     });
 
 window.addEventListener('inquiryStatusChanged', function (e) {
     if (e && e.detail && e.detail.source === 'history') return;
-    loadInquiries(true);
+    loadInquiries(true, true);
 });
 
 window.addEventListener('inquiriesUpdated', function () {
-    loadInquiries(true);
+    loadInquiries(true, true);
 });
 
 document.addEventListener('visibilitychange', function () {
     if (document.visibilityState === 'visible') {
-        loadInquiries(true);
+        loadInquiries(true, true);
     }
 });
 
 // Poll periodically for remote backend/Supabase updates while history page is open
 setInterval(function () {
     if (document.visibilityState === 'visible' && currentUser) {
-        loadInquiries(false);
+        loadInquiries(true, true);
     }
-}, 180000);
+}, 20000);
 
 // Start initialization
 if (document.readyState === 'loading') {

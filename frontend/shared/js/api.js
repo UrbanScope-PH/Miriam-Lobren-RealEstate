@@ -223,22 +223,37 @@
 
     const READ_CACHE = {
         leadProfile: { promise: null, data: null, ts: 0 },
+        properties: new Map(),
         inquiries: { promise: null, data: null, ts: 0 },
         myInquiries: new Map(),
+        adminNotifications: { promise: null, data: null, ts: 0 },
+        clientNotifications: new Map(),
+        currentUser: { promise: null, data: null, ts: 0, hasValue: false },
         superadminUsers: { promise: null, data: null, ts: 0 }
     };
 
     function invalidateReadCache(scope = 'all') {
+        if (scope === 'all' || scope === 'properties') {
+            READ_CACHE.properties.clear();
+        }
         if (scope === 'all' || scope === 'inquiries') {
             READ_CACHE.inquiries = { promise: null, data: null, ts: 0 };
             READ_CACHE.myInquiries.clear();
+            READ_CACHE.adminNotifications = { promise: null, data: null, ts: 0 };
+            READ_CACHE.clientNotifications.clear();
+        }
+        if (scope === 'all' || scope === 'notifications') {
+            READ_CACHE.adminNotifications = { promise: null, data: null, ts: 0 };
+            READ_CACHE.clientNotifications.clear();
         }
         if (scope === 'all' || scope === 'users') {
             READ_CACHE.superadminUsers = { promise: null, data: null, ts: 0 };
             READ_CACHE.leadProfile = { promise: null, data: null, ts: 0 };
+            READ_CACHE.currentUser = { promise: null, data: null, ts: 0, hasValue: false };
         }
         if (scope === 'all' || scope === 'profile') {
             READ_CACHE.leadProfile = { promise: null, data: null, ts: 0 };
+            READ_CACHE.currentUser = { promise: null, data: null, ts: 0, hasValue: false };
             try { localStorage.removeItem('urbanscope_admin_profile_ts'); } catch (_) {}
         }
     }
@@ -359,6 +374,11 @@
     }
 
     function clearClientAuthStorage() {
+        READ_CACHE.currentUser = { promise: null, data: null, ts: 0, hasValue: false };
+        READ_CACHE.clientNotifications.clear();
+        READ_CACHE.myInquiries.clear();
+        READ_CACHE.inquiries = { promise: null, data: null, ts: 0 };
+        READ_CACHE.adminNotifications = { promise: null, data: null, ts: 0 };
         try {
             [
                 TOKEN_KEY,
@@ -459,258 +479,287 @@
     // ----------------------------------------------------------
     // 2. PROPERTY SERVICES
     // ----------------------------------------------------------
-    async function apiGetProperties(filter = {}) {
-        let liveProperties = [];
-
-        try {
-            const queryParts = [];
-
-            // 1. Property Type Filter
-            if (filter.type && filter.type !== 'all') {
-                const t = filter.type.toLowerCase().trim();
-                if (t === 'villa' || t === 'villas') {
-                    queryParts.push('property_type=ilike.*villa*');
-                } else if (t === 'townhouse' || t === 'townhouses') {
-                    queryParts.push('property_type=ilike.*townhouse*');
-                } else if (t === 'apartment' || t === 'apartments' || t === 'condo' || t === 'condominium') {
-                    queryParts.push('or=(property_type.ilike.*condominium*,property_type.ilike.*apartment*)');
-                } else if (t === 'subdivision' || t === 'subdivisions') {
-                    queryParts.push('property_type=ilike.*subdivision*');
-                } else if (t === 'triplex' || t === 'triplexes') {
-                    queryParts.push('property_type=ilike.*triplex*');
-                } else if (t === 'luxury' || t === 'luxury villas') {
-                    queryParts.push('or=(property_type.ilike.*villa*,price.gte.5000000)');
-                } else if (t === 'house-lot' || t === 'house & lot') {
-                    queryParts.push('or=(property_type.ilike.*townhouse*,property_type.ilike.*subdivision*,property_type.ilike.*single attached*,property_type.ilike.*triplex*,property_type.ilike.*villa*)');
-                } else {
-                    const safeType = escapePostgrestFilter(filter.type);
-                    if (safeType) queryParts.push(`property_type=ilike.*${encodeURIComponent(safeType)}*`);
-                }
-            }
-
-            // 2. Location Filter
-            if (filter.location && filter.location !== 'all') {
-                const cleanLoc = escapePostgrestFilter(filter.location.replace(/-/g, ' '));
-                if (cleanLoc) queryParts.push(`location=ilike.*${encodeURIComponent(cleanLoc)}*`);
-            }
-
-            // 3. Search Keyword across title, location, description, amenities
-            if (filter.search && filter.search.trim()) {
-                const cleanedSearch = escapePostgrestFilter(filter.search);
-                if (cleanedSearch) {
-                    const s = encodeURIComponent(cleanedSearch);
-                    queryParts.push(`or=(title.ilike.*${s}*,location.ilike.*${s}*,property_type.ilike.*${s}*,description.ilike.*${s}*,amenities.ilike.*${s}*)`);
-                }
-            }
-
-            if (filter.columns && /^[a-zA-Z0-9_,]+$/.test(String(filter.columns).trim())) {
-                queryParts.push(`select=${String(filter.columns).trim()}`);
-            }
-
-            queryParts.push('order=id.desc');
-
-            const url = `${REST_BASE}/properties?${queryParts.join('&')}`;
-            const res = await fetch(url, { method: 'GET', headers: getHeaders() });
-
-            if (res.ok) {
-                const data = await res.json();
-                if (Array.isArray(data) && data.length > 0) {
-                    liveProperties = data;
-                }
-            }
-        } catch (err) {
-            console.warn('Supabase properties fetch notice, attempting fallback:', err.message);
-        }
-
-        // Fallback 1: Local Python backend if available
-        if (liveProperties.length === 0 && isLocalBackendReachableHost()) {
-            try {
-                const localBase = getLocalApiBase();
-                const localRes = await fetch(`${localBase}/properties`, { method: 'GET' });
-                if (localRes.ok) {
-                    const localData = await localRes.json();
-                    if (Array.isArray(localData) && localData.length > 0) {
-                        liveProperties = localData;
-                    }
-                }
-            } catch (e) {}
-        }
-
-        // Fallback 2: Cached properties in localStorage
-        if (liveProperties.length === 0) {
-            try {
-                const cached = JSON.parse(localStorage.getItem('cached_live_properties') || '[]');
-                if (Array.isArray(cached) && cached.length > 0) {
-                    liveProperties = cached;
-                }
-            } catch (e) {}
-        }
-
-        // Always merge any locally created properties that are not yet in liveProperties
-        try {
-            const localProps = JSON.parse(localStorage.getItem('urbanScopeProperties') || localStorage.getItem('properties') || '[]');
-            if (Array.isArray(localProps) && localProps.length > 0) {
-                const existingIds = new Set(liveProperties.map(p => String(p.id)));
-                const existingTitles = new Set(liveProperties.map(p => (p.title || p.propertyName || '').toLowerCase().trim()));
-
-                localProps.forEach(lp => {
-                    const lpTitle = (lp.title || lp.propertyName || '').toLowerCase().trim();
-                    if (!existingIds.has(String(lp.id)) && (!lpTitle || !existingTitles.has(lpTitle))) {
-                        liveProperties.unshift(lp);
-                        existingIds.add(String(lp.id));
-                    }
-                });
-            }
-        } catch (e) {}
-
-        // Strictly retain only accredited properties: Airmen, Casasuerte, Kathleen, Liora, Benecia, Amore Classico
-        liveProperties = liveProperties.filter(p => {
-            if (!p) return false;
-            const t = (p.title || p.propertyName || p.name || '').toLowerCase().trim();
-            return t.includes('airmen') || t.includes('suerte') || t.includes('kathleen') || t.includes('liora') || t.includes('benecia') || t.includes('amore');
-        }).map(p => {
-            if (!p) return p;
-            const t = (p.title || p.propertyName || p.name || '').toLowerCase().trim();
-            if (t.includes('suerte')) p.title = 'Casasuerte';
-            else if (t.includes('kathleen')) p.title = 'Kathleen';
-            else if (t.includes('benecia')) p.title = 'Benecia Single-Attached';
-            else if (t.includes('amore')) p.title = 'Amore Classico';
-            return p;
+    async function apiGetProperties(filter = {}, forceRefresh = false) {
+        const isForce = Boolean(forceRefresh || (filter && filter.forceRefresh));
+        const cacheKey = JSON.stringify({
+            type: String((filter && filter.type) || 'all').toLowerCase().trim(),
+            location: String((filter && filter.location) || 'all').toLowerCase().trim(),
+            search: String((filter && filter.search) || '').trim(),
+            columns: String((filter && filter.columns) || '').trim()
         });
-
-        // Fallback to static accredited properties if list is empty
-        if (liveProperties.length === 0) {
-            liveProperties = [
-                {
-                    id: 1,
-                    title: "Casasuerte",
-                    location: "Barangay San Agustin, Trece Martires City, Cavite",
-                    property_type: "Townhouse",
-                    price: 2500000.0,
-                    bedrooms: 2,
-                    bathrooms: 1,
-                    lot_area: 50.0,
-                    floor_area: 50.8,
-                    carports: 1,
-                    storeys: 2,
-                    status: "Available",
-                    image_url: "assets/images/casasuerte.jpg",
-                    description: "Casasuerte stands out as an attractive option for first-time homebuyers and modern families looking for a sustainable yet affordable home. Equipped with built-in solar power system.",
-                    amenities: "Gated Entrance, Clubhouse, Basketball Court, Parks & Playgrounds, Built-in Solar Power System"
-                },
-                {
-                    id: 2,
-                    title: "Kathleen",
-                    location: "Molino 7, Bacoor, Cavite",
-                    property_type: "Townhouse",
-                    price: 6200000.0,
-                    bedrooms: 3,
-                    bathrooms: 2,
-                    lot_area: 112.0,
-                    floor_area: 112.0,
-                    carports: 1,
-                    storeys: 2,
-                    status: "Available",
-                    image_url: "assets/images/kathleen-facade.jpg",
-                    description: "Kathleen is a secure, family-friendly residential community offering 275 premium zen-inspired townhouses in Molino VII, Bacoor.",
-                    amenities: "Gated Entrance, Clubhouse, Park, Basketball Court, CCTV, Green-Oriented Community"
-                },
-                {
-                    id: 3,
-                    title: "Liora Homes",
-                    location: "Brgy. Malainen Bago, Naic, Cavite",
-                    property_type: "Townhouse",
-                    price: 2462400.0,
-                    bedrooms: 2,
-                    bathrooms: 1,
-                    lot_area: 50.0,
-                    floor_area: 44.0,
-                    carports: 1,
-                    storeys: 2,
-                    status: "Available",
-                    image_url: "assets/images/LioraHomes.jpg",
-                    description: "Award-winning Amora EcoLove townhomes equipped with solar panel systems and rainwater harvesting in Naic, Cavite.",
-                    amenities: "Clubhouse, Covered Basketball Court, Swimming Pool, Playground & Park, Solar-Ready System"
-                },
-                {
-                    id: 4,
-                    title: "Airmen's Village Triplex",
-                    location: "Pulang Lupa Dos, Las Piñas City",
-                    property_type: "Triplex",
-                    price: 8900000.0,
-                    bedrooms: 3,
-                    bathrooms: 3,
-                    lot_area: 83.25,
-                    floor_area: 143.78,
-                    carports: 2,
-                    storeys: 2,
-                    status: "Available",
-                    image_url: "assets/images/AirmenTriplex.WEBP",
-                    description: "Modern, Ready-for-Occupancy (RFO) triplex residential townhouse located in a secure and peaceful community in Las Piñas.",
-                    amenities: "Clubhouse, Basketball Court, Swimming Pool, Playground & Park, 24/7 Security, Balcony"
-                },
-                {
-                    id: 5,
-                    title: "Benecia Single-Attached",
-                    location: "Sihanouk Village, Barangay Talon IV, Las Piñas City",
-                    property_type: "Single-Attached House",
-                    price: 9695000.0,
-                    bedrooms: 3,
-                    bathrooms: 3,
-                    lot_area: 102.0,
-                    floor_area: 117.0,
-                    carports: 1,
-                    storeys: 2,
-                    status: "Available",
-                    image_url: "assets/images/benecia-facade.jpg",
-                    description: "Benecia Single Attached offers a modern and spacious home designed for families looking for comfort, privacy, and functionality in Sihanouk Village, Talon IV, Las Piñas City.",
-                    amenities: "Single-Attached House Design, Private Carport, Front Fence and Gate, Balcony, Lanai, Functional Multi-Level Living Spaces, Spacious Indoor Living Areas, Maid's Room, Powder Room, Ready for Occupancy (RFO)"
-                },
-                {
-                    id: 6,
-                    title: "Amore Classico",
-                    location: "Benedetto Residences, Barangay Pulang Lupa Uno, Las Piñas City",
-                    property_type: "Townhouse",
-                    price: 7995000.0,
-                    bedrooms: 3,
-                    bathrooms: 3,
-                    lot_area: 52.0,
-                    floor_area: 102.0,
-                    carports: 1,
-                    storeys: 3,
-                    status: "Available",
-                    image_url: "assets/images/amore-facade.jpg",
-                    description: "Amore Classico by Benedetto Residences is a thoughtfully designed three-storey townhouse ideal for growing families who need more space, comfort, and functionality in Pulang Lupa Uno, Las Piñas City.",
-                    amenities: "Three-Storey Townhouse Design, Spacious Family Hall, Dedicated Maid's Room, Functional Multi-Level Living Spaces, Private Patio, Powder Room, Ready-for-Occupancy (RFO) Units"
-                }
-            ];
+        const cachedEntry = READ_CACHE.properties.get(cacheKey);
+        const now = Date.now();
+        if (!isForce && cachedEntry && cachedEntry.data && (now - cachedEntry.ts) < 15000) {
+            return cachedEntry.data;
+        }
+        if (!isForce && cachedEntry && cachedEntry.promise) {
+            return cachedEntry.promise;
         }
 
-        if (liveProperties.length > 0) {
-            if (!filter.columns) {
+        const runner = (async () => {
+            let liveProperties = [];
+
+            try {
+                const queryParts = [];
+
+                // 1. Property Type Filter
+                if (filter.type && filter.type !== 'all') {
+                    const t = filter.type.toLowerCase().trim();
+                    if (t === 'villa' || t === 'villas') {
+                        queryParts.push('property_type=ilike.*villa*');
+                    } else if (t === 'townhouse' || t === 'townhouses') {
+                        queryParts.push('property_type=ilike.*townhouse*');
+                    } else if (t === 'apartment' || t === 'apartments' || t === 'condo' || t === 'condominium') {
+                        queryParts.push('or=(property_type.ilike.*condominium*,property_type.ilike.*apartment*)');
+                    } else if (t === 'subdivision' || t === 'subdivisions') {
+                        queryParts.push('property_type=ilike.*subdivision*');
+                    } else if (t === 'triplex' || t === 'triplexes') {
+                        queryParts.push('property_type=ilike.*triplex*');
+                    } else if (t === 'luxury' || t === 'luxury villas') {
+                        queryParts.push('or=(property_type.ilike.*villa*,price.gte.5000000)');
+                    } else if (t === 'house-lot' || t === 'house & lot') {
+                        queryParts.push('or=(property_type.ilike.*townhouse*,property_type.ilike.*subdivision*,property_type.ilike.*single attached*,property_type.ilike.*triplex*,property_type.ilike.*villa*)');
+                    } else {
+                        const safeType = escapePostgrestFilter(filter.type);
+                        if (safeType) queryParts.push(`property_type=ilike.*${encodeURIComponent(safeType)}*`);
+                    }
+                }
+
+                // 2. Location Filter
+                if (filter.location && filter.location !== 'all') {
+                    const cleanLoc = escapePostgrestFilter(filter.location.replace(/-/g, ' '));
+                    if (cleanLoc) queryParts.push(`location=ilike.*${encodeURIComponent(cleanLoc)}*`);
+                }
+
+                // 3. Search Keyword across title, location, description, amenities
+                if (filter.search && filter.search.trim()) {
+                    const cleanedSearch = escapePostgrestFilter(filter.search);
+                    if (cleanedSearch) {
+                        const s = encodeURIComponent(cleanedSearch);
+                        queryParts.push(`or=(title.ilike.*${s}*,location.ilike.*${s}*,property_type.ilike.*${s}*,description.ilike.*${s}*,amenities.ilike.*${s}*)`);
+                    }
+                }
+
+                if (filter.columns && /^[a-zA-Z0-9_,]+$/.test(String(filter.columns).trim())) {
+                    queryParts.push(`select=${String(filter.columns).trim()}`);
+                }
+
+                queryParts.push('order=id.desc');
+
+                const url = `${REST_BASE}/properties?${queryParts.join('&')}`;
+                const res = await fetch(url, { method: 'GET', headers: getHeaders() });
+
+                if (res.ok) {
+                    const data = await res.json();
+                    if (Array.isArray(data) && data.length > 0) {
+                        liveProperties = data;
+                    }
+                }
+            } catch (err) {
+                console.warn('Supabase properties fetch notice, attempting fallback:', err.message);
+            }
+
+            // Fallback 1: Local Python backend if available
+            if (liveProperties.length === 0 && isLocalBackendReachableHost()) {
                 try {
-                    localStorage.setItem('cached_live_properties', JSON.stringify(liveProperties));
-                    ['urbanScopeProperties', 'properties'].forEach(k => {
-                        const raw = localStorage.getItem(k);
-                        if (raw) {
-                            try {
-                                const parsed = JSON.parse(raw);
-                                if (Array.isArray(parsed)) {
-                                    const clean = parsed.filter(p => {
-                                        const t = (p.title || p.propertyName || p.name || '').toLowerCase().trim();
-                                        return t.includes('airmen') || t.includes('suerte') || t.includes('kathleen') || t.includes('liora') || t.includes('benecia') || t.includes('amore');
-                                    });
-                                    localStorage.setItem(k, JSON.stringify(clean));
-                                }
-                            } catch (_) {}
+                    const localBase = getLocalApiBase();
+                    const localRes = await fetch(`${localBase}/properties`, { method: 'GET' });
+                    if (localRes.ok) {
+                        const localData = await localRes.json();
+                        if (Array.isArray(localData) && localData.length > 0) {
+                            liveProperties = localData;
                         }
-                    });
+                    }
                 } catch (e) {}
             }
-            return liveProperties;
-        }
 
-        return null;
+            // Fallback 2: Cached properties in localStorage
+            if (liveProperties.length === 0) {
+                try {
+                    const cached = JSON.parse(localStorage.getItem('cached_live_properties') || '[]');
+                    if (Array.isArray(cached) && cached.length > 0) {
+                        liveProperties = cached;
+                    }
+                } catch (e) {}
+            }
+
+            // Always merge any locally created properties that are not yet in liveProperties
+            try {
+                const localProps = JSON.parse(localStorage.getItem('urbanScopeProperties') || localStorage.getItem('properties') || '[]');
+                if (Array.isArray(localProps) && localProps.length > 0) {
+                    const existingIds = new Set(liveProperties.map(p => String(p.id)));
+                    const existingTitles = new Set(liveProperties.map(p => (p.title || p.propertyName || '').toLowerCase().trim()));
+
+                    localProps.forEach(lp => {
+                        const lpTitle = (lp.title || lp.propertyName || '').toLowerCase().trim();
+                        if (!existingIds.has(String(lp.id)) && (!lpTitle || !existingTitles.has(lpTitle))) {
+                            liveProperties.unshift(lp);
+                            existingIds.add(String(lp.id));
+                        }
+                    });
+                }
+            } catch (e) {}
+
+            // Strictly retain only accredited properties: Airmen, Casasuerte, Kathleen, Liora, Benecia, Amore Classico
+            liveProperties = liveProperties.filter(p => {
+                if (!p) return false;
+                const t = (p.title || p.propertyName || p.name || '').toLowerCase().trim();
+                return t.includes('airmen') || t.includes('suerte') || t.includes('kathleen') || t.includes('liora') || t.includes('benecia') || t.includes('amore');
+            }).map(p => {
+                if (!p) return p;
+                const t = (p.title || p.propertyName || p.name || '').toLowerCase().trim();
+                if (t.includes('suerte')) p.title = 'Casasuerte';
+                else if (t.includes('kathleen')) p.title = 'Kathleen';
+                else if (t.includes('benecia')) p.title = 'Benecia Single-Attached';
+                else if (t.includes('amore')) p.title = 'Amore Classico';
+                return p;
+            });
+
+            // Fallback to static accredited properties if list is empty
+            if (liveProperties.length === 0) {
+                liveProperties = [
+                    {
+                        id: 1,
+                        title: "Casasuerte",
+                        location: "Barangay San Agustin, Trece Martires City, Cavite",
+                        property_type: "Townhouse",
+                        price: 2500000.0,
+                        bedrooms: 2,
+                        bathrooms: 1,
+                        lot_area: 50.0,
+                        floor_area: 50.8,
+                        carports: 1,
+                        storeys: 2,
+                        status: "Available",
+                        image_url: "assets/images/casasuerte.jpg",
+                        description: "Casasuerte stands out as an attractive option for first-time homebuyers and modern families looking for a sustainable yet affordable home. Equipped with built-in solar power system.",
+                        amenities: "Gated Entrance, Clubhouse, Basketball Court, Parks & Playgrounds, Built-in Solar Power System"
+                    },
+                    {
+                        id: 2,
+                        title: "Kathleen",
+                        location: "Molino 7, Bacoor, Cavite",
+                        property_type: "Townhouse",
+                        price: 6200000.0,
+                        bedrooms: 3,
+                        bathrooms: 2,
+                        lot_area: 112.0,
+                        floor_area: 112.0,
+                        carports: 1,
+                        storeys: 2,
+                        status: "Available",
+                        image_url: "assets/images/kathleen-facade.jpg",
+                        description: "Kathleen is a secure, family-friendly residential community offering 275 premium zen-inspired townhouses in Molino VII, Bacoor.",
+                        amenities: "Gated Entrance, Clubhouse, Park, Basketball Court, CCTV, Green-Oriented Community"
+                    },
+                    {
+                        id: 3,
+                        title: "Liora Homes",
+                        location: "Brgy. Malainen Bago, Naic, Cavite",
+                        property_type: "Townhouse",
+                        price: 2462400.0,
+                        bedrooms: 2,
+                        bathrooms: 1,
+                        lot_area: 50.0,
+                        floor_area: 44.0,
+                        carports: 1,
+                        storeys: 2,
+                        status: "Available",
+                        image_url: "assets/images/LioraHomes.jpg",
+                        description: "Award-winning Amora EcoLove townhomes equipped with solar panel systems and rainwater harvesting in Naic, Cavite.",
+                        amenities: "Clubhouse, Covered Basketball Court, Swimming Pool, Playground & Park, Solar-Ready System"
+                    },
+                    {
+                        id: 4,
+                        title: "Airmen's Village Triplex",
+                        location: "Pulang Lupa Dos, Las Piñas City",
+                        property_type: "Triplex",
+                        price: 8900000.0,
+                        bedrooms: 3,
+                        bathrooms: 3,
+                        lot_area: 83.25,
+                        floor_area: 143.78,
+                        carports: 2,
+                        storeys: 2,
+                        status: "Available",
+                        image_url: "assets/images/AirmenTriplex.WEBP",
+                        description: "Modern, Ready-for-Occupancy (RFO) triplex residential townhouse located in a secure and peaceful community in Las Piñas.",
+                        amenities: "Clubhouse, Basketball Court, Swimming Pool, Playground & Park, 24/7 Security, Balcony"
+                    },
+                    {
+                        id: 5,
+                        title: "Benecia Single-Attached",
+                        location: "Sihanouk Village, Barangay Talon IV, Las Piñas City",
+                        property_type: "Single-Attached House",
+                        price: 9695000.0,
+                        bedrooms: 3,
+                        bathrooms: 3,
+                        lot_area: 102.0,
+                        floor_area: 117.0,
+                        carports: 1,
+                        storeys: 2,
+                        status: "Available",
+                        image_url: "assets/images/benecia-facade.jpg",
+                        description: "Benecia Single Attached offers a modern and spacious home designed for families looking for comfort, privacy, and functionality in Sihanouk Village, Talon IV, Las Piñas City.",
+                        amenities: "Single-Attached House Design, Private Carport, Front Fence and Gate, Balcony, Lanai, Functional Multi-Level Living Spaces, Spacious Indoor Living Areas, Maid's Room, Powder Room, Ready for Occupancy (RFO)"
+                    },
+                    {
+                        id: 6,
+                        title: "Amore Classico",
+                        location: "Benedetto Residences, Barangay Pulang Lupa Uno, Las Piñas City",
+                        property_type: "Townhouse",
+                        price: 7995000.0,
+                        bedrooms: 3,
+                        bathrooms: 3,
+                        lot_area: 52.0,
+                        floor_area: 102.0,
+                        carports: 1,
+                        storeys: 3,
+                        status: "Available",
+                        image_url: "assets/images/amore-facade.jpg",
+                        description: "Amore Classico by Benedetto Residences is a thoughtfully designed three-storey townhouse ideal for growing families who need more space, comfort, and functionality in Pulang Lupa Uno, Las Piñas City.",
+                        amenities: "Three-Storey Townhouse Design, Spacious Family Hall, Dedicated Maid's Room, Functional Multi-Level Living Spaces, Private Patio, Powder Room, Ready-for-Occupancy (RFO) Units"
+                    }
+                ];
+            }
+
+            if (liveProperties.length > 0) {
+                if (!filter.columns) {
+                    try {
+                        localStorage.setItem('cached_live_properties', JSON.stringify(liveProperties));
+                        ['urbanScopeProperties', 'properties'].forEach(k => {
+                            const raw = localStorage.getItem(k);
+                            if (raw) {
+                                try {
+                                    const parsed = JSON.parse(raw);
+                                    if (Array.isArray(parsed)) {
+                                        const clean = parsed.filter(p => {
+                                            const t = (p.title || p.propertyName || p.name || '').toLowerCase().trim();
+                                            return t.includes('airmen') || t.includes('suerte') || t.includes('kathleen') || t.includes('liora') || t.includes('benecia') || t.includes('amore');
+                                        });
+                                        localStorage.setItem(k, JSON.stringify(clean));
+                                    }
+                                } catch (_) {}
+                            }
+                        });
+                    } catch (e) {}
+                }
+                READ_CACHE.properties.set(cacheKey, { promise: null, data: liveProperties, ts: Date.now() });
+                return liveProperties;
+            }
+
+            return null;
+        })().finally(() => {
+            const cur = READ_CACHE.properties.get(cacheKey);
+            if (cur && cur.promise === runner) cur.promise = null;
+        });
+
+        READ_CACHE.properties.set(cacheKey, {
+            promise: runner,
+            data: cachedEntry ? cachedEntry.data : null,
+            ts: cachedEntry ? cachedEntry.ts : 0
+        });
+        return runner;
     }
 
     async function apiGetPropertyById(id) {
@@ -860,6 +909,7 @@
             localStorage.setItem('properties', JSON.stringify(adminProps));
         } catch (e) {}
 
+        invalidateReadCache('properties');
         return created;
     }
 
@@ -919,6 +969,7 @@
             });
         } catch (e) {}
 
+        invalidateReadCache('properties');
         return updated;
     }
 
@@ -959,6 +1010,7 @@
             });
         } catch (e) {}
 
+        invalidateReadCache('properties');
         return deleted;
     }
 
@@ -1077,6 +1129,7 @@
     }
 
     function pushAdminEventNotification(eventObj) {
+        invalidateReadCache('notifications');
         try {
             const list = JSON.parse(localStorage.getItem(ADMIN_EVENT_NOTIFS_KEY) || '[]');
             const cleanList = Array.isArray(list)
@@ -1089,6 +1142,7 @@
     }
 
     function pushClientNotification(notifObj) {
+        invalidateReadCache('notifications');
         try {
             const list = JSON.parse(localStorage.getItem(CLIENT_NOTIFS_KEY) || '[]');
             const cleanList = Array.isArray(list)
@@ -1136,68 +1190,108 @@
         return body;
     }
 
-    async function apiGetAdminNotifications() {
-        let items = [];
-        try {
-            const localEvents = JSON.parse(localStorage.getItem(ADMIN_EVENT_NOTIFS_KEY) || '[]');
-            if (Array.isArray(localEvents)) {
-                items = localEvents.filter(ev => ev && ev.type !== 'approved' && ev.type !== 'completed');
-            }
-        } catch (_) {}
+    async function apiGetAdminNotifications(forceRefresh = false) {
+        const now = Date.now();
+        if (!forceRefresh && READ_CACHE.adminNotifications.data && (now - READ_CACHE.adminNotifications.ts) < 5000) {
+            return READ_CACHE.adminNotifications.data;
+        }
+        if (!forceRefresh && READ_CACHE.adminNotifications.promise) {
+            return READ_CACHE.adminNotifications.promise;
+        }
 
-        try {
-            const res = isLocalBackendReachableHost()
-                ? await localApiFetch('/notifications?role=admin', { method: 'GET' })
-                : await hostedApiFetch('/api/inquiries?action=notifications&role=admin', { method: 'GET' });
-            if (res.ok) {
-                const body = await res.json().catch(() => []);
-                const rows = extractApiArrayPayload(body, 'notifications');
-                rows.forEach(r => {
-                    const inqId = r.inquiry_id || r.reference_id || r.id;
-                    const nType = String(r.type || 'info').toLowerCase();
-                    if (nType === 'approved' || nType === 'completed') return;
-                    const createdMs = r.created_at ? new Date(r.created_at).getTime() : Date.now();
-                    const notifKey = `${nType}_${inqId}`;
-                    if (!items.some(existing => String(existing.inquiryId) === String(inqId) && existing.type === nType)) {
-                        items.push({
-                            id: `srv_${r.id}`,
-                            notifKey: notifKey,
-                            type: nType,
-                            avatarClass: nType === 'cancelled' ? 'cancel' : 'user',
-                            avatarIcon: nType === 'cancelled' ? '✕' : '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>',
-                            inquiryId: inqId,
-                            client_name: r.client_name || 'Client',
-                            property_title: r.property_title || 'General Inquiry',
-                            title: r.title,
-                            subtitle: `${r.property_title || 'General Inquiry'}`,
-                            created_at: r.created_at,
-                            time: isNaN(createdMs) ? Date.now() : createdMs
-                        });
-                    }
-                });
-            }
-        } catch (_) {}
+        const runner = (async () => {
+            let items = [];
+            try {
+                const localEvents = JSON.parse(localStorage.getItem(ADMIN_EVENT_NOTIFS_KEY) || '[]');
+                if (Array.isArray(localEvents)) {
+                    items = localEvents.filter(ev => ev && ev.type !== 'approved' && ev.type !== 'completed');
+                }
+            } catch (_) {}
 
-        items = items.filter(it => it && it.type !== 'approved' && it.type !== 'completed');
-        items.sort((a, b) => (b.time || 0) - (a.time || 0));
-        return items;
+            try {
+                const res = isLocalBackendReachableHost()
+                    ? await localApiFetch('/notifications?role=admin', { method: 'GET' })
+                    : await hostedApiFetch('/api/inquiries?action=notifications&role=admin', { method: 'GET' });
+                if (res.ok) {
+                    const body = await res.json().catch(() => []);
+                    const rows = extractApiArrayPayload(body, 'notifications');
+                    rows.forEach(r => {
+                        const inqId = r.inquiry_id || r.reference_id || r.id;
+                        const nType = String(r.type || 'info').toLowerCase();
+                        if (nType === 'approved' || nType === 'completed') return;
+                        const createdMs = r.created_at ? new Date(r.created_at).getTime() : Date.now();
+                        const notifKey = `${nType}_${inqId}`;
+                        if (!items.some(existing => String(existing.inquiryId) === String(inqId) && existing.type === nType)) {
+                            items.push({
+                                id: `srv_${r.id}`,
+                                notifKey: notifKey,
+                                type: nType,
+                                avatarClass: nType === 'cancelled' ? 'cancel' : 'user',
+                                avatarIcon: nType === 'cancelled' ? '✕' : '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>',
+                                inquiryId: inqId,
+                                client_name: r.client_name || 'Client',
+                                property_title: r.property_title || 'General Inquiry',
+                                title: r.title,
+                                subtitle: `${r.property_title || 'General Inquiry'}`,
+                                created_at: r.created_at,
+                                time: isNaN(createdMs) ? Date.now() : createdMs
+                            });
+                        }
+                    });
+                }
+            } catch (_) {}
+
+            items = items.filter(it => it && it.type !== 'approved' && it.type !== 'completed');
+            items.sort((a, b) => (b.time || 0) - (a.time || 0));
+            READ_CACHE.adminNotifications = { promise: null, data: items, ts: Date.now() };
+            return items;
+        })().finally(() => {
+            if (READ_CACHE.adminNotifications.promise === runner) {
+                READ_CACHE.adminNotifications.promise = null;
+            }
+        });
+
+        READ_CACHE.adminNotifications.promise = runner;
+        return runner;
     }
 
-    async function apiGetClientNotifications(email) {
+    async function apiGetClientNotifications(email, forceRefresh = false) {
         const cleanEmail = (email || '').trim().toLowerCase();
         if (!cleanEmail || getDeletedUserEmails().includes(cleanEmail)) return [];
 
-        const mapByKey = new Map();
+        const cacheEntry = READ_CACHE.clientNotifications.get(cleanEmail);
+        const now = Date.now();
+        if (!forceRefresh && cacheEntry && cacheEntry.data && (now - cacheEntry.ts) < 5000) {
+            return cacheEntry.data;
+        }
+        if (!forceRefresh && cacheEntry && cacheEntry.promise) {
+            return cacheEntry.promise;
+        }
 
-        // 1. Authenticated backend / Vercel notification feed
-        try {
-            const res = isLocalBackendReachableHost()
-                ? await localApiFetch(`/notifications?email=${encodeURIComponent(cleanEmail)}`, { method: 'GET' })
-                : await hostedApiFetch('/api/inquiries?action=notifications', { method: 'GET' });
-            if (res.ok) {
-                const body = await res.json().catch(() => []);
-                const rows = extractApiArrayPayload(body, 'notifications');
-                rows.forEach(r => {
+        const runner = (async () => {
+            const mapByKey = new Map();
+
+            // 1. Fetch authenticated notification feed and client's live inquiries in parallel
+            const notifFetchPromise = (async () => {
+                try {
+                    const res = isLocalBackendReachableHost()
+                        ? await localApiFetch(`/notifications?email=${encodeURIComponent(cleanEmail)}`, { method: 'GET' })
+                        : await hostedApiFetch('/api/inquiries?action=notifications', { method: 'GET' });
+                    if (res.ok) {
+                        const body = await res.json().catch(() => []);
+                        return extractApiArrayPayload(body, 'notifications');
+                    }
+                } catch (_) {}
+                return [];
+            })();
+
+            const [serverRows, myInquiries] = await Promise.all([
+                notifFetchPromise,
+                apiGetMyInquiries(cleanEmail, forceRefresh).catch(() => [])
+            ]);
+
+            if (Array.isArray(serverRows)) {
+                serverRows.forEach(r => {
                     const inqId = r.inquiry_id || r.reference_id || r.id;
                     const nType = (r.reference_type === 'inquiry' ? 'approved' : (r.type || 'approved')).toLowerCase();
                     const key = `${nType}_${inqId}`;
@@ -1219,117 +1313,126 @@
                     });
                 });
             }
-        } catch (_) {}
 
-        // 2. Local stored client notifications (offline fallback)
-        try {
-            const localNotifs = JSON.parse(localStorage.getItem(CLIENT_NOTIFS_KEY) || '[]');
-            if (Array.isArray(localNotifs)) {
-                localNotifs.forEach(n => {
-                    if (n && String(n.client_email || '').trim().toLowerCase() === cleanEmail) {
-                        const key = n.notifKey || `approved_${n.inquiryId || n.id}`;
-                        if (!mapByKey.has(key)) {
-                            mapByKey.set(key, { ...n, notifKey: key });
-                        }
-                    }
-                });
-            }
-        } catch (_) {}
-
-        // 3. Derive from client's live inquiries with 'Approved' status
-        let myInquiries = [];
-        try {
-            myInquiries = await apiGetMyInquiries(cleanEmail);
-            if (Array.isArray(myInquiries)) {
-                let localRead = [];
-                let localToasted = [];
-                try {
-                    localRead = JSON.parse(localStorage.getItem('client_notifs_read_ids_' + cleanEmail) || '[]');
-                    localToasted = JSON.parse(localStorage.getItem('client_notifs_toasted_' + cleanEmail) || '[]');
-                } catch (_) {}
-
-                myInquiries.forEach(inq => {
-                    const s = String(inq.status || '').toLowerCase().trim();
-                    if (s === 'approved' || s === 'scheduled') {
-                        const key = `approved_${inq.id}`;
-                        const propTitle = inq.property_title || inq.propertyTitle || 'General Consultation';
-                        const code = inq.inquiry_code || `INQ-2026-${String(inq.id).padStart(3, '0')}`;
-                        const ts = inq.updated_at || inq.created_at || new Date().toISOString();
-                        const timeMs = new Date(ts).getTime();
-                        const alreadyRead = localRead.includes(key);
-                        const alreadySeen = alreadyRead || localToasted.includes(key);
-
-                        if (!mapByKey.has(key)) {
-                            mapByKey.set(key, {
-                                id: key,
-                                notifKey: key,
-                                type: 'approved',
-                                inquiryId: inq.id,
-                                client_email: cleanEmail,
-                                property_title: propTitle,
-                                title: `Inquiry ${code} Approved!`,
-                                message: `Your inquiry for "${propTitle}" has been approved by Miriam Lobren!`,
-                                is_read: alreadyRead,
-                                is_seen: alreadySeen,
-                                created_at: ts,
-                                time: isNaN(timeMs) ? Date.now() : timeMs
-                            });
-                        } else {
-                            const existing = mapByKey.get(key);
-                            if (existing && !existing.property_title && propTitle) {
-                                existing.property_title = propTitle;
-                            }
-                        }
-                    }
-                });
-            }
-        } catch (_) {}
-
-        // 4. Enforce referential integrity: any inquiry notification MUST belong to a live active inquiry
-        const validInquiryIds = new Set();
-        if (Array.isArray(myInquiries)) {
-            myInquiries.forEach(inq => {
-                if (inq && inq.id != null) validInquiryIds.add(String(inq.id));
-                if (inq && inq.inquiry_id != null) validInquiryIds.add(String(inq.inquiry_id));
-            });
-        }
-
-        const ghostKeys = [];
-        mapByKey.forEach((notif, k) => {
-            const isInquiryNotif = notif.inquiryId != null || notif.type === 'approved' || k.startsWith('approved_');
-            if (isInquiryNotif) {
-                const rawId = String(notif.inquiryId != null ? notif.inquiryId : k.replace(/^approved_/, ''));
-                if (!validInquiryIds.has(rawId)) {
-                    ghostKeys.push(k);
-                }
-            }
-        });
-
-        if (ghostKeys.length > 0) {
-            ghostKeys.forEach(k => mapByKey.delete(k));
+            // 2. Local stored client notifications (offline fallback)
             try {
-                const rawLocal = localStorage.getItem(CLIENT_NOTIFS_KEY);
-                if (rawLocal) {
-                    const parsed = JSON.parse(rawLocal);
-                    if (Array.isArray(parsed)) {
-                        const cleaned = parsed.filter(n => {
-                            if (!n) return false;
-                            const nEmail = String(n.client_email || '').trim().toLowerCase();
-                            if (nEmail === cleanEmail) {
-                                const rawId = String(n.inquiryId != null ? n.inquiryId : n.id || '').replace(/^approved_/, '');
-                                if (!validInquiryIds.has(rawId)) return false;
+                const localNotifs = JSON.parse(localStorage.getItem(CLIENT_NOTIFS_KEY) || '[]');
+                if (Array.isArray(localNotifs)) {
+                    localNotifs.forEach(n => {
+                        if (n && String(n.client_email || '').trim().toLowerCase() === cleanEmail) {
+                            const key = n.notifKey || `approved_${n.inquiryId || n.id}`;
+                            if (!mapByKey.has(key)) {
+                                mapByKey.set(key, { ...n, notifKey: key });
                             }
-                            return true;
-                        });
-                        localStorage.setItem(CLIENT_NOTIFS_KEY, JSON.stringify(cleaned));
-                    }
+                        }
+                    });
                 }
             } catch (_) {}
-        }
 
-        const result = Array.from(mapByKey.values());
-        result.sort((a, b) => (b.time || 0) - (a.time || 0));
-        return result;
+            // 3. Derive from client's live inquiries with 'Approved' status
+            try {
+                if (Array.isArray(myInquiries)) {
+                    let localRead = [];
+                    let localToasted = [];
+                    try {
+                        localRead = JSON.parse(localStorage.getItem('client_notifs_read_ids_' + cleanEmail) || '[]');
+                        localToasted = JSON.parse(localStorage.getItem('client_notifs_toasted_' + cleanEmail) || '[]');
+                    } catch (_) {}
+
+                    myInquiries.forEach(inq => {
+                        const s = String(inq.status || '').toLowerCase().trim();
+                        if (s === 'approved' || s === 'scheduled') {
+                            const key = `approved_${inq.id}`;
+                            const propTitle = inq.property_title || inq.propertyTitle || 'General Consultation';
+                            const code = inq.inquiry_code || `INQ-2026-${String(inq.id).padStart(3, '0')}`;
+                            const ts = inq.updated_at || inq.created_at || new Date().toISOString();
+                            const timeMs = new Date(ts).getTime();
+                            const alreadyRead = localRead.includes(key);
+                            const alreadySeen = alreadyRead || localToasted.includes(key);
+
+                            if (!mapByKey.has(key)) {
+                                mapByKey.set(key, {
+                                    id: key,
+                                    notifKey: key,
+                                    type: 'approved',
+                                    inquiryId: inq.id,
+                                    client_email: cleanEmail,
+                                    property_title: propTitle,
+                                    title: `Inquiry ${code} Approved!`,
+                                    message: `Your inquiry for "${propTitle}" has been approved by Miriam Lobren!`,
+                                    is_read: alreadyRead,
+                                    is_seen: alreadySeen,
+                                    created_at: ts,
+                                    time: isNaN(timeMs) ? Date.now() : timeMs
+                                });
+                            } else {
+                                const existing = mapByKey.get(key);
+                                if (existing && !existing.property_title && propTitle) {
+                                    existing.property_title = propTitle;
+                                }
+                            }
+                        }
+                    });
+                }
+            } catch (_) {}
+
+            // 4. Enforce referential integrity: any inquiry notification MUST belong to a live active inquiry
+            const validInquiryIds = new Set();
+            if (Array.isArray(myInquiries)) {
+                myInquiries.forEach(inq => {
+                    if (inq && inq.id != null) validInquiryIds.add(String(inq.id));
+                    if (inq && inq.inquiry_id != null) validInquiryIds.add(String(inq.inquiry_id));
+                });
+            }
+
+            const ghostKeys = [];
+            mapByKey.forEach((notif, k) => {
+                const isInquiryNotif = notif.inquiryId != null || notif.type === 'approved' || k.startsWith('approved_');
+                if (isInquiryNotif) {
+                    const rawId = String(notif.inquiryId != null ? notif.inquiryId : k.replace(/^approved_/, ''));
+                    if (!validInquiryIds.has(rawId)) {
+                        ghostKeys.push(k);
+                    }
+                }
+            });
+
+            if (ghostKeys.length > 0) {
+                ghostKeys.forEach(k => mapByKey.delete(k));
+                try {
+                    const rawLocal = localStorage.getItem(CLIENT_NOTIFS_KEY);
+                    if (rawLocal) {
+                        const parsed = JSON.parse(rawLocal);
+                        if (Array.isArray(parsed)) {
+                            const cleaned = parsed.filter(n => {
+                                if (!n) return false;
+                                const nEmail = String(n.client_email || '').trim().toLowerCase();
+                                if (nEmail === cleanEmail) {
+                                    const rawId = String(n.inquiryId != null ? n.inquiryId : n.id || '').replace(/^approved_/, '');
+                                    if (!validInquiryIds.has(rawId)) return false;
+                                }
+                                return true;
+                            });
+                            localStorage.setItem(CLIENT_NOTIFS_KEY, JSON.stringify(cleaned));
+                        }
+                    }
+                } catch (_) {}
+            }
+
+            const result = Array.from(mapByKey.values());
+            result.sort((a, b) => (b.time || 0) - (a.time || 0));
+            READ_CACHE.clientNotifications.set(cleanEmail, { promise: null, data: result, ts: Date.now() });
+            return result;
+        })().finally(() => {
+            const cur = READ_CACHE.clientNotifications.get(cleanEmail);
+            if (cur && cur.promise === runner) cur.promise = null;
+        });
+
+        READ_CACHE.clientNotifications.set(cleanEmail, {
+            promise: runner,
+            data: cacheEntry ? cacheEntry.data : null,
+            ts: cacheEntry ? cacheEntry.ts : 0
+        });
+        return runner;
     }
 
     async function apiMarkNotificationsRead(payload) {
@@ -1365,6 +1468,7 @@
             } catch (_) {}
         }
 
+        invalidateReadCache('notifications');
         window.dispatchEvent(new CustomEvent('clientNotificationRead', { detail: payload }));
         return true;
     }
@@ -1402,6 +1506,7 @@
             } catch (_) {}
         }
 
+        invalidateReadCache('notifications');
         return true;
     }
 
@@ -1469,7 +1574,7 @@
 
     async function apiGetInquiries(forceRefresh = false) {
         const now = Date.now();
-        if (!forceRefresh && READ_CACHE.inquiries.data && (now - READ_CACHE.inquiries.ts) < 30000) {
+        if (!forceRefresh && READ_CACHE.inquiries.data && (now - READ_CACHE.inquiries.ts) < 8000) {
             return READ_CACHE.inquiries.data;
         }
         if (!forceRefresh && READ_CACHE.inquiries.promise) {
@@ -1622,7 +1727,7 @@
 
         const entry = READ_CACHE.myInquiries.get(cleanEmail);
         const now = Date.now();
-        if (!forceRefresh && entry && entry.data && (now - entry.ts) < 30000) {
+        if (!forceRefresh && entry && entry.data && (now - entry.ts) < 8000) {
             return entry.data;
         }
         if (!forceRefresh && entry && entry.promise) {
@@ -3445,86 +3550,114 @@
         clearClientAuthStorage();
     }
 
-    async function apiGetCurrentUser() {
-        try {
-            if (isLocalBackendReachableHost()) {
-                try {
-                    const res = await localApiFetch('/auth/me', { method: 'GET' }, 5000);
-                    if (res.ok) {
-                        const u = await res.json();
-                        const userObj = {
-                            id: u.id,
-                            email: u.email,
-                            name: u.full_name,
-                            full_name: u.full_name,
-                            phone: u.phone || '',
-                            role: normalizeAccountRole(u.role, u.email),
-                            avatar_url: sanitizeImageUrl(u.avatar_url || '', ''),
-                            user_metadata: {
-                                full_name: u.full_name,
-                                phone: u.phone || '',
-                                avatar_url: sanitizeImageUrl(u.avatar_url || '', '')
-                            }
-                        };
-                        localStorage.setItem(USER_KEY, JSON.stringify(userObj));
-                        localStorage.setItem(DEMO_KEY, JSON.stringify(userObj));
-                        return userObj;
-                    }
-                    if (res.status === 401 || res.status === 403) {
-                        clearClientAuthStorage();
-                        return null;
-                    }
-                } catch (e) {}
-            } else if (typeof location === 'undefined' || location.protocol !== 'file:') {
-                try {
-                    const res = await hostedApiFetch('/api/session?action=me', { method: 'GET', cache: 'no-store' }, 5000);
-                    if (res.ok) {
-                        const body = await res.json().catch(() => ({}));
-                        if (body && body.authenticated && body.user) {
-                            const u = body.user;
+    async function apiGetCurrentUser(forceRefresh = false) {
+        const now = Date.now();
+        if (!forceRefresh && READ_CACHE.currentUser.hasValue && (now - READ_CACHE.currentUser.ts) < 5000) {
+            return READ_CACHE.currentUser.data;
+        }
+        if (!forceRefresh && READ_CACHE.currentUser.promise) {
+            return READ_CACHE.currentUser.promise;
+        }
+
+        const runner = (async () => {
+            let resolvedUser = null;
+            try {
+                if (isLocalBackendReachableHost()) {
+                    try {
+                        const res = await localApiFetch('/auth/me', { method: 'GET' }, 5000);
+                        if (res.ok) {
+                            const u = await res.json();
                             const userObj = {
                                 id: u.id,
                                 email: u.email,
-                                name: u.full_name || u.name,
-                                full_name: u.full_name || u.name,
+                                name: u.full_name,
+                                full_name: u.full_name,
                                 phone: u.phone || '',
                                 role: normalizeAccountRole(u.role, u.email),
                                 avatar_url: sanitizeImageUrl(u.avatar_url || '', ''),
                                 user_metadata: {
-                                    full_name: u.full_name || u.name,
+                                    full_name: u.full_name,
                                     phone: u.phone || '',
                                     avatar_url: sanitizeImageUrl(u.avatar_url || '', '')
                                 }
                             };
                             localStorage.setItem(USER_KEY, JSON.stringify(userObj));
                             localStorage.setItem(DEMO_KEY, JSON.stringify(userObj));
-                            return userObj;
+                            resolvedUser = userObj;
+                            READ_CACHE.currentUser = { promise: null, data: resolvedUser, ts: Date.now(), hasValue: true };
+                            return resolvedUser;
                         }
-                    }
-                    if (res.status === 401 || res.status === 403) {
-                        const adminSess = await apiGetHostedAdminSession();
-                        if (adminSess && adminSess.email) {
-                            return {
-                                id: adminSess.id || null,
-                                email: adminSess.email,
-                                name: adminSess.name || adminSess.full_name || adminSess.email,
-                                full_name: adminSess.full_name || adminSess.name || adminSess.email,
-                                role: normalizeAccountRole(adminSess.role, adminSess.email),
-                                avatar_url: sanitizeImageUrl(adminSess.avatar_url || '', ''),
-                                user_metadata: { full_name: adminSess.full_name || adminSess.name || '' }
-                            };
+                        if (res.status === 401 || res.status === 403) {
+                            clearClientAuthStorage();
+                            READ_CACHE.currentUser = { promise: null, data: null, ts: Date.now(), hasValue: true };
+                            return null;
                         }
-                        clearClientAuthStorage();
-                        return null;
-                    }
-                } catch (e) {}
-            }
+                    } catch (e) {}
+                } else if (typeof location === 'undefined' || location.protocol !== 'file:') {
+                    try {
+                        const res = await hostedApiFetch('/api/session?action=me', { method: 'GET', cache: 'no-store' }, 5000);
+                        if (res.ok) {
+                            const body = await res.json().catch(() => ({}));
+                            if (body && body.authenticated && body.user) {
+                                const u = body.user;
+                                const userObj = {
+                                    id: u.id,
+                                    email: u.email,
+                                    name: u.full_name || u.name,
+                                    full_name: u.full_name || u.name,
+                                    phone: u.phone || '',
+                                    role: normalizeAccountRole(u.role, u.email),
+                                    avatar_url: sanitizeImageUrl(u.avatar_url || '', ''),
+                                    user_metadata: {
+                                        full_name: u.full_name || u.name,
+                                        phone: u.phone || '',
+                                        avatar_url: sanitizeImageUrl(u.avatar_url || '', '')
+                                    }
+                                };
+                                localStorage.setItem(USER_KEY, JSON.stringify(userObj));
+                                localStorage.setItem(DEMO_KEY, JSON.stringify(userObj));
+                                resolvedUser = userObj;
+                                READ_CACHE.currentUser = { promise: null, data: resolvedUser, ts: Date.now(), hasValue: true };
+                                return resolvedUser;
+                            }
+                        }
+                        if (res.status === 401 || res.status === 403) {
+                            const adminSess = await apiGetHostedAdminSession();
+                            if (adminSess && adminSess.email) {
+                                resolvedUser = {
+                                    id: adminSess.id || null,
+                                    email: adminSess.email,
+                                    name: adminSess.name || adminSess.full_name || adminSess.email,
+                                    full_name: adminSess.full_name || adminSess.name || adminSess.email,
+                                    role: normalizeAccountRole(adminSess.role, adminSess.email),
+                                    avatar_url: sanitizeImageUrl(adminSess.avatar_url || '', ''),
+                                    user_metadata: { full_name: adminSess.full_name || adminSess.name || '' }
+                                };
+                                READ_CACHE.currentUser = { promise: null, data: resolvedUser, ts: Date.now(), hasValue: true };
+                                return resolvedUser;
+                            }
+                            clearClientAuthStorage();
+                            READ_CACHE.currentUser = { promise: null, data: null, ts: Date.now(), hasValue: true };
+                            return null;
+                        }
+                    } catch (e) {}
+                }
 
-            const cached = JSON.parse(localStorage.getItem(USER_KEY)) || JSON.parse(localStorage.getItem(DEMO_KEY));
-            return cached || null;
-        } catch (e) {
-            return null;
-        }
+                const cached = JSON.parse(localStorage.getItem(USER_KEY)) || JSON.parse(localStorage.getItem(DEMO_KEY));
+                resolvedUser = cached || null;
+                READ_CACHE.currentUser = { promise: null, data: resolvedUser, ts: Date.now(), hasValue: true };
+                return resolvedUser;
+            } catch (e) {
+                return null;
+            }
+        })().finally(() => {
+            if (READ_CACHE.currentUser.promise === runner) {
+                READ_CACHE.currentUser.promise = null;
+            }
+        });
+
+        READ_CACHE.currentUser.promise = runner;
+        return runner;
     }
 
     // ----------------------------------------------------------
