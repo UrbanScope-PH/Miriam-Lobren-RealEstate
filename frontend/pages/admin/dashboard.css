@@ -1169,6 +1169,12 @@
     padding: 14px 12px;
 }
 
+#managedPropertiesPanel th:last-child,
+#managedPropertiesPanel td:last-child {
+    width: 1%;
+    white-space: nowrap;
+}
+
 .table-panel tbody tr {
     background: #ffffff;
     transition: background 0.2s ease;

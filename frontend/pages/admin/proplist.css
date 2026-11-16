@@ -210,15 +210,15 @@
 /* SPECIFIC COLUMN WIDTHS & ALIGNMENT */
 #propertiesTable th:nth-child(1),
 #propertiesTable td:nth-child(1) {
-    width: 25%;
-    min-width: 190px;
+    width: 31%;
+    min-width: 210px;
     text-align: left;
 }
 
 #propertiesTable th:nth-child(2),
 #propertiesTable td:nth-child(2) {
-    width: 16%;
-    min-width: 120px;
+    width: 20%;
+    min-width: 140px;
     text-align: left;
 }
 
@@ -238,15 +238,15 @@
 
 #propertiesTable th:nth-child(5),
 #propertiesTable td:nth-child(5) {
-    width: 11%;
+    width: 12%;
     min-width: 95px;
     text-align: left;
 }
 
 #propertiesTable th:nth-child(6),
 #propertiesTable td:nth-child(6) {
-    width: 25%;
-    min-width: 250px;
+    width: 14%;
+    min-width: 120px;
     text-align: left;
 }
 

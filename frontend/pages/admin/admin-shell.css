@@ -2053,4 +2053,308 @@ html.dark-mode .admin-table-skeleton-row {
     background-size: 200% 100%;
 }
 
+/* ============================================================
+   SHARED PROPERTY ROW ACTIONS DROPDOWN MENU
+   ============================================================ */
+.prop-actions-dropdown {
+    display: inline-flex;
+    align-items: center;
+}
+
+.prop-actions-trigger {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 6px 12px;
+    border-radius: 8px;
+    border: 1px solid #cbe0d1;
+    background: #f0f7f2;
+    color: #1e5c33;
+    font-family: inherit;
+    font-size: 0.8rem;
+    font-weight: 600;
+    line-height: 1.2;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: background-color 0.16s ease, border-color 0.16s ease, box-shadow 0.16s ease, transform 0.16s ease;
+}
+
+@media (hover: hover) and (pointer: fine) {
+    .prop-actions-trigger:hover {
+        background: #e1f1e6;
+        border-color: #9ec8ab;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 10px rgba(30, 92, 51, 0.14);
+    }
+}
+
+.prop-actions-trigger:focus-visible,
+.prop-actions-trigger.is-open {
+    outline: none;
+    background: #e1f1e6;
+    border-color: #2d5c39;
+    box-shadow: 0 0 0 3px rgba(45, 92, 57, 0.16);
+}
+
+.prop-actions-trigger:active {
+    transform: translateY(0);
+}
+
+.prop-actions-chevron {
+    flex-shrink: 0;
+    transition: transform 0.18s ease;
+}
+
+.prop-actions-trigger.is-open .prop-actions-chevron {
+    transform: rotate(180deg);
+}
+
+.prop-actions-menu {
+    position: fixed;
+    z-index: 2250;
+    min-width: 184px;
+    background: #ffffff;
+    border: 1px solid #dce8df;
+    border-radius: 14px;
+    padding: 6px;
+    box-shadow: 0 18px 40px -4px rgba(15, 33, 20, 0.18), 0 6px 16px -2px rgba(45, 92, 57, 0.08);
+    box-sizing: border-box;
+    animation: propMenuIn 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+    transform-origin: top right;
+}
+
+.prop-actions-menu.open-upward {
+    animation-name: propMenuInUp;
+    transform-origin: bottom right;
+}
+
+@keyframes propMenuIn {
+    from {
+        opacity: 0;
+        transform: translateY(-6px) scale(0.98);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+@keyframes propMenuInUp {
+    from {
+        opacity: 0;
+        transform: translateY(6px) scale(0.98);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .prop-actions-menu,
+    .prop-actions-menu.open-upward,
+    .prop-actions-chevron,
+    .prop-actions-trigger {
+        animation: none !important;
+        transition: none !important;
+    }
+}
+
+.prop-actions-menu-header {
+    padding: 5px 10px 6px;
+    font-size: 0.67rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    color: #64748b;
+    border-bottom: 1px solid #edf2ee;
+    margin-bottom: 4px;
+    user-select: none;
+}
+
+.prop-actions-menu-divider {
+    height: 1px;
+    background: #edf2ee;
+    margin: 4px 6px;
+}
+
+.prop-actions-item {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    padding: 8px 10px;
+    min-height: 36px;
+    border: none;
+    border-radius: 9px;
+    background: transparent;
+    color: #1e293b;
+    font-family: inherit;
+    font-size: 0.83rem;
+    font-weight: 600;
+    line-height: 1.25;
+    text-align: left;
+    text-decoration: none;
+    cursor: pointer;
+    box-sizing: border-box;
+    outline: none;
+    transition: background-color 0.14s ease, color 0.14s ease;
+}
+
+.prop-actions-item svg {
+    flex-shrink: 0;
+}
+
+.prop-actions-item.prop-menu-view svg {
+    color: #1e5c33;
+}
+
+.prop-actions-item.prop-menu-edit svg {
+    color: #1d4ed8;
+}
+
+.prop-actions-item.prop-menu-sold {
+    color: #b45309;
+}
+
+.prop-actions-item.prop-menu-available {
+    color: #047857;
+}
+
+.prop-actions-item.prop-menu-delete {
+    color: #b91c1c;
+}
+
+.prop-actions-item:focus-visible {
+    background: #eef6f0;
+    color: #164e2b;
+}
+
+@media (hover: hover) and (pointer: fine) {
+    .prop-actions-item:hover {
+        background: #eef6f0;
+        color: #164e2b;
+    }
+
+    .prop-actions-item.prop-menu-edit:hover {
+        background: #eff6ff;
+        color: #1e40af;
+    }
+
+    .prop-actions-item.prop-menu-sold:hover {
+        background: #fff7ed;
+        color: #9a3412;
+    }
+
+    .prop-actions-item.prop-menu-available:hover {
+        background: #ecfdf5;
+        color: #065f46;
+    }
+
+    .prop-actions-item.prop-menu-delete:hover {
+        background: #fef2f2;
+        color: #991b1b;
+    }
+}
+
+.prop-actions-item.prop-menu-delete:focus-visible {
+    background: #fef2f2;
+    color: #991b1b;
+}
+
+html.dark-mode .prop-actions-trigger {
+    background: rgba(34, 197, 94, 0.14);
+    color: #86efac;
+    border-color: rgba(74, 222, 128, 0.34);
+}
+
+@media (hover: hover) and (pointer: fine) {
+    html.dark-mode .prop-actions-trigger:hover {
+        background: rgba(34, 197, 94, 0.24);
+        border-color: rgba(134, 239, 172, 0.55);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+    }
+}
+
+html.dark-mode .prop-actions-trigger:focus-visible,
+html.dark-mode .prop-actions-trigger.is-open {
+    background: rgba(34, 197, 94, 0.24);
+    border-color: #4ade80;
+    box-shadow: 0 0 0 3px rgba(74, 222, 128, 0.18);
+}
+
+html.dark-mode .prop-actions-menu {
+    background: #16231b;
+    border-color: #2b4534;
+    box-shadow: 0 22px 46px rgba(0, 0, 0, 0.58), 0 0 0 1px rgba(134, 239, 172, 0.08);
+}
+
+html.dark-mode .prop-actions-menu-header {
+    color: #7c9684;
+    border-bottom-color: #23362a;
+}
+
+html.dark-mode .prop-actions-menu-divider {
+    background: #23362a;
+}
+
+html.dark-mode .prop-actions-item {
+    color: #d8ebe0;
+}
+
+html.dark-mode .prop-actions-item.prop-menu-view svg,
+html.dark-mode .prop-actions-item.prop-menu-available {
+    color: #86efac;
+}
+
+html.dark-mode .prop-actions-item.prop-menu-edit svg {
+    color: #93c5fd;
+}
+
+html.dark-mode .prop-actions-item.prop-menu-sold {
+    color: #fde68a;
+}
+
+html.dark-mode .prop-actions-item.prop-menu-delete {
+    color: #fca5a5;
+}
+
+html.dark-mode .prop-actions-item:focus-visible {
+    background: #203427;
+    color: #f0fdf4;
+}
+
+@media (hover: hover) and (pointer: fine) {
+    html.dark-mode .prop-actions-item:hover {
+        background: #203427;
+        color: #f0fdf4;
+    }
+
+    html.dark-mode .prop-actions-item.prop-menu-edit:hover {
+        background: rgba(59, 130, 246, 0.18);
+        color: #bfdbfe;
+    }
+
+    html.dark-mode .prop-actions-item.prop-menu-sold:hover {
+        background: rgba(245, 158, 11, 0.18);
+        color: #fef3c7;
+    }
+
+    html.dark-mode .prop-actions-item.prop-menu-available:hover {
+        background: rgba(34, 197, 94, 0.18);
+        color: #bbf7d0;
+    }
+
+    html.dark-mode .prop-actions-item.prop-menu-delete:hover {
+        background: rgba(239, 68, 68, 0.2);
+        color: #fecaca;
+    }
+}
+
+html.dark-mode .prop-actions-item.prop-menu-delete:focus-visible {
+    background: rgba(239, 68, 68, 0.2);
+    color: #fecaca;
+}
+
 

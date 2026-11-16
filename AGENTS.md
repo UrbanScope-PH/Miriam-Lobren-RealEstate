@@ -1421,6 +1421,10 @@ path when rendering from a page.
     - Updated `apiGetDashboardKPIs()` in `frontend/shared/js/supabase.js` and `frontend/shared/js/api.js` to call `hostedApiFetch('/api/inquiries?action=stats', { method: 'GET' }, 6000)` on hosted origins before falling back.
     - Updated `frontend/pages/admin/dashboard.js` (`loadDashboardData`) to invoke `apiGetDashboardKPIs()` across both hosted and local origins with a 60s `cachedDashboardKpis` cache and coerce `totalClientsCount = Math.max(0, Number(kpis.total_clients) || 0)`.
     - Updated `get_dashboard_stats` in `backend/routers/system.py` (`/api/stats` and `/api/view_dashboard_kpis`) to exclude soft-deleted user rows via parenthesized role conditions and deletion-marker filters.
+142. **Compact Property Actions Dropdown (`frontend/pages/admin/admin-shell.js`, `admin-shell.css`, `dashboard.js`, `dashboard.css`, `properties.js`, `proplist.css`, `frontend/shared/css/mobile-shell.css`):**
+  - Consolidated the 4 horizontal property table action buttons (`View`, `Edit`, `Mark Sold`/`Mark Available`, `Delete`) into a single compact `Actions` dropdown button (`UrbanPropertyActionMenu` in `admin-shell.js`) across both `pages/admin/dashboard.html` and `pages/admin/propertylist.html`.
+  - Uses a `position: fixed` floating portal menu (`#propertyActionsFloatingMenu` attached to `document.body`) with right-edge alignment, automatic viewport upward flip, CSS zoom scaling, `Escape`/`Tab`/arrow-key keyboard navigation, light & dark mode styles (`admin-shell.css`), and mobile touch-target sizing (`mobile-shell.css`), while slimming the `ACTIONS` column in `dashboard.css` and `proplist.css`.
+  - Extracted shared `toggleManagedPropertyStatus()` and `requestDeleteManagedProperty()` helpers in `properties.js` and aligned `.view-btn` across desktop/mobile to open `../properties/property-detail.html?id=...`.
 
 ---
 

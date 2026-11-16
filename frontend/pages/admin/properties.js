@@ -103,6 +103,9 @@ async function loadSavedProperties() {
 
 
 function renderPropertyRecords(list) {
+    if (window.UrbanPropertyActionMenu && typeof window.UrbanPropertyActionMenu.close === "function") {
+        window.UrbanPropertyActionMenu.close(false);
+    }
     if (!propertyTableBody) return;
     propertyTableBody.innerHTML = "";
     if (propertiesMobileList) propertiesMobileList.innerHTML = "";
@@ -213,6 +216,27 @@ function addPropertyRow(property) {
         row.style.background = "#fcfdfc";
     }
 
+    const actionsCellHtml = (window.UrbanPropertyActionMenu && typeof window.UrbanPropertyActionMenu.renderTrigger === "function")
+        ? window.UrbanPropertyActionMenu.renderTrigger({
+            id: property.id,
+            status: safeStatus,
+            title: meta.title
+        })
+        : `<div class="actions">
+                <button type="button" class="view-btn" data-id="${safeId}">View</button>
+                <button type="button" class="edit-btn" data-id="${safeId}">Edit</button>
+                <button type="button" class="status-toggle-btn ${isSold ? 'btn-make-available' : 'btn-make-sold'}"
+                    data-id="${safeId}"
+                    data-status="${safeStatus}">
+                    ${isSold ? 'Mark Available' : 'Mark as Sold'}
+                </button>
+                <button type="button" class="delete-btn"
+                    data-id="${safeId}"
+                    data-title="${safeTitle}">
+                    Delete
+                </button>
+            </div>`;
+
     row.innerHTML = `
         <td>
             <div class="property-name" style="display:flex; align-items:center; gap:12px;">
@@ -235,22 +259,7 @@ function addPropertyRow(property) {
                 ${safeStatus}
             </span>
         </td>
-        <td>
-            <div class="actions">
-                <button type="button" class="view-btn" data-id="${safeId}">View</button>
-                <button type="button" class="edit-btn" data-id="${safeId}">Edit</button>
-                <button type="button" class="status-toggle-btn ${isSold ? 'btn-make-available' : 'btn-make-sold'}"
-                    data-id="${safeId}"
-                    data-status="${safeStatus}">
-                    ${isSold ? 'Mark Available' : 'Mark as Sold'}
-                </button>
-                <button type="button" class="delete-btn"
-                    data-id="${safeId}"
-                    data-title="${safeTitle}">
-                    Delete
-                </button>
-            </div>
-        </td>
+        <td>${actionsCellHtml}</td>
     `;
 
     propertyTableBody.appendChild(row);
@@ -335,19 +344,158 @@ document.addEventListener("keydown", function (event) {
 // BUTTON ACTIONS (VIEW, EDIT, STATUS TOGGLE, DELETE)
 // ================================
 
+async function toggleManagedPropertyStatus(propertyId, rawStatus, controlBtn) {
+    const currentStatus = String(rawStatus || 'Available').trim().toLowerCase();
+    const isCurrentlySold = currentStatus === 'sold' || currentStatus === 'sold out';
+    const newStatus = isCurrentlySold ? 'Available' : 'Sold';
+    const isTrigger = Boolean(controlBtn && controlBtn.classList.contains("prop-actions-trigger"));
+    const prevLabel = controlBtn ? controlBtn.innerText : '';
+
+    if (controlBtn) {
+        controlBtn.disabled = true;
+        if (!isTrigger) controlBtn.innerText = 'Updating...';
+    }
+
+    try {
+        if (typeof apiUpdateProperty === 'function') {
+            await apiUpdateProperty(propertyId, { status: newStatus });
+        } else {
+            ['properties', 'cached_live_properties', 'urbanScopeProperties'].forEach(key => {
+                const list = JSON.parse(localStorage.getItem(key) || '[]');
+                const idx = list.findIndex(p => String(p.id) === String(propertyId));
+                if (idx !== -1) {
+                    list[idx].status = newStatus;
+                    localStorage.setItem(key, JSON.stringify(list));
+                }
+            });
+        }
+
+        await loadSavedProperties();
+        if (typeof window.showFeedbackToast === 'function') {
+            window.showFeedbackToast("Property status updated successfully.", "success");
+        }
+    } catch (err) {
+        console.error("Status toggle notice:", err);
+        if (typeof window.showFeedbackToast === 'function') {
+            window.showFeedbackToast("Could not update property status. Please check your connection.", "error");
+        } else {
+            alert("Could not update property status. Please check your connection.");
+        }
+        if (controlBtn) {
+            controlBtn.disabled = false;
+            if (!isTrigger) {
+                controlBtn.innerText = prevLabel || (isCurrentlySold ? 'Mark Available' : 'Mark as Sold');
+            }
+        }
+    }
+}
+
+async function requestDeleteManagedProperty(propertyId, propertyTitle, controlBtn) {
+    const labelTitle = propertyTitle || "this property";
+    if (!propertyId) {
+        if (typeof window.showFeedbackToast === 'function') {
+            window.showFeedbackToast("This property cannot be deleted yet.", "warn");
+        } else {
+            alert("This property cannot be deleted yet.");
+        }
+        return;
+    }
+
+    if (deleteModal) {
+        selectedPropertyId = propertyId;
+        const propToDeleteEl = document.getElementById("propertyToDelete");
+        if (propToDeleteEl) {
+            propToDeleteEl.textContent = `"${labelTitle}"`;
+        }
+        deleteModal.classList.add("show");
+        return;
+    }
+
+    if (!confirm(`Are you sure you want to permanently delete "${labelTitle}"?\n\nThis will remove it from the catalog and database.`)) {
+        return;
+    }
+
+    const isTrigger = Boolean(controlBtn && controlBtn.classList.contains("prop-actions-trigger"));
+    if (controlBtn) {
+        controlBtn.disabled = true;
+        if (!isTrigger) controlBtn.innerText = 'Deleting...';
+    }
+    try {
+        let success = false;
+        if (typeof apiDeleteProperty === "function") {
+            success = await apiDeleteProperty(propertyId);
+        } else {
+            ['properties', 'cached_live_properties', 'urbanScopeProperties'].forEach(key => {
+                const list = JSON.parse(localStorage.getItem(key) || '[]');
+                const filtered = list.filter(p => String(p.id) !== String(propertyId));
+                localStorage.setItem(key, JSON.stringify(filtered));
+            });
+            success = true;
+        }
+
+        if (success) {
+            await loadSavedProperties();
+            if (typeof window.showFeedbackToast === 'function') {
+                window.showFeedbackToast("Property deleted successfully.", "success");
+            }
+        } else {
+            if (typeof window.showFeedbackToast === 'function') {
+                window.showFeedbackToast("Could not delete property. Please check your admin permissions.", "error");
+            } else {
+                alert("Could not delete property. Please check your admin permissions.");
+            }
+            if (controlBtn) {
+                controlBtn.disabled = false;
+                if (!isTrigger) controlBtn.innerText = 'Delete';
+            }
+        }
+    } catch (err) {
+        console.error("Delete notice:", err);
+        if (typeof window.showFeedbackToast === 'function') {
+            window.showFeedbackToast("Could not delete property: " + (err.message || "Unknown error"), "error");
+        } else {
+            alert("Could not delete property: " + (err.message || "Unknown error"));
+        }
+        if (controlBtn) {
+            controlBtn.disabled = false;
+            if (!isTrigger) controlBtn.innerText = 'Delete';
+        }
+    }
+}
+
 document.addEventListener(
     "click",
     async function (event) {
+
+        const actionTrigger = event.target.closest("button.prop-actions-trigger[data-prop-action-toggle]");
+        if (actionTrigger && window.UrbanPropertyActionMenu && typeof window.UrbanPropertyActionMenu.toggle === "function") {
+            window.UrbanPropertyActionMenu.toggle(event, {
+                trigger: actionTrigger,
+                id: actionTrigger.getAttribute("data-prop-id"),
+                status: actionTrigger.getAttribute("data-prop-status") || "Available",
+                title: actionTrigger.getAttribute("data-prop-title") || "Listing",
+                onToggleStatus: async (ctx) => {
+                    await toggleManagedPropertyStatus(ctx.id, ctx.status, ctx.trigger);
+                },
+                onDelete: async (ctx) => {
+                    await requestDeleteManagedProperty(ctx.id, ctx.title, ctx.trigger);
+                }
+            });
+            return;
+        }
 
         // ============================
         // VIEW
         // ============================
 
-        if (event.target.classList.contains("view-btn")) {
-            const propertyId = event.target.dataset.id;
-            window.location.href =
-                "edit-property.html?id=" +
-                encodeURIComponent(propertyId);
+        const viewBtn = event.target.closest(".view-btn");
+        if (viewBtn) {
+            const propertyId = viewBtn.dataset.id;
+            window.open(
+                "../properties/property-detail.html?id=" + encodeURIComponent(propertyId),
+                "_blank",
+                "noopener,noreferrer"
+            );
             return;
         }
 
@@ -356,8 +504,9 @@ document.addEventListener(
         // EDIT
         // ============================
 
-        if (event.target.classList.contains("edit-btn")) {
-            const propertyId = event.target.dataset.id;
+        const editBtn = event.target.closest(".edit-btn");
+        if (editBtn) {
+            const propertyId = editBtn.dataset.id;
             window.location.href =
                 "edit-property.html?id=" +
                 encodeURIComponent(propertyId);
@@ -369,45 +518,9 @@ document.addEventListener(
         // STATUS TOGGLE (SOLD <-> AVAILABLE)
         // ============================
 
-        if (event.target.classList.contains("status-toggle-btn")) {
-            const button = event.target;
-            const propertyId = button.dataset.id;
-            const currentStatus = (button.dataset.status || 'Available').trim().toLowerCase();
-            const isCurrentlySold = currentStatus === 'sold' || currentStatus === 'sold out';
-            const newStatus = isCurrentlySold ? 'Available' : 'Sold';
-
-            button.disabled = true;
-            button.innerText = 'Updating...';
-
-            try {
-                if (typeof apiUpdateProperty === 'function') {
-                    await apiUpdateProperty(propertyId, { status: newStatus });
-                } else {
-                    // Local fallback sync
-                    ['properties', 'cached_live_properties', 'urbanScopeProperties'].forEach(key => {
-                        const list = JSON.parse(localStorage.getItem(key) || '[]');
-                        const idx = list.findIndex(p => String(p.id) === String(propertyId));
-                        if (idx !== -1) {
-                            list[idx].status = newStatus;
-                            localStorage.setItem(key, JSON.stringify(list));
-                        }
-                    });
-                }
-
-                await loadSavedProperties();
-                if (typeof window.showFeedbackToast === 'function') {
-                    window.showFeedbackToast("Property status updated successfully.", "success");
-                }
-            } catch (err) {
-                console.error("Status toggle notice:", err);
-                if (typeof window.showFeedbackToast === 'function') {
-                    window.showFeedbackToast("Could not update property status. Please check your connection.", "error");
-                } else {
-                    alert("Could not update property status. Please check your connection.");
-                }
-                button.disabled = false;
-                button.innerText = isCurrentlySold ? 'Mark Available' : 'Mark as Sold';
-            }
+        const statusBtn = event.target.closest(".status-toggle-btn");
+        if (statusBtn) {
+            await toggleManagedPropertyStatus(statusBtn.dataset.id, statusBtn.dataset.status, statusBtn);
             return;
         }
 
@@ -416,70 +529,11 @@ document.addEventListener(
         // DELETE
         // ============================
 
-        if (event.target.classList.contains("delete-btn")) {
-            const button = event.target;
-            const propertyId = button.dataset.id;
-            const propertyTitle = button.dataset.title || button.closest("tr")?.querySelector("strong")?.textContent || "this property";
-
-            if (!propertyId) {
-                if (typeof window.showFeedbackToast === 'function') {
-                    window.showFeedbackToast("This property cannot be deleted yet.", "warn");
-                } else {
-                    alert("This property cannot be deleted yet.");
-                }
-                return;
-            }
-
-            if (deleteModal) {
-                selectedPropertyId = propertyId;
-                const propToDeleteEl = document.getElementById("propertyToDelete");
-                if (propToDeleteEl) {
-                    propToDeleteEl.textContent = `"${propertyTitle}"`;
-                }
-                deleteModal.classList.add("show");
-            } else {
-                if (confirm(`Are you sure you want to permanently delete "${propertyTitle}"?\n\nThis will remove it from the catalog and database.`)) {
-                    button.disabled = true;
-                    button.innerText = 'Deleting...';
-                    try {
-                        let success = false;
-                        if (typeof apiDeleteProperty === "function") {
-                            success = await apiDeleteProperty(propertyId);
-                        } else {
-                            ['properties', 'cached_live_properties', 'urbanScopeProperties'].forEach(key => {
-                                const list = JSON.parse(localStorage.getItem(key) || '[]');
-                                const filtered = list.filter(p => String(p.id) !== String(propertyId));
-                                localStorage.setItem(key, JSON.stringify(filtered));
-                            });
-                            success = true;
-                        }
-
-                        if (success) {
-                            await loadSavedProperties();
-                            if (typeof window.showFeedbackToast === 'function') {
-                                window.showFeedbackToast("Property deleted successfully.", "success");
-                            }
-                        } else {
-                            if (typeof window.showFeedbackToast === 'function') {
-                                window.showFeedbackToast("Could not delete property. Please check your admin permissions.", "error");
-                            } else {
-                                alert("Could not delete property. Please check your admin permissions.");
-                            }
-                            button.disabled = false;
-                            button.innerText = 'Delete';
-                        }
-                    } catch (err) {
-                        console.error("Delete notice:", err);
-                        if (typeof window.showFeedbackToast === 'function') {
-                            window.showFeedbackToast("Could not delete property: " + (err.message || "Unknown error"), "error");
-                        } else {
-                            alert("Could not delete property: " + (err.message || "Unknown error"));
-                        }
-                        button.disabled = false;
-                        button.innerText = 'Delete';
-                    }
-                }
-            }
+        const deleteBtn = event.target.closest(".delete-btn");
+        if (deleteBtn) {
+            const propertyId = deleteBtn.dataset.id;
+            const propertyTitle = deleteBtn.dataset.title || deleteBtn.closest("tr")?.querySelector("strong")?.textContent || "this property";
+            await requestDeleteManagedProperty(propertyId, propertyTitle, deleteBtn);
             return;
         }
 

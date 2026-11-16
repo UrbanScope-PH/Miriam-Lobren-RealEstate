@@ -986,6 +986,238 @@
         }, true);
     }
 
+    // Shared Property Row Actions Dropdown (used across Admin Dashboard & Manage Properties)
+    let activePropActionCtx = null;
+    let activePropTrigger = null;
+    let propActionMenuEl = null;
+
+    function closePropActionMenu(restoreFocus) {
+        if (activePropTrigger) {
+            activePropTrigger.classList.remove("is-open");
+            activePropTrigger.setAttribute("aria-expanded", "false");
+            if (restoreFocus) {
+                try { activePropTrigger.focus(); } catch (_) {}
+            }
+        }
+        document.querySelectorAll(".prop-actions-trigger.is-open").forEach(btn => {
+            btn.classList.remove("is-open");
+            btn.setAttribute("aria-expanded", "false");
+        });
+        if (propActionMenuEl) {
+            propActionMenuEl.hidden = true;
+            propActionMenuEl.classList.remove("open-upward");
+            propActionMenuEl.style.visibility = "";
+        }
+        activePropActionCtx = null;
+        activePropTrigger = null;
+    }
+
+    function ensurePropActionMenu() {
+        if (propActionMenuEl) return propActionMenuEl;
+        propActionMenuEl = document.createElement("div");
+        propActionMenuEl.id = "propertyActionsFloatingMenu";
+        propActionMenuEl.className = "prop-actions-menu";
+        propActionMenuEl.setAttribute("role", "menu");
+        propActionMenuEl.setAttribute("aria-label", "Property actions");
+        propActionMenuEl.hidden = true;
+        document.body.appendChild(propActionMenuEl);
+
+        propActionMenuEl.addEventListener("click", (e) => {
+            const linkItem = e.target.closest("a.prop-actions-item");
+            if (linkItem) {
+                closePropActionMenu(false);
+                return;
+            }
+            const btnItem = e.target.closest("button.prop-actions-item[data-menu-action]");
+            if (!btnItem || !activePropActionCtx) return;
+            const action = btnItem.getAttribute("data-menu-action");
+            const ctx = activePropActionCtx;
+            closePropActionMenu(false);
+            if (action === "toggle" && typeof ctx.onToggleStatus === "function") {
+                ctx.onToggleStatus(ctx);
+            } else if (action === "delete" && typeof ctx.onDelete === "function") {
+                ctx.onDelete(ctx);
+            }
+        });
+
+        document.addEventListener("click", (e) => {
+            if (!propActionMenuEl || propActionMenuEl.hidden) return;
+            if (e.target.closest("#propertyActionsFloatingMenu") || e.target.closest(".prop-actions-trigger")) return;
+            closePropActionMenu(false);
+        });
+
+        document.addEventListener("keydown", (e) => {
+            if (!propActionMenuEl || propActionMenuEl.hidden) return;
+            if (e.key === "Escape") {
+                e.preventDefault();
+                closePropActionMenu(true);
+                return;
+            }
+            if (e.key === "Tab") {
+                closePropActionMenu(false);
+                return;
+            }
+            const items = Array.from(propActionMenuEl.querySelectorAll('[role="menuitem"]'));
+            if (!items.length) return;
+            const currentIdx = items.indexOf(document.activeElement);
+            if (e.key === "ArrowDown" || e.key === "ArrowUp") {
+                e.preventDefault();
+                const nextIdx = currentIdx === -1
+                    ? (e.key === "ArrowDown" ? 0 : items.length - 1)
+                    : (e.key === "ArrowDown" ? (currentIdx + 1) % items.length : (currentIdx - 1 + items.length) % items.length);
+                items[nextIdx].focus();
+            } else if (e.key === "Home") {
+                e.preventDefault();
+                items[0].focus();
+            } else if (e.key === "End") {
+                e.preventDefault();
+                items[items.length - 1].focus();
+            }
+        });
+
+        window.addEventListener("scroll", (e) => {
+            if (!propActionMenuEl || propActionMenuEl.hidden) return;
+            if (e.target && e.target.id === "propertyActionsFloatingMenu") return;
+            closePropActionMenu(false);
+        }, true);
+
+        window.addEventListener("resize", () => {
+            if (propActionMenuEl && !propActionMenuEl.hidden) {
+                closePropActionMenu(false);
+            }
+        });
+
+        return propActionMenuEl;
+    }
+
+    window.UrbanPropertyActionMenu = {
+        close: closePropActionMenu,
+        renderTrigger(opts) {
+            const safeId = escShellHtml(opts && opts.id != null ? String(opts.id) : "");
+            const safeEncodedId = escShellHtml(encodeURIComponent(opts && opts.id != null ? String(opts.id) : ""));
+            const safeStatus = escShellHtml((opts && opts.status) || "Available");
+            const safeTitle = escShellHtml((opts && opts.title) || "Listing");
+            return `
+                <div class="prop-actions-dropdown">
+                    <button type="button"
+                            class="prop-actions-trigger"
+                            data-prop-action-toggle="1"
+                            data-prop-id="${safeId}"
+                            data-prop-encoded-id="${safeEncodedId}"
+                            data-prop-status="${safeStatus}"
+                            data-prop-title="${safeTitle}"
+                            aria-haspopup="menu"
+                            aria-expanded="false"
+                            aria-label="Actions for ${safeTitle}">
+                        <span>Actions</span>
+                        <svg class="prop-actions-chevron" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <polyline points="6 9 12 15 18 9"></polyline>
+                        </svg>
+                    </button>
+                </div>
+            `;
+        },
+        toggle(event, options) {
+            if (event) event.stopPropagation();
+            const menu = ensurePropActionMenu();
+            const trigger = (options && options.trigger)
+                || (event && event.currentTarget)
+                || (event && event.target && event.target.closest(".prop-actions-trigger"));
+            if (!trigger) return;
+
+            if (!menu.hidden && activePropTrigger === trigger) {
+                closePropActionMenu(false);
+                return;
+            }
+
+            closePropActionMenu(false);
+
+            const id = String((options && options.id != null ? options.id : trigger.getAttribute("data-prop-id")) || "");
+            const status = String((options && options.status != null ? options.status : trigger.getAttribute("data-prop-status")) || "Available");
+            const title = String((options && options.title != null ? options.title : trigger.getAttribute("data-prop-title")) || "Listing");
+            const encodedId = encodeURIComponent(id);
+            const sLower = status.toLowerCase().trim();
+            const isSold = sLower === "sold" || sLower === "sold out";
+            const viewHref = (options && options.viewHref) || `../properties/property-detail.html?id=${encodedId}`;
+            const editHref = (options && options.editHref) || `edit-property.html?id=${encodedId}`;
+
+            activePropTrigger = trigger;
+            activePropActionCtx = {
+                id,
+                status,
+                title,
+                trigger,
+                onToggleStatus: options && options.onToggleStatus,
+                onDelete: options && options.onDelete
+            };
+
+            trigger.classList.add("is-open");
+            trigger.setAttribute("aria-expanded", "true");
+
+            const toggleLabel = isSold ? "Mark Available" : "Mark Sold";
+            const toggleClass = isSold ? "prop-menu-available" : "prop-menu-sold";
+            const toggleIcon = isSold
+                ? '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>'
+                : '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path><line x1="7" y1="7" x2="7.01" y2="7"></line></svg>';
+
+            menu.innerHTML = `
+                <div class="prop-actions-menu-header">Property Actions</div>
+                <a href="${escShellHtml(viewHref)}" target="_blank" rel="noopener noreferrer" class="prop-actions-item prop-menu-view" role="menuitem">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                    <span>View Listing</span>
+                </a>
+                <a href="${escShellHtml(editHref)}" class="prop-actions-item prop-menu-edit" role="menuitem">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                    <span>Edit Property</span>
+                </a>
+                <button type="button" class="prop-actions-item ${toggleClass}" data-menu-action="toggle" role="menuitem">
+                    ${toggleIcon}
+                    <span>${toggleLabel}</span>
+                </button>
+                <div class="prop-actions-menu-divider" role="separator"></div>
+                <button type="button" class="prop-actions-item prop-menu-delete" data-menu-action="delete" role="menuitem">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                    <span>Delete</span>
+                </button>
+            `;
+
+            menu.style.visibility = "hidden";
+            menu.hidden = false;
+
+            const rect = trigger.getBoundingClientRect();
+            const cssZoom = parseFloat(getComputedStyle(document.documentElement).zoom) || 1;
+            const layoutRatio = trigger.offsetWidth > 0 ? (rect.width / trigger.offsetWidth) : 1;
+            const zoomScale = (cssZoom !== 1 && Math.abs(layoutRatio - cssZoom) < 0.1) ? cssZoom : 1;
+
+            const tRight = rect.right / zoomScale;
+            const tLeft = rect.left / zoomScale;
+            const tTop = rect.top / zoomScale;
+            const tBottom = rect.bottom / zoomScale;
+            const vpWidth = (document.documentElement.clientWidth || (window.innerWidth / zoomScale));
+            const vpHeight = (window.innerHeight / zoomScale);
+
+            const menuWidth = Math.max(menu.offsetWidth || 0, 184);
+            menu.style.width = `${menuWidth}px`;
+
+            const menuHeight = menu.offsetHeight || 196;
+            const openUpward = (tBottom + 6 + menuHeight > vpHeight - 10) && (tTop > menuHeight + 16);
+            const preferredLeft = tRight - menuWidth;
+            const left = Math.min(Math.max(10, preferredLeft >= 10 ? preferredLeft : tLeft), vpWidth - menuWidth - 10);
+            const rawTop = openUpward ? (tTop - menuHeight - 6) : (tBottom + 6);
+            const top = Math.max(10, Math.min(rawTop, vpHeight - menuHeight - 10));
+
+            menu.classList.toggle("open-upward", openUpward);
+            menu.style.left = `${left}px`;
+            menu.style.top = `${top}px`;
+            menu.style.visibility = "";
+
+            if (event && event.detail === 0) {
+                const firstItem = menu.querySelector('[role="menuitem"]');
+                if (firstItem) firstItem.focus();
+            }
+        }
+    };
+
     // Initialize on DOM Ready
     if (document.readyState === "loading") {
         document.addEventListener("DOMContentLoaded", function () {
