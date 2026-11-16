@@ -152,7 +152,7 @@
 
             var config = Object.assign({
                 tcp: 6200000,
-                propertyTitle: 'Kathleen',
+                propertyTitle: 'Kathleen - Place 5',
                 propertyId: '',
                 reservationFee: 50000,
                 defaultDpPercent: 20,
@@ -196,7 +196,7 @@
                 '      </div>',
                 '    </div>',
                 '    <div class="calc-tcp-badge">',
-                '      <span class="calc-tcp-label">Total Contract Price (TCP)</span>',
+                '      <span class="calc-tcp-label">Indicative Property Price</span>',
                 '      <strong class="calc-tcp-val" id="calcTcpVal">' + UrbanCalculator.formatPeso(state.tcp) + '</strong>',
                 '    </div>',
                 '  </div>',
@@ -526,8 +526,18 @@
                     link: isSubfolder ? '../properties/casasuerte.html' : 'pages/properties/casasuerte.html'
                 },
                 {
+                    id: 'midori',
+                    title: 'Midori Mid-Rise Condo – Zone 1',
+                    location: 'Zone 1, Dasmariñas, Cavite',
+                    minPrice: 3140000,
+                    minSalary: 58000,
+                    financing: 'Pag-IBIG / Bank',
+                    image: 'assets/images/midori-main.webp',
+                    link: isSubfolder ? '../properties/midori.html' : 'pages/properties/midori.html'
+                },
+                {
                     id: 'kathleen',
-                    title: 'Kathleen Place',
+                    title: 'Kathleen - Place 5',
                     location: 'Bacoor, Cavite',
                     minPrice: 6200000,
                     minSalary: 105000,

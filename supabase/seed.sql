@@ -82,7 +82,7 @@ INSERT INTO property_types (id, name, slug, description) VALUES
 ALTER SEQUENCE property_types_id_seq RESTART WITH 10;
 
 -- ------------------------------------------------------------------------------
--- 8.3 Seed: Properties Catalog (4 Accredited Featured Properties)
+-- 8.3 Seed: Properties Catalog (7 Accredited Featured Properties)
 -- ------------------------------------------------------------------------------
 INSERT INTO properties (
     id, agent_id, property_type_id, title, subdivision_name,
@@ -120,8 +120,8 @@ INSERT INTO properties (
     2,
     1,
     4,
-    'Kathleen',
-    'Kathleen',
+    'Kathleen - Place 5',
+    'Kathleen - Place 5',
     'Magdiwang Road / Marcos Alvarez Ext.',
     'Bacoor',
     'Cavite',
@@ -137,7 +137,7 @@ INSERT INTO properties (
     'Available',
     'Clean Title',
     'assets/images/kathleen-facade.jpg',
-    'Kathleen is a secure, family-friendly residential community offering 275 premium townhouses in Molino VII, Bacoor, Cavite (border Las Pinas). Just 12 minutes from EVIA Lifestyle Center along Daang-Hari and MCX. This development features zen-inspired 2-storey townhouses with complete finishes including steel gates and modular cabinets in all rooms. The project offers quality units built to last, located in a thriving community with easy access to shopping centers, schools, hospitals, and major thoroughfares.',
+    'Kathleen - Place 5 is a secure, family-friendly residential community offering 275 premium townhouses in Molino VII, Bacoor, Cavite (border Las Pinas). Just 12 minutes from EVIA Lifestyle Center along Daang-Hari and MCX. This development features zen-inspired 2-storey townhouses with complete finishes including steel gates and modular cabinets in all rooms. The project offers quality units built to last, located in a thriving community with easy access to shopping centers, schools, hospitals, and major thoroughfares.',
     'Gated Entrance, Clubhouse, Park, Basketball Court, CCTV, Green-Oriented Community, Steel Gates Included, Modular Cabinets',
     14.41600,
     120.97500
@@ -193,12 +193,90 @@ INSERT INTO properties (
     'Clubhouse, Basketball Court, Swimming Pool, Playground & Park, 24/7 Security, Balcony',
     14.46610,
     120.99110
+),
+(
+    5,
+    1,
+    6,
+    'Benecia Single-Attached',
+    'Sihanouk Village',
+    'Sihanouk Village, Talon IV',
+    'Las Piñas City',
+    'Metro Manila',
+    'Sihanouk Village, Barangay Talon IV, Las Piñas City',
+    'Single-Attached House',
+    9695000.00,
+    3,
+    3,
+    102.00,
+    117.00,
+    1,
+    2,
+    'Available',
+    'Clean Title',
+    'assets/images/benecia-facade.jpg',
+    'Benecia Single Attached offers a modern and spacious home designed for families looking for comfort, privacy, and functionality in Sihanouk Village, Talon IV, Las Piñas City. Complete turnover with front fence and gate.',
+    'Single-Attached House Design, Private Carport, Front Fence and Gate, Balcony, Lanai, Maid''s Room, Powder Room',
+    14.43750,
+    120.99950
+),
+(
+    6,
+    1,
+    4,
+    'Amore Classico',
+    'Benedetto Residences',
+    'Benedetto Residences, Pulang Lupa Uno',
+    'Las Piñas City',
+    'Metro Manila',
+    'Benedetto Residences, Barangay Pulang Lupa Uno, Las Piñas City',
+    'Townhouse',
+    7995000.00,
+    3,
+    3,
+    52.00,
+    102.00,
+    1,
+    3,
+    'Available',
+    'Clean Title',
+    'assets/images/amore-facade.jpg',
+    'Amore Classico by Benedetto Residences is a thoughtfully designed three-storey townhouse in Barangay Pulang Lupa Uno, Las Piñas City.',
+    'Three-Storey Townhouse Design, Spacious Family Hall, Dedicated Maid''s Room, Private Patio, Powder Room',
+    14.47880,
+    120.98560
+),
+(
+    7,
+    1,
+    3,
+    'Midori Mid-Rise Condo – Zone 1',
+    'Midori Zone 1',
+    'Zone 1, Buildings 14–21',
+    'Dasmariñas City',
+    'Cavite',
+    'Zone 1, Buildings 14–21, Dasmariñas, Cavite',
+    'Mid-Rise Condominium',
+    3140000.00,
+    2,
+    1,
+    0.00,
+    50.00,
+    0,
+    2,
+    'Available',
+    'Clean Title',
+    'assets/images/midori-main.webp',
+    'Midori Mid-Rise Condo – Zone 1 offers a convenient and comfortable living experience for young professionals, couples, and starting families looking for an affordable home in Dasmariñas, Cavite. Each 50 sqm unit features two bedrooms, a toilet and bath, a living area, a dining and kitchen area, and a patio, with Inner and End unit options.',
+    '2nd Floor Units, Inner & End Unit Types, Living Area, Dining Area, Kitchen Area, Patio, Convenient Access to Public Transportation, Near Dasmariñas Bayan, Close to Schools and Essential Establishments, Accessible to Daily Needs',
+    14.32940,
+    120.93670
 );
 
 ALTER SEQUENCE properties_id_seq RESTART WITH 20;
 
 -- ------------------------------------------------------------------------------
--- 8.4 Seed: Property Gallery Images (4 Accredited Properties)
+-- 8.4 Seed: Property Gallery Images (7 Accredited Properties)
 -- ------------------------------------------------------------------------------
 INSERT INTO property_images (property_id, image_url, caption, display_order, is_primary) VALUES
 -- Casasuerte (ID: 1)
@@ -206,27 +284,79 @@ INSERT INTO property_images (property_id, image_url, caption, display_order, is_
 (1, 'assets/images/casasuerte-living.jpg', 'Living Area & Inverter', 2, FALSE),
 (1, 'assets/images/casasuerte-dining.jpg', 'Dining Hall', 3, FALSE),
 (1, 'assets/images/casasuerte-bedroom1.jpg', 'Master Bedroom', 4, FALSE),
+(1, 'assets/images/casasuerte-bedroom2.jpg', 'Second Bedroom', 5, FALSE),
+(1, 'assets/images/casasuerte-bathroom.jpg', 'Modern Bathroom', 6, FALSE),
+(1, 'assets/images/casasuerte-hallway.jpg', 'Second Floor Hallway & Staircase', 7, FALSE),
+(1, 'assets/images/casasuerte-service.jpg', 'Service & Laundry Area', 8, FALSE),
 
--- Kathleen (ID: 2)
-(2, 'assets/images/kathleen-facade.jpg', 'Zen Townhouse Facade', 1, TRUE),
-(2, 'assets/images/kathleen-living.jpg', 'Open Plan Living Room', 2, FALSE),
-(2, 'assets/images/kathleen-dining.jpg', 'Dining & Modular Kitchen', 3, FALSE),
-(2, 'assets/images/kathleen-gate.jpg', 'Included Steel Gate Entry', 4, FALSE),
+-- Kathleen - Place 5 (ID: 2)
+(2, 'assets/images/kathleen-facade.jpg', 'Kathleen - Place 5 Exterior Facade', 1, TRUE),
+(2, 'assets/images/kathleen-1.jpg', 'Steel Gate & Exterior Frontage', 2, FALSE),
+(2, 'assets/images/kathleen-2.jpg', 'Dressed-Up Living & Dining Room', 3, FALSE),
+(2, 'assets/images/kathleen-3.jpg', 'Dining Room, Kitchen & Staircase', 4, FALSE),
+(2, 'assets/images/kathleen-4.jpg', 'Living Room Seating & Windows', 5, FALSE),
+(2, 'assets/images/kathleen-5.jpg', 'Second Floor Hallway & Staircase', 6, FALSE),
+(2, 'assets/images/kathleen-6.jpg', 'Bedroom with Modular Cabinets', 7, FALSE),
+(2, 'assets/images/kathleen-7.jpg', 'Ground Floor Living, Dining & Kitchen', 8, FALSE),
+(2, 'assets/images/kathleen-8.jpg', 'Covered Carport & Driveway', 9, FALSE),
+(2, 'assets/images/kathleen-9.jpg', 'Open Ground Floor Plan', 10, FALSE),
 
 -- Liora Homes (ID: 3)
 (3, 'assets/images/LioraHomes.jpg', 'Liora Homes EcoLove Exterior', 1, TRUE),
-(3, 'assets/images/liora-aerial.jpg', 'Aerial Solar Roof View', 2, FALSE),
-(3, 'assets/images/liora-pool.jpg', 'Swimming Pool & Amenities', 3, FALSE),
-(3, 'assets/images/liora-living.jpg', 'Living Room & Solar Inverter', 4, FALSE),
-(3, 'assets/images/liora-dining.jpg', 'Dining Room & Kitchen', 5, FALSE),
-(3, 'assets/images/liora-bedroom.jpg', 'Second Floor Bedroom', 6, FALSE),
-(3, 'assets/images/liora-solar.jpg', 'Built-in Solar Panels', 7, FALSE),
-(3, 'assets/images/liora-rainwater.jpg', 'Rainwater Harvesting Storage', 8, FALSE),
+(3, 'assets/images/liora-2.jpg', 'Street Perspective', 2, FALSE),
+(3, 'assets/images/liora-3.jpg', 'Second Floor Bedroom', 3, FALSE),
+(3, 'assets/images/liora-4.jpg', 'Dining & Kitchen Area', 4, FALSE),
+(3, 'assets/images/liora-5.jpg', 'Living Room with Solar Inverter', 5, FALSE),
+(3, 'assets/images/liora-6.jpg', 'Modern Stairs with Modular Storage', 6, FALSE),
+(3, 'assets/images/liora-7.jpg', 'Open Concept Interior Space', 7, FALSE),
+(3, 'assets/images/liora-8.jpg', 'Eco-Friendly Community', 8, FALSE),
+(3, 'assets/images/liora-9.jpg', 'Swimming Pool & Clubhouse', 9, FALSE),
+(3, 'assets/images/liora-10.jpg', 'Aerial Solar Roof Townhouses', 10, FALSE),
+(3, 'assets/images/liora-11.jpg', 'Built-in Solar Panels', 11, FALSE),
+(3, 'assets/images/liora-12.jpg', 'Rainwater Harvesting Storage', 12, FALSE),
 
 -- Airmen's Village Triplex (ID: 4)
 (4, 'assets/images/AirmenTriplex.WEBP', 'Airmen Triplex Modern Elevation', 1, TRUE),
-(4, 'assets/images/airmen-flyer.jpg', 'RFO Triplex House Elevation & Details', 2, FALSE),
-(4, 'assets/images/airmen-tcp.jpg', 'Bank Financing Computation Sheet', 3, FALSE);
+
+-- Benecia Single-Attached (ID: 5)
+(5, 'assets/images/benecia-facade.jpg', 'Benecia Single-Attached Facade', 1, TRUE),
+(5, 'assets/images/benecia-1.jpg', 'Living Area', 2, FALSE),
+(5, 'assets/images/benecia-2.jpg', 'Kitchen Area', 3, FALSE),
+(5, 'assets/images/benecia-3.jpg', 'Lanai Area', 4, FALSE),
+(5, 'assets/images/benecia-4.jpg', 'Service Area', 5, FALSE),
+(5, 'assets/images/benecia-5.jpg', 'Maid''s Room', 6, FALSE),
+(5, 'assets/images/benecia-6.jpg', 'Ground Floor Toilet & Bath', 7, FALSE),
+(5, 'assets/images/benecia-7.jpg', 'Second Floor Hallway', 8, FALSE),
+(5, 'assets/images/benecia-8.jpg', 'Master''s Bedroom', 9, FALSE),
+(5, 'assets/images/benecia-9.jpg', 'Master''s Bedroom with Built-In Cabinets', 10, FALSE),
+(5, 'assets/images/benecia-10.jpg', 'Master Bedroom Toilet & Bath', 11, FALSE),
+(5, 'assets/images/benecia-11.jpg', 'Balcony', 12, FALSE),
+(5, 'assets/images/benecia-12.jpg', 'Bedroom 2', 13, FALSE),
+(5, 'assets/images/benecia-13.jpg', 'Bedroom 3', 14, FALSE),
+
+-- Amore Classico (ID: 6)
+(6, 'assets/images/amore-facade.jpg', 'Amore Classico Exterior', 1, TRUE),
+(6, 'assets/images/amore-livingarea.jpg', 'Living Area', 2, FALSE),
+(6, 'assets/images/amore-dining.jpg', 'Dining Area', 3, FALSE),
+(6, 'assets/images/amore-kitchen.jpg', 'Kitchen Area', 4, FALSE),
+(6, 'assets/images/amore-carport.jpg', 'Covered Carport', 5, FALSE),
+(6, 'assets/images/amore-servicearea.jpg', 'Service Area', 6, FALSE),
+(6, 'assets/images/amore-famcorner.jpg', '2nd Floor Family Corner', 7, FALSE),
+(6, 'assets/images/amore-masterbedroom.jpg', 'Master Bedroom', 8, FALSE),
+(6, 'assets/images/amore-mrbath.jpg', 'Master Bedroom Bath', 9, FALSE),
+(6, 'assets/images/amore-bedroom1.jpg', 'Bedroom 1', 10, FALSE),
+(6, 'assets/images/amore-bedroom2.jpg', 'Bedroom 2', 11, FALSE),
+(6, 'assets/images/amore-3rdfloortoilet.jpg', '3rd Floor Toilet & Bath', 12, FALSE),
+(6, 'assets/images/amore-laundrydeck.jpg', 'Laundry Deck', 13, FALSE),
+
+-- Midori Mid-Rise Condo – Zone 1 (ID: 7)
+(7, 'assets/images/midori-main.webp', 'Midori Mid-Rise Building Exterior', 1, TRUE),
+(7, 'assets/images/midori-living.jpg', 'Living & Dining Area', 2, FALSE),
+(7, 'assets/images/midori-kitchen.jpg', 'Kitchen Area', 3, FALSE),
+(7, 'assets/images/midori-bedroom1.jpg', 'Bedroom 1', 4, FALSE),
+(7, 'assets/images/midori-bedroom2.jpg', 'Bedroom 2', 5, FALSE),
+(7, 'assets/images/midori-toilet.jpg', 'Toilet & Bath', 6, FALSE),
+(7, 'assets/images/midori-patio.jpg', 'Patio Area', 7, FALSE);
 
 -- ------------------------------------------------------------------------------
 -- 8.5 Seed: Property Normalized Features
@@ -235,7 +365,10 @@ INSERT INTO property_features (property_id, feature_name) VALUES
 (1, 'Gated Entrance'), (1, 'Clubhouse'), (1, 'Basketball Court'), (1, 'Parks & Playgrounds'), (1, 'Built-in Solar Power System'),
 (2, 'Gated Entrance'), (2, 'Clubhouse'), (2, 'Park'), (2, 'Basketball Court'), (2, 'CCTV'), (2, 'Steel Gates Included'),
 (3, 'Solar-Ready System'), (3, 'Eco-Friendly Lighting'), (3, 'Basketball Court'), (3, 'Playground & Park'), (3, 'Rainwater Harvesting'),
-(4, 'Master Bedroom Balcony'), (4, 'Built-in Garage'), (4, 'Modern Kitchen Counter'), (4, 'Fiber Ready'), (4, 'Swimming Pool');
+(4, 'Master Bedroom Balcony'), (4, 'Built-in Garage'), (4, 'Modern Kitchen Counter'), (4, 'Fiber Ready'), (4, 'Swimming Pool'),
+(5, 'Private Carport'), (5, 'Front Fence and Gate'), (5, 'Balcony'), (5, 'Lanai'), (5, 'Maid''s Room'),
+(6, 'Family Hall'), (6, 'Maid''s Room'), (6, 'Private Patio'), (6, 'Three-Storey Layout'),
+(7, '2nd Floor Units'), (7, 'Inner & End Unit Types'), (7, 'Private Patio'), (7, 'Near Dasmariñas Bayan'), (7, 'Convenient Public Transport');
 
 -- ------------------------------------------------------------------------------
 -- 8.6 Seed: Saved Properties (Client Favorites)

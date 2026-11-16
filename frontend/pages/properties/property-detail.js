@@ -54,6 +54,10 @@ function initGallery() {
         galleryImages = [mainImg.src];
     }
 
+    document.querySelectorAll('.carousel-arrow').forEach(btn => {
+        btn.style.display = galleryImages.length <= 1 ? 'none' : '';
+    });
+
     if (mainImg) {
         mainImg.style.cursor = 'zoom-in';
         mainImg.setAttribute('title', 'Click to zoom image');
@@ -103,6 +107,9 @@ function updateGallery() {
     if (!mainImg || galleryImages.length === 0) return;
 
     mainImg.src = galleryImages[currentSlide];
+    document.querySelectorAll('.carousel-arrow').forEach(btn => {
+        btn.style.display = galleryImages.length <= 1 ? 'none' : '';
+    });
     thumbs.forEach((t, i) => {
         if (i === currentSlide) t.classList.add('active');
         else t.classList.remove('active');
@@ -222,7 +229,10 @@ async function loadPropertyFromDb() {
     if (inquiryBtn) inquiryBtn.href = `../inquiry/inquiry.html?type=property&id=${encodeURIComponent(propId)}`;
 
     const property = await apiGetPropertyById(propId);
-    if (!property) return;
+    if (!property) {
+        renderPropertyCalculator(null);
+        return;
+    }
 
     const titleEl = document.querySelector('.property-title');
     const locEl = document.querySelector('.property-loc');
@@ -233,9 +243,10 @@ async function loadPropertyFromDb() {
     let cleanTitle = property.title || '';
     const tCheck = cleanTitle.toLowerCase();
     if (tCheck.includes('suerte')) cleanTitle = 'Casasuerte';
-    else if (tCheck.includes('kathleen')) cleanTitle = 'Kathleen';
+    else if (tCheck.includes('kathleen')) cleanTitle = 'Kathleen - Place 5';
     else if (tCheck.includes('benecia')) cleanTitle = 'Benecia Single-Attached';
     else if (tCheck.includes('amore')) cleanTitle = 'Amore Classico';
+    else if (tCheck.includes('midori')) cleanTitle = 'Midori Mid-Rise Condo – Zone 1';
     if (titleEl) titleEl.innerText = cleanTitle;
     if (locEl) {
         locEl.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg> ${_escDetailHtml(property.location || '')}`;
@@ -269,38 +280,40 @@ async function loadPropertyFromDb() {
             '../../assets/images/casasuerte-bedroom1.jpg',
             '../../assets/images/casasuerte-bedroom2.jpg',
             '../../assets/images/casasuerte-bathroom.jpg',
-            '../../assets/images/casasuerte-service.jpg',
-            '../../assets/images/casasuerte-subdivision-plan.jpg'
+            '../../assets/images/casasuerte-hallway.jpg',
+            '../../assets/images/casasuerte-service.jpg'
         ];
     } else if (tLower.includes('kathleen')) {
         propImages = [
             '../../assets/images/kathleen-facade.jpg',
-            '../../assets/images/kathleen-living.jpg',
-            '../../assets/images/kathleen-dining.jpg',
-            '../../assets/images/kathleen-interior.jpg',
-            '../../assets/images/kathleen-gate.jpg',
-            '../../assets/images/kathleen-carport.jpg',
-            '../../assets/images/kathleen-hallway.jpg',
-            '../../assets/images/kathleen-map.jpg'
+            '../../assets/images/kathleen-1.jpg',
+            '../../assets/images/kathleen-2.jpg',
+            '../../assets/images/kathleen-3.jpg',
+            '../../assets/images/kathleen-4.jpg',
+            '../../assets/images/kathleen-5.jpg',
+            '../../assets/images/kathleen-6.jpg',
+            '../../assets/images/kathleen-7.jpg',
+            '../../assets/images/kathleen-8.jpg',
+            '../../assets/images/kathleen-9.jpg'
         ];
     } else if (tLower.includes('liora')) {
         propImages = [
             '../../assets/images/LioraHomes.jpg',
-            '../../assets/images/liora-aerial.jpg',
-            '../../assets/images/liora-pool.jpg',
-            '../../assets/images/liora-living.jpg',
-            '../../assets/images/liora-dining.jpg',
-            '../../assets/images/liora-interior.jpg',
-            '../../assets/images/liora-bedroom.jpg',
-            '../../assets/images/liora-stairs.jpg',
-            '../../assets/images/liora-solar.jpg',
-            '../../assets/images/liora-rainwater.jpg',
-            '../../assets/images/liora-community.jpg'
+            '../../assets/images/liora-2.jpg',
+            '../../assets/images/liora-3.jpg',
+            '../../assets/images/liora-4.jpg',
+            '../../assets/images/liora-5.jpg',
+            '../../assets/images/liora-6.jpg',
+            '../../assets/images/liora-7.jpg',
+            '../../assets/images/liora-8.jpg',
+            '../../assets/images/liora-9.jpg',
+            '../../assets/images/liora-10.jpg',
+            '../../assets/images/liora-11.jpg',
+            '../../assets/images/liora-12.jpg'
         ];
     } else if (tLower.includes('airmen')) {
         propImages = [
-            '../../assets/images/AirmenTriplex.WEBP',
-            '../../assets/images/airmen-flyer.jpg'
+            '../../assets/images/AirmenTriplex.WEBP'
         ];
     } else if (tLower.includes('benecia')) {
         propImages = [
@@ -308,37 +321,48 @@ async function loadPropertyFromDb() {
             '../../assets/images/benecia-1.jpg',
             '../../assets/images/benecia-2.jpg',
             '../../assets/images/benecia-3.jpg',
+            '../../assets/images/benecia-4.jpg',
             '../../assets/images/benecia-5.jpg',
             '../../assets/images/benecia-6.jpg',
             '../../assets/images/benecia-7.jpg',
             '../../assets/images/benecia-8.jpg',
+            '../../assets/images/benecia-9.jpg',
             '../../assets/images/benecia-10.jpg',
             '../../assets/images/benecia-11.jpg',
-            '../../assets/images/benecia-13.jpg',
-            '../../assets/images/benecia-14.jpg',
-            '../../assets/images/benecia-15.jpg',
-            '../../assets/images/benecia-16.jpg',
-            '../../assets/images/benecia-17.jpg',
-            '../../assets/images/benecia-flyer.jpg'
+            '../../assets/images/benecia-12.jpg',
+            '../../assets/images/benecia-13.jpg'
         ];
     } else if (tLower.includes('amore')) {
         propImages = [
             '../../assets/images/amore-facade.jpg',
-            '../../assets/images/amore-1.jpg',
-            '../../assets/images/amore-2.jpg',
-            '../../assets/images/amore-3.jpg',
-            '../../assets/images/amore-4.jpg',
-            '../../assets/images/amore-5.jpg',
-            '../../assets/images/amore-6.jpg',
-            '../../assets/images/amore-7.jpg',
-            '../../assets/images/amore-8.jpg',
-            '../../assets/images/amore-9.jpg',
-            '../../assets/images/amore-10.jpg',
-            '../../assets/images/amore-11.jpg',
-            '../../assets/images/amore-13.jpg',
-            '../../assets/images/amore-14.jpg',
-            '../../assets/images/amore-15.jpg',
-            '../../assets/images/amore-flyer.jpg'
+            '../../assets/images/amore-livingarea.jpg',
+            '../../assets/images/amore-dining.jpg',
+            '../../assets/images/amore-kitchen.jpg',
+            '../../assets/images/amore-carport.jpg',
+            '../../assets/images/amore-servicearea.jpg',
+            '../../assets/images/amore-famcorner.jpg',
+            '../../assets/images/amore-masterbedroom.jpg',
+            '../../assets/images/amore-mrbath.jpg',
+            '../../assets/images/amore-bedroom1.jpg',
+            '../../assets/images/amore-bedroom2.jpg',
+            '../../assets/images/amore-3rdfloortoilet.jpg',
+            '../../assets/images/amore-laundrydeck.jpg'
+        ];
+    } else if (tLower.includes('midori')) {
+        propImages = [
+            '../../assets/images/midori-main.webp',
+            '../../assets/images/midori-living.jpg',
+            '../../assets/images/midori-living-2.jpg',
+            '../../assets/images/midori-kitchen.jpg',
+            '../../assets/images/midori-kitchen-2.jpg',
+            '../../assets/images/midori-bedroom1.jpg',
+            '../../assets/images/midori-bedroom1-2.jpg',
+            '../../assets/images/midori-bedroom1-3.jpg',
+            '../../assets/images/midori-bedroom2.jpg',
+            '../../assets/images/midori-bedroom2-2.jpg',
+            '../../assets/images/midori-bedroom2-3.jpg',
+            '../../assets/images/midori-toilet.jpg',
+            '../../assets/images/midori-patio.jpg'
         ];
     }
 
@@ -381,8 +405,9 @@ async function loadPropertyFromDb() {
             <div class="spec-item">
                 <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 3v18M15 3v18M3 9h18M3 15h18"/></svg>
                 <div class="spec-info">
-                    <strong>${_escDetailHtml(property.lot_area || 0)} sqm</strong>
-                    <span>Lot Area</span>
+                    ${tLower.includes('midori')
+                        ? '<strong>2nd Floor</strong><span>Buildings 14–21</span>'
+                        : `<strong>${_escDetailHtml(property.lot_area || 0)} sqm</strong><span>Lot Area</span>`}
                 </div>
             </div>
             <div class="spec-item">
@@ -395,8 +420,9 @@ async function loadPropertyFromDb() {
             <div class="spec-item">
                 <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M16 3H8L4 7h16l-4-4z"/><circle cx="7.5" cy="15.5" r="1.5"/><circle cx="16.5" cy="15.5" r="1.5"/></svg>
                 <div class="spec-info">
-                    <strong>${_escDetailHtml(property.carports || 1)} Car</strong>
-                    <span>Garage / Carport</span>
+                    ${tLower.includes('midori')
+                        ? '<strong>Inner &amp; End</strong><span>Unit Types</span>'
+                        : `<strong>${_escDetailHtml(property.carports || 1)} Car</strong><span>Garage / Carport</span>`}
                 </div>
             </div>
             <div class="spec-item">
@@ -449,7 +475,7 @@ async function loadPropertyFromDb() {
     if (titleLower.includes('suerte') || lLower.includes('san agustin') || lLower.includes('trece')) {
         mapQuery = '14.28315,120.86832+(Casasuerte+Trece+Martires)';
     } else if (titleLower.includes('kathleen') || lLower.includes('molino') || lLower.includes('bacoor')) {
-        mapQuery = '14.416,120.975+(Kathleen+Bacoor)';
+        mapQuery = '14.416,120.975+(Kathleen+Place+5+Bacoor)';
     } else if (titleLower.includes('liora') || lLower.includes('naic')) {
         mapQuery = '14.31028,120.76329+(Liora+Homes+Naic)';
     } else if (titleLower.includes('airmen')) {
@@ -458,6 +484,8 @@ async function loadPropertyFromDb() {
         mapQuery = '14.4375,120.9995+(Benecia+Single+Attached+Talon+IV+Las+Pinas)';
     } else if (titleLower.includes('amore') || lLower.includes('benedetto')) {
         mapQuery = '14.4788,120.9856+(Amore+Classico+Benedetto+Residences+Las+Pinas)';
+    } else if (titleLower.includes('midori') || lLower.includes('dasmarinas') || lLower.includes('dasmariñas')) {
+        mapQuery = '14.3294,120.9367+(Midori+Mid-Rise+Condo+Zone+1+Dasmarinas+Cavite)';
     }
 
     if (mapIframe) {
@@ -469,145 +497,8 @@ async function loadPropertyFromDb() {
         mapLink.setAttribute('rel', 'noopener noreferrer');
     }
 
-    // Dynamic TCP Section Rendering
-    renderDynamicTcp(property);
-
     // Dynamic Amortization Calculator Rendering
     renderPropertyCalculator(property);
-}
-
-function renderDynamicTcp(property) {
-    const container = document.getElementById('tcpContainer');
-    if (!container || !property) return;
-
-    const tLower = (property.title || '').toLowerCase();
-    let tcpHtml = '';
-
-    if (tLower.includes('suerte')) {
-        tcpHtml = `
-        <section class="tcp-section">
-            <div class="tcp-doc-card">
-                <div class="tcp-doc-info">
-                    <div class="tcp-doc-icon">
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
-                    </div>
-                    <div class="tcp-doc-text">
-                        <h4>Official Pag-IBIG Sample Computation &amp; Pricelist Sheet</h4>
-                        <p>Developer: RubySapphire Land Corp · DHSUD LTS No. 0001645 · As of September 1, 2026</p>
-                    </div>
-                </div>
-                <button type="button" class="tcp-doc-btn" onclick="openDocumentPreview('../../assets/images/casasuerte-tcp.jpg', 'Casasuerte official computation')">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line><line x1="11" y1="8" x2="11" y2="14"></line><line x1="8" y1="11" x2="14" y2="11"></line></svg>
-                    <span>View Official Pricelist</span>
-                </button>
-            </div>
-            <p class="tcp-disclaimer">*Estimated amortization figures are based on Pag-IBIG prevailing indicative rates (6.25% fixed for 3 years). Final loan approval and terms are subject to Pag-IBIG credit assessment.</p>
-        </section>`;
-    } else if (tLower.includes('kathleen')) {
-        tcpHtml = `
-        <section class="tcp-section">
-            <div class="tcp-doc-card">
-                <div class="tcp-doc-info">
-                    <div class="tcp-doc-icon">
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
-                    </div>
-                    <div class="tcp-doc-text">
-                        <h4>Official Bank Financing Promo Sample Computation</h4>
-                        <p>Developer: JKY Group / Jeika Properties Corp · DHSUD LTS No. 0000523 · Inclusive of Title Transfer &amp; Move-in Fees</p>
-                    </div>
-                </div>
-                <button type="button" class="tcp-doc-btn" onclick="openDocumentPreview('../../assets/images/kathleen-tcp.jpg', 'Kathleen official computation')">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line><line x1="11" y1="8" x2="11" y2="14"></line><line x1="8" y1="11" x2="14" y2="11"></line></svg>
-                    <span>View Official Computation</span>
-                </button>
-            </div>
-            <p class="tcp-disclaimer">*Inclusive of Title Transfer and Move-In Fees. Interest rates quoted are prevailing bank indicative rates; final loan approval is based on buyer's credit assessment.</p>
-        </section>`;
-    } else if (tLower.includes('liora')) {
-        tcpHtml = `
-        <section class="tcp-section">
-            <div class="tcp-doc-card">
-                <div class="tcp-doc-info">
-                    <div class="tcp-doc-icon">
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
-                    </div>
-                    <div class="tcp-doc-text">
-                        <h4>Official Pag-IBIG &amp; Bank Financing Sample Computation Sheet</h4>
-                        <p>Developer: Citihomes Builder &amp; Development, Inc. (CBDI) · Effective September 1, 2026</p>
-                    </div>
-                </div>
-                <button type="button" class="tcp-doc-btn" onclick="openDocumentPreview('../../assets/images/liora-tcp.jpg', 'Liora Homes official pricelist')">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line><line x1="11" y1="8" x2="11" y2="14"></line><line x1="8" y1="11" x2="14" y2="11"></line></svg>
-                    <span>View Official Pricelist</span>
-                </button>
-            </div>
-            <p class="tcp-disclaimer">*Estimated amortization figures are indicative at 6.25% fixed for 3 years. Applicable rates will be based on prevailing Pag-IBIG / Bank rates upon loan take-out.</p>
-        </section>`;
-    } else if (tLower.includes('airmen')) {
-        tcpHtml = `
-        <section class="tcp-section">
-            <div class="tcp-doc-card">
-                <div class="tcp-doc-info">
-                    <div class="tcp-doc-icon">
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
-                    </div>
-                    <div class="tcp-doc-text">
-                        <h4>Official Developer Sample Computation Sheet</h4>
-                        <p>Simplicio R. Yutero Construction Services · Jumbo St., Airmen's Village, Pulang Lupa Dos, Las Piñas City</p>
-                    </div>
-                </div>
-                <button type="button" class="tcp-doc-btn" onclick="openDocumentPreview('../../assets/images/airmen-tcp.jpg', 'Airmen’s Village official computation')">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line><line x1="11" y1="8" x2="11" y2="14"></line><line x1="8" y1="11" x2="14" y2="11"></line></svg>
-                    <span>View Official Computation</span>
-                </button>
-            </div>
-            <p class="tcp-disclaimer">*Inclusive of Title Transfer and Move-In Fees. Final loan interest rate and approval is determined by the financing bank upon loan take-out.</p>
-        </section>`;
-    } else if (tLower.includes('benecia')) {
-        tcpHtml = `
-        <section class="tcp-section">
-            <div class="tcp-doc-card">
-                <div class="tcp-doc-info">
-                    <div class="tcp-doc-icon">
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
-                    </div>
-                    <div class="tcp-doc-text">
-                        <h4>Official Property Specification &amp; Turnover Flyer</h4>
-                        <p>Sihanouk Village, Talon IV, Las Piñas City · Single-Attached House &amp; Lot · RFO</p>
-                    </div>
-                </div>
-                <button type="button" class="tcp-doc-btn" onclick="openDocumentPreview('../../assets/images/benecia-flyer.jpg', 'Benecia Single-Attached specifications flyer')">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line><line x1="11" y1="8" x2="11" y2="14"></line><line x1="8" y1="11" x2="14" y2="11"></line></svg>
-                    <span>View Specification Flyer</span>
-                </button>
-            </div>
-            <p class="tcp-disclaimer">*Price: Approximately ₱9.695M. Complete turnover with front fence and gate. Bank financing indicative computation available.</p>
-        </section>`;
-    } else if (tLower.includes('amore')) {
-        tcpHtml = `
-        <section class="tcp-section">
-            <div class="tcp-doc-card">
-                <div class="tcp-doc-info">
-                    <div class="tcp-doc-icon">
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
-                    </div>
-                    <div class="tcp-doc-text">
-                        <h4>Official Benedetto Residences Information Sheet</h4>
-                        <p>Benedetto Residences, Pulang Lupa Uno, Las Piñas City · 3-Storey Townhouse · RFO</p>
-                    </div>
-                </div>
-                <button type="button" class="tcp-doc-btn" onclick="openDocumentPreview('../../assets/images/amore-flyer.jpg', 'Amore Classico information sheet')">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line><line x1="11" y1="8" x2="11" y2="14"></line><line x1="8" y1="11" x2="14" y2="11"></line></svg>
-                    <span>View Information Sheet</span>
-                </button>
-            </div>
-            <p class="tcp-disclaimer">*Price: ₱7,995,000. Ready for Occupancy units in Block 1B / 2B. Bank financing indicative terms upon credit check.</p>
-        </section>`;
-    } else {
-        tcpHtml = '';
-    }
-
-    container.innerHTML = tcpHtml;
 }
 
 function parsePropertyPrice(priceVal) {
@@ -662,10 +553,17 @@ function renderPropertyCalculator(property) {
         dp = 20;
         financing = 'bank';
         supported = ['bank'];
+    } else if (tLower.includes('midori')) {
+        resv = 0;
+        dp = 10;
+        financing = 'pagibig';
+        supported = ['pagibig', 'bank'];
     }
 
     if (calcContainer._setTcp) {
-        calcContainer._setTcp(tcp, title, id, resv);
+        if (property) {
+            calcContainer._setTcp(tcp, title, id, resv);
+        }
     } else {
         UrbanCalculator.initPropertyCalculator('propertyCalculator', {
             tcp: tcp,
@@ -708,7 +606,10 @@ window.addEventListener('DOMContentLoaded', () => {
         loadPropertyFromDb();
     } else {
         loadStaticPropertyAvailability();
-        renderPropertyCalculator(null);
+        const calcContainer = document.getElementById('propertyCalculator');
+        if (calcContainer && !calcContainer._setTcp) {
+            renderPropertyCalculator(null);
+        }
     }
     checkInquiryAuthNote();
     const searchToggle = document.getElementById('searchToggle');
@@ -997,6 +898,10 @@ function syncLightboxImage() {
     const img = document.getElementById('lightboxImg');
     const counter = document.getElementById('lightboxCounter');
     const thumbsContainer = document.getElementById('lightboxThumbs');
+    const prevBtn = document.getElementById('lightboxPrevBtn');
+    const nextBtn = document.getElementById('lightboxNextBtn');
+    if (prevBtn) prevBtn.style.display = galleryImages.length <= 1 ? 'none' : '';
+    if (nextBtn) nextBtn.style.display = galleryImages.length <= 1 ? 'none' : '';
     if (galleryImages.length === 0) return;
 
     const currentSrc = _safeDetailImg(galleryImages[currentSlide] || '', '../../assets/images/property1.jpg');

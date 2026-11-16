@@ -1120,11 +1120,11 @@ async function _loadDashboardDataInner(options = {}) {
             properties = JSON.parse(localStorage.getItem("properties") || localStorage.getItem("cached_live_properties") || "[]");
         }
 
-        // Strictly count only the 4 accredited properties
+        // Count the 7 accredited properties: Airmen, Casasuerte, Kathleen, Liora, Benecia, Amore, Midori
         properties = properties.filter(p => {
             if (!p) return false;
             const t = (p.title || p.name || p.propertyName || '').toLowerCase().trim();
-            return t.includes('airmen') || t.includes('suerte') || t.includes('kathleen') || t.includes('liora');
+            return t.includes('airmen') || t.includes('suerte') || t.includes('kathleen') || t.includes('liora') || t.includes('benecia') || t.includes('amore') || t.includes('midori');
         });
 
         let kpis = null;

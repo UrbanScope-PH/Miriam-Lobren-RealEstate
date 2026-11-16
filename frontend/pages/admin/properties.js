@@ -49,6 +49,7 @@ function normalizePropertyRowMeta(property) {
         else if (tLower.includes('airmen')) imgSrc = '../../assets/images/AirmenTriplex.WEBP';
         else if (tLower.includes('benecia')) imgSrc = '../../assets/images/benecia-facade.jpg';
         else if (tLower.includes('amore')) imgSrc = '../../assets/images/amore-facade.jpg';
+        else if (tLower.includes('midori')) imgSrc = '../../assets/images/midori-main.webp';
     }
     if (!imgSrc) imgSrc = '../../assets/images/property1.jpg';
 
@@ -84,16 +85,19 @@ async function loadSavedProperties() {
                      JSON.parse(localStorage.getItem("cached_live_properties")) || [];
     }
 
-    // Strictly show only the 4 accredited properties: Airmen, Casasuerte, Kathleen, Liora
+    // Retain only the 7 accredited properties: Airmen, Casasuerte, Kathleen, Liora, Benecia, Amore, Midori
     properties = properties.filter(p => {
         if (!p) return false;
         const t = (p.title || p.name || p.propertyName || '').toLowerCase().trim();
-        return t.includes('airmen') || t.includes('suerte') || t.includes('kathleen') || t.includes('liora');
+        return t.includes('airmen') || t.includes('suerte') || t.includes('kathleen') || t.includes('liora') || t.includes('benecia') || t.includes('amore') || t.includes('midori');
     }).map(p => {
         if (!p) return p;
         const t = (p.title || p.name || p.propertyName || '').toLowerCase().trim();
         if (t.includes('suerte')) p.title = 'Casasuerte';
-        else if (t.includes('kathleen')) p.title = 'Kathleen';
+        else if (t.includes('kathleen')) p.title = 'Kathleen - Place 5';
+        else if (t.includes('benecia')) p.title = 'Benecia Single-Attached';
+        else if (t.includes('amore')) p.title = 'Amore Classico';
+        else if (t.includes('midori')) p.title = 'Midori Mid-Rise Condo – Zone 1';
         return p;
     });
 

@@ -53,8 +53,8 @@ const CANONICAL_ACCREDITED_PROPERTIES = [
     },
     {
         id: 2,
-        title: "Kathleen",
-        propertyName: "Kathleen Townhouse",
+        title: "Kathleen - Place 5",
+        propertyName: "Kathleen - Place 5",
         location: "Molino 7, Bacoor, Cavite",
         property_type: "Townhouse",
         price: 6200000,
@@ -64,7 +64,7 @@ const CANONICAL_ACCREDITED_PROPERTIES = [
         floor_area: 112,
         status: "Available",
         image_url: "assets/images/kathleen-facade.jpg",
-        description: "Secure, family-friendly residential community offering 275 premium townhouses in Molino VII, Bacoor, Cavite. Just 12 minutes from EVIA Lifestyle Center along Daang-Hari.",
+        description: "Kathleen - Place 5 is a secure, family-friendly residential community offering 275 premium townhouses in Molino VII, Bacoor, Cavite. Just 12 minutes from EVIA Lifestyle Center along Daang-Hari.",
         amenities: "Gated Entrance, Clubhouse, Park, Basketball Court, CCTV, Green-Oriented Community, Steel Gates Included, Modular Cabinets"
     },
     {
@@ -112,8 +112,8 @@ const CANONICAL_ACCREDITED_PROPERTIES = [
         floor_area: 117,
         status: "Available",
         image_url: "assets/images/benecia-facade.jpg",
-        description: "Benecia Single Attached offers a modern and spacious home in Sihanouk Village, Talon IV, Las Piñas City. Complete turnover with front fence and gate, ready for occupancy.",
-        amenities: "Single-Attached House Design, Private Carport, Front Fence and Gate, Balcony, Lanai, Functional Multi-Level Living Spaces, Maid's Room, Powder Room, RFO Ready"
+        description: "Benecia Single Attached offers a modern and spacious home in Sihanouk Village, Talon IV, Las Piñas City. Complete turnover with front fence and gate.",
+        amenities: "Single-Attached House Design, Private Carport, Front Fence and Gate, Balcony, Lanai, Functional Multi-Level Living Spaces, Maid's Room, Powder Room"
     },
     {
         id: 6,
@@ -128,8 +128,24 @@ const CANONICAL_ACCREDITED_PROPERTIES = [
         floor_area: 102,
         status: "Available",
         image_url: "assets/images/amore-facade.jpg",
-        description: "Amore Classico by Benedetto Residences is a thoughtfully designed three-storey townhouse in Barangay Pulang Lupa Uno, Las Piñas City. Ready for Occupancy (RFO).",
-        amenities: "Three-Storey Townhouse Design, Spacious Family Hall, Dedicated Maid's Room, Functional Multi-Level Living Spaces, Private Patio, Powder Room, RFO Ready"
+        description: "Amore Classico by Benedetto Residences is a thoughtfully designed three-storey townhouse in Barangay Pulang Lupa Uno, Las Piñas City.",
+        amenities: "Three-Storey Townhouse Design, Spacious Family Hall, Dedicated Maid's Room, Functional Multi-Level Living Spaces, Private Patio, Powder Room"
+    },
+    {
+        id: 7,
+        title: "Midori Mid-Rise Condo – Zone 1",
+        propertyName: "Midori Mid-Rise Condo – Zone 1",
+        location: "Zone 1, Buildings 14–21, Dasmariñas, Cavite",
+        property_type: "Mid-Rise Condominium",
+        price: 3140000,
+        bedrooms: 2,
+        bathrooms: 1,
+        lot_area: 0,
+        floor_area: 50,
+        status: "Available",
+        image_url: "assets/images/midori-main.webp",
+        description: "Midori Mid-Rise Condo – Zone 1 offers a convenient and comfortable living experience for young professionals, couples, and starting families looking for an affordable home in Dasmariñas, Cavite.",
+        amenities: "2nd Floor Units, Inner & End Unit Types, Living Area, Dining Area, Kitchen Area, Patio, Convenient Access to Public Transportation, Near Dasmariñas Bayan, Close to Schools and Essential Establishments, Accessible to Daily Needs"
     }
 ];
 
@@ -154,11 +170,12 @@ function formatPropertyTitle(title) {
     if (!title) return '';
     const t = String(title).toLowerCase();
     if (t.includes('suerte')) return 'Casasuerte';
-    if (t.includes('kathleen')) return 'Kathleen';
+    if (t.includes('kathleen')) return 'Kathleen - Place 5';
     if (t.includes('liora')) return 'Liora Homes';
     if (t.includes('airmen')) return "Airmen's Village Triplex";
     if (t.includes('benecia')) return "Benecia Single-Attached";
     if (t.includes('amore')) return "Amore Classico";
+    if (t.includes('midori')) return "Midori Mid-Rise Condo – Zone 1";
     return title;
 }
 
@@ -171,6 +188,7 @@ function resolveCardImage(url, item) {
         if (t.includes('airmen')) return 'assets/images/AirmenTriplex.WEBP';
         if (t.includes('benecia')) return 'assets/images/benecia-facade.jpg';
         if (t.includes('amore')) return 'assets/images/amore-facade.jpg';
+        if (t.includes('midori')) return 'assets/images/midori-main.webp';
     }
     return _safeImgUrl(url, 'assets/images/casasuerte.jpg');
 }
@@ -183,52 +201,29 @@ function getPropertyDetailUrl(item) {
     if (title.includes('kathleen')) return 'pages/properties/kathleen.html';
     if (title.includes('benecia')) return 'pages/properties/benecia.html';
     if (title.includes('amore')) return 'pages/properties/amore-classico.html';
+    if (title.includes('midori')) return 'pages/properties/midori.html';
     return `pages/properties/property-detail.html?id=${encodeURIComponent(String(item.id ?? ''))}`;
 }
 
 function getPropertyPricingMeta(item) {
     const t = (item.title || item.propertyName || '').toLowerCase();
     if (t.includes('suerte')) {
-        return {
-            priceDisplay: '₱2.50M - ₱3.00M',
-            tcpTag: 'TCP Available • Pag-IBIG',
-            tcpSubtext: 'Est. Amort: ₱12,250/mo • Res: ₱20,000'
-        };
+        return { priceDisplay: '₱2.50M - ₱3.00M' };
     } else if (t.includes('kathleen')) {
-        return {
-            priceDisplay: '₱6.20M - ₱9.00M',
-            tcpTag: 'TCP Available • Bank Financing',
-            tcpSubtext: 'Est. Amort: ₱52,382/mo • Res: ₱50,000'
-        };
+        return { priceDisplay: '₱6.20M - ₱9.00M' };
     } else if (t.includes('liora')) {
-        return {
-            priceDisplay: '₱2.46M - ₱2.89M',
-            tcpTag: 'TCP Available • Pag-IBIG & Bank',
-            tcpSubtext: 'Est. Amort: ₱14,476/mo • Res: ₱12,000'
-        };
+        return { priceDisplay: '₱2.46M - ₱2.89M' };
     } else if (t.includes('airmen')) {
-        return {
-            priceDisplay: '₱8.90M - ₱9.03M',
-            tcpTag: 'TCP Available • Bank Financing',
-            tcpSubtext: 'Est. Amort: ₱53,658/mo • Res: ₱50,000'
-        };
+        return { priceDisplay: '₱8.90M - ₱9.03M' };
     } else if (t.includes('benecia')) {
-        return {
-            priceDisplay: '₱9.695M',
-            tcpTag: 'TCP Available • Bank Financing',
-            tcpSubtext: 'Est. Amort: ₱60,119/mo • RFO Ready'
-        };
+        return { priceDisplay: '₱9.695M' };
     } else if (t.includes('amore')) {
-        return {
-            priceDisplay: '₱7.995M',
-            tcpTag: 'TCP Available • Bank Financing',
-            tcpSubtext: 'Est. Amort: ₱49,577/mo • RFO Ready'
-        };
+        return { priceDisplay: '₱7.995M' };
+    } else if (t.includes('midori')) {
+        return { priceDisplay: '₱3.14M - ₱3.22M' };
     }
     return {
-        priceDisplay: '₱' + Number(item.price || 0).toLocaleString(),
-        tcpTag: 'Total Contract Price (TCP)',
-        tcpSubtext: 'Sample computation available upon inquiry'
+        priceDisplay: '₱' + Number(item.price || 0).toLocaleString()
     };
 }
 
@@ -382,10 +377,9 @@ function renderFeaturedGrid(list) {
         const bedLabel = bedCount === 1 ? '1 Bed' : `${bedCount} Beds`;
         const bathLabel = bathCount === 1 ? '1 Bath' : `${bathCount} Baths`;
 
-        const isRfo = (pricing.tcpSubtext || '').toLowerCase().includes('rfo') || (item.title || '').toLowerCase().includes('benecia') || (item.title || '').toLowerCase().includes('amore');
         const badgeHtml = isSold
             ? `<span class="property-status-badge badge-sold">Sold Out</span>`
-            : (isRfo ? `<span class="property-status-badge badge-rfo">RFO Ready</span>` : '');
+            : '';
         const mobileExtraClass = idx >= 3 ? 'mobile-collapsed-card' : '';
 
         const safeDetailUrl = _escHtml(detailUrl);
@@ -431,14 +425,9 @@ function renderFeaturedGrid(list) {
                         </svg> ${_escHtml(specsLot)}</span>
                 </div>
                 <div class="property-tcp-container">
-                    <div class="tcp-pill-tag">
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
-                        <span>${_escHtml(pricing.tcpTag)}</span>
-                    </div>
                     <div class="property-price-row">
                         <strong class="property-price tabular-nums">${_escHtml(pricing.priceDisplay)}</strong>
                     </div>
-                    <p class="tcp-subtext tabular-nums">${_escHtml(pricing.tcpSubtext)}</p>
                 </div>
             </div>
         </article>
@@ -469,8 +458,8 @@ function filterPropertyList(list, category, location, keyword, maxPrice = null) 
             let matchesCat = false;
             if (cat === 'villas' || cat === 'villa') {
                 matchesCat = type.includes('villa') || title.includes('villa');
-            } else if (cat === 'apartments' || cat === 'apartment') {
-                matchesCat = type.includes('apartment') || type.includes('condo') || title.includes('apartment') || title.includes('condo');
+            } else if (cat === 'apartments' || cat === 'apartment' || cat === 'condominium' || cat === 'condo') {
+                matchesCat = type.includes('apartment') || type.includes('condo') || title.includes('apartment') || title.includes('condo') || title.includes('midori');
             } else if (cat === 'townhouses' || cat === 'townhouse') {
                 matchesCat = type.includes('townhouse') || title.includes('townhouse') || title.includes('suerte') || title.includes('kathleen') || title.includes('liora') || title.includes('amore');
             } else if (cat === 'triplex' || cat === 'triplexes') {
@@ -536,7 +525,7 @@ function sortPropertyList(list, sortKey) {
             return typeA.localeCompare(typeB);
         });
     } else if (sortKey === 'featured') {
-        const order = ['suerte', 'kathleen', 'liora', 'airmen', 'benecia', 'amore'];
+        const order = ['suerte', 'kathleen', 'liora', 'airmen', 'benecia', 'amore', 'midori'];
         sorted.sort((a, b) => {
             const titleA = (a.title || a.propertyName || '').toLowerCase();
             const titleB = (b.title || b.propertyName || '').toLowerCase();
@@ -621,7 +610,15 @@ function handleSearchSubmit(e) {
 function isAccreditedPropertyItem(item) {
     if (!item) return false;
     const t = (item.title || item.propertyName || item.name || '').toLowerCase().trim();
-    return t.includes('airmen') || t.includes('suerte') || t.includes('kathleen') || t.includes('liora') || t.includes('benecia') || t.includes('amore');
+    return t.includes('airmen') || t.includes('suerte') || t.includes('kathleen') || t.includes('liora') || t.includes('benecia') || t.includes('amore') || t.includes('midori');
+}
+
+function getAccreditedPropertyKey(item) {
+    const t = (item && (item.title || item.propertyName || item.name) || '').toLowerCase();
+    for (const key of ['suerte', 'kathleen', 'liora', 'airmen', 'benecia', 'amore', 'midori']) {
+        if (t.includes(key)) return key;
+    }
+    return '';
 }
 
 async function loadHomeProperties(category = 'all') {
@@ -640,7 +637,12 @@ async function loadHomeProperties(category = 'all') {
             if (data && Array.isArray(data) && data.length > 0) {
                 const accredited = data.filter(isAccreditedPropertyItem);
                 if (accredited.length > 0) {
-                    allCachedProperties = accredited;
+                    const presentKeys = new Set(accredited.map(getAccreditedPropertyKey).filter(Boolean));
+                    const missingCanonical = CANONICAL_ACCREDITED_PROPERTIES.filter(item => {
+                        const key = getAccreditedPropertyKey(item);
+                        return key && !presentKeys.has(key);
+                    });
+                    allCachedProperties = [...accredited, ...missingCanonical];
                     applyCurrentFiltersAndRender();
                 }
             }
@@ -705,6 +707,9 @@ function initSearchSelect(selectEl) {
         if (v === 'triplex' || t.includes('triplex')) {
             return `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="9" y1="7" x2="15" y2="7"/><line x1="9" y1="12" x2="15" y2="12"/><line x1="9" y1="17" x2="15" y2="17"/></svg>`;
         }
+        if (v === 'condominium' || v === 'condo' || t.includes('condo')) {
+            return `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="3" width="16" height="18" rx="2"/><line x1="9" y1="8" x2="9" y2="8.01"/><line x1="15" y1="8" x2="15" y2="8.01"/><line x1="9" y1="12" x2="9" y2="12.01"/><line x1="15" y1="12" x2="15" y2="12.01"/><path d="M9 21v-4h6v4"/></svg>`;
+        }
         if (v === 'house-lot' || t.includes('house')) {
             return `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>`;
         }
@@ -713,7 +718,7 @@ function initSearchSelect(selectEl) {
         if (v === 'all' && (t.includes('location') || t.includes('all locations'))) {
             return `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/></svg>`;
         }
-        if (t.includes('piñas') || t.includes('pinas') || t.includes('bacoor') || t.includes('naic') || t.includes('trece') || t.includes('cavite')) {
+        if (t.includes('piñas') || t.includes('pinas') || t.includes('bacoor') || t.includes('naic') || t.includes('trece') || t.includes('dasmari') || t.includes('cavite')) {
             return `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>`;
         }
 

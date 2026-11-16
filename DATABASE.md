@@ -292,16 +292,17 @@ Seeding happens inside `init_db()` **only when the table is empty** or missing i
 | `miriamalobren@gmail.com` | `admin` | `SEED_MIRIAM_PASSWORD` env var, or generated once in dev into `backend/.bootstrap_credentials.txt` | Miriam Lobren (Lead Admin) |
 | `admin.realestate@gmail.com` | `admin` | `SEED_ADMIN_PASSWORD` env var, or generated once in dev into `backend/.bootstrap_credentials.txt` | Real Estate Admin |
 
-**Properties (6 accredited featured listings)**
+**Properties (7 accredited featured listings)**
 
 | Title | Location | Type | Price (₱) | Specs |
 | :--- | :--- | :--- | ---: | :--- |
 | Casasuerte | Barangay San Agustin, Trece Martires City, Cavite | Townhouse | 2,500,000 | 2 Beds, 1 Bath, 50.8 sqm |
-| Kathleen | Molino 7, Bacoor, Cavite | Townhouse | 6,200,000 | 3 Beds, 2 Baths, 112.0 sqm |
+| Kathleen - Place 5 | Molino 7, Bacoor, Cavite | Townhouse | 6,200,000 | 3 Beds, 2 Baths, 112.0 sqm |
 | Liora Homes | Brgy. Malainen Bago, Naic, Cavite | Townhouse | 2,462,400 | 2 Beds, 1 Bath, 44.0 sqm |
 | Airmen's Village Triplex | Pulang Lupa Dos, Las Piñas City | Triplex | 8,900,000 | 3 Beds, 3 Baths, 143.78 sqm |
 | Benecia Single-Attached | Sihanouk Village, Barangay Talon IV, Las Piñas City | Single Attached | 9,695,000 | 3 Beds, 3 Baths, 117.0 sqm |
 | Amore Classico | Benedetto Residences, Barangay Pulang Lupa Uno, Las Piñas City | Townhouse | 7,995,000 | 3 Beds, 3 Baths, 102.0 sqm |
+| Midori Mid-Rise Condo – Zone 1 | Zone 1, Buildings 14–21, Dasmariñas, Cavite | Mid-Rise Condominium | 3,140,000 | 2 Beds, 1 Bath, 50.0 sqm |
 
 **Inquiries (3)** — Sarah Jenkins (*Under Review*), Mark Anthony Cruz (*Approved*),
 Maria Elena Santos (*Completed*).
