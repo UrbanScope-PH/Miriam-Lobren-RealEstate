@@ -341,6 +341,7 @@
 
                                 <label for="price">
                                     Price
+                                    <span>*</span>
                                 </label>
 
                                 <div class="input-with-prefix">
@@ -351,7 +352,10 @@
                                         type="number"
                                         id="price"
                                         name="price"
-                                        placeholder="0.00" inputmode="decimal"
+                                        min="1"
+                                        step="any"
+                                        placeholder="e.g. 3500000" inputmode="decimal"
+                                        required
                                     >
 
                                 </div>

@@ -30,6 +30,7 @@
     border-radius: 24px;
     font-size: 14.5px;
     font-weight: 600;
+    text-decoration: none;
     cursor: pointer;
     box-shadow: 0 4px 14px rgba(45, 92, 57, 0.25);
     transition: all 0.2s;
@@ -266,6 +267,7 @@
     border-radius: 6px;
     font-size: 0.76rem;
     font-weight: 600;
+    text-decoration: none;
     cursor: pointer;
     white-space: nowrap;
     transition: all 0.2s ease;
@@ -438,6 +440,7 @@
     border-radius: 8px;
     font-size: 13.5px;
     font-weight: 600;
+    text-decoration: none;
     cursor: pointer;
 }
 
@@ -449,6 +452,7 @@
     border-radius: 8px;
     font-size: 13.5px;
     font-weight: 600;
+    text-decoration: none;
     cursor: pointer;
 }
 

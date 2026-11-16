@@ -827,10 +827,21 @@ body.superadmin-body {
 .search-select-dropdown,
 .sort-select-dropdown,
 .status-dropdown-menu,
-#statusFloatingMenu,
-.table-wrapper,
-.table-container {
+#statusFloatingMenu {
     overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+}
+
+/* Horizontal table wrappers contain only X-axis overscroll so vertical wheel/touch scrolling chains to the page */
+.table-wrapper,
+.table-container,
+.table-scroll,
+.table-responsive,
+.table-wrap,
+.tcp-table-wrapper {
+    overflow-y: hidden;
+    overscroll-behavior-x: contain;
+    overscroll-behavior-y: auto;
     -webkit-overflow-scrolling: touch;
 }
 

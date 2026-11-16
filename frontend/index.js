@@ -437,6 +437,13 @@ function renderFeaturedGrid(list) {
     if (window.UrbanSession && typeof UrbanSession.initScrollReveals === 'function') {
         UrbanSession.initScrollReveals();
     }
+    const viewH = window.innerHeight || document.documentElement.clientHeight || 900;
+    grid.querySelectorAll('.reveal-on-scroll:not(.is-visible)').forEach(card => {
+        const rect = card.getBoundingClientRect();
+        if (rect.top < viewH) {
+            card.classList.add('is-visible');
+        }
+    });
     updateMobilePropertiesExpandUi(list.length, hasFilter);
 }
 
@@ -607,10 +614,20 @@ function handleSearchSubmit(e) {
     scrollToFeatured();
 }
 
-function isAccreditedPropertyItem(item) {
-    if (!item) return false;
+const DEPRECATED_HOME_DEMO_TITLES = new Set([
+    'velemont residences',
+    'green valley villa',
+    'horizon heights',
+    'sunset heights executive townhouse',
+    'maple ridge residence',
+    'oakwood manor',
+    'victoria park residences'
+]);
+
+function isDeprecatedHomeDemoItem(item) {
+    if (!item || typeof item !== 'object') return true;
     const t = (item.title || item.propertyName || item.name || '').toLowerCase().trim();
-    return t.includes('airmen') || t.includes('suerte') || t.includes('kathleen') || t.includes('liora') || t.includes('benecia') || t.includes('amore') || t.includes('midori');
+    return !t || DEPRECATED_HOME_DEMO_TITLES.has(t);
 }
 
 function getAccreditedPropertyKey(item) {
@@ -635,14 +652,14 @@ async function loadHomeProperties(category = 'all') {
         try {
             const data = await apiGetProperties({});
             if (data && Array.isArray(data) && data.length > 0) {
-                const accredited = data.filter(isAccreditedPropertyItem);
-                if (accredited.length > 0) {
-                    const presentKeys = new Set(accredited.map(getAccreditedPropertyKey).filter(Boolean));
+                const activeList = data.filter(item => !isDeprecatedHomeDemoItem(item));
+                if (activeList.length > 0) {
+                    const presentKeys = new Set(activeList.map(getAccreditedPropertyKey).filter(Boolean));
                     const missingCanonical = CANONICAL_ACCREDITED_PROPERTIES.filter(item => {
                         const key = getAccreditedPropertyKey(item);
                         return key && !presentKeys.has(key);
                     });
-                    allCachedProperties = [...accredited, ...missingCanonical];
+                    allCachedProperties = [...activeList, ...missingCanonical];
                     applyCurrentFiltersAndRender();
                 }
             }

@@ -1213,12 +1213,25 @@
         }
     };
 
+    const DEPRECATED_DEMO_TITLES = new Set([
+        'velemont residences',
+        'green valley villa',
+        'horizon heights',
+        'sunset heights executive townhouse',
+        'maple ridge residence',
+        'oakwood manor',
+        'victoria park residences'
+    ]);
+
+    window.isDeprecatedDemoProperty = function (p) {
+        if (!p || typeof p !== 'object') return true;
+        const t = (p.title || p.name || p.propertyName || '').toLowerCase().trim();
+        if (!t) return true;
+        return DEPRECATED_DEMO_TITLES.has(t);
+    };
+
     function normalizeAdminAccreditedList(rawList) {
-        return (Array.isArray(rawList) ? rawList : []).filter(p => {
-            if (!p) return false;
-            const t = (p.title || p.name || p.propertyName || '').toLowerCase().trim();
-            return t.includes('airmen') || t.includes('suerte') || t.includes('kathleen') || t.includes('liora') || t.includes('benecia') || t.includes('amore') || t.includes('midori');
-        }).map(p => {
+        return (Array.isArray(rawList) ? rawList : []).filter(p => !window.isDeprecatedDemoProperty(p)).map(p => {
             if (!p) return p;
             const t = (p.title || p.name || p.propertyName || '').toLowerCase().trim();
             if (t.includes('suerte')) p.title = 'Casasuerte';
