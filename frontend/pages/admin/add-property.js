@@ -21,6 +21,20 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
+    // Contextual back navigation when opened from Manage Properties
+    const fromParam = new URLSearchParams(window.location.search).get("from");
+    if (fromParam === "propertylist") {
+        const backBtn = document.querySelector(".back-btn");
+        if (backBtn) {
+            backBtn.href = "propertylist.html";
+            backBtn.textContent = "← Back to Properties";
+        }
+        const cancelBtn = document.querySelector(".cancel-btn");
+        if (cancelBtn) {
+            cancelBtn.href = "propertylist.html";
+        }
+    }
+
     // =========================
     // FORM & UPLOAD REFERENCES
     // =========================
@@ -224,7 +238,21 @@ document.addEventListener("DOMContentLoaded", () => {
                     const ctx = canvas.getContext("2d");
                     ctx.drawImage(img, 0, 0, width, height);
                     const outputMime = verifiedMime === "image/png" ? "image/png" : (verifiedMime === "image/webp" ? "image/webp" : "image/jpeg");
-                    resolve(canvas.toDataURL(outputMime, 0.82));
+                    let dataUrl = canvas.toDataURL(outputMime, 0.82);
+                    // Compress PNGs or oversized photos to JPEG so serverless API payload limits are never exceeded
+                    if (dataUrl.length > 750 * 1024) {
+                        dataUrl = canvas.toDataURL("image/jpeg", 0.78);
+                    }
+                    if (dataUrl.length > 1100 * 1024) {
+                        const scale = Math.min(1, 900 / Math.max(width, height));
+                        if (scale < 1) {
+                            canvas.width = Math.round(width * scale);
+                            canvas.height = Math.round(height * scale);
+                            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                        }
+                        dataUrl = canvas.toDataURL("image/jpeg", 0.68);
+                    }
+                    resolve(dataUrl);
                 };
                 img.onerror = () => resolve(null);
                 img.src = e.target.result;
@@ -271,17 +299,41 @@ document.addEventListener("DOMContentLoaded", () => {
                 }
             }
 
+            const parseIntOr = (rawVal, fallback, minVal = 0) => {
+                if (rawVal === undefined || rawVal === null || String(rawVal).trim() === "") return fallback;
+                const parsed = parseInt(rawVal, 10);
+                return Number.isFinite(parsed) && parsed >= minVal ? parsed : fallback;
+            };
+            const parseFloatOr = (rawVal, fallback, minVal = 0) => {
+                if (rawVal === undefined || rawVal === null || String(rawVal).trim() === "") return fallback;
+                const parsed = parseFloat(rawVal);
+                return Number.isFinite(parsed) && parsed >= minVal ? parsed : fallback;
+            };
+
             const propertyName = document.getElementById("propertyName")?.value.trim() || "New Listing";
             const location = document.getElementById("location")?.value.trim() || "Cavite, Philippines";
             const propertyType = document.getElementById("propertyType")?.value || "Villa";
-            const price = parseFloat(document.getElementById("price")?.value) || 0;
+            const price = parseFloatOr(document.getElementById("price")?.value, 0, 0);
+            if (price <= 0) {
+                if (submitBtn) {
+                    submitBtn.disabled = false;
+                    submitBtn.innerText = originalBtnText;
+                }
+                const errMsg = "Please enter a valid property price greater than 0.";
+                if (typeof window.showFeedbackToast === "function") {
+                    window.showFeedbackToast(errMsg, "warn");
+                } else {
+                    alert(errMsg);
+                }
+                return;
+            }
             const status = document.getElementById("status")?.value || "Available";
-            const bedrooms = parseInt(document.getElementById("bedrooms")?.value, 10) || 3;
-            const bathrooms = parseInt(document.getElementById("bathrooms")?.value, 10) || 2;
-            const carports = parseInt(document.getElementById("carports")?.value, 10) || 1;
-            const storeys = parseInt(document.getElementById("storeys")?.value, 10) || 2;
-            const lotArea = parseFloat(document.getElementById("lotArea")?.value) || 100;
-            const floorArea = parseFloat(document.getElementById("floorArea")?.value) || 80;
+            const bedrooms = parseIntOr(document.getElementById("bedrooms")?.value, 3, 0);
+            const bathrooms = parseIntOr(document.getElementById("bathrooms")?.value, 2, 0);
+            const carports = parseIntOr(document.getElementById("carports")?.value, 1, 0);
+            const storeys = parseIntOr(document.getElementById("storeys")?.value, 2, 1);
+            const lotArea = parseFloatOr(document.getElementById("lotArea")?.value, 100, 0);
+            const floorArea = parseFloatOr(document.getElementById("floorArea")?.value, 80, 0);
             const amenities = document.getElementById("amenities")?.value.trim() || "";
             const description = document.getElementById("description")?.value.trim() || "";
             const resolvedImg = uploadedImageUrl || (selectedFiles[0] ? "assets/images/" + selectedFiles[0].name : "assets/images/property1.jpg");
@@ -314,46 +366,64 @@ document.addEventListener("DOMContentLoaded", () => {
             if (typeof apiAddProperty === "function") {
                 try {
                     const cloudRes = await apiAddProperty(property);
-                    if (cloudRes) {
+                    if (cloudRes && cloudRes.id) {
                         savedToCloud = true;
-                        if (cloudRes.id) property.id = cloudRes.id;
+                        property.id = cloudRes.id;
+                    } else if (cloudRes) {
+                        savedToCloud = true;
                     }
                 } catch (e) {
                     console.warn("Database add property notice:", e);
                 }
+                if (!savedToCloud) {
+                    if (submitBtn) {
+                        submitBtn.disabled = false;
+                        submitBtn.innerText = originalBtnText;
+                    }
+                    const serverErr = window.__urbanLastPropertyError ? ` (${window.__urbanLastPropertyError})` : "";
+                    const failMsg = `Could not save property to the database${serverErr}. Please verify your inputs and admin session.`;
+                    if (typeof window.showFeedbackToast === "function") {
+                        window.showFeedbackToast(failMsg, "error");
+                    } else {
+                        alert(failMsg);
+                    }
+                    return;
+                }
             }
 
             try {
-                // Keep local browser cache updated safely
-                try {
-                    const savedProperties = JSON.parse(
-                        localStorage.getItem("urbanScopeProperties") || "[]"
-                    );
-                    savedProperties.unshift(property);
-                    localStorage.setItem(
-                        "urbanScopeProperties",
-                        JSON.stringify(savedProperties)
-                    );
-                } catch (e) {
-                    console.warn("Local cache notice (urbanScopeProperties):", e);
-                }
+                // Keep local browser cache synced when running without the API gateway
+                if (!savedToCloud) {
+                    try {
+                        const savedProperties = JSON.parse(
+                            localStorage.getItem("urbanScopeProperties") || "[]"
+                        );
+                        savedProperties.unshift(property);
+                        localStorage.setItem(
+                            "urbanScopeProperties",
+                            JSON.stringify(savedProperties)
+                        );
+                    } catch (e) {
+                        console.warn("Local cache notice (urbanScopeProperties):", e);
+                    }
 
-                try {
-                    const adminProps = JSON.parse(localStorage.getItem("properties") || "[]");
-                    adminProps.unshift({
-                        id: property.id,
-                        name: property.propertyName,
-                        title: property.propertyName,
-                        location: property.location,
-                        type: property.propertyType,
-                        property_type: property.propertyType,
-                        price: property.price,
-                        status: property.status,
-                        image_url: property.image_url
-                    });
-                    localStorage.setItem("properties", JSON.stringify(adminProps));
-                } catch (e) {
-                    console.warn("Local cache notice (properties):", e);
+                    try {
+                        const adminProps = JSON.parse(localStorage.getItem("properties") || "[]");
+                        adminProps.unshift({
+                            id: property.id,
+                            name: property.propertyName,
+                            title: property.propertyName,
+                            location: property.location,
+                            type: property.propertyType,
+                            property_type: property.propertyType,
+                            price: property.price,
+                            status: property.status,
+                            image_url: property.image_url
+                        });
+                        localStorage.setItem("properties", JSON.stringify(adminProps));
+                    } catch (e) {
+                        console.warn("Local cache notice (properties):", e);
+                    }
                 }
 
                 if (typeof window.showFeedbackToast === 'function') {
@@ -366,12 +436,13 @@ document.addEventListener("DOMContentLoaded", () => {
 
             } catch (error) {
                 console.error("Unable to save property:", error);
-                if (typeof window.showFeedbackToast === 'function') {
-                    window.showFeedbackToast("Property saved! Redirecting to properties list.", "info");
+                if (submitBtn) {
+                    submitBtn.disabled = false;
+                    submitBtn.innerText = originalBtnText;
                 }
-                setTimeout(() => {
-                    window.location.href = "propertylist.html";
-                }, 500);
+                if (typeof window.showFeedbackToast === 'function') {
+                    window.showFeedbackToast("Could not finalize property save. Please try again.", "error");
+                }
             }
         });
     }

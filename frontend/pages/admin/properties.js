@@ -92,10 +92,11 @@ async function loadSavedProperties() {
         );
     } else {
         // Fallback filter/normalization if admin-shell helper is unavailable
+        const legacyDemo = new Set(['velemont residences', 'green valley villa', 'horizon heights', 'sunset heights executive townhouse', 'maple ridge residence', 'oakwood manor', 'victoria park residences']);
         properties = properties.filter(p => {
             if (!p) return false;
             const t = (p.title || p.name || p.propertyName || '').toLowerCase().trim();
-            return t.includes('airmen') || t.includes('suerte') || t.includes('kathleen') || t.includes('liora') || t.includes('benecia') || t.includes('amore') || t.includes('midori');
+            return Boolean(t) && !legacyDemo.has(t);
         }).map(p => {
             if (!p) return p;
             const t = (p.title || p.name || p.propertyName || '').toLowerCase().trim();

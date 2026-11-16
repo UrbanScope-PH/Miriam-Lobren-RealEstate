@@ -730,7 +730,7 @@
                 queryParts.push('order=id.desc');
 
                 const url = `${REST_BASE}/properties?${queryParts.join('&')}`;
-                const res = await fetch(url, { method: 'GET', headers: getHeaders() });
+                const res = await fetch(url, { method: 'GET', headers: getHeaders(), cache: 'no-store' });
 
                 if (res.ok) {
                     const data = await res.json();
@@ -742,16 +742,17 @@
                 console.warn('Supabase properties fetch notice, attempting fallback:', err.message);
             }
 
-            // Fallback 1 / Local SQLite merge: ensure newly added local accredited listings (e.g. Midori before remote push) are merged
+            // Fallback 1 / Local SQLite merge: ensure newly created or locally stored properties merge cleanly on localhost/:5500
             const isUnfilteredQuery = (!filter || ((!filter.type || filter.type === 'all') && (!filter.location || filter.location === 'all') && !filter.search));
-            const suppressMidoriSync = (() => {
-                try { return localStorage.getItem('urbanscope_suppress_midori_sync') === '1'; } catch (_) { return false; }
-            })();
-            const needsLocalAccreditedMerge = liveProperties.length === 0 || (isUnfilteredQuery && !suppressMidoriSync && !liveProperties.some(p => String(p?.title || p?.propertyName || p?.name || '').toLowerCase().includes('midori')));
-            if (needsLocalAccreditedMerge && isLocalBackendReachableHost()) {
+            if ((liveProperties.length === 0 || isUnfilteredQuery) && isLocalBackendReachableHost()) {
                 try {
                     const localBase = getLocalApiBase();
-                    const localRes = await fetch(`${localBase}/properties`, { method: 'GET' });
+                    const localRes = await fetch(`${localBase}/properties`, {
+                        method: 'GET',
+                        signal: (typeof AbortSignal !== 'undefined' && typeof AbortSignal.timeout === 'function')
+                            ? AbortSignal.timeout(1800)
+                            : undefined
+                    });
                     if (localRes.ok) {
                         const localData = await localRes.json();
                         if (Array.isArray(localData) && localData.length > 0) {
@@ -761,7 +762,7 @@
                                 const existingTitles = new Set(liveProperties.map(p => String(p?.title || p?.propertyName || p?.name || '').toLowerCase().trim()));
                                 localData.forEach(lp => {
                                     const lt = String(lp?.title || '').toLowerCase().trim();
-                                    if (lt.includes('midori') && !existingTitles.has(lt)) {
+                                    if (lt && !existingTitles.has(lt)) {
                                         liveProperties.unshift(lp);
                                         existingTitles.add(lt);
                                     }
@@ -799,12 +800,22 @@
                 }
             } catch (e) {}
 
-            // Strictly retain only accredited properties: Airmen, Casasuerte, Kathleen, Liora, Benecia, Amore Classico, Midori
-            liveProperties = liveProperties.filter(p => {
-                if (!p) return false;
+            // Drop deprecated pre-migration mock seed titles while preserving accredited + admin-added listings
+            const deprecatedDemoTitles = new Set([
+                'velemont residences',
+                'green valley villa',
+                'horizon heights',
+                'sunset heights executive townhouse',
+                'maple ridge residence',
+                'oakwood manor',
+                'victoria park residences'
+            ]);
+            const retainActiveListing = (p) => {
+                if (!p || typeof p !== 'object') return false;
                 const t = (p.title || p.propertyName || p.name || '').toLowerCase().trim();
-                return t.includes('airmen') || t.includes('suerte') || t.includes('kathleen') || t.includes('liora') || t.includes('benecia') || t.includes('amore') || t.includes('midori');
-            }).map(p => {
+                return Boolean(t) && !deprecatedDemoTitles.has(t);
+            };
+            liveProperties = liveProperties.filter(retainActiveListing).map(p => {
                 if (!p) return p;
                 const t = (p.title || p.propertyName || p.name || '').toLowerCase().trim();
                 if (t.includes('suerte')) p.title = 'Casasuerte';
@@ -830,10 +841,7 @@
                                 try {
                                     const parsed = JSON.parse(raw);
                                     if (Array.isArray(parsed)) {
-                                        const clean = parsed.filter(p => {
-                                            const t = (p.title || p.propertyName || p.name || '').toLowerCase().trim();
-                                            return t.includes('airmen') || t.includes('suerte') || t.includes('kathleen') || t.includes('liora') || t.includes('benecia') || t.includes('amore') || t.includes('midori');
-                                        });
+                                        const clean = parsed.filter(retainActiveListing);
                                         localStorage.setItem(k, JSON.stringify(clean));
                                     }
                                 } catch (_) {}
@@ -946,6 +954,7 @@
             try { localStorage.removeItem('urbanscope_suppress_midori_sync'); } catch (_) {}
         }
 
+        window.__urbanLastPropertyError = '';
         let created = null;
 
         if (isLocalBackendReachableHost()) {
@@ -958,10 +967,13 @@
                     created = await localRes.json();
                 } else {
                     const errBody = await localRes.json().catch(() => ({}));
-                    console.warn('Local property insert rejected:', errBody.detail || errBody.error || localRes.status);
+                    const errMsg = errBody.detail || errBody.error || `HTTP ${localRes.status}`;
+                    window.__urbanLastPropertyError = String(errMsg);
+                    console.warn('Local property insert rejected:', errMsg);
                     return null;
                 }
             } catch (e) {
+                window.__urbanLastPropertyError = String(e.message || 'Network error');
                 console.warn('Local backend property insert notice:', e);
                 return null;
             }
@@ -976,10 +988,13 @@
                     created = extractApiObjectPayload(data, 'property');
                 } else {
                     const errBody = await res.json().catch(() => ({}));
-                    console.warn('Hosted property insert rejected:', errBody.error || res.status);
+                    const errMsg = errBody.error || errBody.message || `HTTP ${res.status}`;
+                    window.__urbanLastPropertyError = String(errMsg);
+                    console.warn('Hosted property insert rejected:', errMsg);
                     return null;
                 }
             } catch (err) {
+                window.__urbanLastPropertyError = String(err.message || 'Network error');
                 console.warn('Hosted property insert notice:', err.message);
                 return null;
             }

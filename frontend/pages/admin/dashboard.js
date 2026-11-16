@@ -1128,11 +1128,11 @@ async function _loadDashboardDataInner(options = {}) {
             cachedDashboardProperties = properties;
             lastDashboardPropertiesAt = Date.now();
         } else {
-            // Count the 7 accredited properties: Airmen, Casasuerte, Kathleen, Liora, Benecia, Amore, Midori
             properties = properties.filter(p => {
                 if (!p) return false;
+                if (typeof window.isDeprecatedDemoProperty === "function") return !window.isDeprecatedDemoProperty(p);
                 const t = (p.title || p.name || p.propertyName || '').toLowerCase().trim();
-                return t.includes('airmen') || t.includes('suerte') || t.includes('kathleen') || t.includes('liora') || t.includes('benecia') || t.includes('amore') || t.includes('midori');
+                return Boolean(t);
             });
         }
 

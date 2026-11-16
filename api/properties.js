@@ -12,7 +12,7 @@ import {
     verifyCsrfIfAuthenticated
 } from '../lib/server-security.js';
 
-const ALLOWED_PROPERTY_STATUSES = new Set(['Available', 'Sold', 'Reserved', 'Pre-Selling', 'Draft']);
+const ALLOWED_PROPERTY_STATUSES = new Set(['Available', 'Sold', 'Reserved', 'Under Review', 'Pre-Selling', 'Draft']);
 
 const CANONICAL_MIDORI_PROPERTY = {
     title: 'Midori Mid-Rise Condo – Zone 1',
@@ -45,6 +45,20 @@ function validatePropertyFields(raw, { requireAll = false } = {}) {
         const location = String(raw.location || '').trim();
         if (location.length < 2 || location.length > 200) return { error: 'Location must be between 2 and 200 characters.' };
         out.location = location;
+    }
+    if (requireAll || raw.city !== undefined) {
+        const locFallback = String(out.location || raw.location || '').trim();
+        const derivedCity = String(
+            raw.city || (locFallback.includes(',') ? locFallback.split(',')[0] : locFallback) || 'Cavite'
+        ).trim().slice(0, 100);
+        if (derivedCity.length < 1) return { error: 'City must not be empty.' };
+        out.city = derivedCity;
+    }
+    if (requireAll || raw.province !== undefined) {
+        const locFallback = String(out.location || raw.location || '').trim();
+        const locSecond = locFallback.includes(',') ? locFallback.split(',').slice(1).join(',').trim() : '';
+        const derivedProvince = String(raw.province || locSecond || 'Cavite').trim().slice(0, 100) || 'Cavite';
+        out.province = derivedProvince;
     }
     if (requireAll || raw.property_type !== undefined) {
         const propType = String(raw.property_type || '').trim();
@@ -94,11 +108,11 @@ function validatePropertyFields(raw, { requireAll = false } = {}) {
     }
 
     if (raw.image_url !== undefined) {
-        const imgCheck = sanitizeImageUrl(raw.image_url, { maxDataUrlBytes: 3 * 1024 * 1024, defaultValue: 'assets/images/placeholder-house.jpg' });
+        const imgCheck = sanitizeImageUrl(raw.image_url, { maxDataUrlBytes: 3 * 1024 * 1024, defaultValue: 'assets/images/property1.jpg' });
         if (!imgCheck.ok) return { error: imgCheck.error };
         out.image_url = imgCheck.value;
     } else if (requireAll) {
-        out.image_url = 'assets/images/placeholder-house.jpg';
+        out.image_url = 'assets/images/property1.jpg';
     }
 
     if (raw.description !== undefined) {
@@ -109,6 +123,39 @@ function validatePropertyFields(raw, { requireAll = false } = {}) {
     }
 
     return { fields: out };
+}
+
+async function insertPropertySafe(rawFields) {
+    const body = { ...rawFields };
+    for (let attempt = 0; attempt < 6; attempt++) {
+        const r = await fetch(restUrl('properties'), {
+            method: 'POST',
+            headers: serviceHeaders({ Prefer: 'return=representation' }, true),
+            body: JSON.stringify(body)
+        });
+        if (r.ok) {
+            const created = await r.json().catch(() => []);
+            return { ok: true, data: Array.isArray(created) ? created[0] : created };
+        }
+        const errText = await r.text().catch(() => '');
+        let errJson = {};
+        try { errJson = JSON.parse(errText); } catch (_) {}
+        const msg = String(errJson.message || errJson.details || errText || '');
+        const pgrstMatch = msg.match(/Could not find the '([a-zA-Z0-9_]+)' column/i) || msg.match(/column "([a-zA-Z0-9_]+)" of relation/i);
+        const missingCol = pgrstMatch ? pgrstMatch[1] : null;
+        if (missingCol && missingCol in body && !['title', 'location', 'property_type', 'price'].includes(missingCol)) {
+            delete body[missingCol];
+            continue;
+        }
+        console.error('[properties/create] Supabase insert failed:', r.status, msg);
+        const clientStatus = r.status >= 400 && r.status < 500 ? 400 : 502;
+        return {
+            ok: false,
+            status: clientStatus,
+            error: errJson.message || errJson.hint || 'Failed to create property listing.'
+        };
+    }
+    return { ok: false, status: 502, error: 'Failed to create property listing.' };
 }
 
 export default async function handler(req, res) {
@@ -229,14 +276,11 @@ export default async function handler(req, res) {
         const { fields, error } = validatePropertyFields(body.payload || body, { requireAll: true });
         if (error) return jsonWithCookies({ success: false, error }, 400, res);
 
-        const r = await fetch(restUrl('properties'), {
-            method: 'POST',
-            headers: serviceHeaders({ Prefer: 'return=representation' }, true),
-            body: JSON.stringify(fields)
-        });
-        if (!r.ok) return jsonWithCookies({ success: false, error: 'Failed to create property listing.' }, 502, res);
-        const created = await r.json().catch(() => []);
-        return jsonWithCookies({ success: true, data: Array.isArray(created) ? created[0] : created }, 200, res);
+        const ins = await insertPropertySafe(fields);
+        if (!ins.ok) {
+            return jsonWithCookies({ success: false, error: ins.error }, ins.status || 502, res);
+        }
+        return jsonWithCookies({ success: true, data: ins.data }, 200, res);
     }
 
     const id = String(body.id ?? body.property_id ?? '').trim();
