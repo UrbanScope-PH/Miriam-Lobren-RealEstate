@@ -1459,7 +1459,7 @@ path when rendering from a page.
   - Updated `apiGetProperties()` in `supabase.js` / `api.js` to execute remote Supabase fetches concurrently (`Promise.allSettled`) with local FastAPI `/properties` on reachable local hosts instead of waiting sequentially, added `apiGetLocalPropertiesFast()` for millisecond cold-cache local reconciliation, added quota-safe list caching (`persistPropertyListToCache()` stripping bulky multi-photo `gallery_images` only on `QuotaExceededError`), and wired cross-tab/back-navigation synchronization via `BroadcastChannel('urbanscope_properties')`, `storage` (`urbanscope_properties_sync_ts`), `pageshow`, and `visibilitychange`.
 150. **Sitewide Solid-Color Styling (`frontend/**/*.css`, `README.md`):**
   - Replaced all frontend CSS gradient backgrounds and overlays with solid colors, including hero and CTA overlays, cards, buttons, sidebars, splash screen, legal pages, inquiry flows, property details, calculators, and admin consoles.
-  - Converted animated gradient skeleton shimmer placeholders to static, theme-matched solid-color placeholders. Sidebar styling now uses the single `--sidebar-bg` token. This current styling supersedes earlier notes describing gradient effects.
+  - Converted animated gradient skeleton shimmer placeholders to static, theme-matched solid-color placeholders. Removed the intro splash screen's blurred glow orbs, which created gradient-like color fields despite having solid fills. Sidebar styling now uses the single `--sidebar-bg` token. This current styling supersedes earlier notes describing gradient effects.
 
 ---
 
