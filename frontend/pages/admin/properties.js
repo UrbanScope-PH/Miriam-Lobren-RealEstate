@@ -85,21 +85,28 @@ async function loadSavedProperties() {
                      JSON.parse(localStorage.getItem("cached_live_properties")) || [];
     }
 
-    // Retain only the 7 accredited properties: Airmen, Casasuerte, Kathleen, Liora, Benecia, Amore, Midori
-    properties = properties.filter(p => {
-        if (!p) return false;
-        const t = (p.title || p.name || p.propertyName || '').toLowerCase().trim();
-        return t.includes('airmen') || t.includes('suerte') || t.includes('kathleen') || t.includes('liora') || t.includes('benecia') || t.includes('amore') || t.includes('midori');
-    }).map(p => {
-        if (!p) return p;
-        const t = (p.title || p.name || p.propertyName || '').toLowerCase().trim();
-        if (t.includes('suerte')) p.title = 'Casasuerte';
-        else if (t.includes('kathleen')) p.title = 'Kathleen - Place 5';
-        else if (t.includes('benecia')) p.title = 'Benecia Single-Attached';
-        else if (t.includes('amore')) p.title = 'Amore Classico';
-        else if (t.includes('midori')) p.title = 'Midori Mid-Rise Condo – Zone 1';
-        return p;
-    });
+    if (typeof window.filterAndSyncAccreditedProperties === "function") {
+        properties = await window.filterAndSyncAccreditedProperties(
+            properties,
+            typeof apiGetProperties === "function" ? () => apiGetProperties({}, true) : null
+        );
+    } else {
+        // Fallback filter/normalization if admin-shell helper is unavailable
+        properties = properties.filter(p => {
+            if (!p) return false;
+            const t = (p.title || p.name || p.propertyName || '').toLowerCase().trim();
+            return t.includes('airmen') || t.includes('suerte') || t.includes('kathleen') || t.includes('liora') || t.includes('benecia') || t.includes('amore') || t.includes('midori');
+        }).map(p => {
+            if (!p) return p;
+            const t = (p.title || p.name || p.propertyName || '').toLowerCase().trim();
+            if (t.includes('suerte')) p.title = 'Casasuerte';
+            else if (t.includes('kathleen')) p.title = 'Kathleen - Place 5';
+            else if (t.includes('benecia')) p.title = 'Benecia Single-Attached';
+            else if (t.includes('amore')) p.title = 'Amore Classico';
+            else if (t.includes('midori')) p.title = 'Midori Mid-Rise Condo – Zone 1';
+            return p;
+        });
+    }
 
     currentLoadedProperties = properties;
     filterTable();

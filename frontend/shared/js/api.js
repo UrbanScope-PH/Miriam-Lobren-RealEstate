@@ -485,6 +485,182 @@
     // ----------------------------------------------------------
     // 2. PROPERTY SERVICES
     // ----------------------------------------------------------
+    function getStaticFallbackProperties() {
+        return [
+            {
+                id: 1,
+                title: "Casasuerte",
+                location: "Barangay San Agustin, Trece Martires City, Cavite",
+                property_type: "Townhouse",
+                price: 2500000.0,
+                bedrooms: 2,
+                bathrooms: 1,
+                lot_area: 50.0,
+                floor_area: 50.8,
+                carports: 1,
+                storeys: 2,
+                status: "Available",
+                image_url: "assets/images/casasuerte.jpg",
+                description: "Casasuerte stands out as an attractive option for first-time homebuyers and modern families looking for a sustainable yet affordable home. Equipped with built-in solar power system.",
+                amenities: "Gated Entrance, Clubhouse, Basketball Court, Parks & Playgrounds, Built-in Solar Power System"
+            },
+            {
+                id: 2,
+                title: "Kathleen - Place 5",
+                location: "Molino 7, Bacoor, Cavite",
+                property_type: "Townhouse",
+                price: 6200000.0,
+                bedrooms: 3,
+                bathrooms: 2,
+                lot_area: 112.0,
+                floor_area: 112.0,
+                carports: 1,
+                storeys: 2,
+                status: "Available",
+                image_url: "assets/images/kathleen-facade.jpg",
+                description: "Kathleen - Place 5 is a secure, family-friendly residential community offering 275 premium zen-inspired townhouses in Molino VII, Bacoor.",
+                amenities: "Gated Entrance, Clubhouse, Park, Basketball Court, CCTV, Green-Oriented Community"
+            },
+            {
+                id: 3,
+                title: "Liora Homes",
+                location: "Brgy. Malainen Bago, Naic, Cavite",
+                property_type: "Townhouse",
+                price: 2462400.0,
+                bedrooms: 2,
+                bathrooms: 1,
+                lot_area: 50.0,
+                floor_area: 44.0,
+                carports: 1,
+                storeys: 2,
+                status: "Available",
+                image_url: "assets/images/LioraHomes.jpg",
+                description: "Award-winning Amora EcoLove townhomes equipped with solar panel systems and rainwater harvesting in Naic, Cavite.",
+                amenities: "Clubhouse, Covered Basketball Court, Swimming Pool, Playground & Park, Solar-Ready System"
+            },
+            {
+                id: 4,
+                title: "Airmen's Village Triplex",
+                location: "Pulang Lupa Dos, Las Piñas City",
+                property_type: "Triplex",
+                price: 8900000.0,
+                bedrooms: 3,
+                bathrooms: 3,
+                lot_area: 83.25,
+                floor_area: 143.78,
+                carports: 2,
+                storeys: 2,
+                status: "Available",
+                image_url: "assets/images/AirmenTriplex.WEBP",
+                description: "Modern, Ready-for-Occupancy (RFO) triplex residential townhouse located in a secure and peaceful community in Las Piñas.",
+                amenities: "Clubhouse, Basketball Court, Swimming Pool, Playground & Park, 24/7 Security, Balcony"
+            },
+            {
+                id: 5,
+                title: "Benecia Single-Attached",
+                location: "Sihanouk Village, Barangay Talon IV, Las Piñas City",
+                property_type: "Single-Attached House",
+                price: 9695000.0,
+                bedrooms: 3,
+                bathrooms: 3,
+                lot_area: 102.0,
+                floor_area: 117.0,
+                carports: 1,
+                storeys: 2,
+                status: "Available",
+                image_url: "assets/images/benecia-facade.jpg",
+                description: "Benecia Single Attached offers a modern and spacious home designed for families looking for comfort, privacy, and functionality in Sihanouk Village, Talon IV, Las Piñas City.",
+                amenities: "Single-Attached House Design, Private Carport, Front Fence and Gate, Balcony, Lanai, Functional Multi-Level Living Spaces, Spacious Indoor Living Areas, Maid's Room, Powder Room"
+            },
+            {
+                id: 6,
+                title: "Amore Classico",
+                location: "Benedetto Residences, Barangay Pulang Lupa Uno, Las Piñas City",
+                property_type: "Townhouse",
+                price: 7995000.0,
+                bedrooms: 3,
+                bathrooms: 3,
+                lot_area: 52.0,
+                floor_area: 102.0,
+                carports: 1,
+                storeys: 3,
+                status: "Available",
+                image_url: "assets/images/amore-facade.jpg",
+                description: "Amore Classico by Benedetto Residences is a thoughtfully designed three-storey townhouse ideal for growing families who need more space, comfort, and functionality in Pulang Lupa Uno, Las Piñas City.",
+                amenities: "Three-Storey Townhouse Design, Spacious Family Hall, Dedicated Maid's Room, Functional Multi-Level Living Spaces, Private Patio, Powder Room"
+            },
+            {
+                id: 7,
+                title: "Midori Mid-Rise Condo – Zone 1",
+                location: "Zone 1, Buildings 14–21, Dasmariñas, Cavite",
+                property_type: "Mid-Rise Condominium",
+                price: 3140000.0,
+                bedrooms: 2,
+                bathrooms: 1,
+                lot_area: 0.0,
+                floor_area: 50.0,
+                carports: 0,
+                storeys: 2,
+                status: "Available",
+                image_url: "assets/images/midori-main.webp",
+                description: "Midori Mid-Rise Condo – Zone 1 offers a convenient and comfortable living experience for young professionals, couples, and starting families looking for an affordable home in Dasmariñas, Cavite.",
+                amenities: "2nd Floor Units, Inner & End Unit Types, Living Area, Dining Area, Kitchen Area, Patio, Convenient Access to Public Transportation, Near Dasmariñas Bayan, Close to Schools and Essential Establishments, Accessible to Daily Needs"
+            }
+        ];
+    }
+
+    let ensureAccreditedPromise = null;
+
+    async function apiEnsureAccreditedProperties() {
+        try {
+            if (localStorage.getItem('urbanscope_suppress_midori_sync') === '1') {
+                return { ok: true, skipped: true, created: false, data: null };
+            }
+        } catch (_) {}
+
+        if (ensureAccreditedPromise) return ensureAccreditedPromise;
+
+        ensureAccreditedPromise = (async () => {
+            if (isLocalBackendReachableHost()) {
+                try {
+                    const localRes = await fetch(`${getLocalApiBase()}/properties`, { method: 'GET' });
+                    if (localRes.ok) {
+                        const localData = await localRes.json().catch(() => []);
+                        const midori = Array.isArray(localData)
+                            ? localData.find(p => String(p?.title || '').toLowerCase().includes('midori'))
+                            : null;
+                        if (midori) invalidateReadCache('properties');
+                        return { ok: true, created: false, data: midori || null };
+                    }
+                } catch (_) {}
+                return { ok: false, created: false, data: null };
+            }
+
+            try {
+                const res = await hostedApiFetch('/api/properties', {
+                    method: 'POST',
+                    body: JSON.stringify({ action: 'sync_accredited' })
+                });
+                const body = await res.json().catch(() => ({}));
+                if (res.ok && body && body.success !== false) {
+                    if (body.created || body.data) invalidateReadCache('properties');
+                    return {
+                        ok: true,
+                        created: Boolean(body.created),
+                        data: body.data || null
+                    };
+                }
+            } catch (err) {
+                console.warn('Accredited property sync notice:', err?.message || err);
+            }
+            return { ok: false, created: false, data: null };
+        })().finally(() => {
+            ensureAccreditedPromise = null;
+        });
+
+        return ensureAccreditedPromise;
+    }
+
     async function apiGetProperties(filter = {}, forceRefresh = false) {
         const isForce = Boolean(forceRefresh || (filter && filter.forceRefresh));
         const cacheKey = JSON.stringify({
@@ -565,15 +741,31 @@
                 console.warn('Supabase properties fetch notice, attempting fallback:', err.message);
             }
 
-            // Fallback 1: Local Python backend if available
-            if (liveProperties.length === 0 && isLocalBackendReachableHost()) {
+            // Fallback 1 / Local SQLite merge: ensure newly added local accredited listings (e.g. Midori before remote push) are merged
+            const isUnfilteredQuery = (!filter || ((!filter.type || filter.type === 'all') && (!filter.location || filter.location === 'all') && !filter.search));
+            const suppressMidoriSync = (() => {
+                try { return localStorage.getItem('urbanscope_suppress_midori_sync') === '1'; } catch (_) { return false; }
+            })();
+            const needsLocalAccreditedMerge = liveProperties.length === 0 || (isUnfilteredQuery && !suppressMidoriSync && !liveProperties.some(p => String(p?.title || p?.propertyName || p?.name || '').toLowerCase().includes('midori')));
+            if (needsLocalAccreditedMerge && isLocalBackendReachableHost()) {
                 try {
                     const localBase = getLocalApiBase();
                     const localRes = await fetch(`${localBase}/properties`, { method: 'GET' });
                     if (localRes.ok) {
                         const localData = await localRes.json();
                         if (Array.isArray(localData) && localData.length > 0) {
-                            liveProperties = localData;
+                            if (liveProperties.length === 0) {
+                                liveProperties = localData;
+                            } else {
+                                const existingTitles = new Set(liveProperties.map(p => String(p?.title || p?.propertyName || p?.name || '').toLowerCase().trim()));
+                                localData.forEach(lp => {
+                                    const lt = String(lp?.title || '').toLowerCase().trim();
+                                    if (lt.includes('midori') && !existingTitles.has(lt)) {
+                                        liveProperties.unshift(lp);
+                                        existingTitles.add(lt);
+                                    }
+                                });
+                            }
                         }
                     }
                 } catch (e) {}
@@ -624,127 +816,7 @@
 
             // Fallback to static accredited properties if list is empty
             if (liveProperties.length === 0) {
-                liveProperties = [
-                    {
-                        id: 1,
-                        title: "Casasuerte",
-                        location: "Barangay San Agustin, Trece Martires City, Cavite",
-                        property_type: "Townhouse",
-                        price: 2500000.0,
-                        bedrooms: 2,
-                        bathrooms: 1,
-                        lot_area: 50.0,
-                        floor_area: 50.8,
-                        carports: 1,
-                        storeys: 2,
-                        status: "Available",
-                        image_url: "assets/images/casasuerte.jpg",
-                        description: "Casasuerte stands out as an attractive option for first-time homebuyers and modern families looking for a sustainable yet affordable home. Equipped with built-in solar power system.",
-                        amenities: "Gated Entrance, Clubhouse, Basketball Court, Parks & Playgrounds, Built-in Solar Power System"
-                    },
-                    {
-                        id: 2,
-                        title: "Kathleen - Place 5",
-                        location: "Molino 7, Bacoor, Cavite",
-                        property_type: "Townhouse",
-                        price: 6200000.0,
-                        bedrooms: 3,
-                        bathrooms: 2,
-                        lot_area: 112.0,
-                        floor_area: 112.0,
-                        carports: 1,
-                        storeys: 2,
-                        status: "Available",
-                        image_url: "assets/images/kathleen-facade.jpg",
-                        description: "Kathleen - Place 5 is a secure, family-friendly residential community offering 275 premium zen-inspired townhouses in Molino VII, Bacoor.",
-                        amenities: "Gated Entrance, Clubhouse, Park, Basketball Court, CCTV, Green-Oriented Community"
-                    },
-                    {
-                        id: 3,
-                        title: "Liora Homes",
-                        location: "Brgy. Malainen Bago, Naic, Cavite",
-                        property_type: "Townhouse",
-                        price: 2462400.0,
-                        bedrooms: 2,
-                        bathrooms: 1,
-                        lot_area: 50.0,
-                        floor_area: 44.0,
-                        carports: 1,
-                        storeys: 2,
-                        status: "Available",
-                        image_url: "assets/images/LioraHomes.jpg",
-                        description: "Award-winning Amora EcoLove townhomes equipped with solar panel systems and rainwater harvesting in Naic, Cavite.",
-                        amenities: "Clubhouse, Covered Basketball Court, Swimming Pool, Playground & Park, Solar-Ready System"
-                    },
-                    {
-                        id: 4,
-                        title: "Airmen's Village Triplex",
-                        location: "Pulang Lupa Dos, Las Piñas City",
-                        property_type: "Triplex",
-                        price: 8900000.0,
-                        bedrooms: 3,
-                        bathrooms: 3,
-                        lot_area: 83.25,
-                        floor_area: 143.78,
-                        carports: 2,
-                        storeys: 2,
-                        status: "Available",
-                        image_url: "assets/images/AirmenTriplex.WEBP",
-                        description: "Modern, Ready-for-Occupancy (RFO) triplex residential townhouse located in a secure and peaceful community in Las Piñas.",
-                        amenities: "Clubhouse, Basketball Court, Swimming Pool, Playground & Park, 24/7 Security, Balcony"
-                    },
-                    {
-                        id: 5,
-                        title: "Benecia Single-Attached",
-                        location: "Sihanouk Village, Barangay Talon IV, Las Piñas City",
-                        property_type: "Single-Attached House",
-                        price: 9695000.0,
-                        bedrooms: 3,
-                        bathrooms: 3,
-                        lot_area: 102.0,
-                        floor_area: 117.0,
-                        carports: 1,
-                        storeys: 2,
-                        status: "Available",
-                        image_url: "assets/images/benecia-facade.jpg",
-                        description: "Benecia Single Attached offers a modern and spacious home designed for families looking for comfort, privacy, and functionality in Sihanouk Village, Talon IV, Las Piñas City.",
-                        amenities: "Single-Attached House Design, Private Carport, Front Fence and Gate, Balcony, Lanai, Functional Multi-Level Living Spaces, Spacious Indoor Living Areas, Maid's Room, Powder Room"
-                    },
-                    {
-                        id: 6,
-                        title: "Amore Classico",
-                        location: "Benedetto Residences, Barangay Pulang Lupa Uno, Las Piñas City",
-                        property_type: "Townhouse",
-                        price: 7995000.0,
-                        bedrooms: 3,
-                        bathrooms: 3,
-                        lot_area: 52.0,
-                        floor_area: 102.0,
-                        carports: 1,
-                        storeys: 3,
-                        status: "Available",
-                        image_url: "assets/images/amore-facade.jpg",
-                        description: "Amore Classico by Benedetto Residences is a thoughtfully designed three-storey townhouse ideal for growing families who need more space, comfort, and functionality in Pulang Lupa Uno, Las Piñas City.",
-                        amenities: "Three-Storey Townhouse Design, Spacious Family Hall, Dedicated Maid's Room, Functional Multi-Level Living Spaces, Private Patio, Powder Room"
-                    },
-                    {
-                        id: 7,
-                        title: "Midori Mid-Rise Condo – Zone 1",
-                        location: "Zone 1, Buildings 14–21, Dasmariñas, Cavite",
-                        property_type: "Mid-Rise Condominium",
-                        price: 3140000.0,
-                        bedrooms: 2,
-                        bathrooms: 1,
-                        lot_area: 0.0,
-                        floor_area: 50.0,
-                        carports: 0,
-                        storeys: 2,
-                        status: "Available",
-                        image_url: "assets/images/midori-main.webp",
-                        description: "Midori Mid-Rise Condo – Zone 1 offers a convenient and comfortable living experience for young professionals, couples, and starting families looking for an affordable home in Dasmariñas, Cavite.",
-                        amenities: "2nd Floor Units, Inner & End Unit Types, Living Area, Dining Area, Kitchen Area, Patio, Convenient Access to Public Transportation, Near Dasmariñas Bayan, Close to Schools and Essential Establishments, Accessible to Daily Needs"
-                    }
-                ];
+                liveProperties = getStaticFallbackProperties();
             }
 
             if (liveProperties.length > 0) {
@@ -845,19 +917,22 @@
             else validStatus = 'Available';
         }
 
+        const numOr = (val, fb) => (val !== undefined && val !== null && val !== '' && Number.isFinite(Number(val))) ? Number(val) : fb;
+        const intOr = (val, fb) => (val !== undefined && val !== null && val !== '' && Number.isFinite(Number(val))) ? Math.trunc(Number(val)) : fb;
+
         const payload = {
             title: property.title || property.propertyName || 'New Listing',
             location: loc,
             city: city,
             province: province,
             property_type: property.property_type || property.propertyType || 'Villa',
-            price: parseFloat(property.price) || 0,
-            bedrooms: parseInt(property.bedrooms, 10) || 3,
-            bathrooms: parseInt(property.bathrooms, 10) || 2,
-            lot_area: parseFloat(property.lot_area || property.lotArea) || 120,
-            floor_area: parseFloat(property.floor_area || property.floorArea) || 80,
-            carports: parseInt(property.carports, 10) || 1,
-            storeys: parseInt(property.storeys, 10) || 2,
+            price: numOr(property.price, 0),
+            bedrooms: intOr(property.bedrooms, 3),
+            bathrooms: intOr(property.bathrooms, 2),
+            lot_area: numOr(property.lot_area !== undefined ? property.lot_area : property.lotArea, 120),
+            floor_area: numOr(property.floor_area !== undefined ? property.floor_area : property.floorArea, 80),
+            carports: intOr(property.carports, 1),
+            storeys: intOr(property.storeys, 2),
             status: validStatus,
             image_url: sanitizeImageUrl(
                 property.image_url || (property.imageNames && property.imageNames[0] ? 'assets/images/' + property.imageNames[0] : 'assets/images/property1.jpg'),
@@ -866,6 +941,9 @@
             description: property.description || '',
             amenities: property.amenities || ''
         };
+        if (String(payload.title || '').toLowerCase().includes('midori')) {
+            try { localStorage.removeItem('urbanscope_suppress_midori_sync'); } catch (_) {}
+        }
 
         let created = null;
 
@@ -1032,6 +1110,10 @@
             ['cached_live_properties', 'urbanScopeProperties', 'properties'].forEach(key => {
                 const list = JSON.parse(localStorage.getItem(key) || '[]');
                 if (Array.isArray(list) && list.length > 0) {
+                    const targetProp = list.find(p => String(p.id) === String(id));
+                    if (targetProp && String(targetProp.title || targetProp.name || '').toLowerCase().includes('midori')) {
+                        localStorage.setItem('urbanscope_suppress_midori_sync', '1');
+                    }
                     const filtered = list.filter(p => String(p.id) !== String(id));
                     localStorage.setItem(key, JSON.stringify(filtered));
                 }
@@ -3913,6 +3995,8 @@
     window.apiGetCurrentUser = apiGetCurrentUser;
     window.apiGetDashboardKPIs = apiGetDashboardKPIs;
     window.apiGetAppointments = apiGetAppointments;
+    window.apiEnsureAccreditedProperties = apiEnsureAccreditedProperties;
+    window.getStaticFallbackProperties = getStaticFallbackProperties;
     window.isSupabaseConfigured = isBackendConfigured;
     window.isBackendConfigured = isBackendConfigured;
 

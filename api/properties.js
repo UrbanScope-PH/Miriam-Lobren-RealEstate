@@ -14,6 +14,25 @@ import {
 
 const ALLOWED_PROPERTY_STATUSES = new Set(['Available', 'Sold', 'Reserved', 'Pre-Selling', 'Draft']);
 
+const CANONICAL_MIDORI_PROPERTY = {
+    title: 'Midori Mid-Rise Condo – Zone 1',
+    location: 'Zone 1, Buildings 14–21, Dasmariñas, Cavite',
+    city: 'Dasmariñas City',
+    province: 'Cavite',
+    property_type: 'Mid-Rise Condominium',
+    price: 3140000.0,
+    bedrooms: 2,
+    bathrooms: 1,
+    lot_area: 0.0,
+    floor_area: 50.0,
+    carports: 0,
+    storeys: 2,
+    status: 'Available',
+    image_url: 'assets/images/midori-main.webp',
+    description: 'Midori Mid-Rise Condo – Zone 1 offers a convenient and comfortable living experience for young professionals, couples, and starting families looking for an affordable home in Dasmariñas, Cavite. Each 50 sqm unit features two bedrooms, a toilet and bath, a living area, a dining and kitchen area, and a patio, with Inner and End unit options.',
+    amenities: '2nd Floor Units, Inner & End Unit Types, Living Area, Dining Area, Kitchen Area, Patio, Convenient Access to Public Transportation, Near Dasmariñas Bayan, Close to Schools and Essential Establishments, Accessible to Daily Needs'
+};
+
 function validatePropertyFields(raw, { requireAll = false } = {}) {
     const out = {};
 
@@ -161,6 +180,50 @@ export default async function handler(req, res) {
 
     const body = await parseJsonBody(req);
     const action = String(body.action || queryAction || '').trim().toLowerCase();
+
+    if (action === 'sync_accredited') {
+        const listRes = await fetch(restUrl('properties', { select: 'id,title', limit: '200' }), {
+            headers: serviceHeaders({}, false)
+        });
+        if (!listRes.ok) {
+            return jsonWithCookies({ success: false, error: 'Unable to inspect property catalog.' }, 502, res);
+        }
+        const existingRows = await listRes.json().catch(() => []);
+        const rowsList = Array.isArray(existingRows) ? existingRows : [];
+        let createdMidori = null;
+
+        const hasMidori = rowsList.some((p) => String(p?.title || '').toLowerCase().includes('midori'));
+        if (!hasMidori) {
+            const insertRes = await fetch(restUrl('properties'), {
+                method: 'POST',
+                headers: serviceHeaders({ Prefer: 'return=representation' }, true),
+                body: JSON.stringify(CANONICAL_MIDORI_PROPERTY)
+            });
+            if (!insertRes.ok) {
+                return jsonWithCookies({ success: false, error: 'Failed to seed Midori property listing.' }, 502, res);
+            }
+            const inserted = await insertRes.json().catch(() => []);
+            createdMidori = Array.isArray(inserted) ? inserted[0] : inserted;
+        }
+
+        const oldKathleen = rowsList.find((p) => {
+            const t = String(p?.title || '').toLowerCase();
+            return t.includes('kathleen') && p.title !== 'Kathleen - Place 5';
+        });
+        if (oldKathleen && oldKathleen.id != null) {
+            await fetch(restUrl('properties', { id: `eq.${oldKathleen.id}` }), {
+                method: 'PATCH',
+                headers: serviceHeaders({ Prefer: 'return=minimal' }, true),
+                body: JSON.stringify({ title: 'Kathleen - Place 5' })
+            }).catch(() => {});
+        }
+
+        return jsonWithCookies({
+            success: true,
+            created: Boolean(createdMidori),
+            data: createdMidori || rowsList.find((p) => String(p?.title || '').toLowerCase().includes('midori')) || null
+        }, 200, res);
+    }
 
     if (action === 'create') {
         const { fields, error } = validatePropertyFields(body.payload || body, { requireAll: true });

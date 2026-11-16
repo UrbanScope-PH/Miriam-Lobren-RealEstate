@@ -1138,7 +1138,6 @@
             const encodedId = encodeURIComponent(id);
             const sLower = status.toLowerCase().trim();
             const isSold = sLower === "sold" || sLower === "sold out";
-            const viewHref = (options && options.viewHref) || `../properties/property-detail.html?id=${encodedId}`;
             const editHref = (options && options.editHref) || `edit-property.html?id=${encodedId}`;
 
             activePropTrigger = trigger;
@@ -1162,10 +1161,6 @@
 
             menu.innerHTML = `
                 <div class="prop-actions-menu-header">Property Actions</div>
-                <a href="${escShellHtml(viewHref)}" target="_blank" rel="noopener noreferrer" class="prop-actions-item prop-menu-view" role="menuitem">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
-                    <span>View Listing</span>
-                </a>
                 <a href="${escShellHtml(editHref)}" class="prop-actions-item prop-menu-edit" role="menuitem">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
                     <span>Edit Property</span>
@@ -1199,7 +1194,7 @@
             const menuWidth = Math.max(menu.offsetWidth || 0, 184);
             menu.style.width = `${menuWidth}px`;
 
-            const menuHeight = menu.offsetHeight || 196;
+            const menuHeight = menu.offsetHeight || 162;
             const openUpward = (tBottom + 6 + menuHeight > vpHeight - 10) && (tTop > menuHeight + 16);
             const preferredLeft = tRight - menuWidth;
             const left = Math.min(Math.max(10, preferredLeft >= 10 ? preferredLeft : tLeft), vpWidth - menuWidth - 10);
@@ -1216,6 +1211,62 @@
                 if (firstItem) firstItem.focus();
             }
         }
+    };
+
+    function normalizeAdminAccreditedList(rawList) {
+        return (Array.isArray(rawList) ? rawList : []).filter(p => {
+            if (!p) return false;
+            const t = (p.title || p.name || p.propertyName || '').toLowerCase().trim();
+            return t.includes('airmen') || t.includes('suerte') || t.includes('kathleen') || t.includes('liora') || t.includes('benecia') || t.includes('amore') || t.includes('midori');
+        }).map(p => {
+            if (!p) return p;
+            const t = (p.title || p.name || p.propertyName || '').toLowerCase().trim();
+            if (t.includes('suerte')) p.title = 'Casasuerte';
+            else if (t.includes('kathleen')) p.title = 'Kathleen - Place 5';
+            else if (t.includes('benecia')) p.title = 'Benecia Single-Attached';
+            else if (t.includes('amore')) p.title = 'Amore Classico';
+            else if (t.includes('midori')) p.title = 'Midori Mid-Rise Condo – Zone 1';
+            return p;
+        });
+    }
+
+    /**
+     * Ensures newly added accredited listings (such as Midori Mid-Rise Condo – Zone 1)
+     * are synchronized into live Supabase / local backend when missing on admin pages.
+     */
+    window.filterAndSyncAccreditedProperties = async function (rawProperties, refreshFn) {
+        let filtered = normalizeAdminAccreditedList(rawProperties);
+        let suppressMidori = false;
+        try {
+            suppressMidori = localStorage.getItem('urbanscope_suppress_midori_sync') === '1';
+        } catch (_) {}
+
+        const hasMidori = (list) => list.some(p => String(p?.title || p?.name || p?.propertyName || '').toLowerCase().includes('midori'));
+        if (!suppressMidori && !hasMidori(filtered)) {
+            if (typeof window.apiEnsureAccreditedProperties === 'function') {
+                try {
+                    const syncRes = await window.apiEnsureAccreditedProperties();
+                    if (syncRes && !syncRes.skipped) {
+                        if (typeof refreshFn === 'function') {
+                            const refreshed = await refreshFn();
+                            if (Array.isArray(refreshed) && refreshed.length > 0) {
+                                filtered = normalizeAdminAccreditedList(refreshed);
+                            }
+                        }
+                        if (!hasMidori(filtered) && syncRes.data && typeof syncRes.data === 'object') {
+                            filtered = normalizeAdminAccreditedList([syncRes.data, ...filtered]);
+                        }
+                    }
+                } catch (_) {}
+            }
+            if (!hasMidori(filtered) && typeof window.getStaticFallbackProperties === 'function') {
+                const fallbackMidori = window.getStaticFallbackProperties().find(p => String(p?.title || '').toLowerCase().includes('midori'));
+                if (fallbackMidori) {
+                    filtered = normalizeAdminAccreditedList([fallbackMidori, ...filtered]);
+                }
+            }
+        }
+        return filtered;
     };
 
     // Initialize on DOM Ready
