@@ -638,37 +638,120 @@ function getAccreditedPropertyKey(item) {
     return '';
 }
 
-async function loadHomeProperties(category = 'all') {
-    activeCategory = category;
+let lastRenderedHomeSignature = '';
+let lastSeenPropertySyncTs = '';
 
-    // Fast-path: immediately render canonical accredited properties so filtering and sorting work with zero delay
-    if (!allCachedProperties || allCachedProperties.length === 0) {
-        allCachedProperties = [...CANONICAL_ACCREDITED_PROPERTIES];
+function getHomePropertyListSignature(list) {
+    if (!Array.isArray(list)) return '';
+    return list.map(item => {
+        if (!item) return '';
+        const img = String(item.image_url || item.image || '');
+        return [
+            item.id ?? '',
+            String(item.title || item.propertyName || item.name || '').trim(),
+            String(item.location || '').trim(),
+            Number(item.price) || 0,
+            String(item.status || '').trim(),
+            String(item.property_type || item.propertyType || '').trim(),
+            img.slice(0, 64),
+            img.length
+        ].join(':');
+    }).join('|');
+}
+
+function mergeWithCanonicalHomeProperties(rawList) {
+    if (!Array.isArray(rawList) || rawList.length === 0) {
+        return [...CANONICAL_ACCREDITED_PROPERTIES];
+    }
+    const activeList = rawList.filter(item => !isDeprecatedHomeDemoItem(item));
+    if (activeList.length === 0) {
+        return [...CANONICAL_ACCREDITED_PROPERTIES];
+    }
+    const presentKeys = new Set(activeList.map(getAccreditedPropertyKey).filter(Boolean));
+    const missingCanonical = CANONICAL_ACCREDITED_PROPERTIES.filter(item => {
+        const key = getAccreditedPropertyKey(item);
+        return key && !presentKeys.has(key);
+    });
+    return [...activeList, ...missingCanonical];
+}
+
+function getInitialCachedHomeProperties() {
+    if (typeof apiGetCachedProperties === 'function') {
+        const cached = apiGetCachedProperties();
+        if (Array.isArray(cached) && cached.length > 0) {
+            return mergeWithCanonicalHomeProperties(cached);
+        }
+    }
+    try {
+        for (const key of ['cached_live_properties', 'urbanScopeProperties', 'properties']) {
+            const parsed = JSON.parse(localStorage.getItem(key) || '[]');
+            if (Array.isArray(parsed) && parsed.length > 0) {
+                return mergeWithCanonicalHomeProperties(parsed);
+            }
+        }
+    } catch (_) {}
+    return [...CANONICAL_ACCREDITED_PROPERTIES];
+}
+
+function applyHomePropertiesState(nextList) {
+    const merged = mergeWithCanonicalHomeProperties(nextList);
+    const sig = getHomePropertyListSignature(merged);
+    if (sig === lastRenderedHomeSignature && allCachedProperties && allCachedProperties.length > 0) {
+        return false;
+    }
+    lastRenderedHomeSignature = sig;
+    allCachedProperties = merged;
+    if (window.UrbanCalculator && typeof UrbanCalculator.updateBudgetMatcherProjects === 'function') {
+        UrbanCalculator.updateBudgetMatcherProjects(allCachedProperties);
     }
     applyCurrentFiltersAndRender();
+    return true;
+}
 
-    // Fetch fresh live data from backend API if available
-    if (typeof apiGetProperties === 'function') {
-        try {
-            const data = await apiGetProperties({});
-            if (data && Array.isArray(data) && data.length > 0) {
-                const activeList = data.filter(item => !isDeprecatedHomeDemoItem(item));
-                if (activeList.length > 0) {
-                    const presentKeys = new Set(activeList.map(getAccreditedPropertyKey).filter(Boolean));
-                    const missingCanonical = CANONICAL_ACCREDITED_PROPERTIES.filter(item => {
-                        const key = getAccreditedPropertyKey(item);
-                        return key && !presentKeys.has(key);
-                    });
-                    allCachedProperties = [...activeList, ...missingCanonical];
-                    if (window.UrbanCalculator && typeof UrbanCalculator.updateBudgetMatcherProjects === 'function') {
-                        UrbanCalculator.updateBudgetMatcherProjects(allCachedProperties);
-                    }
-                    applyCurrentFiltersAndRender();
-                }
-            }
-        } catch (e) {
+async function loadHomeProperties(category = 'all', options = {}) {
+    activeCategory = category;
+
+    // 1. Instant 0ms synchronous hydration from local browser cache (+ canonical defaults)
+    if (!allCachedProperties || allCachedProperties.length === 0 || options.fromSyncEvent) {
+        applyHomePropertiesState(getInitialCachedHomeProperties());
+    } else {
+        applyCurrentFiltersAndRender();
+    }
+
+    // 2. Concurrent fast local backend fetch (~3ms on localhost) + full live API reconciliation
+    const localFastPromise = (typeof apiGetLocalPropertiesFast === 'function')
+        ? apiGetLocalPropertiesFast().catch(() => null)
+        : Promise.resolve(null);
+
+    const fullLivePromise = (typeof apiGetProperties === 'function')
+        ? apiGetProperties({}, Boolean(options.forceRefresh)).catch(e => {
             console.warn('Live property fetch notice:', e);
-        }
+            return null;
+        })
+        : Promise.resolve(null);
+
+    let fullResolved = false;
+
+    localFastPromise.then(localData => {
+        if (fullResolved || !Array.isArray(localData) || localData.length === 0) return;
+        const activeLocal = localData.filter(item => !isDeprecatedHomeDemoItem(item));
+        if (activeLocal.length === 0) return;
+        // Preserve any non-local remote items already in cache while surfacing local creations immediately
+        const localIds = new Set(activeLocal.map(p => String(p.id)));
+        const localTitles = new Set(activeLocal.map(p => String(p.title || p.propertyName || '').toLowerCase().trim()).filter(Boolean));
+        const extraCached = (allCachedProperties || []).filter(item => {
+            const key = getAccreditedPropertyKey(item);
+            if (key) return false;
+            const t = String(item.title || item.propertyName || '').toLowerCase().trim();
+            return !localIds.has(String(item.id)) && (!t || !localTitles.has(t));
+        });
+        applyHomePropertiesState([...activeLocal, ...extraCached]);
+    });
+
+    const data = await fullLivePromise;
+    fullResolved = true;
+    if (data && Array.isArray(data) && data.length > 0) {
+        applyHomePropertiesState(data);
     }
 }
 
@@ -1043,14 +1126,66 @@ function initSortSelect(selectEl) {
     updateDisplay();
 }
 
+function setupHomepagePropertySyncListeners() {
+    try {
+        lastSeenPropertySyncTs = localStorage.getItem('urbanscope_properties_sync_ts') || '';
+    } catch (_) {}
+
+    const syncNow = () => {
+        try {
+            lastSeenPropertySyncTs = localStorage.getItem('urbanscope_properties_sync_ts') || '';
+        } catch (_) {}
+        loadHomeProperties(activeCategory, { forceRefresh: true, fromSyncEvent: true });
+    };
+
+    try {
+        if (typeof BroadcastChannel === 'function') {
+            const ch = new BroadcastChannel('urbanscope_properties');
+            ch.addEventListener('message', (ev) => {
+                if (ev && ev.data && ev.data.type === 'properties_updated') {
+                    syncNow();
+                }
+            });
+        }
+    } catch (_) {}
+
+    window.addEventListener('storage', (e) => {
+        if (!e || !e.key) return;
+        if (e.key === 'urbanscope_properties_sync_ts' ||
+            e.key === 'cached_live_properties' ||
+            e.key === 'urbanScopeProperties' ||
+            e.key === 'properties') {
+            syncNow();
+        }
+    });
+
+    window.addEventListener('pageshow', (e) => {
+        if (e && e.persisted) {
+            syncNow();
+        }
+    });
+
+    document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState !== 'visible') return;
+        try {
+            const currentTs = localStorage.getItem('urbanscope_properties_sync_ts') || '';
+            if (currentTs && currentTs !== lastSeenPropertySyncTs) {
+                syncNow();
+            }
+        } catch (_) {}
+    });
+}
+
 function initHomepage() {
-    // 0. Initialize Quick Home Affordability & Budget Matcher
+    // 0. Initialize Quick Home Affordability & Budget Matcher with cached live snapshot on first paint
+    const initialSnapshot = getInitialCachedHomeProperties();
     if (window.UrbanCalculator && typeof UrbanCalculator.initHomepageBudgetMatcher === 'function') {
-        UrbanCalculator.initHomepageBudgetMatcher('homepageBudgetMatcher');
+        UrbanCalculator.initHomepageBudgetMatcher('homepageBudgetMatcher', { projects: initialSnapshot });
     }
 
-    // 1. Initial load from live database
+    // 1. Hydrate grid cleanly at 0ms + reconcile with live backend
     loadHomeProperties('all');
+    setupHomepagePropertySyncListeners();
 
     // 2. Intercept search bar form submission & button click (prevents page reload / navigation)
     const searchForm = document.getElementById('propertySearch');
