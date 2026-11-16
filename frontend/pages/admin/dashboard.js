@@ -1227,6 +1227,9 @@ function sanitizeAdminPropImg(rawUrl, fallback = '../../assets/images/property1.
 }
 
 function renderDashboardProperties(list) {
+    if (window.UrbanPropertyActionMenu && typeof window.UrbanPropertyActionMenu.close === 'function') {
+        window.UrbanPropertyActionMenu.close(false);
+    }
     const tbody = document.getElementById("dashboardPropertyTableBody");
     if (!tbody) return;
 
@@ -1253,6 +1256,14 @@ function renderDashboardProperties(list) {
         const safeEncodedId = escapeHTML(encodeURIComponent(String(p.id ?? '')));
         const imgSrc = sanitizeAdminPropImg(p.image_url, '../../assets/images/property1.jpg');
 
+        const actionsCellHtml = (window.UrbanPropertyActionMenu && typeof window.UrbanPropertyActionMenu.renderTrigger === 'function')
+            ? window.UrbanPropertyActionMenu.renderTrigger({
+                id: p.id,
+                status: displayStatus,
+                title
+            })
+            : `<div class="dash-prop-actions"><a href="edit-property.html?id=${safeEncodedId}" class="prop-action-btn prop-action-edit">Edit</a></div>`;
+
         return `
         <tr class="${isSold ? 'row-sold' : ''}">
             <td>
@@ -1273,25 +1284,7 @@ function renderDashboardProperties(list) {
                     ${safeStatus}
                 </span>
             </td>
-            <td>
-                <div class="dash-prop-actions">
-                    <a href="../properties/property-detail.html?id=${safeEncodedId}" target="_blank" rel="noopener noreferrer" class="prop-action-btn prop-action-view">
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
-                        View
-                    </a>
-                    <a href="edit-property.html?id=${safeEncodedId}" class="prop-action-btn prop-action-edit">
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
-                        Edit
-                    </a>
-                    <button type="button" data-dash-prop-action="toggle" data-prop-id="${safeId}" data-prop-status="${safeStatus}" class="prop-action-btn ${isSold ? 'prop-action-available' : 'prop-action-sold'}">
-                        ${isSold ? 'Mark Available' : 'Mark Sold'}
-                    </button>
-                    <button type="button" data-dash-prop-action="delete" data-prop-id="${safeId}" data-prop-title="${safeTitle}" class="prop-action-btn prop-action-delete">
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
-                        Delete
-                    </button>
-                </div>
-            </td>
+            <td>${actionsCellHtml}</td>
         </tr>
         `;
     }).join('');
@@ -1299,6 +1292,26 @@ function renderDashboardProperties(list) {
     if (!tbody.dataset.dashPropBound) {
         tbody.dataset.dashPropBound = '1';
         tbody.addEventListener('click', (event) => {
+            const trigger = event.target.closest('button.prop-actions-trigger[data-prop-action-toggle]');
+            if (trigger && window.UrbanPropertyActionMenu && typeof window.UrbanPropertyActionMenu.toggle === 'function') {
+                window.UrbanPropertyActionMenu.toggle(event, {
+                    trigger,
+                    id: trigger.getAttribute('data-prop-id'),
+                    status: trigger.getAttribute('data-prop-status') || '',
+                    title: trigger.getAttribute('data-prop-title') || '',
+                    onToggleStatus: (ctx) => {
+                        if (typeof window.togglePropertyStatus === 'function') {
+                            window.togglePropertyStatus(ctx.id, ctx.status);
+                        }
+                    },
+                    onDelete: (ctx) => {
+                        if (typeof window.deletePropertyListing === 'function') {
+                            window.deletePropertyListing(ctx.id, ctx.title);
+                        }
+                    }
+                });
+                return;
+            }
             const btn = event.target.closest('button[data-dash-prop-action]');
             if (!btn) return;
             const action = btn.getAttribute('data-dash-prop-action');
