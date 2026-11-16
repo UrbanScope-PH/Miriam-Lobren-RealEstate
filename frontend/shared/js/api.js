@@ -869,10 +869,23 @@
     async function apiGetPropertyById(id) {
         try {
             const url = `${REST_BASE}/properties?id=eq.${encodeURIComponent(id)}&select=*`;
-            const res = await fetch(url, { method: 'GET', headers: getHeaders() });
+            const imgUrl = `${REST_BASE}/property_images?property_id=eq.${encodeURIComponent(id)}&select=image_url,display_order&order=display_order.asc`;
+            const [res, imgRes] = await Promise.all([
+                fetch(url, { method: 'GET', headers: getHeaders(), cache: 'no-store' }),
+                fetch(imgUrl, { method: 'GET', headers: getHeaders(), cache: 'no-store' }).catch(() => null)
+            ]);
             if (res.ok) {
                 const data = await res.json();
-                if (data && data.length > 0) return data[0];
+                if (data && data.length > 0) {
+                    const prop = data[0];
+                    if (imgRes && imgRes.ok) {
+                        const imgRows = await imgRes.json().catch(() => []);
+                        if (Array.isArray(imgRows) && imgRows.length > 0) {
+                            prop.gallery_images = imgRows.map(r => r && r.image_url).filter(Boolean);
+                        }
+                    }
+                    return prop;
+                }
             }
         } catch (err) {
             console.warn(`Supabase notice fetching property #${id}:`, err.message);
@@ -882,7 +895,12 @@
         if (isLocalBackendReachableHost()) {
             try {
                 const localBase = getLocalApiBase();
-                const localRes = await fetch(`${localBase}/properties/${encodeURIComponent(id)}`);
+                const localRes = await fetch(`${localBase}/properties/${encodeURIComponent(id)}`, {
+                    cache: 'no-store',
+                    signal: (typeof AbortSignal !== 'undefined' && typeof AbortSignal.timeout === 'function')
+                        ? AbortSignal.timeout(1800)
+                        : undefined
+                });
                 if (localRes.ok) return await localRes.json();
             } catch (e) {}
         }
@@ -946,9 +964,15 @@
                 property.image_url || (property.imageNames && property.imageNames[0] ? 'assets/images/' + property.imageNames[0] : 'assets/images/property1.jpg'),
                 'assets/images/property1.jpg'
             ),
+            gallery_images: Array.isArray(property.gallery_images)
+                ? property.gallery_images.slice(0, 10).map(u => sanitizeImageUrl(u, '')).filter(Boolean)
+                : undefined,
             description: property.description || '',
             amenities: property.amenities || ''
         };
+        if (!payload.gallery_images || payload.gallery_images.length === 0) {
+            delete payload.gallery_images;
+        }
         if (String(payload.title || '').toLowerCase().includes('midori')) {
             try { localStorage.removeItem('urbanscope_suppress_midori_sync'); } catch (_) {}
         }

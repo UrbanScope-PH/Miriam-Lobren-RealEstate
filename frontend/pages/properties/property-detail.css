@@ -6,6 +6,11 @@
     max-width: 1200px;
     margin: 0 auto;
     padding: 34px 4% 80px;
+    transition: opacity 0.14s ease;
+}
+
+html.detail-hydrating .detail-container {
+    opacity: 0;
 }
 
 /* PROPERTY HEADER */

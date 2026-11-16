@@ -137,6 +137,19 @@ def init_db():
     if "amenities" not in existing_cols:
         cursor.execute("ALTER TABLE properties ADD COLUMN amenities TEXT DEFAULT ''")
 
+    # 2b. Property Images Table (multi-photo gallery slides for listings)
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS property_images (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            property_id INTEGER NOT NULL REFERENCES properties(id) ON DELETE CASCADE,
+            image_url TEXT NOT NULL,
+            display_order INTEGER DEFAULT 1,
+            is_primary INTEGER DEFAULT 0,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+    """)
+    cursor.execute("CREATE INDEX IF NOT EXISTS idx_property_images_prop_order ON property_images(property_id, display_order)")
+
     cursor.execute("PRAGMA table_info(users)")
     existing_user_cols = {col[1] for col in cursor.fetchall()}
     if "email_verified_at" not in existing_user_cols:
