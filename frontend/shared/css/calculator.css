@@ -19,7 +19,7 @@
 
 /* Header */
 .calc-header {
-    background: linear-gradient(135deg, #14351e 0%, #1e5c33 60%, #2d5c39 100%);
+    background: #1e5c33;
     color: #ffffff;
     padding: 24px 28px;
     display: flex;
@@ -267,7 +267,7 @@
 }
 
 .calc-kpi-featured {
-    background: linear-gradient(135deg, #1b3d25 0%, #2a5a36 100%);
+    background: #1b3d25;
     color: #ffffff;
     padding: 20px;
     border-radius: 14px;
@@ -795,7 +795,7 @@ html[data-theme="dark"] .calc-card {
 
 html.dark-mode .calc-header,
 html[data-theme="dark"] .calc-header {
-    background: linear-gradient(135deg, #112618 0%, #173622 60%, #1f472e 100%);
+    background: #173622;
     border-bottom: 1px solid #284431;
 }
 
@@ -876,7 +876,7 @@ html[data-theme="dark"] .calc-results-box {
 
 html.dark-mode .calc-kpi-featured,
 html[data-theme="dark"] .calc-kpi-featured {
-    background: linear-gradient(135deg, #132d1c 0%, #1c452a 100%);
+    background: #132d1c;
     border: 1px solid #2e553a;
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
 }

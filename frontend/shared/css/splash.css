@@ -27,7 +27,7 @@ html.splash-pending {
     cursor: pointer;
     font-family: 'Plus Jakarta Sans', 'Segoe UI', sans-serif;
     color: #fff;
-    background: radial-gradient(circle at 50% 38%, #347c47 0%, #2d5c39 38%, #1a3b23 78%, #10261a 100%);
+    background: #2d5c39;
     border-radius: 0 0 0 0;
     transition: transform 0.9s cubic-bezier(0.77, 0, 0.18, 1), border-radius 0.9s cubic-bezier(0.77, 0, 0.18, 1);
     will-change: transform;
@@ -122,7 +122,7 @@ html.splash-pending {
     height: 2px;
     width: 0;
     margin: 16px 0 14px;
-    background: linear-gradient(90deg, transparent, #e3c779, transparent);
+    background: #e3c779;
     animation: splashLine 0.9s ease-out 1.35s forwards;
 }
 

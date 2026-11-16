@@ -23,8 +23,7 @@
     --bg-main: #f4f8f5;
     --white: #ffffff;
     --shadow: 0 8px 26px rgba(27, 46, 33, 0.055);
-    --sidebar-gradient-start: #17321e;
-    --sidebar-gradient-end: #0d2113;
+    --sidebar-bg: #17321e;
     --sidebar-active-bg: rgba(52, 124, 71, 0.32);
     --sidebar-active-edge: #9bd3a5;
 }
@@ -562,7 +561,7 @@ input:focus-visible {
     padding: 24px;
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
-    background: linear-gradient(180deg, var(--sidebar-gradient-start), var(--sidebar-gradient-end));
+    background: var(--sidebar-bg);
     color: #ffffff;
     box-shadow: 6px 0 25px rgba(0, 0, 0, 0.2);
     transform: translateX(-105%);
@@ -1958,7 +1957,7 @@ html.dark-mode .btn-change-avatar {
 .btn-modal-approve:not(.approved):not(:disabled),
 .btn-save-profile,
 .btn-add-property {
-    background: linear-gradient(135deg, var(--green, #1f4928) 0%, var(--forest, #2e7d32) 100%) !important;
+    background: var(--green, #1f4928) !important;
     color: #ffffff !important;
     border: none !important;
     box-shadow: 0 4px 14px rgba(31, 73, 40, 0.28) !important;
@@ -2039,18 +2038,15 @@ html.dark-mode .status-pill.status-review {
     font-style: normal !important;
 }
 
-/* Loading Skeleton Shimmer for Admin (Rule 19) */
+/* Static Loading Skeleton for Admin (Rule 19) */
 .admin-table-skeleton-row {
     height: 48px;
-    background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%);
-    background-size: 200% 100%;
-    animation: skeletonShimmer 1.6s ease-in-out infinite;
+    background: #f1f5f9;
     border-radius: 6px;
     margin: 8px 0;
 }
 html.dark-mode .admin-table-skeleton-row {
-    background: linear-gradient(90deg, #1c2b20 25%, #25392a 50%, #1c2b20 75%);
-    background-size: 200% 100%;
+    background: #1c2b20;
 }
 
 /* ============================================================

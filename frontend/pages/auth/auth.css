@@ -116,7 +116,7 @@ body {
 .overlay {
     position: absolute;
     inset: 0;
-    background: linear-gradient(180deg, rgba(255, 255, 255, 0.22) 0%, rgba(255, 255, 255, 0.05) 20%, rgba(12, 28, 17, 0.6) 55%, rgba(7, 18, 10, 0.9) 100%);
+    background: rgba(12, 28, 17, 0.6);
     z-index: 1;
 }
 
@@ -1405,7 +1405,7 @@ body.terms-modal-open {
 
 .terms-modal-header {
     flex-shrink: 0;
-    background: linear-gradient(180deg, #f0f7f2 0%, #ffffff 100%);
+    background: #f0f7f2;
     border-bottom: 1px solid #e3ede6;
 }
 
@@ -1513,7 +1513,7 @@ body.terms-modal-open {
 .terms-scroll-bar {
     height: 100%;
     width: 0%;
-    background: linear-gradient(90deg, #2d5c39 0%, #22c55e 100%);
+    background: #2d5c39;
     border-radius: 0 3px 3px 0;
     transition: width 0.12s ease-out;
 }
@@ -2420,7 +2420,7 @@ html.dark-mode .admin-security-card {
 }
 
 html.dark-mode .terms-modal-header {
-    background: linear-gradient(180deg, #1b2c21 0%, #16231b 100%);
+    background: #1b2c21;
     border-bottom-color: #26392c;
 }
 
@@ -2592,7 +2592,7 @@ html.dark-mode .strength-bars span {
 
 /* Emphasize Primary Auth CTA (Rule 10) */
 .btn-submit {
-    background: linear-gradient(135deg, var(--green, #1f4928) 0%, var(--forest, #2e7d32) 100%) !important;
+    background: var(--green, #1f4928) !important;
     box-shadow: 0 4px 14px rgba(31, 73, 40, 0.28);
     transition: transform 0.18s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.18s ease;
 }

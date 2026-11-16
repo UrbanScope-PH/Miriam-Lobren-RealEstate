@@ -22,7 +22,7 @@
 .hero-overlay {
     position: absolute;
     inset: 0;
-    background: linear-gradient(90deg, rgba(15, 33, 20, 0.65) 0%, rgba(15, 33, 20, 0.35) 60%, rgba(15, 33, 20, 0.2) 100%);
+    background: rgba(15, 33, 20, 0.35);
     z-index: 1;
 }
 
@@ -369,7 +369,7 @@ html.dark-mode .search-select-option.is-selected .search-select-option-sub {
     align-items: center;
     justify-content: center;
     gap: 8px;
-    background: linear-gradient(135deg, #1e5c33 0%, #15803d 100%);
+    background: #1e5c33;
     color: #ffffff;
     border: none;
     /* Inner radius = outer (60px) - padding (12px) = 48px */
@@ -388,7 +388,7 @@ html.dark-mode .search-select-option.is-selected .search-select-option-sub {
     .search-submit:hover {
         transform: translateY(-2px);
         box-shadow: 0 8px 22px rgba(21, 128, 61, 0.42);
-        background: linear-gradient(135deg, #164826 0%, #166534 100%);
+        background: #164826;
     }
 }
 
@@ -763,12 +763,7 @@ html.dark-mode .search-select-option.is-selected .search-select-option-sub {
     font-variant-numeric: tabular-nums;
 }
 
-/* SKELETON LOADERS (Rule 19: Add loading states) */
-@keyframes shimmerWave {
-    0% { background-position: -200% 0; }
-    100% { background-position: 200% 0; }
-}
-
+/* Static Skeleton Loaders (Rule 19: Add loading states) */
 .property-skeleton-card {
     background: #ffffff;
     border-radius: 18px;
@@ -780,9 +775,7 @@ html.dark-mode .search-select-option.is-selected .search-select-option-sub {
 
 .property-skeleton-img {
     height: 240px;
-    background: linear-gradient(90deg, #f0f3f1 25%, #e2e8e4 50%, #f0f3f1 75%);
-    background-size: 200% 100%;
-    animation: shimmerWave 1.6s infinite ease-in-out;
+    background: #f0f3f1;
 }
 
 .property-skeleton-info {
@@ -794,9 +787,7 @@ html.dark-mode .search-select-option.is-selected .search-select-option-sub {
 
 .skeleton-bar {
     border-radius: 6px;
-    background: linear-gradient(90deg, #f0f3f1 25%, #e2e8e4 50%, #f0f3f1 75%);
-    background-size: 200% 100%;
-    animation: shimmerWave 1.6s infinite ease-in-out;
+    background: #f0f3f1;
 }
 
 html.dark-mode .property-skeleton-card {
@@ -806,8 +797,7 @@ html.dark-mode .property-skeleton-card {
 
 html.dark-mode .property-skeleton-img,
 html.dark-mode .skeleton-bar {
-    background: linear-gradient(90deg, #1b2c21 25%, #24382c 50%, #1b2c21 75%);
-    background-size: 200% 100%;
+    background: #1b2c21;
 }
 
 html.dark-mode .property-status-badge.badge-rfo {
@@ -1207,16 +1197,7 @@ html.dark-mode .property-status-badge.badge-rfo {
 .cta-overlay {
     position: absolute;
     inset: 0;
-    background: linear-gradient(
-        180deg,
-        rgba(20, 44, 26, 0.46) 0%,
-        rgba(20, 44, 26, 0.50) 45%,
-        rgba(22, 48, 29, 0.58) 62%,
-        rgba(24, 52, 31, 0.72) 70%,
-        rgba(26, 56, 34, 0.88) 82%,
-        rgba(26, 59, 35, 0.97) 94%,
-        var(--dark-green) 100%
-    );
+    background: rgba(22, 48, 29, 0.58);
     z-index: 1;
     pointer-events: none;
 }
@@ -2022,13 +2003,13 @@ html.dark-mode .property-status-badge.badge-rfo {
 }
 
 .icon-general {
-    background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
+    background: #e8f5e9;
     color: #1e5c33;
     border: 1px solid #b7deb9;
 }
 
 .icon-property {
-    background: linear-gradient(135deg, #e0f2f1 0%, #b2dfdb 100%);
+    background: #e0f2f1;
     color: #004d40;
     border: 1px solid #80cbc4;
 }
@@ -2379,16 +2360,7 @@ html.dark-mode .cta-banner {
 
 html.dark-mode .cta-overlay {
     bottom: -2px;
-    background: linear-gradient(
-        180deg,
-        rgba(10, 22, 14, 0.48) 0%,
-        rgba(10, 22, 14, 0.54) 45%,
-        rgba(10, 20, 13, 0.66) 62%,
-        rgba(9, 18, 12, 0.80) 74%,
-        rgba(9, 16, 11, 0.94) 88%,
-        #090f0b 98%,
-        #090f0b 100%
-    );
+    background: rgba(10, 20, 13, 0.64);
 }
 
 @media (hover: hover) and (pointer: fine) {
@@ -2421,13 +2393,13 @@ html.dark-mode .modal-header-icon {
 }
 
 html.dark-mode .icon-general {
-    background: linear-gradient(135deg, #1b3524 0%, #14281b 100%);
+    background: #1b3524;
     color: #86efac;
     border-color: #2f573b;
 }
 
 html.dark-mode .icon-property {
-    background: linear-gradient(135deg, #163330 0%, #112624 100%);
+    background: #163330;
     color: #5eead4;
     border-color: #28544f;
 }

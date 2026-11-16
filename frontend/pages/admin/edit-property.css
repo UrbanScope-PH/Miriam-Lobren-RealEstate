@@ -917,7 +917,7 @@ body.sidebar-is-open {
 
 /* Emphasize Save Changes CTA (Rule 10) */
 .save-btn {
-    background: linear-gradient(135deg, var(--green, #1f4928) 0%, var(--forest, #2e7d32) 100%) !important;
+    background: var(--green, #1f4928) !important;
     color: #ffffff !important;
     box-shadow: 0 4px 14px rgba(31, 73, 40, 0.28) !important;
     border-radius: var(--radius-md, 8px) !important;

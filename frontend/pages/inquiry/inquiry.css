@@ -384,7 +384,7 @@ body {
     justify-content: center;
     gap: 8px;
     padding: 13px 36px;
-    background: linear-gradient(135deg, #1e5c33 0%, #15803d 100%);
+    background: #1e5c33;
     color: #ffffff;
     border: none;
     border-radius: 24px;
@@ -398,7 +398,7 @@ body {
 
 @media (hover: hover) and (pointer: fine) {
     .submit-btn:hover {
-        background: linear-gradient(135deg, #164826 0%, #166534 100%);
+        background: #164826;
         transform: translateY(-2px);
         box-shadow: 0 8px 22px rgba(21, 128, 61, 0.42);
     }
@@ -673,7 +673,7 @@ body {
 .success-modal-hero {
     text-align: center;
     padding: 34px 28px 16px;
-    background: linear-gradient(180deg, #f0f7f2 0%, #ffffff 100%);
+    background: #f0f7f2;
     border-bottom: 1px solid #eef4f0;
 }
 
@@ -1210,7 +1210,7 @@ html.dark-mode .modal-close-btn {
 }
 
 html.dark-mode .success-modal-hero {
-    background: linear-gradient(180deg, #1b2e22 0%, #16231b 100%);
+    background: #1b2e22;
     border-bottom-color: #243629;
 }
 

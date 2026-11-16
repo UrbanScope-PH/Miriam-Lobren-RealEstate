@@ -359,7 +359,7 @@ html.auth-checking body {
     border-radius: 50%;
     display: grid;
     place-items: center;
-    background: linear-gradient(135deg, #347c47, #1a3b23);
+    background: #347c47;
     color: #fff;
     font-size: 0.78rem;
     font-weight: 700;
@@ -1095,7 +1095,7 @@ html.dark-mode .tcp-document-modal {
 }
 
 html.dark-mode .history-header {
-    background: linear-gradient(135deg, #13281b 0%, #193824 55%, #20472e 100%);
+    background: #193824;
     border: 1px solid #2b4e37;
     box-shadow: 0 12px 32px rgba(0, 0, 0, 0.45);
 }
@@ -1285,7 +1285,7 @@ html.dark-mode .success-card-header {
 }
 
 html.dark-mode .success-modal-hero {
-    background: linear-gradient(180deg, #1b2e22 0%, #16231b 100%);
+    background: #1b2e22;
     border-bottom-color: #26392c;
 }
 
@@ -1400,16 +1400,7 @@ html.dark-mode textarea::placeholder {
 
 html.dark-mode .cta-overlay {
     bottom: -2px;
-    background: linear-gradient(
-        180deg,
-        rgba(10, 22, 14, 0.48) 0%,
-        rgba(10, 22, 14, 0.54) 45%,
-        rgba(10, 20, 13, 0.66) 62%,
-        rgba(9, 18, 12, 0.80) 74%,
-        rgba(9, 16, 11, 0.94) 88%,
-        #090f0b 98%,
-        #090f0b 100%
-    );
+    background: rgba(10, 20, 13, 0.64);
 }
 
 html.dark-mode .footer {
@@ -1480,7 +1471,7 @@ body.has-contact-fab .toast-notice {
     width: 56px;
     height: 56px;
     border-radius: 50%;
-    background: linear-gradient(135deg, #2d5c39 0%, #1e4228 100%);
+    background: #2d5c39;
     color: #ffffff;
     border: none;
     cursor: pointer;
@@ -1618,7 +1609,7 @@ body.has-contact-fab .toast-notice {
 
 /* Dark mode for Contact FAB */
 html.dark-mode .fab-main-btn {
-    background: linear-gradient(135deg, #3ea35d 0%, #1e5c33 100%);
+    background: #3ea35d;
     box-shadow: 0 10px 28px rgba(0, 0, 0, 0.6);
 }
 

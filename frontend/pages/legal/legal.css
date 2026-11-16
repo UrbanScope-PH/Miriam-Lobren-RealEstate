@@ -29,7 +29,7 @@ body {
 
 /* HERO SECTION */
 .legal-hero {
-    background: linear-gradient(135deg, #14351e 0%, #1e5c33 60%, #2d5c39 100%);
+    background: #1e5c33;
     color: #ffffff;
     padding: 56px 6% 44px;
     text-align: center;
@@ -44,7 +44,7 @@ body {
     right: -50px;
     width: 250px;
     height: 250px;
-    background: radial-gradient(circle, rgba(201, 162, 74, 0.15) 0%, transparent 70%);
+    background: none;
     pointer-events: none;
 }
 
@@ -368,7 +368,7 @@ body {
 
 /* CONTACT CALLOUT CARD */
 .legal-contact-box {
-    background: linear-gradient(135deg, #f0f7f2 0%, #e6f2e9 100%);
+    background: #f0f7f2;
     border: 1px solid #cbe0d1;
     border-radius: 16px;
     padding: 26px 28px;
@@ -570,7 +570,7 @@ html.dark-mode {
 }
 
 html.dark-mode .legal-hero {
-    background: linear-gradient(135deg, #112618 0%, #173521 60%, #1f472d 100%);
+    background: #173521;
     border-bottom: 1px solid #26392c;
 }
 

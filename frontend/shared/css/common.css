@@ -1045,30 +1045,22 @@ html[data-theme="dark"] #urbanFeedbackToast {
     box-shadow: 0 12px 32px rgba(0, 0, 0, 0.6);
 }
 
-/* Universal Loading Skeleton Shimmer (Rule 19) */
-@keyframes skeletonShimmer {
-    0% { background-position: -200% 0; }
-    100% { background-position: 200% 0; }
-}
-
+/* Universal Static Loading Skeleton (Rule 19) */
 .skeleton-shimmer {
-    background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%);
-    background-size: 200% 100%;
-    animation: skeletonShimmer 1.6s ease-in-out infinite;
+    background: #f1f5f9;
     border-radius: var(--radius-sm, 6px);
 }
 
 html.dark-mode .skeleton-shimmer,
 html[data-theme="dark"] .skeleton-shimmer {
-    background: linear-gradient(90deg, #1c2b20 25%, #25392a 50%, #1c2b20 75%);
-    background-size: 200% 100%;
+    background: #1c2b20;
 }
 
 /* Universal CTA Button Emphasis (Rule 10) */
 .btn-cta-emerald,
 .btn-submit-primary,
 .action-btn-primary {
-    background: linear-gradient(135deg, var(--green, #1f4928) 0%, var(--forest, #2e7d32) 100%);
+    background: var(--green, #1f4928);
     color: #ffffff !important;
     border: none;
     border-radius: var(--radius-md, 8px);
