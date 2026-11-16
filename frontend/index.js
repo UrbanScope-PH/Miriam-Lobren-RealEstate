@@ -1356,18 +1356,8 @@ function renderHomepageAgentDetails(profile) {
     if (footerName) footerName.textContent = cleanName;
     const footerBio = document.getElementById('footerAgentBio');
     if (footerBio) {
-        let cleanBio = String(bio || '')
-            .replace(/cdmiranda\s*realty/gi, 'CD Miranda Realty')
-            .replace(/real estate sales person/gi, 'real estate salesperson');
-        if (/^trusted real estate salesperson/i.test(cleanBio)) {
-            footerBio.textContent = cleanBio;
-        } else if (/^trusted real estate/i.test(cleanBio)) {
-            footerBio.textContent = cleanBio.replace(/^trusted real estate\s+[a-z\s]+affiliated with\s+[^.]+\.\s*/i, `Trusted ${title.toLowerCase()} affiliated with ${brokerage}. `);
-        } else if (/^hello!\s*i'm/i.test(cleanBio)) {
-            footerBio.textContent = cleanBio;
-        } else {
-            footerBio.textContent = `Trusted ${title.toLowerCase()} affiliated with ${brokerage}. ${cleanBio}`;
-        }
+        const defaultFooterBio = 'Licensed real estate assistance for Cavite & Las Piñas premier subdivisions and townhouses. Connecting families to sustainable, high-value dream homes.';
+        footerBio.textContent = (profile.footer_bio && String(profile.footer_bio).trim()) || defaultFooterBio;
     }
     const licenseNote = document.getElementById('footerAgentLicense');
     const rawLic = (profile.license_number || profile.license || '').trim();
