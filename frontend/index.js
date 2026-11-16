@@ -660,6 +660,9 @@ async function loadHomeProperties(category = 'all') {
                         return key && !presentKeys.has(key);
                     });
                     allCachedProperties = [...activeList, ...missingCanonical];
+                    if (window.UrbanCalculator && typeof UrbanCalculator.updateBudgetMatcherProjects === 'function') {
+                        UrbanCalculator.updateBudgetMatcherProjects(allCachedProperties);
+                    }
                     applyCurrentFiltersAndRender();
                 }
             }

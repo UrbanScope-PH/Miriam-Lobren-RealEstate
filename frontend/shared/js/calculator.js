@@ -12,6 +12,132 @@
 (function (root) {
     'use strict';
 
+    var _pendingMatcherProjects = null;
+    var _activeMatcher = null;
+
+    function escMatcherHtml(str) {
+        if (str === null || str === undefined) return '';
+        return String(str)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
+    }
+
+    function resolveMatcherImageSrc(rawSrc, imgBase) {
+        var fallback = imgBase + 'assets/images/property1.jpg';
+        var src = String(rawSrc || '').trim();
+        if (!src) return fallback;
+        var compact = src.replace(/[\u0000-\u001F\u007F\s]+/g, '').toLowerCase();
+        if (compact.startsWith('javascript:') || compact.startsWith('vbscript:') || compact.startsWith('data:image/svg')) {
+            return fallback;
+        }
+        if (/^data:image\/(png|jpeg|jpg|webp|gif);base64,[A-Za-z0-9+/=]+$/i.test(src)) {
+            return src;
+        }
+        if (/^(https?:)?\/\//i.test(src)) {
+            return src;
+        }
+        var cleaned = src.replace(/^(\.\.\/)+/, '').replace(/^\.\//, '').replace(/^\/+/, '');
+        return cleaned ? (imgBase + cleaned) : fallback;
+    }
+
+    function getMatcherCanonicalKey(title) {
+        var t = String(title || '').toLowerCase();
+        if (t.includes('suerte')) return 'suerte';
+        if (t.includes('kathleen')) return 'kathleen';
+        if (t.includes('liora')) return 'liora';
+        if (t.includes('airmen')) return 'airmen';
+        if (t.includes('amore')) return 'amore';
+        if (t.includes('benecia')) return 'benecia';
+        if (t.includes('midori')) return 'midori';
+        return null;
+    }
+
+    function getDefaultMatcherProjects(isSubfolder) {
+        var propPrefix = isSubfolder ? '../properties/' : 'pages/properties/';
+        return [
+            {
+                id: 'liora',
+                key: 'liora',
+                title: 'Liora Homes',
+                location: 'General Trias, Cavite',
+                minPrice: 2460000,
+                minSalary: 42000,
+                financing: 'Pag-IBIG / Bank',
+                image: 'assets/images/LioraHomes.jpg',
+                link: propPrefix + 'Liora.html'
+            },
+            {
+                id: 'casasuerte',
+                key: 'suerte',
+                title: 'Casasuerte',
+                location: 'Bacoor, Cavite',
+                minPrice: 2500000,
+                minSalary: 45000,
+                financing: 'Pag-IBIG / Bank',
+                image: 'assets/images/casasuerte.jpg',
+                link: propPrefix + 'casasuerte.html'
+            },
+            {
+                id: 'midori',
+                key: 'midori',
+                title: 'Midori Mid-Rise Condo – Zone 1',
+                location: 'Zone 1, Dasmariñas, Cavite',
+                minPrice: 3140000,
+                minSalary: 58000,
+                financing: 'Pag-IBIG / Bank',
+                image: 'assets/images/midori-main.webp',
+                link: propPrefix + 'midori.html'
+            },
+            {
+                id: 'kathleen',
+                key: 'kathleen',
+                title: 'Kathleen - Place 5',
+                location: 'Bacoor, Cavite',
+                minPrice: 6200000,
+                minSalary: 105000,
+                financing: 'Bank Financing',
+                image: 'assets/images/kathleen-facade.jpg',
+                link: propPrefix + 'kathleen.html'
+            },
+            {
+                id: 'airmen',
+                key: 'airmen',
+                title: "Airmen's Village Triplex",
+                location: 'Cavite & Las Piñas',
+                minPrice: 8900000,
+                minSalary: 155000,
+                financing: 'Bank Financing',
+                image: 'assets/images/AirmenTriplex.WEBP',
+                link: propPrefix + 'Airmen.html'
+            },
+            {
+                id: 'amore',
+                key: 'amore',
+                title: 'Amore Classico',
+                location: 'Benedetto Residences, Las Piñas',
+                minPrice: 7995000,
+                minSalary: 140000,
+                financing: 'Bank Financing',
+                image: 'assets/images/amore-facade.jpg',
+                link: propPrefix + 'amore-classico.html'
+            },
+            {
+                id: 'benecia',
+                key: 'benecia',
+                title: 'Benecia Single-Attached',
+                location: 'Talon IV, Las Piñas City',
+                minPrice: 9695000,
+                minSalary: 170000,
+                financing: 'Bank Financing',
+                image: 'assets/images/benecia-facade.jpg',
+                link: propPrefix + 'benecia.html'
+            }
+        ];
+    }
+
     var UrbanCalculator = {
         // Benchmark interest rates
         RATES: {
@@ -494,7 +620,109 @@
         /**
          * Mounts the Salary-based Quick Home Affordability Matcher on the homepage
          */
-        initHomepageBudgetMatcher: function (containerOrId) {
+        computeRequiredSalaryForPrice: function (price) {
+            var tcp = Math.max(0, Number(price) || 0);
+            if (!tcp) return 0;
+            var amort = UrbanCalculator.computeAmortization({
+                tcp: tcp,
+                dpPercent: 20,
+                loanTermYears: 20,
+                interestRateAnnual: UrbanCalculator.RATES.bank
+            });
+            return Math.max(1000, Math.round(amort.requiredGmi / 1000) * 1000);
+        },
+
+        normalizeMatcherProjects: function (rawList, isSubfolder) {
+            var defaults = getDefaultMatcherProjects(Boolean(isSubfolder));
+            if (!Array.isArray(rawList) || rawList.length === 0) {
+                return defaults;
+            }
+
+            var canonicalByKey = {};
+            defaults.forEach(function (item, idx) {
+                canonicalByKey[item.key] = Object.assign({ _order: idx }, item);
+            });
+
+            var result = [];
+            var seenKeys = {};
+            var seenIds = {};
+            var hasCustom = false;
+            var detailPrefix = isSubfolder ? '../properties/property-detail.html?id=' : 'pages/properties/property-detail.html?id=';
+            var inquiryPrefix = isSubfolder ? '../inquiry/inquiry.html?type=property&title=' : 'pages/inquiry/inquiry.html?type=property&title=';
+
+            rawList.forEach(function (item, idx) {
+                if (!item || typeof item !== 'object') return;
+                var rawTitle = String(item.title || item.propertyName || item.name || '').trim();
+                if (!rawTitle) return;
+
+                var rawStatus = String(item.status || 'Available').trim().toLowerCase();
+                var isSold = rawStatus === 'sold' || rawStatus === 'sold out';
+                var canonicalKey = getMatcherCanonicalKey(rawTitle);
+
+                if (canonicalKey && canonicalByKey[canonicalKey]) {
+                    if (seenKeys[canonicalKey]) return;
+                    seenKeys[canonicalKey] = true;
+                    result.push(Object.assign({}, canonicalByKey[canonicalKey], { isSold: isSold }));
+                    return;
+                }
+
+                var rawId = item.id !== undefined && item.id !== null ? String(item.id).trim() : '';
+                var dedupeKey = rawId || ('custom:' + rawTitle.toLowerCase() + '|' + String(item.location || '').toLowerCase());
+                if (seenIds[dedupeKey]) return;
+                seenIds[dedupeKey] = true;
+
+                var minPrice = Math.max(0, Number(item.price !== undefined ? item.price : item.minPrice) || 0);
+                var minSalary = item.minSalary !== undefined && Number(item.minSalary) > 0
+                    ? Math.round(Number(item.minSalary))
+                    : UrbanCalculator.computeRequiredSalaryForPrice(minPrice);
+                var financing = String(item.financing || '').trim() ||
+                    (minPrice > 0 && minPrice <= 3500000 ? 'Pag-IBIG / Bank' : 'Bank Financing');
+                var imgRaw = item.image_url || item.image ||
+                    (Array.isArray(item.images) && item.images.length > 0 ? item.images[0] : '') ||
+                    'assets/images/property1.jpg';
+                var link = String(item.link || '').trim() ||
+                    (rawId ? (detailPrefix + encodeURIComponent(rawId)) : (inquiryPrefix + encodeURIComponent(rawTitle)));
+
+                hasCustom = true;
+                result.push({
+                    id: rawId || ('custom-' + idx),
+                    key: null,
+                    title: rawTitle,
+                    location: String(item.location || 'Cavite / Las Piñas').trim(),
+                    minPrice: minPrice,
+                    minSalary: minSalary,
+                    financing: financing,
+                    image: imgRaw,
+                    link: link,
+                    isSold: isSold,
+                    isCustom: true,
+                    _order: 1000 + idx
+                });
+            });
+
+            defaults.forEach(function (item, idx) {
+                if (!seenKeys[item.key]) {
+                    result.push(Object.assign({ _order: idx }, item));
+                }
+            });
+
+            if (hasCustom) {
+                result.sort(function (a, b) {
+                    return (a.minSalary - b.minSalary) || (a.minPrice - b.minPrice) || (a._order - b._order);
+                });
+            }
+
+            return result;
+        },
+
+        updateBudgetMatcherProjects: function (rawList) {
+            _pendingMatcherProjects = Array.isArray(rawList) ? rawList.slice() : null;
+            if (_activeMatcher && typeof _activeMatcher.setProjects === 'function') {
+                _activeMatcher.setProjects(_pendingMatcherProjects);
+            }
+        },
+
+        initHomepageBudgetMatcher: function (containerOrId, options) {
             var container = typeof containerOrId === 'string'
                 ? document.getElementById(containerOrId)
                 : containerOrId;
@@ -503,79 +731,10 @@
             // Project threshold benchmarks
             var isSubfolder = window.location.pathname.includes('/pages/');
             var imgBase = isSubfolder ? '../../' : '';
-
-            var PROJECTS = [
-                {
-                    id: 'liora',
-                    title: 'Liora Homes',
-                    location: 'General Trias, Cavite',
-                    minPrice: 2460000,
-                    minSalary: 42000,
-                    financing: 'Pag-IBIG / Bank',
-                    image: 'assets/images/LioraHomes.jpg',
-                    link: isSubfolder ? '../properties/Liora.html' : 'pages/properties/Liora.html'
-                },
-                {
-                    id: 'casasuerte',
-                    title: 'Casasuerte',
-                    location: 'Bacoor, Cavite',
-                    minPrice: 2500000,
-                    minSalary: 45000,
-                    financing: 'Pag-IBIG / Bank',
-                    image: 'assets/images/casasuerte.jpg',
-                    link: isSubfolder ? '../properties/casasuerte.html' : 'pages/properties/casasuerte.html'
-                },
-                {
-                    id: 'midori',
-                    title: 'Midori Mid-Rise Condo – Zone 1',
-                    location: 'Zone 1, Dasmariñas, Cavite',
-                    minPrice: 3140000,
-                    minSalary: 58000,
-                    financing: 'Pag-IBIG / Bank',
-                    image: 'assets/images/midori-main.webp',
-                    link: isSubfolder ? '../properties/midori.html' : 'pages/properties/midori.html'
-                },
-                {
-                    id: 'kathleen',
-                    title: 'Kathleen - Place 5',
-                    location: 'Bacoor, Cavite',
-                    minPrice: 6200000,
-                    minSalary: 105000,
-                    financing: 'Bank Financing',
-                    image: 'assets/images/kathleen-facade.jpg',
-                    link: isSubfolder ? '../properties/kathleen.html' : 'pages/properties/kathleen.html'
-                },
-                {
-                    id: 'airmen',
-                    title: "Airmen's Village Triplex",
-                    location: 'Cavite & Las Piñas',
-                    minPrice: 8900000,
-                    minSalary: 155000,
-                    financing: 'Bank Financing',
-                    image: 'assets/images/AirmenTriplex.WEBP',
-                    link: isSubfolder ? '../properties/Airmen.html' : 'pages/properties/Airmen.html'
-                },
-                {
-                    id: 'amore',
-                    title: 'Amore Classico',
-                    location: 'Benedetto Residences, Las Piñas',
-                    minPrice: 7995000,
-                    minSalary: 140000,
-                    financing: 'Bank Financing',
-                    image: 'assets/images/amore-facade.jpg',
-                    link: isSubfolder ? '../properties/amore-classico.html' : 'pages/properties/amore-classico.html'
-                },
-                {
-                    id: 'benecia',
-                    title: 'Benecia Single-Attached',
-                    location: 'Talon IV, Las Piñas City',
-                    minPrice: 9695000,
-                    minSalary: 170000,
-                    financing: 'Bank Financing',
-                    image: 'assets/images/benecia-facade.jpg',
-                    link: isSubfolder ? '../properties/benecia.html' : 'pages/properties/benecia.html'
-                }
-            ];
+            var initialRaw = (options && Array.isArray(options.projects))
+                ? options.projects
+                : _pendingMatcherProjects;
+            var PROJECTS = UrbanCalculator.normalizeMatcherProjects(initialRaw, isSubfolder);
 
             var defaultSalary = 50000;
 
@@ -663,27 +822,35 @@
                     var qualifies = salary >= p.minSalary;
                     if (qualifies) matchCount++;
 
+                    var safeTitle = escMatcherHtml(p.title);
+                    var safeLocation = escMatcherHtml(p.location);
+                    var safeFinancing = escMatcherHtml(p.financing) + (p.isSold ? ' &bull; Sold Out' : '');
+                    var safeLink = escMatcherHtml(p.link);
+                    var resolvedImg = resolveMatcherImageSrc(p.image, imgBase);
+                    var safeImg = escMatcherHtml(resolvedImg);
+                    var safeFallback = escMatcherHtml(imgBase + 'assets/images/property1.jpg');
+
                     html += [
                         '<div class="bm-project-item ' + (qualifies ? 'qualified' : 'unqualified') + '">',
                         '  <div class="bm-item-thumb">',
-                        '    <img src="' + imgBase + p.image + '" alt="' + p.title + '" loading="lazy" onerror="this.src=\'' + imgBase + 'assets/images/property1.jpg\'">',
+                        '    <img src="' + safeImg + '" alt="' + safeTitle + '" loading="lazy" onerror="this.onerror=null;this.src=\'' + safeFallback + '\'">',
                         '    <span class="bm-item-badge ' + (qualifies ? 'badge-match' : 'badge-gap') + '">',
                         qualifies ? '✓ You Qualify' : 'Needs ₱' + (p.minSalary).toLocaleString('en-PH'),
                         '    </span>',
                         '  </div>',
                         '  <div class="bm-item-info">',
-                        '    <h5>' + p.title + '</h5>',
+                        '    <h5>' + safeTitle + '</h5>',
                         '    <p class="bm-item-loc">',
                         '      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>',
-                        p.location,
+                        safeLocation,
                         '    </p>',
                         '    <div class="bm-item-pricing">',
                         '      <span>Starts at <strong>' + UrbanCalculator.formatPeso(p.minPrice) + '</strong></span>',
-                        '      <small>Financing: ' + p.financing + '</small>',
+                        '      <small>Financing: ' + safeFinancing + '</small>',
                         '    </div>',
                         '  </div>',
                         '  <div class="bm-item-act">',
-                        '    <a href="' + p.link + '" class="bm-view-btn ' + (qualifies ? 'btn-highlight' : '') + '">View Details</a>',
+                        '    <a href="' + safeLink + '" class="bm-view-btn ' + (qualifies ? 'btn-highlight' : '') + '">View Details</a>',
                         '  </div>',
                         '</div>'
                     ].join('\n');
@@ -700,6 +867,14 @@
                     renderMatches(Number(this.value));
                 });
             }
+
+            _activeMatcher = {
+                setProjects: function (rawList) {
+                    PROJECTS = UrbanCalculator.normalizeMatcherProjects(rawList, isSubfolder);
+                    var currentSalary = slider ? Number(slider.value) : defaultSalary;
+                    renderMatches(currentSalary);
+                }
+            };
 
             renderMatches(defaultSalary);
         }

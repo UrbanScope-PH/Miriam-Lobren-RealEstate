@@ -17,6 +17,24 @@ router = APIRouter()
 # PROPERTIES ENDPOINTS
 # ==========================================================
 
+def _attach_property_gallery(cursor, prop_dict: dict) -> dict:
+    """Populates gallery_images on a property dictionary when custom gallery rows exist."""
+    pid = prop_dict.get("id")
+    if pid is None:
+        return prop_dict
+    try:
+        cursor.execute(
+            "SELECT image_url FROM property_images WHERE property_id = ? ORDER BY display_order ASC, id ASC",
+            (pid,)
+        )
+        urls = [row[0] for row in cursor.fetchall() if row and row[0]]
+        if urls:
+            prop_dict["gallery_images"] = urls
+    except Exception:
+        pass
+    return prop_dict
+
+
 @router.get("/api/properties", response_model=List[PropertyResponse], tags=["Properties"])
 def list_properties(
     type: Optional[str] = Query(None, description="Filter by property type (e.g. Townhouse, Subdivision)"),
@@ -71,7 +89,7 @@ def list_properties(
 
     cursor.execute(query, params)
     rows = cursor.fetchall()
-    properties = [row_to_dict(r) for r in rows]
+    properties = [_attach_property_gallery(cursor, row_to_dict(r)) for r in rows]
     conn.close()
 
     return properties
@@ -84,12 +102,13 @@ def get_property(property_id: int):
     cursor = conn.cursor()
     cursor.execute("SELECT * FROM properties WHERE id = ?", (property_id,))
     row = cursor.fetchone()
-    conn.close()
-
     if not row:
+        conn.close()
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Property listing not found")
 
-    return row_to_dict(row)
+    prop = _attach_property_gallery(cursor, row_to_dict(row))
+    conn.close()
+    return prop
 
 
 @router.post("/api/properties", response_model=PropertyResponse, tags=["Properties"])
@@ -121,11 +140,19 @@ def create_property(payload: PropertyCreate, admin_user: dict = Depends(require_
         payload.description,
         payload.amenities
     ))
+    new_id = cursor.lastrowid
+    gallery_urls = [u for u in (payload.gallery_images or []) if u]
+    if not gallery_urls and payload.image_url:
+        gallery_urls = [payload.image_url]
+    for idx, img_url in enumerate(gallery_urls[:10]):
+        cursor.execute(
+            "INSERT INTO property_images (property_id, image_url, display_order, is_primary) VALUES (?, ?, ?, ?)",
+            (new_id, img_url, idx + 1, 1 if idx == 0 else 0)
+        )
     conn.commit()
 
-    new_id = cursor.lastrowid
     cursor.execute("SELECT * FROM properties WHERE id = ?", (new_id,))
-    new_prop = row_to_dict(cursor.fetchone())
+    new_prop = _attach_property_gallery(cursor, row_to_dict(cursor.fetchone()))
     conn.close()
 
     return new_prop
@@ -194,6 +221,7 @@ def delete_property(property_id: int, admin_user: dict = Depends(require_admin))
         conn.close()
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Property not found")
 
+    cursor.execute("DELETE FROM property_images WHERE property_id = ?", (property_id,))
     cursor.execute("DELETE FROM properties WHERE id = ?", (property_id,))
     conn.commit()
     conn.close()

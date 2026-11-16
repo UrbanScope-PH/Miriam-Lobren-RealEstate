@@ -281,10 +281,12 @@ document.addEventListener("DOMContentLoaded", () => {
                 submitBtn.innerText = "Saving to Database...";
             }
 
-            let uploadedImageUrl = null;
-            if (selectedFiles.length > 0) {
-                uploadedImageUrl = await readImageFileAsDataUrl(selectedFiles[0]);
-                if (!uploadedImageUrl) {
+            const uploadedImageUrls = [];
+            const filesToUpload = selectedFiles.slice(0, 8);
+            const perImageLimit = filesToUpload.length > 1 ? 350 * 1024 : 750 * 1024;
+            for (const file of filesToUpload) {
+                let dataUrl = await readImageFileAsDataUrl(file);
+                if (!dataUrl) {
                     if (submitBtn) {
                         submitBtn.disabled = false;
                         submitBtn.innerText = originalBtnText;
@@ -297,7 +299,25 @@ document.addEventListener("DOMContentLoaded", () => {
                     }
                     return;
                 }
+                if (dataUrl.length > perImageLimit && filesToUpload.length > 1) {
+                    // Ensure multi-image batch stays within serverless JSON body limits
+                    try {
+                        const img = new Image();
+                        await new Promise((res) => { img.onload = res; img.onerror = res; img.src = dataUrl; });
+                        if (img.width > 0 && img.height > 0) {
+                            const maxD = 880;
+                            const scale = Math.min(1, maxD / Math.max(img.width, img.height));
+                            const c = document.createElement("canvas");
+                            c.width = Math.round(img.width * scale);
+                            c.height = Math.round(img.height * scale);
+                            c.getContext("2d").drawImage(img, 0, 0, c.width, c.height);
+                            dataUrl = c.toDataURL("image/jpeg", 0.72);
+                        }
+                    } catch (_) {}
+                }
+                uploadedImageUrls.push(dataUrl);
             }
+            const uploadedImageUrl = uploadedImageUrls[0] || null;
 
             const parseIntOr = (rawVal, fallback, minVal = 0) => {
                 if (rawVal === undefined || rawVal === null || String(rawVal).trim() === "") return fallback;
@@ -359,6 +379,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 amenities: amenities,
                 description: description,
                 image_url: resolvedImg,
+                gallery_images: uploadedImageUrls.length > 0 ? uploadedImageUrls : [resolvedImg],
                 createdAt: new Date().toISOString()
             };
 

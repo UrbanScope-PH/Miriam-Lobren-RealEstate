@@ -122,7 +122,26 @@ function validatePropertyFields(raw, { requireAll = false } = {}) {
         out.amenities = String(raw.amenities || '').trim().slice(0, 2000);
     }
 
-    return { fields: out };
+    const rawGallery = Array.isArray(raw.gallery_images)
+        ? raw.gallery_images
+        : (Array.isArray(raw.images) ? raw.images : null);
+    let galleryImages = [];
+    if (rawGallery) {
+        const seen = new Set();
+        for (const candidate of rawGallery.slice(0, 10)) {
+            const check = sanitizeImageUrl(candidate, { maxDataUrlBytes: 3 * 1024 * 1024, defaultValue: '' });
+            if (!check.ok) return { error: check.error };
+            if (check.value && !seen.has(check.value)) {
+                seen.add(check.value);
+                galleryImages.push(check.value);
+            }
+        }
+        if (out.image_url === undefined && galleryImages.length > 0) {
+            out.image_url = galleryImages[0];
+        }
+    }
+
+    return { fields: out, galleryImages };
 }
 
 async function insertPropertySafe(rawFields) {
@@ -166,13 +185,24 @@ export default async function handler(req, res) {
         if (queryAction === 'get') {
             const id = String(reqUrl.searchParams.get('id') || '').trim();
             if (!/^\d+$/.test(id)) return jsonWithCookies({ success: false, error: 'Invalid property ID.' }, 400, res);
-            const r = await fetch(restUrl('properties', { id: `eq.${id}`, select: '*', limit: '1' }), {
-                headers: serviceHeaders({}, false)
-            });
+            const [r, imgRes] = await Promise.all([
+                fetch(restUrl('properties', { id: `eq.${id}`, select: '*', limit: '1' }), {
+                    headers: serviceHeaders({}, false)
+                }),
+                fetch(restUrl('property_images', { property_id: `eq.${id}`, select: 'image_url,display_order', order: 'display_order.asc' }), {
+                    headers: serviceHeaders({}, false)
+                }).catch(() => null)
+            ]);
             if (!r.ok) return jsonWithCookies({ success: false, error: 'Unable to fetch property.' }, 502, res);
             const rows = await r.json().catch(() => []);
             const prop = Array.isArray(rows) && rows[0] ? rows[0] : null;
             if (!prop) return jsonWithCookies({ success: false, error: 'Property listing not found.' }, 404, res);
+            if (imgRes && imgRes.ok) {
+                const imgs = await imgRes.json().catch(() => []);
+                if (Array.isArray(imgs) && imgs.length > 0) {
+                    prop.gallery_images = imgs.map((i) => i?.image_url).filter(Boolean);
+                }
+            }
             return jsonWithCookies({ success: true, data: prop }, 200, res);
         }
 
@@ -273,14 +303,32 @@ export default async function handler(req, res) {
     }
 
     if (action === 'create') {
-        const { fields, error } = validatePropertyFields(body.payload || body, { requireAll: true });
+        const { fields, galleryImages, error } = validatePropertyFields(body.payload || body, { requireAll: true });
         if (error) return jsonWithCookies({ success: false, error }, 400, res);
 
         const ins = await insertPropertySafe(fields);
         if (!ins.ok) {
             return jsonWithCookies({ success: false, error: ins.error }, ins.status || 502, res);
         }
-        return jsonWithCookies({ success: true, data: ins.data }, 200, res);
+        const createdProp = ins.data;
+        const imagesToStore = (Array.isArray(galleryImages) && galleryImages.length > 0)
+            ? galleryImages
+            : (createdProp?.image_url ? [createdProp.image_url] : []);
+        if (createdProp && createdProp.id != null && imagesToStore.length > 0) {
+            const imageRows = imagesToStore.slice(0, 10).map((url, idx) => ({
+                property_id: createdProp.id,
+                image_url: url,
+                display_order: idx + 1,
+                is_primary: idx === 0
+            }));
+            await fetch(restUrl('property_images'), {
+                method: 'POST',
+                headers: serviceHeaders({ Prefer: 'return=minimal' }, true),
+                body: JSON.stringify(imageRows)
+            }).catch(() => {});
+            createdProp.gallery_images = imagesToStore.slice(0, 10);
+        }
+        return jsonWithCookies({ success: true, data: createdProp }, 200, res);
     }
 
     const id = String(body.id ?? body.property_id ?? '').trim();

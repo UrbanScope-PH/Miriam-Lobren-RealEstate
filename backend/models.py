@@ -4,7 +4,7 @@ Validates incoming payloads, enforces length/value bounds, sanitizes image URLs,
 and structures trimmed API responses.
 """
 
-from typing import Optional
+from typing import List, Optional
 # pyrefly: ignore [missing-import]
 from pydantic import BaseModel, Field, field_validator
 
@@ -151,6 +151,7 @@ class PropertyCreate(BaseModel):
     storeys: Optional[int] = Field(default=2, ge=1, le=200, description="Number of storeys/floors")
     status: Optional[str] = Field(default="Available", max_length=40)
     image_url: Optional[str] = Field(default="assets/images/property1.jpg", max_length=4500000)
+    gallery_images: Optional[List[str]] = Field(default=None, max_length=10)
     description: Optional[str] = Field(default="", max_length=5000)
     amenities: Optional[str] = Field(default="", max_length=2000, description="Key features and amenities")
 
@@ -160,6 +161,20 @@ class PropertyCreate(BaseModel):
         if v is None:
             return "assets/images/property1.jpg"
         return sanitize_image_url(v, max_data_url_bytes=3 * 1024 * 1024, default="assets/images/property1.jpg")
+
+    @field_validator("gallery_images")
+    @classmethod
+    def validate_gallery_images(cls, vals: Optional[List[str]]) -> Optional[List[str]]:
+        if not vals:
+            return None
+        cleaned: List[str] = []
+        seen = set()
+        for item in vals[:10]:
+            safe = sanitize_image_url(item, max_data_url_bytes=3 * 1024 * 1024, default="")
+            if safe and safe not in seen:
+                seen.add(safe)
+                cleaned.append(safe)
+        return cleaned or None
 
 
 class PropertyUpdate(BaseModel):
@@ -200,6 +215,7 @@ class PropertyResponse(BaseModel):
     storeys: Optional[int] = 2
     status: Optional[str] = "Available"
     image_url: Optional[str] = ""
+    gallery_images: Optional[List[str]] = None
     description: Optional[str] = ""
     amenities: Optional[str] = ""
     created_at: Optional[str] = None

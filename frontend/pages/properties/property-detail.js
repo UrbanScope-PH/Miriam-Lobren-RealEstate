@@ -220,19 +220,44 @@ async function refreshPropertyInquiryAvailability() {
     await loadStaticPropertyAvailability();
 }
 
-async function loadPropertyFromDb() {
-    const urlParams = new URLSearchParams(window.location.search);
-    const propId = urlParams.get('id');
-    if (!propId || typeof apiGetPropertyById !== 'function') return;
-
-    const inquiryBtn = document.querySelector('.submit-inquiry-btn');
-    if (inquiryBtn) inquiryBtn.href = `../inquiry/inquiry.html?type=property&id=${encodeURIComponent(propId)}`;
-
-    const property = await apiGetPropertyById(propId);
-    if (!property) {
-        renderPropertyCalculator(null);
-        return;
+function findCachedPropertyById(propId) {
+    const targetId = String(propId || '').trim();
+    if (!targetId) return null;
+    try {
+        const all = JSON.parse(localStorage.getItem('cached_live_properties') || '[]')
+            .concat(JSON.parse(localStorage.getItem('urbanScopeProperties') || '[]'))
+            .concat(JSON.parse(localStorage.getItem('properties') || '[]'));
+        const cached = all.find(p => p && String(p.id) === targetId);
+        if (cached) return cached;
+    } catch (_) {}
+    if (typeof getStaticFallbackProperties === 'function') {
+        const staticMatch = getStaticFallbackProperties().find(p => p && String(p.id) === targetId);
+        if (staticMatch) return staticMatch;
     }
+    return null;
+}
+
+function resolveUploadedGalleryImages(property) {
+    const urls = [];
+    const seen = new Set();
+    const pushUrl = (raw) => {
+        const s = String(raw || '').trim();
+        if (!s || seen.has(s)) return;
+        seen.add(s);
+        urls.push(s);
+    };
+    const extra = Array.isArray(property?.gallery_images)
+        ? property.gallery_images
+        : (Array.isArray(property?.images) ? property.images : []);
+    if (property?.image_url) pushUrl(property.image_url);
+    extra.forEach(pushUrl);
+    if (urls.length === 0) pushUrl('../../assets/images/property1.jpg');
+    return urls.map(src => _safeDetailImg(src, '../../assets/images/property1.jpg'));
+}
+
+function renderPropertyDetails(property) {
+    document.documentElement.classList.remove('detail-hydrating');
+    if (!property) return;
 
     const titleEl = document.querySelector('.property-title');
     const locEl = document.querySelector('.property-loc');
@@ -247,24 +272,21 @@ async function loadPropertyFromDb() {
     else if (tCheck.includes('benecia')) cleanTitle = 'Benecia Single-Attached';
     else if (tCheck.includes('amore')) cleanTitle = 'Amore Classico';
     else if (tCheck.includes('midori')) cleanTitle = 'Midori Mid-Rise Condo – Zone 1';
-    if (titleEl) titleEl.innerText = cleanTitle;
+    if (cleanTitle) {
+        document.title = `${cleanTitle} | Miriam Lobren · CD Miranda Realty`;
+    }
+    if (titleEl) titleEl.innerText = cleanTitle || 'Property Details';
     if (locEl) {
-        locEl.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg> ${_escDetailHtml(property.location || '')}`;
+        locEl.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg> ${_escDetailHtml(property.location || 'Cavite & Las Piñas, Philippines')}`;
     }
     if (priceEl) priceEl.innerText = `₱${Number(property.price || 0).toLocaleString()}`;
-    
-    if (statusBadge && property.status) {
-        const soldOut = isSoldOutProperty(property);
-        statusBadge.innerText = soldOut ? 'Sold Out' : property.status;
-        const isAvail = String(property.status).trim().toLowerCase() === 'available';
-        statusBadge.className = 'status-badge ' + (isAvail ? 'available' : 'sold');
-    }
 
-    if (mainImgEl && property.image_url) {
-        const fullImg = _safeDetailImg(property.image_url, '../../assets/images/property1.jpg');
-        mainImgEl.src = fullImg;
-        galleryImages[0] = fullImg;
-        updateGallery();
+    if (statusBadge) {
+        statusBadge.hidden = false;
+        const soldOut = isSoldOutProperty(property);
+        statusBadge.innerText = soldOut ? 'Sold Out' : (property.status || 'Available');
+        const isAvail = String(property.status || 'Available').trim().toLowerCase() === 'available';
+        statusBadge.className = 'status-badge ' + (isAvail ? 'available' : 'sold');
     }
 
     // Setup dynamic gallery images based on property
@@ -366,20 +388,29 @@ async function loadPropertyFromDb() {
         ];
     }
 
-    if (propImages.length > 0 && (!window.galleryImages || window.galleryImages.length <= 1)) {
-        galleryImages = propImages.map(src => _safeDetailImg(src, '../../assets/images/property1.jpg'));
+    if (!Array.isArray(window.galleryImages) || window.galleryImages.length <= 1) {
+        galleryImages = propImages.length > 0
+            ? propImages.map(src => _safeDetailImg(src, '../../assets/images/property1.jpg'))
+            : resolveUploadedGalleryImages(property);
+        currentSlide = 0;
         if (thumbsContainer) {
             thumbsContainer.innerHTML = galleryImages.map((src, idx) => {
                 const safeSrc = _escDetailHtml(src);
                 return `
-                <div class="thumb ${idx === 0 ? 'active' : ''}" onclick="selectThumb(${idx}, '${safeSrc}')">
+                <div class="thumb ${idx === 0 ? 'active' : ''}" onclick="selectThumb(${idx})">
                     <img src="${safeSrc}" alt="Photo ${idx + 1}" loading="lazy" decoding="async">
                 </div>
             `;
             }).join('');
         }
         if (mainImgEl) {
+            mainImgEl.hidden = false;
             mainImgEl.src = galleryImages[0];
+            mainImgEl.style.cursor = 'zoom-in';
+            mainImgEl.onclick = (e) => {
+                e && e.preventDefault && e.preventDefault();
+                openLightbox(currentSlide);
+            };
         }
         updateGallery();
     }
@@ -422,7 +453,7 @@ async function loadPropertyFromDb() {
                 <div class="spec-info">
                     ${tLower.includes('midori')
                         ? '<strong>Inner &amp; End</strong><span>Unit Types</span>'
-                        : `<strong>${_escDetailHtml(property.carports || 1)} Car</strong><span>Garage / Carport</span>`}
+                        : `<strong>${_escDetailHtml(property.carports !== undefined && property.carports !== null ? property.carports : 1)} Car</strong><span>Garage / Carport</span>`}
                 </div>
             </div>
             <div class="spec-item">
@@ -437,23 +468,24 @@ async function loadPropertyFromDb() {
 
     // Dynamic Description & Amenities
     const descBlock = document.querySelector('.detail-block p');
-    if (descBlock && property.description) {
-        descBlock.innerText = property.description;
+    if (descBlock) {
+        const cleanDesc = String(property.description || '').trim();
+        descBlock.innerText = cleanDesc || `${cleanTitle || 'This property'} in ${property.location || 'Cavite & Las Piñas'} is available for inquiry and scheduled site viewing.`;
     }
 
-    if (property.amenities) {
-        const amenitiesGrid = document.querySelector('.amenities-grid');
-        if (amenitiesGrid) {
-            const list = property.amenities.split(',').map(a => a.trim()).filter(Boolean);
-            if (list.length > 0) {
-                const half = Math.ceil(list.length / 2);
-                const col1 = list.slice(0, half);
-                const col2 = list.slice(half);
-                amenitiesGrid.innerHTML = `
-                    <ul>${col1.map(item => `<li><span class="bullet">&bull;</span> ${_escDetailHtml(item)}</li>`).join('')}</ul>
-                    <ul>${col2.map(item => `<li><span class="bullet">&bull;</span> ${_escDetailHtml(item)}</li>`).join('')}</ul>
-                `;
-            }
+    const amenitiesGrid = document.querySelector('.amenities-grid');
+    if (amenitiesGrid) {
+        const list = property.amenities ? String(property.amenities).split(',').map(a => a.trim()).filter(Boolean) : [];
+        if (list.length > 0) {
+            const half = Math.ceil(list.length / 2);
+            const col1 = list.slice(0, half);
+            const col2 = list.slice(half);
+            amenitiesGrid.innerHTML = `
+                <ul>${col1.map(item => `<li><span class="bullet">&bull;</span> ${_escDetailHtml(item)}</li>`).join('')}</ul>
+                <ul>${col2.map(item => `<li><span class="bullet">&bull;</span> ${_escDetailHtml(item)}</li>`).join('')}</ul>
+            `;
+        } else {
+            amenitiesGrid.innerHTML = `<ul><li><span class="bullet">&bull;</span> Contact agent for complete amenities and floor plan details.</li></ul>`;
         }
     }
 
@@ -499,6 +531,39 @@ async function loadPropertyFromDb() {
 
     // Dynamic Amortization Calculator Rendering
     renderPropertyCalculator(property);
+}
+
+async function loadPropertyFromDb() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const propId = urlParams.get('id');
+    if (!propId || typeof apiGetPropertyById !== 'function') {
+        document.documentElement.classList.remove('detail-hydrating');
+        return;
+    }
+
+    const inquiryBtn = document.querySelector('.submit-inquiry-btn');
+    if (inquiryBtn) inquiryBtn.href = `../inquiry/inquiry.html?type=property&id=${encodeURIComponent(propId)}`;
+
+    // Hydrate synchronously from client cache first so cached cards open directly without flashing another property
+    const cachedProperty = findCachedPropertyById(propId);
+    if (cachedProperty) {
+        renderPropertyDetails(cachedProperty);
+    }
+
+    const property = await apiGetPropertyById(propId);
+    if (!property) {
+        document.documentElement.classList.remove('detail-hydrating');
+        if (!cachedProperty) {
+            const titleEl = document.querySelector('.property-title');
+            if (titleEl) titleEl.innerText = 'Property Listing Not Found';
+            const descEl = document.querySelector('.detail-block p');
+            if (descEl) descEl.innerText = 'This listing may have been removed or is unavailable.';
+            renderPropertyCalculator(null);
+        }
+        return;
+    }
+
+    renderPropertyDetails(property);
 }
 
 function parsePropertyPrice(priceVal) {
@@ -601,10 +666,32 @@ function checkInquiryAuthNote(user) {
 }
 
 window.addEventListener('DOMContentLoaded', () => {
-    initGallery();
-    if (new URLSearchParams(window.location.search).get('id')) {
+    const urlParams = new URLSearchParams(window.location.search);
+    const propId = urlParams.get('id');
+    if (propId) {
+        window.setTimeout(() => document.documentElement.classList.remove('detail-hydrating'), 600);
         loadPropertyFromDb();
     } else {
+        document.documentElement.classList.remove('detail-hydrating');
+        const staticFallback = (typeof getStaticFallbackProperties === 'function' && getStaticFallbackProperties()[0]) || {
+            id: 1,
+            title: 'Casasuerte',
+            location: 'Barangay San Agustin, Trece Martires City, Cavite',
+            property_type: 'Townhouse',
+            price: 2500000,
+            bedrooms: 2,
+            bathrooms: 1,
+            lot_area: 50,
+            floor_area: 50.8,
+            carports: 1,
+            status: 'Available',
+            image_url: 'assets/images/casasuerte.jpg'
+        };
+        if (document.querySelectorAll('.thumbnails-row .thumb').length > 0) {
+            initGallery();
+        } else {
+            renderPropertyDetails(staticFallback);
+        }
         loadStaticPropertyAvailability();
         const calcContainer = document.getElementById('propertyCalculator');
         if (calcContainer && !calcContainer._setTcp) {
