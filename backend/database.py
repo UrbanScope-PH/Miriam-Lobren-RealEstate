@@ -326,7 +326,7 @@ def init_db():
                 "Gated Entrance, Clubhouse, Basketball Court, Parks & Playgrounds, Built-in Solar Power System, Paved Concrete Roads"
             ),
             (
-                "Kathleen",
+                "Kathleen - Place 5",
                 "Molino 7, Bacoor, Cavite",
                 "Townhouse",
                 6200000.0,
@@ -338,7 +338,7 @@ def init_db():
                 2,
                 "Available",
                 "assets/images/kathleen-facade.jpg",
-                "Kathleen is a secure, family-friendly residential community offering 275 premium townhouses in Molino VII, Bacoor, Cavite (border Las Pinas). Just 12 minutes from EVIA Lifestyle Center along Daang-Hari and MCX. This development features zen-inspired 2-storey townhouses with complete finishes including steel gates and modular cabinets in all rooms. The project offers quality units built to last, located in a thriving community with easy access to shopping centers, schools, hospitals, and major thoroughfares.",
+                "Kathleen - Place 5 is a secure, family-friendly residential community offering 275 premium townhouses in Molino VII, Bacoor, Cavite (border Las Pinas). Just 12 minutes from EVIA Lifestyle Center along Daang-Hari and MCX. This development features zen-inspired 2-storey townhouses with complete finishes including steel gates and modular cabinets in all rooms. The project offers quality units built to last, located in a thriving community with easy access to shopping centers, schools, hospitals, and major thoroughfares.",
                 "Gated Entrance, Clubhouse, Park, Basketball Court, CCTV, Green-Oriented Community, Steel Gates Included, Modular Cabinets"
             ),
             (
@@ -387,7 +387,7 @@ def init_db():
                 "Available",
                 "assets/images/benecia-facade.jpg",
                 "Benecia Single Attached offers a modern and spacious home designed for families looking for comfort, privacy, and functionality. Located in Sihanouk Village, Barangay Talon IV, Las Piñas City, this property provides a practical residential setting with convenient access to surrounding establishments and main roads. Complete turnover with front fence and gate.",
-                "Single-Attached House Design, Private Carport, Front Fence and Gate, Balcony, Lanai, Functional Multi-Level Living Spaces, Spacious Indoor Living Areas, Maid's Room, Powder Room, Ready for Occupancy (RFO)"
+                "Single-Attached House Design, Private Carport, Front Fence and Gate, Balcony, Lanai, Functional Multi-Level Living Spaces, Spacious Indoor Living Areas, Maid's Room, Powder Room"
             ),
             (
                 "Amore Classico",
@@ -403,7 +403,23 @@ def init_db():
                 "Available",
                 "assets/images/amore-facade.jpg",
                 "Amore Classico by Benedetto Residences is a thoughtfully designed three-storey townhouse ideal for growing families who need more space, comfort, and functionality. Located in Barangay Pulang Lupa Uno, Las Piñas City, offering functional multi-level living with family hall and private patio.",
-                "Three-Storey Townhouse Design, Spacious Family Hall, Dedicated Maid's Room, Functional Multi-Level Living Spaces, Private Patio, Powder Room, Ready-for-Occupancy (RFO) Units"
+                "Three-Storey Townhouse Design, Spacious Family Hall, Dedicated Maid's Room, Functional Multi-Level Living Spaces, Private Patio, Powder Room"
+            ),
+            (
+                "Midori Mid-Rise Condo – Zone 1",
+                "Zone 1, Buildings 14–21, Dasmariñas, Cavite",
+                "Mid-Rise Condominium",
+                3140000.0,
+                2,
+                1,
+                0.0,
+                50.0,
+                0,
+                2,
+                "Available",
+                "assets/images/midori-main.webp",
+                "Midori Mid-Rise Condo – Zone 1 offers a convenient and comfortable living experience for young professionals, couples, and starting families looking for an affordable home in Dasmariñas, Cavite. Each 50 sqm unit features two bedrooms, a toilet and bath, a living area, a dining and kitchen area, and a patio, with Inner and End unit options.",
+                "2nd Floor Units, Inner & End Unit Types, Living Area, Dining Area, Kitchen Area, Patio, Convenient Access to Public Transportation, Near Dasmariñas Bayan, Close to Schools and Essential Establishments, Accessible to Daily Needs"
             )
         ]
 
@@ -416,7 +432,100 @@ def init_db():
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """, properties_seed)
         conn.commit()
-        print("✓ Database seeded with 6 accredited featured properties")
+        print("✓ Database seeded with 7 accredited featured properties")
+    else:
+        # Idempotently sync newly added accredited properties on existing SQLite DBs
+        canonical_additions = [
+            (
+                "Benecia",
+                (
+                    "Benecia Single-Attached",
+                    "Sihanouk Village, Barangay Talon IV, Las Piñas City",
+                    "Single-Attached House",
+                    9695000.0,
+                    3,
+                    3,
+                    102.0,
+                    117.0,
+                    1,
+                    2,
+                    "Available",
+                    "assets/images/benecia-facade.jpg",
+                    "Benecia Single Attached offers a modern and spacious home designed for families looking for comfort, privacy, and functionality. Located in Sihanouk Village, Barangay Talon IV, Las Piñas City, this property provides a practical residential setting with convenient access to surrounding establishments and main roads. Complete turnover with front fence and gate.",
+                    "Single-Attached House Design, Private Carport, Front Fence and Gate, Balcony, Lanai, Functional Multi-Level Living Spaces, Spacious Indoor Living Areas, Maid's Room, Powder Room"
+                )
+            ),
+            (
+                "Amore",
+                (
+                    "Amore Classico",
+                    "Benedetto Residences, Barangay Pulang Lupa Uno, Las Piñas City",
+                    "Townhouse",
+                    7995000.0,
+                    3,
+                    3,
+                    52.0,
+                    102.0,
+                    1,
+                    3,
+                    "Available",
+                    "assets/images/amore-facade.jpg",
+                    "Amore Classico by Benedetto Residences is a thoughtfully designed three-storey townhouse ideal for growing families who need more space, comfort, and functionality. Located in Barangay Pulang Lupa Uno, Las Piñas City, offering functional multi-level living with family hall and private patio.",
+                    "Three-Storey Townhouse Design, Spacious Family Hall, Dedicated Maid's Room, Functional Multi-Level Living Spaces, Private Patio, Powder Room"
+                )
+            ),
+            (
+                "Midori",
+                (
+                    "Midori Mid-Rise Condo – Zone 1",
+                    "Zone 1, Buildings 14–21, Dasmariñas, Cavite",
+                    "Mid-Rise Condominium",
+                    3140000.0,
+                    2,
+                    1,
+                    0.0,
+                    50.0,
+                    0,
+                    2,
+                    "Available",
+                    "assets/images/midori-main.webp",
+                    "Midori Mid-Rise Condo – Zone 1 offers a convenient and comfortable living experience for young professionals, couples, and starting families looking for an affordable home in Dasmariñas, Cavite. Each 50 sqm unit features two bedrooms, a toilet and bath, a living area, a dining and kitchen area, and a patio, with Inner and End unit options.",
+                    "2nd Floor Units, Inner & End Unit Types, Living Area, Dining Area, Kitchen Area, Patio, Convenient Access to Public Transportation, Near Dasmariñas Bayan, Close to Schools and Essential Establishments, Accessible to Daily Needs"
+                )
+            )
+        ]
+        for match_key, row_vals in canonical_additions:
+            cursor.execute("SELECT id FROM properties WHERE LOWER(title) LIKE ? LIMIT 1", (f"%{match_key.lower()}%",))
+            if cursor.fetchone() is None:
+                cursor.execute("""
+                    INSERT INTO properties (
+                        title, location, property_type, price,
+                        bedrooms, bathrooms, lot_area, floor_area, carports, storeys,
+                        status, image_url, description, amenities
+                    )
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """, row_vals)
+        # Keep accredited display titles & RFO removals synchronized on existing SQLite DBs
+        cursor.execute("""
+            UPDATE properties
+            SET title = 'Kathleen - Place 5',
+                description = REPLACE(description, 'Kathleen is a secure', 'Kathleen - Place 5 is a secure')
+            WHERE LOWER(title) LIKE '%kathleen%'
+              AND title != 'Kathleen - Place 5'
+        """)
+        cursor.execute("""
+            UPDATE properties
+            SET amenities = 'Single-Attached House Design, Private Carport, Front Fence and Gate, Balcony, Lanai, Functional Multi-Level Living Spaces, Spacious Indoor Living Areas, Maid''s Room, Powder Room'
+            WHERE LOWER(title) LIKE '%benecia%'
+              AND LOWER(COALESCE(amenities, '')) LIKE '%rfo%'
+        """)
+        cursor.execute("""
+            UPDATE properties
+            SET amenities = 'Three-Storey Townhouse Design, Spacious Family Hall, Dedicated Maid''s Room, Functional Multi-Level Living Spaces, Private Patio, Powder Room'
+            WHERE LOWER(title) LIKE '%amore%'
+              AND LOWER(COALESCE(amenities, '')) LIKE '%rfo%'
+        """)
+        conn.commit()
 
     # Inquiries table is ready for client submissions
 

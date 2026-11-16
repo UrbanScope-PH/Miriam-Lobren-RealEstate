@@ -369,7 +369,7 @@ async function loadPropertiesCatalog() {
             },
             {
                 id: 2,
-                title: "Kathleen",
+                title: "Kathleen - Place 5",
                 location: "Molino 7, Bacoor, Cavite",
                 property_type: "Townhouse",
                 price: 6200000,
@@ -411,6 +411,16 @@ async function loadPropertiesCatalog() {
                 price: 7995000,
                 lot_area: 52,
                 image_url: "assets/images/amore-facade.jpg"
+            },
+            {
+                id: 7,
+                title: "Midori Mid-Rise Condo – Zone 1",
+                location: "Zone 1, Buildings 14–21, Dasmariñas, Cavite",
+                property_type: "Mid-Rise Condominium",
+                price: 3140000,
+                lot_area: 0,
+                floor_area: 50,
+                image_url: "assets/images/midori-main.webp"
             }
         ];
     }
@@ -419,9 +429,10 @@ async function loadPropertiesCatalog() {
         if (!property || !property.title) return;
         const title = property.title.toLowerCase();
         if (title.includes('suerte')) property.title = 'Casasuerte';
-        else if (title.includes('kathleen')) property.title = 'Kathleen';
+        else if (title.includes('kathleen')) property.title = 'Kathleen - Place 5';
         else if (title.includes('benecia')) property.title = 'Benecia Single-Attached';
         else if (title.includes('amore')) property.title = 'Amore Classico';
+        else if (title.includes('midori')) property.title = 'Midori Mid-Rise Condo – Zone 1';
     });
     loadedProperties = allLoadedProperties.filter(property => !isSoldOutProperty(property));
 

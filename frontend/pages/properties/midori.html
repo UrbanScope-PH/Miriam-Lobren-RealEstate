@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
+    <meta name="color-scheme" content="light">
+    <meta name="theme-color" media="(prefers-color-scheme: light)" content="#ffffff">
+    <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#0e1611">
+    <title>Midori Mid-Rise Condo – Zone 1, Dasmariñas, Cavite | Miriam Lobren · CD Miranda Realty</title>
+    <meta name="description" content="Midori Mid-Rise Condo – Zone 1 in Buildings 14–21, Dasmariñas, Cavite. 50 sqm floor area, 2 bedrooms, 1 T&amp;B, living, dining, kitchen, and patio. Starting at ₱3,140,000 - ₱3,215,000. Inquire with Miriam Lobren, CD Miranda Realty.">
+    <link rel="canonical" href="https://miriam-lobren-real-estate.vercel.app/pages/properties/midori.html">
+    <link rel="icon" href="../../assets/images/favicon.jpg" type="image/x-icon">
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Miriam Lobren · CD Miranda Realty">
+    <meta property="og:title" content="Midori Mid-Rise Condo – Zone 1, Dasmariñas, Cavite | Miriam Lobren">
+    <meta property="og:description" content="2 BR · 1 T&amp;B · 50 sqm Floor Area · Living, Dining &amp; Kitchen · Patio · 2nd Floor Inner &amp; End Units · Starting at ₱3.14M–₱3.22M">
+    <meta property="og:image" content="https://miriam-lobren-real-estate.vercel.app/assets/images/midori-main.webp">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:url" content="https://miriam-lobren-real-estate.vercel.app/pages/properties/midori.html">
+    <meta property="og:locale" content="en_PH">
+    <meta name="twitter:card" content="summary_large_image">
+
+    <link rel="stylesheet" href="property-detail.css">
+    <link rel="stylesheet" href="../../shared/css/splash.css">
+    <link rel="stylesheet" href="../../shared/css/session.css">
+    <link rel="stylesheet" href="../../shared/css/calculator.css">
+    <link rel="stylesheet" href="../../shared/css/mobile-shell.css">
+    <script src="../../shared/js/splash.js"></script>
+    <script src="../../shared/js/supabase.js"></script>
+    <script src="../../shared/js/session.js"></script>
+</head>
+<body>
+    <!-- NAVBAR -->
+    <header class="navbar">
+        <a class="Cname" href="../../index.html">
+            <img src="../../assets/images/logo.png" alt="ML Logo" class="brand-logo" onerror="this.style.display='none'">
+            <span>
+                <strong>Miriam Lobren</strong>
+                <small>REAL ESTATE SALESPERSON</small>
+            </span>
+        </a>
+
+        <nav id="mainNav" aria-label="Primary navigation">
+            <a href="../../index.html">Home</a>
+            <a href="../../index.html#properties" class="active">Properties</a>
+            <a href="../../index.html#about">About</a>
+            <a href="../../index.html#faqs">FAQs</a>
+            <a href="../../index.html#contact">Contact</a>
+        </nav>
+
+        <div class="nav-acts">
+            <a href="../auth/login.html" class="login-btn" id="loginBtn">Log In</a>
+            <a href="../auth/register.html" class="signup-btn" id="signupBtn">Sign Up</a>
+
+            <button class="mobile-nav-toggle" id="mobileNavToggle" type="button" aria-label="Toggle navigation menu" aria-expanded="false">
+                <span class="hamburger-line"></span>
+                <span class="hamburger-line"></span>
+                <span class="hamburger-line"></span>
+            </button>
+        </div>
+    </header>
+
+    <main class="detail-container">
+        <!-- PROPERTY HEADER -->
+        <div class="detail-header">
+            <div class="header-left">
+                <span class="status-badge available">Available</span>
+                <h1 class="property-title">Midori Mid-Rise Condo – Zone 1</h1>
+                <p class="property-loc">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                    Zone 1, Buildings 14–21, Dasmariñas, Cavite
+                </p>
+            </div>
+            <div class="header-right">
+                <span class="detail-price">Starting at ₱3,140,000 - ₱3,215,000</span>
+            </div>
+        </div>
+
+        <!-- IMAGE GALLERY CAROUSEL -->
+        <section class="gallery-section">
+            <div class="main-carousel">
+                <button class="carousel-arrow prev" type="button" aria-label="Previous image" onclick="changeSlide(-1)">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"></polyline></svg>
+                </button>
+                <img id="mainGalleryImg" src="../../assets/images/midori-main.webp" alt="Midori Mid-Rise Condo – Zone 1 Exterior Perspective" fetchpriority="high" onclick="openLightbox()" title="Click to zoom image">
+                <button class="carousel-arrow next" type="button" aria-label="Next image" onclick="changeSlide(1)">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                </button>
+                <button class="carousel-zoom-btn" type="button" aria-label="Zoom image" title="Click to zoom image" onclick="openLightbox()">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="11" cy="11" r="8"></circle>
+                        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                        <line x1="11" y1="8" x2="11" y2="14"></line>
+                        <line x1="8" y1="11" x2="14" y2="11"></line>
+                    </svg>
+                    <span>Zoom</span>
+                </button>
+            </div>
+
+            <!-- THUMBNAIL ROW -->
+            <div class="thumbnails-row">
+                <div class="thumb active" onclick="selectThumb(0, '../../assets/images/midori-main.webp')">
+                    <img src="../../assets/images/midori-main.webp" alt="Midori Mid-Rise Condo Exterior" loading="lazy" decoding="async">
+                </div>
+                <div class="thumb" onclick="selectThumb(1, '../../assets/images/midori-living.jpg')">
+                    <img src="../../assets/images/midori-living.jpg" alt="Living and Dining Area" loading="lazy" decoding="async">
+                </div>
+                <div class="thumb" onclick="selectThumb(2, '../../assets/images/midori-living-2.jpg')">
+                    <img src="../../assets/images/midori-living-2.jpg" alt="Living Room Alternative View" loading="lazy" decoding="async">
+                </div>
+                <div class="thumb" onclick="selectThumb(3, '../../assets/images/midori-kitchen.jpg')">
+                    <img src="../../assets/images/midori-kitchen.jpg" alt="Kitchen Area" loading="lazy" decoding="async">
+                </div>
+                <div class="thumb" onclick="selectThumb(4, '../../assets/images/midori-kitchen-2.jpg')">
+                    <img src="../../assets/images/midori-kitchen-2.jpg" alt="Kitchen Countertop and Storage" loading="lazy" decoding="async">
+                </div>
+                <div class="thumb" onclick="selectThumb(5, '../../assets/images/midori-bedroom1.jpg')">
+                    <img src="../../assets/images/midori-bedroom1.jpg" alt="Bedroom 1" loading="lazy" decoding="async">
+                </div>
+                <div class="thumb" onclick="selectThumb(6, '../../assets/images/midori-bedroom1-2.jpg')">
+                    <img src="../../assets/images/midori-bedroom1-2.jpg" alt="Bedroom 1 Interior Angle" loading="lazy" decoding="async">
+                </div>
+                <div class="thumb" onclick="selectThumb(7, '../../assets/images/midori-bedroom1-3.jpg')">
+                    <img src="../../assets/images/midori-bedroom1-3.jpg" alt="Bedroom 1 Window and Space" loading="lazy" decoding="async">
+                </div>
+                <div class="thumb" onclick="selectThumb(8, '../../assets/images/midori-bedroom2.jpg')">
+                    <img src="../../assets/images/midori-bedroom2.jpg" alt="Bedroom 2" loading="lazy" decoding="async">
+                </div>
+                <div class="thumb" onclick="selectThumb(9, '../../assets/images/midori-bedroom2-2.jpg')">
+                    <img src="../../assets/images/midori-bedroom2-2.jpg" alt="Bedroom 2 Interior Angle" loading="lazy" decoding="async">
+                </div>
+                <div class="thumb" onclick="selectThumb(10, '../../assets/images/midori-bedroom2-3.jpg')">
+                    <img src="../../assets/images/midori-bedroom2-3.jpg" alt="Bedroom 2 Layout View" loading="lazy" decoding="async">
+                </div>
+                <div class="thumb" onclick="selectThumb(11, '../../assets/images/midori-toilet.jpg')">
+                    <img src="../../assets/images/midori-toilet.jpg" alt="Toilet and Bath" loading="lazy" decoding="async">
+                </div>
+                <div class="thumb" onclick="selectThumb(12, '../../assets/images/midori-patio.jpg')">
+                    <img src="../../assets/images/midori-patio.jpg" alt="Patio and Service Area" loading="lazy" decoding="async">
+                </div>
+            </div>
+        </section>
+
+        <!-- SPECS BAR -->
+        <div class="specs-bar">
+            <div class="spec-item">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M2 4v16M2 8h18a2 2 0 0 1 2 2v10M2 17h20M6 8v9"/></svg>
+                <div class="spec-info">
+                    <strong>2 Beds</strong>
+                    <span>2 Bedrooms</span>
+                </div>
+            </div>
+            <div class="spec-item">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 12v7a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-7M2 12h20M7 12V5a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v7"/></svg>
+                <div class="spec-info">
+                    <strong>1 Bath</strong>
+                    <span>1 Toilet &amp; Bath</span>
+                </div>
+            </div>
+            <div class="spec-item">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 21h18M5 21V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16M9 9h6M9 13h6M9 17h6"/></svg>
+                <div class="spec-info">
+                    <strong>50 sqm</strong>
+                    <span>Floor Area</span>
+                </div>
+            </div>
+            <div class="spec-item">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="9" y1="7" x2="15" y2="7"/><line x1="9" y1="12" x2="15" y2="12"/><line x1="9" y1="17" x2="15" y2="17"/></svg>
+                <div class="spec-info">
+                    <strong>2nd Floor</strong>
+                    <span>Bldgs 14–21</span>
+                </div>
+            </div>
+            <div class="spec-item">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+                <div class="spec-info">
+                    <strong>Inner &amp; End</strong>
+                    <span>Unit Types</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- ABOUT & FEATURES -->
+        <section class="details-section">
+            <div class="detail-block">
+                <h2>About the Property</h2>
+                <p>Midori Mid-Rise Condo – Zone 1 offers a convenient and comfortable living experience for young professionals, couples, and starting families looking for an affordable home in Dasmariñas, Cavite.</p>
+                <p style="margin-top: 10px;">With a 50 sqm floor area, each unit features two bedrooms, a toilet and bath, a living area, a dining and kitchen area, and a patio. Buyers can choose between Inner Units and End Units, depending on their preferences and lifestyle.</p>
+                <p style="margin-top: 10px;">Strategically located near Dasmariñas Bayan, schools, and essential establishments, the development also provides convenient access to public transportation.</p>
+                <p style="margin-top: 10px;">Midori offers a practical and comfortable living space where residents can enjoy privacy, convenience, and a place to create lasting memories with their families.</p>
+            </div>
+
+            <div class="detail-block">
+                <h2>Property Details &amp; Unit Layout</h2>
+                <div class="amenities-grid">
+                    <ul>
+                        <li><span class="bullet">&bull;</span> 50 sqm Floor Area</li>
+                        <li><span class="bullet">&bull;</span> 2 Bedrooms</li>
+                        <li><span class="bullet">&bull;</span> 1 Toilet and Bath</li>
+                        <li><span class="bullet">&bull;</span> Living Area &amp; Dining Area</li>
+                    </ul>
+                    <ul>
+                        <li><span class="bullet">&bull;</span> Kitchen Area &amp; Patio</li>
+                        <li><span class="bullet">&bull;</span> 2nd Floor Units (Buildings 14–21)</li>
+                        <li><span class="bullet">&bull;</span> Available Unit Types: Inner Unit &amp; End Unit</li>
+                        <li><span class="bullet">&bull;</span> Zone 1, Buildings 14–21, Dasmariñas, Cavite</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="detail-block">
+                <h2>Amenities and Features</h2>
+                <div class="amenities-grid">
+                    <ul>
+                        <li><span class="bullet">&bull;</span> Convenient Access to Public Transportation</li>
+                        <li><span class="bullet">&bull;</span> Near Dasmariñas Bayan</li>
+                    </ul>
+                    <ul>
+                        <li><span class="bullet">&bull;</span> Close to Schools and Essential Establishments</li>
+                        <li><span class="bullet">&bull;</span> Accessible to Daily Needs</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- INTERACTIVE AMORTIZATION CALCULATOR -->
+        <section class="amortization-calculator-section" id="propertyCalculator"></section>
+
+        <!-- MAP & INQUIRY SECTION -->
+        <section class="location-inquiry-grid">
+            <div class="location-box">
+                <div class="location-header">
+                    <h3>Location &amp; Vicinity</h3>
+                    <p>Zone 1, Buildings 14–21, Dasmariñas, Cavite</p>
+                </div>
+                <div class="map-container">
+                    <iframe
+                        src="https://maps.google.com/maps?q=14.3294,120.9367+(Midori+Mid-Rise+Condo+Zone+1+Dasmarinas+Cavite)&amp;t=&amp;z=15&amp;ie=UTF8&amp;iwloc=B&amp;output=embed"
+                        width="100%" height="280" style="border:0; border-radius: 8px;" allowfullscreen="" loading="lazy"
+                        referrerpolicy="no-referrer-when-downgrade" title="Midori Mid-Rise Condo – Zone 1 Location Map"></iframe>
+                </div>
+                <a href="https://www.google.com/maps/search/?api=1&amp;query=14.3294,120.9367" class="view-map-link" target="_blank" rel="noopener noreferrer">
+                    <span>Open in Google Maps</span>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+                </a>
+            </div>
+
+            <!-- Interested in Property CTA Card -->
+            <div class="inquiry-card">
+                <div class="inquiry-card-header">
+                    <div class="inquiry-icon-circle">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+                    </div>
+                    <div>
+                        <h3>Interested in Midori?</h3>
+                        <p>Submit an inquiry to schedule a viewing or ask about Inner and End Unit options.</p>
+                    </div>
+                </div>
+
+                <a href="../inquiry/inquiry.html?type=property&amp;id=7&amp;title=Midori" class="submit-inquiry-btn">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+                    <span>Submit Inquiry</span>
+                </a>
+
+                <p class="inquiry-note">*No account needed. Log in only if you want to track your inquiries.</p>
+            </div>
+        </section>
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="footer">
+        <div class="footer-top">
+            <div class="footer-about">
+                <h3>Miriam Lobren</h3>
+                <p>Licensed real estate assistance for Cavite &amp; Las Piñas premier subdivisions, townhouses, and mid-rise condominiums. Connecting families to sustainable, high-value dream homes.</p>
+            </div>
+
+            <div class="footer-links-column">
+                <h3>QUICK LINKS</h3>
+                <ul>
+                    <li><a href="../../index.html">Home</a></li>
+                    <li><a href="../../index.html#about">About</a></li>
+                    <li><a href="../../index.html#properties">Listings</a></li>
+                    <li><a href="../inquiry/inquiry.html">Consultation</a></li>
+                </ul>
+            </div>
+
+            <div class="footer-links-column">
+                <h3>FEATURED HOMES</h3>
+                <ul>
+                    <li><a href="casasuerte.html">Casasuerte</a></li>
+                    <li><a href="kathleen.html">Kathleen - Place 5</a></li>
+                    <li><a href="Liora.html">Liora Homes</a></li>
+                    <li><a href="Airmen.html">Airmen's Triplex</a></li>
+                    <li><a href="benecia.html">Benecia Single-Attached</a></li>
+                    <li><a href="amore-classico.html">Amore Classico</a></li>
+                    <li><a href="midori.html">Midori Mid-Rise Condo</a></li>
+                </ul>
+            </div>
+
+            <div class="footer-contact-info">
+                <h3>CONTACT</h3>
+                <p>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                    Las Piñas City &amp; Cavite, Philippines
+                </p>
+                <p>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                    miriamalobren@gmail.com
+                </p>
+            </div>
+        </div>
+
+        <div class="footer-bottom">
+            <p>&copy; 2026 Miriam Lobren Real Estate. All rights reserved.</p>
+            <div class="footer-legal">
+                <a href="../legal/privacy.html">Privacy Policy</a>
+                <a href="../legal/terms.html">Terms of Service</a>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        window.galleryImages = [
+            '../../assets/images/midori-main.webp',
+            '../../assets/images/midori-living.jpg',
+            '../../assets/images/midori-living-2.jpg',
+            '../../assets/images/midori-kitchen.jpg',
+            '../../assets/images/midori-kitchen-2.jpg',
+            '../../assets/images/midori-bedroom1.jpg',
+            '../../assets/images/midori-bedroom1-2.jpg',
+            '../../assets/images/midori-bedroom1-3.jpg',
+            '../../assets/images/midori-bedroom2.jpg',
+            '../../assets/images/midori-bedroom2-2.jpg',
+            '../../assets/images/midori-bedroom2-3.jpg',
+            '../../assets/images/midori-toilet.jpg',
+            '../../assets/images/midori-patio.jpg'
+        ];
+    </script>
+    <script src="../../shared/js/calculator.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            if (window.UrbanCalculator) {
+                UrbanCalculator.initPropertyCalculator('propertyCalculator', {
+                    tcp: 3140000,
+                    propertyTitle: "Midori Mid-Rise Condo – Zone 1",
+                    propertyId: 7,
+                    reservationFee: 0,
+                    defaultDpPercent: 10,
+                    defaultTermYears: 20,
+                    defaultFinancing: 'pagibig',
+                    supportedFinancing: ['pagibig', 'bank']
+                });
+            }
+        });
+    </script>
+    <script src="property-detail.js"></script>
+</body>
+</html>
+

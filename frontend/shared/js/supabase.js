@@ -607,18 +607,19 @@
                 }
             } catch (e) {}
 
-            // Strictly retain only accredited properties: Airmen, Casasuerte, Kathleen, Liora, Benecia, Amore Classico
+            // Strictly retain only accredited properties: Airmen, Casasuerte, Kathleen, Liora, Benecia, Amore Classico, Midori
             liveProperties = liveProperties.filter(p => {
                 if (!p) return false;
                 const t = (p.title || p.propertyName || p.name || '').toLowerCase().trim();
-                return t.includes('airmen') || t.includes('suerte') || t.includes('kathleen') || t.includes('liora') || t.includes('benecia') || t.includes('amore');
+                return t.includes('airmen') || t.includes('suerte') || t.includes('kathleen') || t.includes('liora') || t.includes('benecia') || t.includes('amore') || t.includes('midori');
             }).map(p => {
                 if (!p) return p;
                 const t = (p.title || p.propertyName || p.name || '').toLowerCase().trim();
                 if (t.includes('suerte')) p.title = 'Casasuerte';
-                else if (t.includes('kathleen')) p.title = 'Kathleen';
+                else if (t.includes('kathleen')) p.title = 'Kathleen - Place 5';
                 else if (t.includes('benecia')) p.title = 'Benecia Single-Attached';
                 else if (t.includes('amore')) p.title = 'Amore Classico';
+                else if (t.includes('midori')) p.title = 'Midori Mid-Rise Condo – Zone 1';
                 return p;
             });
 
@@ -644,7 +645,7 @@
                     },
                     {
                         id: 2,
-                        title: "Kathleen",
+                        title: "Kathleen - Place 5",
                         location: "Molino 7, Bacoor, Cavite",
                         property_type: "Townhouse",
                         price: 6200000.0,
@@ -656,7 +657,7 @@
                         storeys: 2,
                         status: "Available",
                         image_url: "assets/images/kathleen-facade.jpg",
-                        description: "Kathleen is a secure, family-friendly residential community offering 275 premium zen-inspired townhouses in Molino VII, Bacoor.",
+                        description: "Kathleen - Place 5 is a secure, family-friendly residential community offering 275 premium zen-inspired townhouses in Molino VII, Bacoor.",
                         amenities: "Gated Entrance, Clubhouse, Park, Basketball Court, CCTV, Green-Oriented Community"
                     },
                     {
@@ -708,7 +709,7 @@
                         status: "Available",
                         image_url: "assets/images/benecia-facade.jpg",
                         description: "Benecia Single Attached offers a modern and spacious home designed for families looking for comfort, privacy, and functionality in Sihanouk Village, Talon IV, Las Piñas City.",
-                        amenities: "Single-Attached House Design, Private Carport, Front Fence and Gate, Balcony, Lanai, Functional Multi-Level Living Spaces, Spacious Indoor Living Areas, Maid's Room, Powder Room, Ready for Occupancy (RFO)"
+                        amenities: "Single-Attached House Design, Private Carport, Front Fence and Gate, Balcony, Lanai, Functional Multi-Level Living Spaces, Spacious Indoor Living Areas, Maid's Room, Powder Room"
                     },
                     {
                         id: 6,
@@ -725,7 +726,24 @@
                         status: "Available",
                         image_url: "assets/images/amore-facade.jpg",
                         description: "Amore Classico by Benedetto Residences is a thoughtfully designed three-storey townhouse ideal for growing families who need more space, comfort, and functionality in Pulang Lupa Uno, Las Piñas City.",
-                        amenities: "Three-Storey Townhouse Design, Spacious Family Hall, Dedicated Maid's Room, Functional Multi-Level Living Spaces, Private Patio, Powder Room, Ready-for-Occupancy (RFO) Units"
+                        amenities: "Three-Storey Townhouse Design, Spacious Family Hall, Dedicated Maid's Room, Functional Multi-Level Living Spaces, Private Patio, Powder Room"
+                    },
+                    {
+                        id: 7,
+                        title: "Midori Mid-Rise Condo – Zone 1",
+                        location: "Zone 1, Buildings 14–21, Dasmariñas, Cavite",
+                        property_type: "Mid-Rise Condominium",
+                        price: 3140000.0,
+                        bedrooms: 2,
+                        bathrooms: 1,
+                        lot_area: 0.0,
+                        floor_area: 50.0,
+                        carports: 0,
+                        storeys: 2,
+                        status: "Available",
+                        image_url: "assets/images/midori-main.webp",
+                        description: "Midori Mid-Rise Condo – Zone 1 offers a convenient and comfortable living experience for young professionals, couples, and starting families looking for an affordable home in Dasmariñas, Cavite.",
+                        amenities: "2nd Floor Units, Inner & End Unit Types, Living Area, Dining Area, Kitchen Area, Patio, Convenient Access to Public Transportation, Near Dasmariñas Bayan, Close to Schools and Essential Establishments, Accessible to Daily Needs"
                     }
                 ];
             }
@@ -742,7 +760,7 @@
                                     if (Array.isArray(parsed)) {
                                         const clean = parsed.filter(p => {
                                             const t = (p.title || p.propertyName || p.name || '').toLowerCase().trim();
-                                            return t.includes('airmen') || t.includes('suerte') || t.includes('kathleen') || t.includes('liora') || t.includes('benecia') || t.includes('amore');
+                                            return t.includes('airmen') || t.includes('suerte') || t.includes('kathleen') || t.includes('liora') || t.includes('benecia') || t.includes('amore') || t.includes('midori');
                                         });
                                         localStorage.setItem(k, JSON.stringify(clean));
                                     }
@@ -798,6 +816,10 @@
             const found = all.find(p => String(p.id) === String(id));
             if (found) return found;
         } catch (e) {}
+
+        // Fallback 3: Canonical static fallback list
+        const staticMatch = getStaticFallbackProperties().find(p => String(p.id) === String(id));
+        if (staticMatch) return staticMatch;
 
         return null;
     }
