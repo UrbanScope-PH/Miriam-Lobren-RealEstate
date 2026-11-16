@@ -661,6 +661,130 @@
         return ensureAccreditedPromise;
     }
 
+    const DEPRECATED_PROPERTY_TITLES = new Set([
+        'velemont residences',
+        'green valley villa',
+        'horizon heights',
+        'sunset heights executive townhouse',
+        'maple ridge residence',
+        'oakwood manor',
+        'victoria park residences'
+    ]);
+
+    function retainActivePropertyListing(p) {
+        if (!p || typeof p !== 'object') return false;
+        const t = String(p.title || p.propertyName || p.name || '').toLowerCase().trim();
+        return Boolean(t) && !DEPRECATED_PROPERTY_TITLES.has(t);
+    }
+
+    function normalizePropertyListItem(p) {
+        if (!p || typeof p !== 'object') return p;
+        const out = { ...p };
+        const t = String(out.title || out.propertyName || out.name || '').toLowerCase().trim();
+        if (t.includes('suerte')) out.title = 'Casasuerte';
+        else if (t.includes('kathleen')) out.title = 'Kathleen - Place 5';
+        else if (t.includes('benecia')) out.title = 'Benecia Single-Attached';
+        else if (t.includes('amore')) out.title = 'Amore Classico';
+        else if (t.includes('midori')) out.title = 'Midori Mid-Rise Condo – Zone 1';
+        return out;
+    }
+
+    function persistPropertyListToCache(storageKey, list) {
+        if (!Array.isArray(list)) return;
+        try {
+            localStorage.setItem(storageKey, JSON.stringify(list));
+            return;
+        } catch (err) {
+            try {
+                // Retry with compact card metadata (dropping bulky multi-photo arrays if localStorage quota is tight)
+                const compactList = list.map((item) => {
+                    if (!item || typeof item !== 'object') return item;
+                    const clone = { ...item };
+                    if (Array.isArray(clone.gallery_images) && clone.gallery_images.length > 1) {
+                        clone.gallery_images = clone.image_url ? [clone.image_url] : clone.gallery_images.slice(0, 1);
+                    }
+                    return clone;
+                });
+                localStorage.setItem(storageKey, JSON.stringify(compactList));
+                return;
+            } catch (_) {
+                try {
+                    const minimalList = list.map((item) => {
+                        if (!item || typeof item !== 'object') return item;
+                        const { gallery_images, ...rest } = item;
+                        return rest;
+                    });
+                    localStorage.setItem(storageKey, JSON.stringify(minimalList));
+                } catch (_2) {}
+            }
+        }
+    }
+
+    function emitPropertiesSyncSignal() {
+        try {
+            localStorage.setItem('urbanscope_properties_sync_ts', String(Date.now()));
+        } catch (_) {}
+        try {
+            if (typeof BroadcastChannel === 'function') {
+                const ch = new BroadcastChannel('urbanscope_properties');
+                ch.postMessage({ type: 'properties_updated', ts: Date.now() });
+                ch.close();
+            }
+        } catch (_) {}
+    }
+
+    function apiGetCachedProperties() {
+        try {
+            const keys = ['cached_live_properties', 'urbanScopeProperties', 'properties'];
+            const combined = [];
+            const seenIds = new Set();
+            const seenTitles = new Set();
+            keys.forEach((key) => {
+                let parsed = [];
+                try {
+                    parsed = JSON.parse(localStorage.getItem(key) || '[]');
+                } catch (_) {
+                    parsed = [];
+                }
+                if (!Array.isArray(parsed)) return;
+                parsed.forEach((raw) => {
+                    if (!retainActivePropertyListing(raw)) return;
+                    const item = normalizePropertyListItem(raw);
+                    const idKey = item.id !== undefined && item.id !== null && String(item.id).trim() !== '' ? String(item.id).trim() : '';
+                    const titleKey = String(item.title || item.propertyName || item.name || '').toLowerCase().trim();
+                    if (idKey && seenIds.has(idKey)) return;
+                    if (!idKey && titleKey && seenTitles.has(titleKey)) return;
+                    if (idKey) seenIds.add(idKey);
+                    if (titleKey) seenTitles.add(titleKey);
+                    combined.push(item);
+                });
+            });
+            return combined.length > 0 ? combined : null;
+        } catch (_) {
+            return null;
+        }
+    }
+
+    async function apiGetLocalPropertiesFast() {
+        if (!isLocalBackendReachableHost()) return null;
+        try {
+            const localBase = getLocalApiBase();
+            const localRes = await fetch(`${localBase}/properties`, {
+                method: 'GET',
+                cache: 'no-store',
+                signal: (typeof AbortSignal !== 'undefined' && typeof AbortSignal.timeout === 'function')
+                    ? AbortSignal.timeout(1800)
+                    : undefined
+            });
+            if (!localRes.ok) return null;
+            const localData = await localRes.json();
+            if (!Array.isArray(localData) || localData.length === 0) return null;
+            return localData.filter(retainActivePropertyListing).map(normalizePropertyListItem);
+        } catch (_) {
+            return null;
+        }
+    }
+
     async function apiGetProperties(filter = {}, forceRefresh = false) {
         const isForce = Boolean(forceRefresh || (filter && filter.forceRefresh));
         const cacheKey = JSON.stringify({
@@ -680,96 +804,129 @@
 
         const runner = (async () => {
             let liveProperties = [];
-
-            try {
-                const queryParts = [];
-
-                // 1. Property Type Filter
-                if (filter.type && filter.type !== 'all') {
-                    const t = filter.type.toLowerCase().trim();
-                    if (t === 'villa' || t === 'villas') {
-                        queryParts.push('property_type=ilike.*villa*');
-                    } else if (t === 'townhouse' || t === 'townhouses') {
-                        queryParts.push('property_type=ilike.*townhouse*');
-                    } else if (t === 'apartment' || t === 'apartments' || t === 'condo' || t === 'condominium') {
-                        queryParts.push('or=(property_type.ilike.*condominium*,property_type.ilike.*apartment*)');
-                    } else if (t === 'subdivision' || t === 'subdivisions') {
-                        queryParts.push('property_type=ilike.*subdivision*');
-                    } else if (t === 'triplex' || t === 'triplexes') {
-                        queryParts.push('property_type=ilike.*triplex*');
-                    } else if (t === 'luxury' || t === 'luxury villas') {
-                        queryParts.push('or=(property_type.ilike.*villa*,price.gte.5000000)');
-                    } else if (t === 'house-lot' || t === 'house & lot') {
-                        queryParts.push('or=(property_type.ilike.*townhouse*,property_type.ilike.*subdivision*,property_type.ilike.*single attached*,property_type.ilike.*triplex*,property_type.ilike.*villa*)');
-                    } else {
-                        const safeType = escapePostgrestFilter(filter.type);
-                        if (safeType) queryParts.push(`property_type=ilike.*${encodeURIComponent(safeType)}*`);
-                    }
-                }
-
-                // 2. Location Filter
-                if (filter.location && filter.location !== 'all') {
-                    const cleanLoc = escapePostgrestFilter(filter.location.replace(/-/g, ' '));
-                    if (cleanLoc) queryParts.push(`location=ilike.*${encodeURIComponent(cleanLoc)}*`);
-                }
-
-                // 3. Search Keyword across title, location, description, amenities
-                if (filter.search && filter.search.trim()) {
-                    const cleanedSearch = escapePostgrestFilter(filter.search);
-                    if (cleanedSearch) {
-                        const s = encodeURIComponent(cleanedSearch);
-                        queryParts.push(`or=(title.ilike.*${s}*,location.ilike.*${s}*,property_type.ilike.*${s}*,description.ilike.*${s}*,amenities.ilike.*${s}*)`);
-                    }
-                }
-
-                if (filter.columns && /^[a-zA-Z0-9_,]+$/.test(String(filter.columns).trim())) {
-                    queryParts.push(`select=${String(filter.columns).trim()}`);
-                }
-
-                queryParts.push('order=id.desc');
-
-                const url = `${REST_BASE}/properties?${queryParts.join('&')}`;
-                const res = await fetch(url, { method: 'GET', headers: getHeaders(), cache: 'no-store' });
-
-                if (res.ok) {
-                    const data = await res.json();
-                    if (Array.isArray(data) && data.length > 0) {
-                        liveProperties = data;
-                    }
-                }
-            } catch (err) {
-                console.warn('Supabase properties fetch notice, attempting fallback:', err.message);
-            }
-
-            // Fallback 1 / Local SQLite merge: ensure newly created or locally stored properties merge cleanly on localhost/:5500
             const isUnfilteredQuery = (!filter || ((!filter.type || filter.type === 'all') && (!filter.location || filter.location === 'all') && !filter.search));
-            if ((liveProperties.length === 0 || isUnfilteredQuery) && isLocalBackendReachableHost()) {
+            const localReachable = isLocalBackendReachableHost();
+
+            const remotePromise = (async () => {
+                try {
+                    const queryParts = [];
+
+                    // 1. Property Type Filter
+                    if (filter.type && filter.type !== 'all') {
+                        const t = filter.type.toLowerCase().trim();
+                        if (t === 'villa' || t === 'villas') {
+                            queryParts.push('property_type=ilike.*villa*');
+                        } else if (t === 'townhouse' || t === 'townhouses') {
+                            queryParts.push('property_type=ilike.*townhouse*');
+                        } else if (t === 'apartment' || t === 'apartments' || t === 'condo' || t === 'condominium') {
+                            queryParts.push('or=(property_type.ilike.*condominium*,property_type.ilike.*apartment*)');
+                        } else if (t === 'subdivision' || t === 'subdivisions') {
+                            queryParts.push('property_type=ilike.*subdivision*');
+                        } else if (t === 'triplex' || t === 'triplexes') {
+                            queryParts.push('property_type=ilike.*triplex*');
+                        } else if (t === 'luxury' || t === 'luxury villas') {
+                            queryParts.push('or=(property_type.ilike.*villa*,price.gte.5000000)');
+                        } else if (t === 'house-lot' || t === 'house & lot') {
+                            queryParts.push('or=(property_type.ilike.*townhouse*,property_type.ilike.*subdivision*,property_type.ilike.*single attached*,property_type.ilike.*triplex*,property_type.ilike.*villa*)');
+                        } else {
+                            const safeType = escapePostgrestFilter(filter.type);
+                            if (safeType) queryParts.push(`property_type=ilike.*${encodeURIComponent(safeType)}*`);
+                        }
+                    }
+
+                    // 2. Location Filter
+                    if (filter.location && filter.location !== 'all') {
+                        const cleanLoc = escapePostgrestFilter(filter.location.replace(/-/g, ' '));
+                        if (cleanLoc) queryParts.push(`location=ilike.*${encodeURIComponent(cleanLoc)}*`);
+                    }
+
+                    // 3. Search Keyword across title, location, description, amenities
+                    if (filter.search && filter.search.trim()) {
+                        const cleanedSearch = escapePostgrestFilter(filter.search);
+                        if (cleanedSearch) {
+                            const s = encodeURIComponent(cleanedSearch);
+                            queryParts.push(`or=(title.ilike.*${s}*,location.ilike.*${s}*,property_type.ilike.*${s}*,description.ilike.*${s}*,amenities.ilike.*${s}*)`);
+                        }
+                    }
+
+                    if (filter.columns && /^[a-zA-Z0-9_,]+$/.test(String(filter.columns).trim())) {
+                        queryParts.push(`select=${String(filter.columns).trim()}`);
+                    }
+
+                    queryParts.push('order=id.desc');
+
+                    const url = `${REST_BASE}/properties?${queryParts.join('&')}`;
+                    const res = await fetch(url, { method: 'GET', headers: getHeaders(), cache: 'no-store' });
+
+                    if (res.ok) {
+                        const data = await res.json();
+                        if (Array.isArray(data) && data.length > 0) {
+                            return data;
+                        }
+                    }
+                } catch (err) {
+                    console.warn('Supabase properties fetch notice, attempting fallback:', err.message);
+                }
+                return [];
+            })();
+
+            // Launch local FastAPI /properties fetch concurrently with remote Supabase on localhost/:5500
+            const localUnfilteredPromise = (localReachable && isUnfilteredQuery)
+                ? (async () => {
+                    try {
+                        const localBase = getLocalApiBase();
+                        const localRes = await fetch(`${localBase}/properties`, {
+                            method: 'GET',
+                            cache: 'no-store',
+                            signal: (typeof AbortSignal !== 'undefined' && typeof AbortSignal.timeout === 'function')
+                                ? AbortSignal.timeout(1800)
+                                : undefined
+                        });
+                        if (localRes.ok) {
+                            const localData = await localRes.json();
+                            if (Array.isArray(localData) && localData.length > 0) return localData;
+                        }
+                    } catch (e) {}
+                    return [];
+                })()
+                : Promise.resolve([]);
+
+            const [remoteSettled, localSettled] = await Promise.allSettled([remotePromise, localUnfilteredPromise]);
+            if (remoteSettled.status === 'fulfilled' && Array.isArray(remoteSettled.value)) {
+                liveProperties = remoteSettled.value.slice();
+            }
+            let localData = (localSettled.status === 'fulfilled' && Array.isArray(localSettled.value)) ? localSettled.value : [];
+
+            if (localReachable && !isUnfilteredQuery && liveProperties.length === 0) {
                 try {
                     const localBase = getLocalApiBase();
                     const localRes = await fetch(`${localBase}/properties`, {
                         method: 'GET',
+                        cache: 'no-store',
                         signal: (typeof AbortSignal !== 'undefined' && typeof AbortSignal.timeout === 'function')
                             ? AbortSignal.timeout(1800)
                             : undefined
                     });
                     if (localRes.ok) {
-                        const localData = await localRes.json();
-                        if (Array.isArray(localData) && localData.length > 0) {
-                            if (liveProperties.length === 0) {
-                                liveProperties = localData;
-                            } else {
-                                const existingTitles = new Set(liveProperties.map(p => String(p?.title || p?.propertyName || p?.name || '').toLowerCase().trim()));
-                                localData.forEach(lp => {
-                                    const lt = String(lp?.title || '').toLowerCase().trim();
-                                    if (lt && !existingTitles.has(lt)) {
-                                        liveProperties.unshift(lp);
-                                        existingTitles.add(lt);
-                                    }
-                                });
-                            }
-                        }
+                        const data = await localRes.json();
+                        if (Array.isArray(data)) localData = data;
                     }
                 } catch (e) {}
+            }
+
+            if (localData.length > 0) {
+                if (liveProperties.length === 0) {
+                    liveProperties = localData;
+                } else {
+                    const existingTitles = new Set(liveProperties.map(p => String(p?.title || p?.propertyName || p?.name || '').toLowerCase().trim()));
+                    localData.forEach(lp => {
+                        const lt = String(lp?.title || '').toLowerCase().trim();
+                        if (lt && !existingTitles.has(lt)) {
+                            liveProperties.unshift(lp);
+                            existingTitles.add(lt);
+                        }
+                    });
+                }
             }
 
             // Fallback 2: Cached properties in localStorage
@@ -800,30 +957,7 @@
             } catch (e) {}
 
             // Drop deprecated pre-migration mock seed titles while preserving accredited + admin-added listings
-            const deprecatedDemoTitles = new Set([
-                'velemont residences',
-                'green valley villa',
-                'horizon heights',
-                'sunset heights executive townhouse',
-                'maple ridge residence',
-                'oakwood manor',
-                'victoria park residences'
-            ]);
-            const retainActiveListing = (p) => {
-                if (!p || typeof p !== 'object') return false;
-                const t = (p.title || p.propertyName || p.name || '').toLowerCase().trim();
-                return Boolean(t) && !deprecatedDemoTitles.has(t);
-            };
-            liveProperties = liveProperties.filter(retainActiveListing).map(p => {
-                if (!p) return p;
-                const t = (p.title || p.propertyName || p.name || '').toLowerCase().trim();
-                if (t.includes('suerte')) p.title = 'Casasuerte';
-                else if (t.includes('kathleen')) p.title = 'Kathleen - Place 5';
-                else if (t.includes('benecia')) p.title = 'Benecia Single-Attached';
-                else if (t.includes('amore')) p.title = 'Amore Classico';
-                else if (t.includes('midori')) p.title = 'Midori Mid-Rise Condo – Zone 1';
-                return p;
-            });
+            liveProperties = liveProperties.filter(retainActivePropertyListing).map(normalizePropertyListItem);
 
             // Fallback to static accredited properties if list is empty
             if (liveProperties.length === 0) {
@@ -832,21 +966,19 @@
 
             if (liveProperties.length > 0) {
                 if (!filter.columns) {
-                    try {
-                        localStorage.setItem('cached_live_properties', JSON.stringify(liveProperties));
-                        ['urbanScopeProperties', 'properties'].forEach(k => {
+                    persistPropertyListToCache('cached_live_properties', liveProperties);
+                    ['urbanScopeProperties', 'properties'].forEach(k => {
+                        try {
                             const raw = localStorage.getItem(k);
                             if (raw) {
-                                try {
-                                    const parsed = JSON.parse(raw);
-                                    if (Array.isArray(parsed)) {
-                                        const clean = parsed.filter(retainActiveListing);
-                                        localStorage.setItem(k, JSON.stringify(clean));
-                                    }
-                                } catch (_) {}
+                                const parsed = JSON.parse(raw);
+                                if (Array.isArray(parsed)) {
+                                    const clean = parsed.filter(retainActivePropertyListing);
+                                    persistPropertyListToCache(k, clean);
+                                }
                             }
-                        });
-                    } catch (e) {}
+                        } catch (_) {}
+                    });
                 }
                 READ_CACHE.properties.set(cacheKey, { promise: null, data: liveProperties, ts: Date.now() });
                 return liveProperties;
@@ -1025,22 +1157,25 @@
 
         if (!created) return null;
 
-        // Immediately update local browser caches for snappy admin UI
+        // Immediately update local browser caches for snappy admin & homepage UI
         try {
             const cached = JSON.parse(localStorage.getItem('cached_live_properties') || '[]');
-            cached.unshift(created);
-            localStorage.setItem('cached_live_properties', JSON.stringify(cached));
+            const filtered = Array.isArray(cached) ? cached.filter(p => String(p && p.id) !== String(created.id)) : [];
+            filtered.unshift(created);
+            persistPropertyListToCache('cached_live_properties', filtered);
         } catch (e) {}
 
         try {
             const urbanProps = JSON.parse(localStorage.getItem('urbanScopeProperties') || '[]');
-            urbanProps.unshift(created);
-            localStorage.setItem('urbanScopeProperties', JSON.stringify(urbanProps));
+            const filtered = Array.isArray(urbanProps) ? urbanProps.filter(p => String(p && p.id) !== String(created.id)) : [];
+            filtered.unshift(created);
+            persistPropertyListToCache('urbanScopeProperties', filtered);
         } catch (e) {}
 
         try {
             const adminProps = JSON.parse(localStorage.getItem('properties') || '[]');
-            adminProps.unshift({
+            const filtered = Array.isArray(adminProps) ? adminProps.filter(p => String(p && p.id) !== String(created.id)) : [];
+            filtered.unshift({
                 id: created.id,
                 name: created.title,
                 title: created.title,
@@ -1049,12 +1184,18 @@
                 property_type: created.property_type,
                 price: created.price,
                 status: created.status,
+                bedrooms: created.bedrooms,
+                bathrooms: created.bathrooms,
+                lot_area: created.lot_area,
+                floor_area: created.floor_area,
+                carports: created.carports,
                 image_url: created.image_url
             });
-            localStorage.setItem('properties', JSON.stringify(adminProps));
+            persistPropertyListToCache('properties', filtered);
         } catch (e) {}
 
         invalidateReadCache('properties');
+        emitPropertiesSyncSignal();
         return created;
     }
 
@@ -1108,13 +1249,14 @@
                     const idx = list.findIndex(p => String(p.id) === String(id));
                     if (idx !== -1) {
                         list[idx] = { ...list[idx], ...safePayload };
-                        localStorage.setItem(key, JSON.stringify(list));
+                        persistPropertyListToCache(key, list);
                     }
                 }
             });
         } catch (e) {}
 
         invalidateReadCache('properties');
+        emitPropertiesSyncSignal();
         return updated;
     }
 
@@ -1154,12 +1296,13 @@
                         localStorage.setItem('urbanscope_suppress_midori_sync', '1');
                     }
                     const filtered = list.filter(p => String(p.id) !== String(id));
-                    localStorage.setItem(key, JSON.stringify(filtered));
+                    persistPropertyListToCache(key, filtered);
                 }
             });
         } catch (e) {}
 
         invalidateReadCache('properties');
+        emitPropertiesSyncSignal();
         return deleted;
     }
 
@@ -4035,6 +4178,8 @@
     window.apiGetDashboardKPIs = apiGetDashboardKPIs;
     window.apiGetAppointments = apiGetAppointments;
     window.apiEnsureAccreditedProperties = apiEnsureAccreditedProperties;
+    window.apiGetCachedProperties = apiGetCachedProperties;
+    window.apiGetLocalPropertiesFast = apiGetLocalPropertiesFast;
     window.getStaticFallbackProperties = getStaticFallbackProperties;
     window.isSupabaseConfigured = isBackendConfigured;
     window.isBackendConfigured = isBackendConfigured;
