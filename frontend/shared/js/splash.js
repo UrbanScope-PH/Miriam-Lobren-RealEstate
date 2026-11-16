@@ -57,8 +57,6 @@
         el.setAttribute('role', 'status');
         el.setAttribute('aria-label', 'Miriam Lobren, Real Estate Salesperson');
         el.innerHTML =
-            '<span class="splash-orb o1"></span>' +
-            '<span class="splash-orb o2"></span>' +
             '<div class="splash-inner">' +
                 '<div class="splash-logo-ring"><img src="' + basePath + 'assets/images/logo.png" alt=""></div>' +
                 '<div class="splash-name" aria-hidden="true">' + letters('Miriam Lobren') + '</div>' +

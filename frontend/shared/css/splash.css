@@ -43,17 +43,6 @@ html.splash-pending {
     pointer-events: none !important;
 }
 
-/* Soft drifting glow orbs */
-#splash .splash-orb {
-    position: absolute;
-    border-radius: 50%;
-    filter: blur(60px);
-    opacity: 0.35;
-    animation: splashFloat 6s ease-in-out infinite alternate;
-}
-#splash .splash-orb.o1 { width: 340px; height: 340px; background: #5aa86d; top: -90px; left: -80px; }
-#splash .splash-orb.o2 { width: 300px; height: 300px; background: #c9a24a; bottom: -100px; right: -60px; animation-delay: -2s; opacity: 0.22; }
-
 #splash .splash-inner {
     position: relative;
     z-index: 2;
@@ -170,11 +159,6 @@ html.splash-pending {
 @keyframes splashLetter { to { opacity: 1; transform: translateY(0) rotateX(0); } }
 @keyframes splashLine { to { width: min(260px, 60vw); } }
 @keyframes splashFade { to { opacity: 1; } }
-@keyframes splashFloat {
-    from { transform: translate(0, 0) scale(1); }
-    to   { transform: translate(40px, 30px) scale(1.15); }
-}
-
 @media (max-width: 480px) {
     #splash .splash-logo-ring { width: 92px; height: 92px; }
     #splash .splash-logo-ring img { width: 58px; height: 58px; }
