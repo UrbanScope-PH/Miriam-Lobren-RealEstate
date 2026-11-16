@@ -3743,6 +3743,17 @@
                     return Array.isArray(localData) ? localData[0] : localData;
                 }
             } catch (e) {}
+        } else {
+            try {
+                const hostedRes = await hostedApiFetch('/api/inquiries?action=stats', { method: 'GET' }, 6000);
+                if (hostedRes.ok) {
+                    const body = await hostedRes.json().catch(() => null);
+                    const stats = extractApiObjectPayload(body);
+                    if (stats && typeof stats === 'object') {
+                        return stats;
+                    }
+                }
+            } catch (e) {}
         }
 
         try {

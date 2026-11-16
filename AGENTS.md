@@ -1415,6 +1415,12 @@ path when rendering from a page.
   - **Frontend Gateway & UI (`frontend/shared/js/supabase.js`, `frontend/shared/js/api.js`, `frontend/pages/auth/forgot-password.js`, `forgot-password.css`):** `apiSendPasswordResetEmail` preserves server `code`; `forgot-password.js` keeps Step 1 open on error, renders safe DOM action links (`Create an account` -> `register.html` / `Go to Log In` -> `login.html`), displays resend errors cleanly, and relies on `.auth-notice.is-error` / `html.dark-mode #resetStatus.is-error` CSS rules rather than inline light-mode color overrides.
 140. **Legal Hub Vector Contact Icons (`frontend/pages/legal/terms.html`, `privacy.html`, `legal.css`):**
   - Replaced emoji characters (`📍`, `📧`, `📞`) in the Section 10 contact cards on both `terms.html` and `privacy.html` with crisp aligned Lucide-style inline SVG icons (`.legal-contact-icon` inside `.legal-contact-row`) and `.legal-contact-link` styling (including `#86efac` dark-mode contrast).
+141. **Admin Dashboard Total Clients KPI Fix (`api/inquiries.js`, `frontend/shared/js/supabase.js`, `api.js`, `frontend/pages/admin/dashboard.js`, `backend/routers/system.py`):**
+  - Fixed `Total Clients` showing `0` on the Admin Dashboard (`/pages/admin/dashboard.html`) on Vercel deployments and hardened local SQLite filtering:
+    - Added staff-guarded `GET /api/inquiries?action=stats` in `api/inquiries.js` (`session.isStaff`, returning aggregate `{ total_clients }` only — never exposing Superadmin `/api/superadmin/users` user-directory PII to non-superadmin admins — while excluding soft-deleted rows `bio === '__URBANSCOPE_DELETED__'`, `password_hash === '__DELETED_ACCOUNT__'`, and `deleted_*` emails).
+    - Updated `apiGetDashboardKPIs()` in `frontend/shared/js/supabase.js` and `frontend/shared/js/api.js` to call `hostedApiFetch('/api/inquiries?action=stats', { method: 'GET' }, 6000)` on hosted origins before falling back.
+    - Updated `frontend/pages/admin/dashboard.js` (`loadDashboardData`) to invoke `apiGetDashboardKPIs()` across both hosted and local origins with a 60s `cachedDashboardKpis` cache and coerce `totalClientsCount = Math.max(0, Number(kpis.total_clients) || 0)`.
+    - Updated `get_dashboard_stats` in `backend/routers/system.py` (`/api/stats` and `/api/view_dashboard_kpis`) to exclude soft-deleted user rows via parenthesized role conditions and deletion-marker filters.
 
 ---
 
