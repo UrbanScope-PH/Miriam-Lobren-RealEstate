@@ -38,7 +38,13 @@ def get_dashboard_stats(admin_user: dict = Depends(require_admin)):
     cursor.execute("SELECT COUNT(*) FROM inquiries WHERE LOWER(status) LIKE '%completed%'")
     completed_inquiries = cursor.fetchone()[0]
 
-    cursor.execute("SELECT COUNT(*) FROM users WHERE LOWER(role) IN ('client', 'user') OR role IS NULL")
+    cursor.execute(r"""
+        SELECT COUNT(*) FROM users
+        WHERE (LOWER(COALESCE(role, '')) IN ('client', 'user', '') OR role IS NULL)
+          AND COALESCE(bio, '') != '__URBANSCOPE_DELETED__'
+          AND COALESCE(password_hash, '') != '__DELETED_ACCOUNT__'
+          AND LOWER(COALESCE(email, '')) NOT LIKE 'deleted\_%' ESCAPE '\'
+    """)
     total_clients = cursor.fetchone()[0]
 
     conn.close()

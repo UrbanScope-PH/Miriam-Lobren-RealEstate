@@ -333,6 +333,38 @@ export default async function handler(req, res) {
             return jsonWithCookies({ success: true, data: Array.isArray(rows) ? rows : [] }, 200, res);
         }
 
+        if (queryAction === 'stats') {
+            if (!session.isStaff) {
+                return jsonWithCookies({ success: false, error: 'Administrator privileges required.' }, 403, res);
+            }
+            const r = await fetch(restUrl('users', {
+                select: 'id,email,role,bio,password_hash'
+            }), { headers: serviceHeaders({}, true), cache: 'no-store' }).catch(() => null);
+            if (!r || !r.ok) {
+                return jsonWithCookies({ success: false, error: 'Unable to load dashboard client statistics.' }, 502, res);
+            }
+            const rows = await r.json().catch(() => []);
+            const activeUsers = (Array.isArray(rows) ? rows : []).filter((u) => {
+                if (!u) return false;
+                const bio = String(u.bio || '');
+                const passwordHash = String(u.password_hash || '');
+                const email = String(u.email || '').toLowerCase();
+                return bio !== '__URBANSCOPE_DELETED__' &&
+                    passwordHash !== '__DELETED_ACCOUNT__' &&
+                    !email.startsWith('deleted_');
+            });
+            const totalClients = activeUsers.filter((u) => {
+                const role = normalizeAccountRole(u.role, u.email);
+                return role === 'user' || role === 'client';
+            }).length;
+            return jsonWithCookies({
+                success: true,
+                data: {
+                    total_clients: totalClients
+                }
+            }, 200, res);
+        }
+
         return jsonWithCookies({ success: false, error: 'Unsupported inquiry GET action.' }, 400, res);
     }
 

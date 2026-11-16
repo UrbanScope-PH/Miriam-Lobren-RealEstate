@@ -1068,6 +1068,8 @@ let cachedDashboardProperties = null;
 let lastDashboardPropertiesAt = 0;
 let cachedDashboardUsers = null;
 let lastDashboardUsersAt = 0;
+let cachedDashboardKpis = null;
+let lastDashboardKpisAt = 0;
 
 async function loadDashboardData(options = {}) {
     if (dashboardLoadPromise) return dashboardLoadPromise;
@@ -1089,14 +1091,14 @@ async function _loadDashboardDataInner(options = {}) {
 
         const now = Date.now();
         const shouldFetchProps = forceProperties || !cachedDashboardProperties || (now - lastDashboardPropertiesAt) > 120000;
-        const shouldFetchKpis = (typeof isLocalBackendReachableHost === "function" && isLocalBackendReachableHost()) && typeof apiGetDashboardKPIs === "function";
+        const shouldFetchKpis = (forceUsers || !cachedDashboardKpis || (now - lastDashboardKpisAt) > 60000) && typeof apiGetDashboardKPIs === "function";
 
         const [inquiriesRes, propertiesRes, kpisRes] = await Promise.allSettled([
             (typeof apiGetInquiries === "function") ? apiGetInquiries(forceInquiries) : Promise.resolve(null),
             shouldFetchProps
                 ? ((typeof apiGetProperties === "function") ? apiGetProperties() : Promise.resolve(null))
                 : Promise.resolve(cachedDashboardProperties),
-            shouldFetchKpis ? apiGetDashboardKPIs() : Promise.resolve(null)
+            shouldFetchKpis ? apiGetDashboardKPIs() : Promise.resolve(cachedDashboardKpis)
         ]);
 
         let inquiries = [];
@@ -1128,6 +1130,12 @@ async function _loadDashboardDataInner(options = {}) {
         let kpis = null;
         if (kpisRes.status === "fulfilled" && kpisRes.value) {
             kpis = kpisRes.value;
+            if (kpis.total_clients != null) {
+                cachedDashboardKpis = kpis;
+                lastDashboardKpisAt = Date.now();
+            }
+        } else if (cachedDashboardKpis) {
+            kpis = cachedDashboardKpis;
         }
 
         let users = cachedDashboardUsers || [];
@@ -1159,7 +1167,7 @@ async function _loadDashboardDataInner(options = {}) {
 
         let totalClientsCount = 0;
         if (kpis && kpis.total_clients != null) {
-            totalClientsCount = kpis.total_clients;
+            totalClientsCount = Math.max(0, Number(kpis.total_clients) || 0);
         } else if (users && users.length > 0) {
             totalClientsCount = users.filter(u => {
                 const r = String(u.role || "client").toLowerCase();
