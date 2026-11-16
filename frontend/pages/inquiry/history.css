@@ -54,7 +54,7 @@ body {
 
 /* HEADER SECTION */
 .history-header {
-    background: linear-gradient(135deg, #14351e 0%, #1e5c33 60%, #2d5c39 100%);
+    background: #1e5c33;
     border-radius: 20px;
     color: #ffffff;
     padding: 36px 36px 32px;
@@ -940,7 +940,7 @@ html.dark-mode body {
 }
 
 html.dark-mode .history-header {
-    background: linear-gradient(135deg, #13281b 0%, #193824 55%, #20472e 100%);
+    background: #193824;
     border: 1px solid #2b4e37;
     box-shadow: 0 12px 32px rgba(0, 0, 0, 0.45);
 }

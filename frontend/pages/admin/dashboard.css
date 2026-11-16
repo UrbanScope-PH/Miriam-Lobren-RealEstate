@@ -331,9 +331,7 @@
     padding: 24px;
     border: 1px solid #e5eee6;
     border-radius: 16px;
-    background:
-        radial-gradient(circle at top right, #dcefe1 0%, transparent 48%),
-        #f5f9f5;
+    background: #f5f9f5;
 }
 
 .property-illustration-icon {
@@ -399,7 +397,7 @@
     margin-top: auto;
     padding: 13px 18px;
     border-radius: 11px;
-    background: linear-gradient(135deg, var(--accent-green), var(--green));
+    background: var(--accent-green);
     box-shadow: 0 6px 15px rgba(45, 92, 57, 0.14);
     color: #ffffff;
     font-size: 12.5px;
@@ -689,9 +687,7 @@
 .calendar-agenda {
     display: flex;
     flex-direction: column;
-    background:
-        radial-gradient(circle at top right, rgba(220, 239, 224, 0.6), transparent 45%),
-        #f7faf7;
+    background: #f7faf7;
 }
 
 .agenda-date-heading {
@@ -1999,7 +1995,7 @@
 }
 
 .inquiry-client-banner {
-    background: linear-gradient(135deg, #f0f7f2 0%, #e6f2e9 100%);
+    background: #f0f7f2;
     border: 1px solid #d2e6d7;
     border-radius: 14px;
     padding: 16px 20px;
@@ -2352,7 +2348,7 @@
 }
 
 .btn-modal-approve {
-    background: linear-gradient(135deg, var(--green, #1f4928) 0%, var(--forest, #2e7d32) 100%) !important;
+    background: var(--green, #1f4928) !important;
     color: #ffffff !important;
     box-shadow: 0 4px 14px rgba(31, 73, 40, 0.28) !important;
     border-radius: 8px !important;
