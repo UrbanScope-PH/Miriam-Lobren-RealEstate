@@ -26,7 +26,6 @@
     <link rel="stylesheet" href="property-detail.css">
     <link rel="stylesheet" href="../../shared/css/splash.css">
     <link rel="stylesheet" href="../../shared/css/session.css">
-    <link rel="stylesheet" href="../../shared/css/calculator.css">
     <link rel="stylesheet" href="../../shared/css/mobile-shell.css">
     <script src="../../shared/js/splash.js"></script>
     <script src="../../shared/js/supabase.js"></script>
@@ -226,9 +225,6 @@
             </div>
         </section>
 
-        <!-- INTERACTIVE AMORTIZATION CALCULATOR -->
-        <section class="amortization-calculator-section" id="propertyCalculator"></section>
-
         <!-- MAP & INQUIRY SECTION -->
         <section class="location-inquiry-grid">
             <div class="location-box">
@@ -339,23 +335,6 @@
             '../../assets/images/midori-toilet.jpg',
             '../../assets/images/midori-patio.jpg'
         ];
-    </script>
-    <script src="../../shared/js/calculator.js"></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            if (window.UrbanCalculator) {
-                UrbanCalculator.initPropertyCalculator('propertyCalculator', {
-                    tcp: 3140000,
-                    propertyTitle: "Midori Mid-Rise Condo – Zone 1",
-                    propertyId: 7,
-                    reservationFee: 0,
-                    defaultDpPercent: 10,
-                    defaultTermYears: 20,
-                    defaultFinancing: 'pagibig',
-                    supportedFinancing: ['pagibig', 'bank']
-                });
-            }
-        });
     </script>
     <script src="property-detail.js"></script>
 </body>

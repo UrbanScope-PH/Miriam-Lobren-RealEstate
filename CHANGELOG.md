@@ -8,6 +8,7 @@ This document records all features, enhancements, bug fixes, user requests, arch
 
 | Date | Category | Summary of Changes | Key Files |
 | :--- | :--- | :--- | :--- |
+| **Nov 2026** | **Calculator Feature Removal** | Removed property-page monthly amortization estimators, the homepage affordability matcher, and calculator-based inquiry prefill/banner behavior; retained inert shared asset placeholders under repository file-deletion guidance | `frontend/index.html`, `frontend/index.js`, `frontend/pages/properties/*`, `frontend/pages/inquiry/*`, `frontend/shared/{js,css}/calculator.*`, `frontend/shared/css/mobile-shell.css`, `README.md`, `AGENTS.md` |
 | **Oct 2026** | **Admin Features** | Profile picture upload with strict `< 5MB` limit, canvas compression, topbar avatar sync, reset photo option | `profile.html`, `profile.js`, `profile.css` |
 | **Oct 2026** | **Admin UI** | Inquiry details modal (`#inquiryModal`) replacing native browser `alert()` popups with mailto trigger | `dashboard.html`, `dashboard.js`, `dashboard.css` |
 | **Oct 2026** | **Inquiry Flow** | Consultation intent modal (`#consultationIntentModal`) on homepage for general vs. property inquiries | `index.html`, `index.js`, `index.css` |

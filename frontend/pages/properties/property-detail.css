@@ -857,7 +857,7 @@ html[data-auth-state="logged-in"] .inquiry-note,
     border: 1px solid #eef2ef;
 }
 
-/* Computation breakdown UI, calculators, and schedules hidden per requirement */
+/* Legacy TCP computation breakdown UI and schedules remain hidden */
 .tcp-section-header,
 .tcp-grid,
 .tcp-table-wrapper {
@@ -1430,8 +1430,7 @@ html.dark-mode .tcp-document-modal-image-wrap {
 .detail-title,
 .section-title,
 .specs-card h3,
-.location-card h3,
-.calculator-card h3 {
+.location-card h3 {
     text-wrap: balance;
 }
 
@@ -1453,9 +1452,6 @@ html.dark-mode .tcp-document-modal-image-wrap {
 .hero-price-amount,
 .spec-value,
 .spec-number,
-.amort-val,
-.calc-output,
-.monthly-amort-amount,
 .downpayment-val,
 .spec-item span,
 .tcp-price-figure {
@@ -1465,8 +1461,7 @@ html.dark-mode .tcp-document-modal-image-wrap {
 
 /* Emphasize Primary CTA Buttons (Rule 10) */
 .inquire-now-btn,
-.schedule-viewing-btn,
-.calc-btn-primary {
+.schedule-viewing-btn {
     background: var(--btn-primary-bg);
     box-shadow: 0 4px 14px rgba(31, 73, 40, 0.28);
     transition: transform 0.18s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.18s ease, background-color 0.18s ease;
@@ -1474,34 +1469,14 @@ html.dark-mode .tcp-document-modal-image-wrap {
 
 @media (hover: hover) and (pointer: fine) {
     .inquire-now-btn:hover,
-    .schedule-viewing-btn:hover,
-    .calc-btn-primary:hover {
+    .schedule-viewing-btn:hover {
         transform: translateY(-2px);
         box-shadow: 0 6px 18px rgba(31, 73, 40, 0.38);
     }
 }
 
 .inquire-now-btn:active,
-.schedule-viewing-btn:active,
-.calc-btn-primary:active {
+.schedule-viewing-btn:active {
     transform: translateY(0);
     box-shadow: 0 2px 8px rgba(31, 73, 40, 0.25);
 }
-
-/* Concentric Radius Math (Rule 14) */
-.calculator-card {
-    border-radius: 18px;
-    padding: 24px;
-}
-.calculator-card .calc-field input,
-.calculator-card .calc-field select {
-    border-radius: 10px; /* 18px outer - 8px delta */
-}
-.calc-result-box {
-    border-radius: 12px;
-}
-
-
-
-
-

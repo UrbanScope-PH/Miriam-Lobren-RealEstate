@@ -702,9 +702,6 @@ function applyHomePropertiesState(nextList) {
     }
     lastRenderedHomeSignature = sig;
     allCachedProperties = merged;
-    if (window.UrbanCalculator && typeof UrbanCalculator.updateBudgetMatcherProjects === 'function') {
-        UrbanCalculator.updateBudgetMatcherProjects(allCachedProperties);
-    }
     applyCurrentFiltersAndRender();
     return true;
 }
@@ -1178,12 +1175,6 @@ function setupHomepagePropertySyncListeners() {
 }
 
 function initHomepage() {
-    // 0. Initialize Quick Home Affordability & Budget Matcher with cached live snapshot on first paint
-    const initialSnapshot = getInitialCachedHomeProperties();
-    if (window.UrbanCalculator && typeof UrbanCalculator.initHomepageBudgetMatcher === 'function') {
-        UrbanCalculator.initHomepageBudgetMatcher('homepageBudgetMatcher', { projects: initialSnapshot });
-    }
-
     // 1. Hydrate grid cleanly at 0ms + reconcile with live backend
     loadHomeProperties('all');
     setupHomepagePropertySyncListeners();
