@@ -1,4 +1,5 @@
 @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+@import url('tokens.css');
 
 * {
     box-sizing: border-box;
@@ -7,30 +8,10 @@
 }
 
 /* ==========================================================================
-   UrbanScope Design Tokens & Global Variables
+   UrbanScope Design Tokens & Global Layout Scales
+   (Canonical palette colors live in shared/css/tokens.css)
    ========================================================================== */
 :root {
-    color-scheme: light;
-    /* Brand Green Color Scale */
-    --green: #2d5c39;
-    --dark-green: #1a3b23;
-    --light-green: #eef5ef;
-    --accent-green: #347c47;
-    --emerald-primary: #15803d;
-    --emerald-bright: #48bb78;
-
-    /* Intentional Warm Accent Color (Rule 11) */
-    --accent-warm: #d97706;
-    --accent-warm-light: #fef3c7;
-    --accent-warm-dark: #b45309;
-    --accent-warm-border: #fde68a;
-
-    /* High-Contrast Typography Tokens (Rule 15) */
-    --text-dark: #0f1f14;
-    --text-muted: #475a4d;
-    --text-subtle: #64748b;
-    --border-color: #d1ddd3;
-
     /* Consistent Spacing Scale (Rule 5 & Rule 8) */
     --space-1: 4px;
     --space-2: 8px;
@@ -52,28 +33,6 @@
     --radius-xl: 24px;
     --radius-2xl: 32px;
     --radius-full: 9999px;
-
-    /* Elevation Shadow Tokens */
-    --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.05);
-    --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.06);
-    --shadow-md: 0 6px 16px rgba(0, 0, 0, 0.08);
-    --shadow-lg: 0 12px 28px rgba(26, 59, 35, 0.12);
-    --shadow-xl: 0 20px 40px rgba(26, 59, 35, 0.18);
-    --card-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
-}
-
-/* Dark Mode Design Token Adjustments */
-html.dark-mode {
-    color-scheme: dark;
-    --text-dark: #ecfdf5;
-    --text-muted: #94a3b8;
-    --text-subtle: #cbd5e1;
-    --border-color: #26392c;
-    --light-green: #16241b;
-    --accent-warm: #f59e0b;
-    --accent-warm-light: rgba(245, 158, 11, 0.16);
-    --accent-warm-dark: #fde68a;
-    --accent-warm-border: rgba(245, 158, 11, 0.35);
 }
 
 /* Global Typographic Polishes: Headline Balancing (Rule 16) & Tabular Numbers (Rule 18) */
@@ -145,7 +104,7 @@ body {
     max-width: 100%;
     overflow-x: hidden;
     font-family: 'Plus Jakarta Sans', Arial, sans-serif;
-    background-color: #ffffff;
+    background-color: var(--bg-page);
     color: var(--text-dark);
     line-height: 1.6;
     -webkit-font-smoothing: antialiased;
@@ -159,7 +118,7 @@ img, video, canvas, svg {
 /* NAVBAR */
 .navbar {
     height: 90px;
-    background-color: #ffffff;
+    background-color: var(--topbar-bg);
     box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
     display: flex;
     align-items: center;
@@ -238,9 +197,9 @@ img, video, canvas, svg {
 .s-icon-btn {
     width: 40px;
     height: 40px;
-    border: 1.5px solid var(--border-color, #d1ddd3);
-    background: #ffffff;
-    color: var(--dark-green, #1a3b23);
+    border: 1.5px solid var(--border-color);
+    background: var(--surface);
+    color: var(--dark-green);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -261,9 +220,9 @@ img, video, canvas, svg {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    background-color: #ffffff;
+    background-color: var(--surface);
     color: var(--dark-green);
-    border: 1.5px solid #a8baa9;
+    border: 1.5px solid var(--border-strong);
     border-radius: 8px;
     padding: 8px 22px;
     font-size: 14.5px;
@@ -289,9 +248,9 @@ img, video, canvas, svg {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    background-color: var(--green);
+    background-color: var(--btn-primary-bg);
     color: #ffffff;
-    border: 1.5px solid var(--green);
+    border: 1.5px solid var(--btn-primary-bg);
     border-radius: 8px;
     padding: 8px 22px;
     font-size: 14.5px;
@@ -305,8 +264,8 @@ img, video, canvas, svg {
 
 @media (hover: hover) and (pointer: fine) {
     .signup-btn:hover {
-        background-color: var(--dark-green);
-        border-color: var(--dark-green);
+        background-color: var(--btn-primary-hover);
+        border-color: var(--btn-primary-hover);
         transform: translateY(-1px);
         box-shadow: 0 4px 14px rgba(45, 92, 57, 0.3);
     }
@@ -314,7 +273,7 @@ img, video, canvas, svg {
 
 /* FOOTER */
 .footer {
-    background-color: var(--dark-green);
+    background-color: var(--footer-bg);
     color: #ffffff;
 }
 
@@ -618,8 +577,8 @@ img, video, canvas, svg {
         top: 70px;
         left: 0;
         right: 0;
-        background: #ffffff;
-        box-shadow: 0 16px 36px rgba(26, 59, 35, 0.15);
+        background: var(--surface);
+        box-shadow: var(--shadow-lg);
         border-bottom: 2px solid var(--light-green);
         flex-direction: column;
         align-items: stretch;
@@ -677,7 +636,7 @@ img, video, canvas, svg {
     .mobile-drawer-auth {
         margin-top: 14px;
         padding-top: 14px;
-        border-top: 1px solid #e5ede7;
+        border-top: 1px solid var(--border-subtle);
         display: flex;
         flex-direction: column;
         gap: 10px;
@@ -688,7 +647,7 @@ img, video, canvas, svg {
         align-items: center;
         justify-content: center;
         padding: 11px;
-        border: 1.5px solid #a8baa9;
+        border: 1.5px solid var(--border-strong);
         border-radius: 10px;
         color: var(--dark-green);
         font-weight: 600;
@@ -710,8 +669,8 @@ img, video, canvas, svg {
         align-items: center;
         justify-content: center;
         padding: 11px;
-        background-color: var(--green);
-        border: 1.5px solid var(--green);
+        background-color: var(--btn-primary-bg);
+        border: 1.5px solid var(--btn-primary-bg);
         border-radius: 10px;
         color: #ffffff;
         font-weight: 600;
@@ -722,7 +681,7 @@ img, video, canvas, svg {
 
     @media (hover: hover) and (pointer: fine) {
         .mobile-drawer-auth .m-signup-btn:hover {
-                background-color: var(--dark-green);
+                background-color: var(--btn-primary-hover);
             }
     }
 
@@ -938,30 +897,30 @@ img, video, canvas, svg {
 /* Dark Mode Support */
 html.dark-mode .back-to-top-btn,
 html[data-theme="dark"] .back-to-top-btn {
-    background: #17241a;
-    border-color: rgba(72, 187, 120, 0.32);
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+    background: var(--surface);
+    border-color: var(--border-color);
+    box-shadow: var(--shadow-md);
 }
 
 html.dark-mode .btt-progress-track,
 html[data-theme="dark"] .btt-progress-track {
-    stroke: rgba(255, 255, 255, 0.1);
+    stroke: rgba(255, 255, 255, 0.12);
 }
 
 html.dark-mode .btt-progress-fill,
 html[data-theme="dark"] .btt-progress-fill {
-    stroke: #48bb78;
+    stroke: var(--green);
 }
 
 html.dark-mode .btt-icon,
 html[data-theme="dark"] .btt-icon {
-    color: #48bb78;
+    color: var(--green);
 }
 
 @media (hover: hover) and (pointer: fine) {
     html.dark-mode .back-to-top-btn:hover .btt-icon,
     html[data-theme="dark"] .back-to-top-btn:hover .btt-icon {
-        color: #68d391;
+        color: var(--dark-green);
     }
 }
 
@@ -1047,20 +1006,20 @@ html[data-theme="dark"] #urbanFeedbackToast {
 
 /* Universal Static Loading Skeleton (Rule 19) */
 .skeleton-shimmer {
-    background: #f1f5f9;
+    background: var(--border-subtle);
     border-radius: var(--radius-sm, 6px);
 }
 
 html.dark-mode .skeleton-shimmer,
 html[data-theme="dark"] .skeleton-shimmer {
-    background: #1c2b20;
+    background: var(--surface-hover);
 }
 
 /* Universal CTA Button Emphasis (Rule 10) */
 .btn-cta-emerald,
 .btn-submit-primary,
 .action-btn-primary {
-    background: var(--green, #1f4928);
+    background: var(--btn-primary-bg);
     color: #ffffff !important;
     border: none;
     border-radius: var(--radius-md, 8px);
@@ -1071,16 +1030,16 @@ html[data-theme="dark"] .skeleton-shimmer {
     gap: 8px;
     cursor: pointer;
     box-shadow: 0 4px 14px rgba(31, 73, 40, 0.28);
-    transition: transform 0.18s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.18s ease, filter 0.18s ease;
+    transition: transform 0.18s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.18s ease, background-color 0.18s ease;
 }
 
 @media (hover: hover) and (pointer: fine) {
     .btn-cta-emerald:hover,
     .btn-submit-primary:hover,
     .action-btn-primary:hover {
+        background: var(--btn-primary-hover);
         transform: translateY(-2px);
         box-shadow: 0 6px 18px rgba(31, 73, 40, 0.38);
-        filter: brightness(1.05);
     }
 }
 
@@ -1095,9 +1054,9 @@ html[data-theme="dark"] .skeleton-shimmer {
 .status-pill-warm,
 .badge-status-pending,
 .badge-status-review {
-    background: var(--accent-warm-light, #fef3c7);
-    color: var(--accent-warm-dark, #b45309);
-    border: 1px solid var(--accent-warm-border, #fde68a);
+    background: var(--accent-warm-light);
+    color: var(--accent-warm-dark);
+    border: 1px solid var(--accent-warm-border);
     font-weight: 600;
     border-radius: var(--radius-full, 9999px);
     display: inline-flex;
@@ -1108,9 +1067,9 @@ html[data-theme="dark"] .skeleton-shimmer {
 html.dark-mode .status-pill-warm,
 html.dark-mode .badge-status-pending,
 html.dark-mode .badge-status-review {
-    background: rgba(245, 158, 11, 0.16);
-    color: #fbbf24;
-    border-color: rgba(245, 158, 11, 0.35);
+    background: var(--accent-warm-light);
+    color: var(--accent-warm-dark);
+    border-color: var(--accent-warm-border);
 }
 
 

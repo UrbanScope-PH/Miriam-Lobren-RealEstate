@@ -894,7 +894,7 @@
             try {
                 var p = String(location.pathname || '').toLowerCase().replace(/\\/g, '/');
                 var darkColor = (p.includes('/pages/admin/') || p.includes('/pages/superadmin/')) ? '#131f17' : '#0e1611';
-                var lightColor = p.includes('/pages/auth/') ? '#f6faf6' : '#ffffff';
+                var lightColor = p.includes('/pages/auth/') ? '#f4f8f5' : '#ffffff';
                 var targetColor = isDark ? darkColor : lightColor;
                 document.querySelectorAll('meta[name="theme-color"]').forEach(function (meta) {
                     meta.setAttribute('content', targetColor);

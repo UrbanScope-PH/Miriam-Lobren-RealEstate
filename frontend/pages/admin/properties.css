@@ -71,8 +71,8 @@
     border: none;
     border-radius: 7px;
 
-    background: var(--green);
-    color: var(--white);
+    background: var(--btn-primary-bg);
+    color: #ffffff;
 
     font-size: 13px;
     font-weight: 700;
@@ -84,7 +84,7 @@
 
 @media (hover: hover) and (pointer: fine) {
     .add-btn:hover {
-        background: var(--dark-green);
+        background: var(--btn-primary-hover);
     }
 }
 
@@ -104,10 +104,10 @@
     padding: 16px;
     margin-bottom: 20px;
 
-    border: 1px solid #e4e8e4;
+    border: 1px solid var(--border-color);
     border-radius: 10px;
 
-    background: var(--white);
+    background: var(--surface);
 }
 
 .search-box {
@@ -121,10 +121,10 @@
 
     padding: 0 12px;
 
-    border: 1px solid #dce2dc;
+    border: 1px solid var(--border-input);
     border-radius: 7px;
 
-    background: var(--white);
+    background: var(--surface-input);
 }
 
 .search-box:focus-within {
@@ -155,7 +155,7 @@
 }
 
 .search-box input::placeholder {
-    color: #89918a;
+    color: var(--text-subtle);
 }
 
 .status-filter {
@@ -167,11 +167,11 @@
 
     padding: 0 12px;
 
-    border: 1px solid #dce2dc;
+    border: 1px solid var(--border-input);
     border-radius: 7px;
 
-    background: var(--white);
-    color: #4e574f;
+    background: var(--surface-input);
+    color: var(--text-secondary);
 
     font-size: 13px;
     outline: none;
@@ -194,16 +194,16 @@
 
     overflow: hidden;
 
-    border: 1px solid #e4e8e4;
+    border: 1px solid var(--border-color);
     border-radius: 10px;
 
-    background: var(--white);
+    background: var(--surface);
 }
 
 .card-header {
     padding: 20px 24px;
 
-    border-bottom: 1px solid #e8ece8;
+    border-bottom: 1px solid var(--border-subtle);
 }
 
 .card-header h2 {
@@ -242,13 +242,13 @@
 }
 
 .table-container thead {
-    background: #f7f9f7;
+    background: var(--surface-muted);
 }
 
 .table-container th {
     padding: 14px 16px;
 
-    color: #737b74;
+    color: var(--text-muted);
 
     font-size: 11px;
     font-weight: 700;
@@ -261,9 +261,9 @@
 .table-container td {
     padding: 14px 16px;
 
-    border-top: 1px solid #edf0ed;
+    border-top: 1px solid var(--border-subtle);
 
-    color: #4e574f;
+    color: var(--text-secondary);
     font-size: 12px;
 
     vertical-align: middle;
@@ -273,9 +273,13 @@
     transition: background 0.15s ease;
 }
 
+.table-container tbody tr.row-sold {
+    background: var(--surface-muted);
+}
+
 @media (hover: hover) and (pointer: fine) {
     .table-container tbody tr:hover {
-        background: #fbfdfb;
+        background: var(--surface-hover);
     }
 }
 
@@ -306,7 +310,7 @@
 
     border-radius: 7px;
 
-    background: #e8eee8;
+    background: var(--surface-muted);
     color: var(--text-muted);
 
     font-size: 10px;
@@ -332,14 +336,14 @@
 }
 
 .property-name strong {
-    color: #263329;
+    color: var(--text-dark);
     font-size: 12px;
     font-weight: 700;
     line-height: 1.4;
 }
 
 .property-name small {
-    color: #89918a;
+    color: var(--text-subtle);
     font-size: 10px;
     line-height: 1.4;
 }
@@ -363,8 +367,8 @@
 }
 
 .status-update {
-    background: #f0f1ed;
-    color: #73776f;
+    background: var(--status-neutral-bg);
+    color: var(--status-neutral-text);
 }
 
 
@@ -394,35 +398,35 @@
 }
 
 .view-btn {
-    background: #edf3ed;
+    background: var(--light-green);
     color: var(--green);
 }
 
 @media (hover: hover) and (pointer: fine) {
     .view-btn:hover {
-        background: #dfe9df;
+        background: var(--light-green-hover);
     }
 }
 
 .edit-btn {
-    background: #f1f2ed;
-    color: #596159;
+    background: var(--surface-muted);
+    color: var(--text-secondary);
 }
 
 @media (hover: hover) and (pointer: fine) {
     .edit-btn:hover {
-        background: #e5e7e2;
+        background: var(--surface-hover);
     }
 }
 
 .delete-btn {
     background: var(--danger-light);
-    color: var(--danger);
+    color: var(--danger-text);
 }
 
 @media (hover: hover) and (pointer: fine) {
     .delete-btn:hover {
-        background: #f2dddd;
+        background: var(--danger-border);
     }
 }
 
@@ -457,8 +461,8 @@
 
     border-radius: 12px;
 
-    background: var(--white);
-    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.15);
+    background: var(--surface);
+    box-shadow: var(--shadow);
 
     text-align: center;
 
@@ -478,7 +482,7 @@
     border-radius: 50%;
 
     background: var(--danger-light);
-    color: var(--danger);
+    color: var(--danger-text);
 
     font-size: 25px;
     font-weight: 700;
@@ -487,20 +491,20 @@
 .delete-modal-content h2 {
     margin-bottom: 10px;
 
-    color: #263329;
+    color: var(--text-dark);
     font-size: 20px;
 }
 
 .delete-modal-content p {
     margin-bottom: 7px;
 
-    color: #697169;
+    color: var(--text-muted);
     font-size: 13px;
     line-height: 1.6;
 }
 
 .delete-modal-content p strong {
-    color: #263329;
+    color: var(--text-dark);
 }
 
 .delete-warning {
@@ -508,7 +512,7 @@
 
     margin-bottom: 25px;
 
-    color: #a05a5a;
+    color: var(--danger-text);
     font-size: 12px;
 }
 
@@ -534,24 +538,24 @@
 }
 
 .cancel-delete {
-    background: #f0f2f0;
-    color: #596159;
+    background: var(--surface-muted);
+    color: var(--text-secondary);
 }
 
 @media (hover: hover) and (pointer: fine) {
     .cancel-delete:hover {
-        background: #e4e8e4;
+        background: var(--surface-hover);
     }
 }
 
 .confirm-delete {
-    background: var(--danger);
-    color: var(--white);
+    background: var(--danger-btn-bg);
+    color: #ffffff;
 }
 
 @media (hover: hover) and (pointer: fine) {
     .confirm-delete:hover {
-        background: #963e3e;
+        background: var(--danger-btn-hover);
     }
 }
 
@@ -1031,7 +1035,7 @@
 
 /* Emphasize Primary CTA: + Add Property (Rule 10) */
 .add-property-btn {
-    background: var(--green, #1f4928) !important;
+    background: var(--btn-primary-bg) !important;
     color: #ffffff !important;
     box-shadow: 0 4px 14px rgba(31, 73, 40, 0.28) !important;
     border-radius: var(--radius-md, 8px) !important;
@@ -1041,6 +1045,7 @@
 
 @media (hover: hover) and (pointer: fine) {
     .add-property-btn:hover {
+        background: var(--btn-primary-hover) !important;
         transform: translateY(-2px) !important;
         box-shadow: 0 6px 18px rgba(31, 73, 40, 0.38) !important;
     }

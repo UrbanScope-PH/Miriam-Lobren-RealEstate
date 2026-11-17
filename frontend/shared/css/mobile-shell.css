@@ -5,15 +5,15 @@
 :root,
 html {
     color-scheme: light;
-    --us-scroll-track: #f1f5f2;
-    --us-scroll-thumb: #bdd4c2;
-    --us-scroll-thumb-hover: #7aa384;
+    --us-scroll-track: #edf3ee;
+    --us-scroll-thumb: #b4c8b9;
+    --us-scroll-thumb-hover: #2d5c39;
 }
 
 html.dark-mode,
 html[data-theme="dark"] {
     color-scheme: dark;
-    --us-scroll-track: #111b15;
+    --us-scroll-track: #0e1611;
     --us-scroll-thumb: #2b4533;
     --us-scroll-thumb-hover: #3ea35d;
 }
@@ -428,7 +428,7 @@ html[data-theme="dark"] {
     html.dark-mode .mobile-nav-toggle {
         background: transparent !important;
         border-color: transparent !important;
-        color: #e7f0e9;
+        color: var(--text-dark, #e7f0e9);
     }
 
     html.dark-mode .mobile-nav-toggle.active,
@@ -439,8 +439,8 @@ html[data-theme="dark"] {
     }
 
     html.dark-mode .profile-menu.open .profile-chip {
-        background: #203327;
-        border-color: #4ade80;
+        background: var(--surface-hover, #203327);
+        border-color: var(--emerald-bright, #4ade80);
         box-shadow: 0 6px 18px rgba(0, 0, 0, 0.45);
     }
 
@@ -481,8 +481,8 @@ html[data-theme="dark"] {
         max-height: calc(100dvh - 76px);
         padding: 8px;
         overflow-y: auto;
-        background: #ffffff;
-        border: 1px solid #d1ddd3;
+        background: var(--surface, #ffffff);
+        border: 1px solid var(--border-color, #d7e3da);
         border-radius: 16px;
         box-shadow: 0 18px 40px rgba(0, 0, 0, 0.16);
         opacity: 0;
@@ -513,7 +513,7 @@ html[data-theme="dark"] {
         padding: 10px 12px;
         border: 0 !important;
         border-radius: 10px;
-        color: #1b2e21;
+        color: var(--text-dark, #0f1f14);
         font-family: inherit;
         font-size: 0.88rem;
         font-weight: 500;
@@ -524,8 +524,8 @@ html[data-theme="dark"] {
 
     .navbar nav > a.active,
     .app-topbar #mainNav > a.active {
-        background-color: #eef5ef;
-        color: #2d5c39;
+        background-color: var(--light-green, #eef5ef);
+        color: var(--green, #2d5c39);
         font-weight: 600;
         padding: 10px 12px;
         border: 0 !important;
@@ -534,8 +534,8 @@ html[data-theme="dark"] {
     @media (hover: hover) and (pointer: fine) {
         .navbar nav > a:hover,
         .app-topbar #mainNav > a:hover {
-            background-color: #eef5ef;
-            color: #2d5c39;
+            background-color: var(--light-green, #eef5ef);
+            color: var(--green, #2d5c39);
             padding: 10px 12px;
             border: 0 !important;
         }
@@ -546,7 +546,7 @@ html[data-theme="dark"] {
         align-items: center;
         justify-content: center;
         flex-shrink: 0;
-        color: #2d5c39;
+        color: var(--green, #2d5c39);
     }
 
     .nav-link-mobile-icon svg {
@@ -555,32 +555,32 @@ html[data-theme="dark"] {
 
     html.dark-mode .navbar nav,
     html.dark-mode .app-topbar #mainNav {
-        background-color: #152119;
-        border-color: #293e2f;
-        box-shadow: 0 18px 42px rgba(0, 0, 0, 0.6);
+        background-color: var(--surface, #16231b);
+        border-color: var(--border-color, #273c2e);
+        box-shadow: var(--shadow, 0 18px 42px rgba(0, 0, 0, 0.6));
     }
 
     html.dark-mode .navbar nav > a,
     html.dark-mode .app-topbar #mainNav > a {
-        color: #e7f0e9;
+        color: var(--text-dark, #e7f0e9);
     }
 
     html.dark-mode .navbar nav > a.active,
     html.dark-mode .app-topbar #mainNav > a.active {
-        background-color: rgba(62, 163, 93, 0.18);
-        color: #86efac;
+        background-color: var(--light-green, #1c3123);
+        color: var(--dark-green, #86efac);
     }
 
     @media (hover: hover) and (pointer: fine) {
         html.dark-mode .navbar nav > a:hover,
         html.dark-mode .app-topbar #mainNav > a:hover {
-            background-color: #213528;
-            color: #86efac;
+            background-color: var(--surface-hover, #203327);
+            color: var(--dark-green, #86efac);
         }
     }
 
     html.dark-mode .nav-link-mobile-icon {
-        color: #86efac;
+        color: var(--dark-green, #86efac);
     }
 
     .mobile-drawer-auth {
@@ -589,11 +589,11 @@ html[data-theme="dark"] {
         gap: 8px;
         margin-top: 6px;
         padding: 8px 4px 2px;
-        border-top: 1px solid #e6eee8;
+        border-top: 1px solid var(--border-subtle, #edf3ee);
     }
 
     html.dark-mode .mobile-drawer-auth {
-        border-top-color: #26392c;
+        border-top-color: var(--border-subtle, #203327);
     }
 
     /* Mobile drawer user section - removed so mobile menu displays exclusively primary nav links */
@@ -616,19 +616,19 @@ html[data-theme="dark"] {
     }
 
     .mobile-drawer-auth .m-login-btn {
-        border: 1.5px solid #a8baa9;
+        border: 1.5px solid var(--border-strong, #b8cbbd);
         background: transparent;
         color: var(--dark-green, #1a3b23);
     }
 
     html.dark-mode .mobile-drawer-auth .m-login-btn {
-        border: 1.5px solid #2f4736;
-        color: #e7f0e9;
+        border: 1.5px solid var(--border-strong, #334e3b);
+        color: var(--text-dark, #e7f0e9);
     }
 
     .mobile-drawer-auth .m-signup-btn {
-        border: 1.5px solid var(--green, #2d5c39);
-        background: var(--green, #2d5c39);
+        border: 1.5px solid var(--btn-primary-bg, #2d5c39);
+        background: var(--btn-primary-bg, #2d5c39);
         color: #ffffff;
     }
 
@@ -1347,9 +1347,9 @@ button,
         min-height: 46px;
         padding: 11px 22px;
         border-radius: 999px;
-        border: 1.5px solid #2d5c39;
-        background: #eef5ef;
-        color: #1a3b23;
+        border: 1.5px solid var(--green, #2d5c39);
+        background: var(--light-green, #eef5ef);
+        color: var(--dark-green, #1a3b23);
         font-family: inherit;
         font-weight: 700;
         font-size: 15px;
@@ -1511,7 +1511,7 @@ button,
         padding: 6px 2px;
         background: none;
         border: none;
-        color: #1e5c33;
+        color: var(--green, #2d5c39);
         font-family: inherit;
         font-weight: 700;
         font-size: 15px;
@@ -1553,9 +1553,9 @@ button,
         flex-direction: column;
         gap: 10px;
         padding: 14px 16px;
-        background: #f2f8f4;
-        border-top: 1px solid #d9e7dd;
-        border-bottom: 1px solid #d9e7dd;
+        background: var(--surface-muted, #f4f8f5);
+        border-top: 1px solid var(--border-color, #d7e3da);
+        border-bottom: 1px solid var(--border-color, #d7e3da);
     }
 
     .calc-mobile-summary-info {
@@ -1569,19 +1569,19 @@ button,
         font-weight: 700;
         text-transform: uppercase;
         letter-spacing: 0.4px;
-        color: #526456;
+        color: var(--text-muted, #526658);
     }
 
     .calc-mobile-summary-val {
         font-size: 22px;
         font-weight: 800;
-        color: #1a3b23;
+        color: var(--dark-green, #1a3b23);
         line-height: 1.2;
     }
 
     .calc-mobile-summary-sub {
         font-size: 13.5px;
-        color: #526456;
+        color: var(--text-muted, #526658);
     }
 
     .calc-mobile-toggle-btn {
@@ -1592,9 +1592,9 @@ button,
         min-height: 46px;
         padding: 10px 14px;
         border-radius: 10px;
-        border: 1.5px solid #2d5c39;
-        background: #ffffff;
-        color: #1a3b23;
+        border: 1.5px solid var(--green, #2d5c39);
+        background: var(--surface, #ffffff);
+        color: var(--dark-green, #1a3b23);
         font-family: inherit;
         font-weight: 700;
         font-size: 15px;
@@ -1649,7 +1649,7 @@ button,
         background: rgba(255, 255, 255, 0.96);
         backdrop-filter: blur(12px);
         -webkit-backdrop-filter: blur(12px);
-        border-top: 1px solid #d5e2d8;
+        border-top: 1px solid var(--border-color, #d7e3da);
         box-shadow: 0 -6px 24px rgba(15, 36, 20, 0.12);
     }
 
@@ -1667,18 +1667,18 @@ button,
     }
 
     .mobile-cta-call-btn {
-        background: #eef5ef;
-        color: #1a3b23;
-        border: 1.5px solid #bfd3c4;
+        background: var(--light-green, #eef5ef);
+        color: var(--dark-green, #1a3b23);
+        border: 1.5px solid var(--green-border-soft, #cbe0d1);
     }
 
     .mobile-cta-inquire-btn {
-        background: #2d5c39;
+        background: var(--btn-primary-bg, #2d5c39);
         color: #ffffff;
     }
 
     .mobile-cta-inquire-btn.is-closed {
-        background: #64748b;
+        background: var(--text-subtle, #64748b);
         color: #ffffff;
         cursor: not-allowed;
         opacity: 0.85;
@@ -1699,8 +1699,8 @@ button,
         display: flex !important;
         flex-direction: column;
         gap: 6px;
-        background: #ffffff;
-        border: 1px solid #cbd9ce;
+        background: var(--surface, #ffffff);
+        border: 1px solid var(--border-color, #d7e3da);
         border-radius: 12px;
         padding: 12px 14px;
     }
@@ -1708,7 +1708,7 @@ button,
     .legal-mobile-jump label {
         font-size: 13.5px;
         font-weight: 700;
-        color: #1a3b23;
+        color: var(--dark-green, #1a3b23);
     }
 
     .legal-jump-select {
@@ -1716,12 +1716,12 @@ button,
         min-height: 46px;
         padding: 10px 12px;
         border-radius: 10px;
-        border: 1px solid #b5c7b9;
+        border: 1px solid var(--border-input, #c9d8cd);
         font-family: inherit;
         font-size: 15.5px;
         font-weight: 600;
-        color: #1b2e21;
-        background: #f8fbf9;
+        color: var(--text-dark, #0f1f14);
+        background: var(--surface-input, #f8fbf9);
     }
 
     .legal-content-card {
@@ -1731,7 +1731,7 @@ button,
     .legal-section {
         margin-bottom: 14px !important;
         padding-bottom: 14px !important;
-        border-bottom: 1px solid #e2ece4;
+        border-bottom: 1px solid var(--border-subtle, #edf3ee);
     }
 
     .legal-section .section-head {
@@ -1760,7 +1760,7 @@ button,
         justify-content: center;
         width: 28px;
         height: 28px;
-        color: #2d5c39;
+        color: var(--green, #2d5c39);
         flex-shrink: 0;
         transition: transform 0.2s ease;
     }
@@ -1822,13 +1822,13 @@ button,
     .mobile-empty-state {
         text-align: center;
         padding: 28px 16px;
-        color: #526456;
+        color: var(--text-muted, #526658);
         font-size: 15px;
     }
 
     .mobile-data-card {
-        background: #ffffff;
-        border: 1px solid #d7e4da;
+        background: var(--surface, #ffffff);
+        border: 1px solid var(--border-color, #d7e3da);
         border-radius: 14px;
         padding: 14px;
         box-shadow: 0 2px 10px rgba(26, 59, 35, 0.04);
@@ -1851,7 +1851,7 @@ button,
     .mobile-card-title-block strong {
         display: block;
         font-size: 16px;
-        color: #1b2e21;
+        color: var(--text-dark, #0f1f14);
         line-height: 1.3;
     }
 
@@ -1859,7 +1859,7 @@ button,
     .mobile-card-sub {
         display: block;
         font-size: 13.5px;
-        color: #526456;
+        color: var(--text-muted, #526658);
         line-height: 1.35;
         overflow-wrap: anywhere;
     }
@@ -1867,7 +1867,7 @@ button,
     .mobile-card-date {
         font-size: 13.5px;
         font-weight: 600;
-        color: #526456;
+        color: var(--text-muted, #526658);
         white-space: nowrap;
         flex-shrink: 0;
     }
@@ -1875,14 +1875,14 @@ button,
     .mobile-card-detail strong {
         display: block;
         font-size: 15px;
-        color: #1a3b23;
+        color: var(--dark-green, #1a3b23);
         line-height: 1.35;
     }
 
     .mobile-card-detail small {
         display: block;
         font-size: 13.5px;
-        color: #526456;
+        color: var(--text-muted, #526658);
     }
 
     .mobile-card-phone-link {
@@ -1892,13 +1892,13 @@ button,
         min-height: 44px;
         font-size: 15px;
         font-weight: 700;
-        color: #1e5c33;
+        color: var(--green, #2d5c39);
         text-decoration: none;
     }
 
     .mobile-card-phone-muted {
         font-size: 14px;
-        color: #526456;
+        color: var(--text-muted, #526658);
     }
 
     .mobile-card-actions-bar {
@@ -1907,7 +1907,7 @@ button,
         justify-content: space-between;
         gap: 10px;
         padding-top: 8px;
-        border-top: 1px solid #edf3ee;
+        border-top: 1px solid var(--border-subtle, #edf3ee);
     }
 
     .mobile-card-actions-bar .status-select-pill {
@@ -1937,7 +1937,7 @@ button,
         border-radius: 10px;
         object-fit: cover;
         flex-shrink: 0;
-        border: 1px solid #d7e4da;
+        border: 1px solid var(--border-color, #d7e3da);
     }
 
     .mobile-property-card.is-sold .mobile-prop-thumb {
@@ -1962,7 +1962,7 @@ button,
 
     .mobile-card-title-row strong {
         font-size: 16px;
-        color: #1b2e21;
+        color: var(--text-dark, #0f1f14);
         line-height: 1.25;
     }
 
@@ -1976,13 +1976,13 @@ button,
     }
 
     .mobile-status-chip.is-available {
-        background: #dcfce7;
-        color: #15803d;
+        background: var(--status-success-bg, #dcfce7);
+        color: var(--status-success-text, #15803d);
     }
 
     .mobile-status-chip.is-sold {
-        background: #fee2e2;
-        color: #b91c1c;
+        background: var(--danger-light, #fee2e2);
+        color: var(--danger-text, #b91c1c);
     }
 
     .mobile-prop-price-row {
@@ -1996,14 +1996,14 @@ button,
     .mobile-prop-price {
         font-size: 16px;
         font-weight: 800;
-        color: #1a3b23;
+        color: var(--dark-green, #1a3b23);
     }
 
     .mobile-type-tag {
         padding: 3px 9px;
         border-radius: 6px;
-        background: #eef5ef;
-        color: #1a3b23;
+        background: var(--light-green, #eef5ef);
+        color: var(--dark-green, #1a3b23);
         font-size: 12.5px;
         font-weight: 600;
     }
@@ -2013,7 +2013,7 @@ button,
         grid-template-columns: repeat(2, minmax(0, 1fr));
         gap: 8px;
         padding-top: 8px;
-        border-top: 1px solid #edf3ee;
+        border-top: 1px solid var(--border-subtle, #edf3ee);
     }
 
     .mobile-prop-actions button {
@@ -2095,9 +2095,9 @@ button,
         min-height: 46px;
         padding: 10px 14px;
         border-radius: 10px;
-        border: 1.5px solid #2d5c39;
-        background: #eef5ef;
-        color: #1a3b23;
+        border: 1.5px solid var(--green, #2d5c39);
+        background: var(--light-green, #eef5ef);
+        color: var(--dark-green, #1a3b23);
         font-family: inherit;
         font-size: 14.5px;
         font-weight: 700;
@@ -2111,7 +2111,7 @@ button,
     .calendar-mobile-summary {
         font-size: 13.5px;
         font-weight: 600;
-        color: #526456;
+        color: var(--text-muted, #526658);
     }
 
     .calendar-card.mobile-calendar-collapsed .calendar-layout,
@@ -2126,7 +2126,7 @@ button,
     .mobile-dash-prop {
         font-size: 15px;
         font-weight: 700;
-        color: #1a3b23;
+        color: var(--dark-green, #1a3b23);
         line-height: 1.35;
         margin: 0;
     }
@@ -2144,7 +2144,7 @@ button,
         margin-left: auto;
         width: 32px;
         height: 32px;
-        color: #2d5c39;
+        color: var(--green, #2d5c39);
         flex-shrink: 0;
         transition: transform 0.2s ease;
     }
@@ -2170,9 +2170,9 @@ button,
         min-height: 44px;
         padding: 8px 14px;
         border-radius: 10px;
-        border: 1.5px solid #2d5c39;
-        background: #eef5ef;
-        color: #1a3b23;
+        border: 1.5px solid var(--green, #2d5c39);
+        background: var(--light-green, #eef5ef);
+        color: var(--dark-green, #1a3b23);
         font-family: inherit;
         font-size: 14px;
         font-weight: 700;
@@ -2208,13 +2208,13 @@ button,
     .mobile-sa-user-id strong {
         display: block;
         font-size: 15.5px;
-        color: #1b2e21;
+        color: var(--text-dark, #0f1f14);
     }
 
     .mobile-sa-user-id small {
         display: block;
         font-size: 13.5px;
-        color: #526456;
+        color: var(--text-muted, #526658);
         overflow-wrap: anywhere;
     }
 
@@ -2223,7 +2223,7 @@ button,
         flex-wrap: wrap;
         gap: 6px 14px;
         font-size: 13.5px;
-        color: #526456;
+        color: var(--text-muted, #526658);
     }
 
     .mobile-sa-user-actions .action-btns-group {
@@ -2248,25 +2248,25 @@ button,
     html[data-theme="dark"] .calendar-mobile-toggle,
     html.dark-mode .sa-mobile-collapse-btn,
     html[data-theme="dark"] .sa-mobile-collapse-btn {
-        background: #17271c;
-        border-color: #3ea35d;
-        color: #d7f2df;
+        background: var(--light-green, #1c3123);
+        border-color: var(--green, #3ea35d);
+        color: var(--text-dark, #e7f0e9);
     }
 
     html.dark-mode .about-mobile-avatar,
     html[data-theme="dark"] .about-mobile-avatar {
-        border-color: #2f4b38;
+        border-color: var(--green-border-soft, #2f4e39);
     }
 
     html.dark-mode .mobile-inline-toggle,
     html[data-theme="dark"] .mobile-inline-toggle {
-        color: #86efac;
+        color: var(--dark-green, #86efac);
     }
 
     html.dark-mode .calc-mobile-summary-bar,
     html[data-theme="dark"] .calc-mobile-summary-bar {
-        background: #131f17;
-        border-color: #24382b;
+        background: var(--surface-muted, #131f17);
+        border-color: var(--border-color, #273c2e);
     }
 
     html.dark-mode .calc-mobile-summary-lbl,
@@ -2275,37 +2275,37 @@ button,
     html[data-theme="dark"] .calc-mobile-summary-sub,
     html.dark-mode .calendar-mobile-summary,
     html[data-theme="dark"] .calendar-mobile-summary {
-        color: #a7bfae;
+        color: var(--text-muted, #9ab09f);
     }
 
     html.dark-mode .calc-mobile-summary-val,
     html[data-theme="dark"] .calc-mobile-summary-val {
-        color: #86efac;
+        color: var(--dark-green, #86efac);
     }
 
     html.dark-mode .mobile-property-cta-bar,
     html[data-theme="dark"] .mobile-property-cta-bar {
         background: rgba(15, 25, 19, 0.96);
-        border-top-color: #24382b;
+        border-top-color: var(--border-color, #273c2e);
     }
 
     html.dark-mode .mobile-cta-call-btn,
     html[data-theme="dark"] .mobile-cta-call-btn {
-        background: #1a2d21;
-        color: #e7f0e9;
-        border-color: #2d4636;
+        background: var(--light-green, #1c3123);
+        color: var(--text-dark, #e7f0e9);
+        border-color: var(--green-border-soft, #2f4e39);
     }
 
     html.dark-mode .mobile-cta-inquire-btn,
     html[data-theme="dark"] .mobile-cta-inquire-btn {
-        background: #3ea35d;
+        background: var(--btn-primary-bg, #2d6e3f);
         color: #ffffff;
     }
 
     html.dark-mode .legal-mobile-jump,
     html[data-theme="dark"] .legal-mobile-jump {
-        background: #141f18;
-        border-color: #26392c;
+        background: var(--surface-muted, #131f17);
+        border-color: var(--border-color, #273c2e);
     }
 
     html.dark-mode .legal-mobile-jump label,
@@ -2314,25 +2314,25 @@ button,
     html[data-theme="dark"] .legal-section-chevron,
     html.dark-mode .form-card-chevron,
     html[data-theme="dark"] .form-card-chevron {
-        color: #86efac;
+        color: var(--dark-green, #86efac);
     }
 
     html.dark-mode .legal-jump-select,
     html[data-theme="dark"] .legal-jump-select {
-        background: #0f1812;
-        border-color: #2b4233;
-        color: #eef6f0;
+        background: var(--surface-input, #0f1812);
+        border-color: var(--border-input, #2b4233);
+        color: var(--text-dark, #e7f0e9);
     }
 
     html.dark-mode .legal-section,
     html[data-theme="dark"] .legal-section {
-        border-bottom-color: #233428;
+        border-bottom-color: var(--border-subtle, #203327);
     }
 
     html.dark-mode .mobile-data-card,
     html[data-theme="dark"] .mobile-data-card {
-        background: #16221a;
-        border-color: #27392c;
+        background: var(--surface, #16231b);
+        border-color: var(--border-color, #273c2e);
     }
 
     html.dark-mode .mobile-card-title-block strong,
@@ -2347,7 +2347,7 @@ button,
     html[data-theme="dark"] .mobile-dash-prop,
     html.dark-mode .mobile-sa-user-id strong,
     html[data-theme="dark"] .mobile-sa-user-id strong {
-        color: #eef6f0;
+        color: var(--text-dark, #e7f0e9);
     }
 
     html.dark-mode .mobile-card-title-block small,
@@ -2366,40 +2366,40 @@ button,
     html[data-theme="dark"] .mobile-card-meta-row,
     html.dark-mode .mobile-empty-state,
     html[data-theme="dark"] .mobile-empty-state {
-        color: #a7bfae;
+        color: var(--text-muted, #9ab09f);
     }
 
     html.dark-mode .mobile-card-phone-link,
     html[data-theme="dark"] .mobile-card-phone-link {
-        color: #86efac;
+        color: var(--dark-green, #86efac);
     }
 
     html.dark-mode .mobile-card-actions-bar,
     html[data-theme="dark"] .mobile-card-actions-bar,
     html.dark-mode .mobile-prop-actions,
     html[data-theme="dark"] .mobile-prop-actions {
-        border-top-color: #24362a;
+        border-top-color: var(--border-subtle, #203327);
     }
 
     html.dark-mode .mobile-type-tag,
     html[data-theme="dark"] .mobile-type-tag {
-        background: #1c3123;
-        color: #bbf7d0;
+        background: var(--light-green, #1c3123);
+        color: var(--green-200, #bbf7d0);
     }
 
     html.dark-mode .mobile-prop-thumb,
     html[data-theme="dark"] .mobile-prop-thumb {
-        border-color: #2a3e30;
+        border-color: var(--border-color, #273c2e);
     }
 
     html.dark-mode .form-footer-links a,
     html[data-theme="dark"] .form-footer-links a {
-        color: #86efac !important;
+        color: var(--dark-green, #86efac) !important;
     }
 
     html.dark-mode .property-status-badge.badge-rfo,
     html[data-theme="dark"] .property-status-badge.badge-rfo {
-        background: #b45309 !important;
+        background: var(--accent-warm-solid, #b45309) !important;
         color: #ffffff !important;
     }
 
@@ -2496,7 +2496,7 @@ button,
     }
 
     .form-footer-links a {
-        color: #2d5c39 !important;
+        color: var(--green, #2d5c39) !important;
         text-decoration: underline !important;
         text-underline-offset: 3px;
         font-weight: 600;

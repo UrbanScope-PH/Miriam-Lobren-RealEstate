@@ -1,28 +1,11 @@
+@import url('../../shared/css/tokens.css');
+
 /**
  * UrbanScope - Superadmin Executive Console Stylesheet
- * Aligned 100% with Miriam Lobren Admin Visual Design System & Palette
+ * Aligned 100% with UrbanScope Admin Visual Design System & Canonical Palette
  */
 
 :root {
-    color-scheme: light;
-    /* Admin Design Tokens */
-    --green: #2d5c39;
-    --dark-green: #1a3b23;
-    --light-green: #eef5ef;
-    --accent-green: #347c47;
-    --text-dark: #1b2e21;
-    --text-muted: #526456;
-    --border-color: #cbd9ce;
-    --bg-main: #f4f8f5;
-    --white: #ffffff;
-    --shadow: 0 8px 26px rgba(27, 46, 33, 0.055);
-    --sidebar-bg: #17321e;
-    --sidebar-active-bg: rgba(52, 124, 71, 0.32);
-    --sidebar-active-edge: #9bd3a5;
-    
-    --danger: #c53030;
-    --danger-light: #fee2e2;
-
     --font: 'Plus Jakarta Sans', Arial, sans-serif;
     --topbar-h: 80px;
     --sidebar-w: 260px;
@@ -31,21 +14,21 @@
     --radius-lg: 16px;
     --radius-pill: 999px;
 
-    /* Backward compatibility mapping for old sa- tokens */
+    /* Backward compatibility mapping for legacy sa- tokens */
     --sa-bg-darkest: var(--bg-main);
-    --sa-bg-dark: #ffffff;
-    --sa-bg-surface: #ffffff;
-    --sa-bg-card: #ffffff;
-    --sa-bg-card-hover: #f9fbf9;
+    --sa-bg-dark: var(--surface);
+    --sa-bg-surface: var(--surface);
+    --sa-bg-card: var(--surface);
+    --sa-bg-card-hover: var(--surface-hover);
     --sa-border: var(--border-color);
-    --sa-border-strong: #a4cbaa;
+    --sa-border-strong: var(--border-strong);
     --sa-gold: var(--green);
     --sa-gold-light: var(--accent-green);
     --sa-emerald: var(--green);
     --sa-text-white: var(--text-dark);
     --sa-text-light: var(--text-dark);
     --sa-text-muted: var(--text-muted);
-    --sa-text-dim: #8fa093;
+    --sa-text-dim: var(--text-subtle);
     --sa-danger: var(--danger);
     --sa-font: var(--font);
     --sa-topbar-h: var(--topbar-h);
@@ -91,7 +74,7 @@ button:focus-visible,
 a:focus-visible,
 input:focus-visible,
 select:focus-visible {
-    outline: 3px solid #a4cbaa;
+    outline: 3px solid var(--green-border-soft);
     outline-offset: 2px;
 }
 
@@ -109,7 +92,7 @@ select:focus-visible {
     gap: 24px;
     min-height: var(--topbar-h);
     padding: 12px 3.5%;
-    background: #ffffff;
+    background: var(--topbar-bg);
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.045);
     border-bottom: 1px solid var(--border-color);
 }
@@ -200,7 +183,7 @@ select:focus-visible {
     width: 7px;
     height: 7px;
     border-radius: 50%;
-    background: #16a34a;
+    background: var(--emerald-primary);
     box-shadow: 0 0 6px rgba(22, 163, 74, 0.6);
 }
 
@@ -221,7 +204,7 @@ select:focus-visible {
 
 @media (hover: hover) and (pointer: fine) {
     .sa-quick-btn:hover {
-        background: #e2ede4;
+        background: var(--light-green-hover);
         border-color: var(--accent-green);
     }
 }
@@ -303,9 +286,9 @@ select:focus-visible {
 }
 
 .root-pill {
-    background: #fef3c7;
-    color: #92400e;
-    border: 1px solid #fde68a;
+    background: var(--accent-warm-light);
+    color: var(--accent-warm-dark);
+    border: 1px solid var(--accent-warm-border);
 }
 
 .profile-chevron,
@@ -325,9 +308,9 @@ select:focus-visible {
     top: calc(100% + 8px);
     right: 0;
     width: 260px;
-    background: #ffffff;
+    background: var(--surface);
     border-radius: 12px;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
+    box-shadow: var(--shadow);
     border: 1px solid var(--border-color);
     padding: 10px;
     z-index: 200;
@@ -356,7 +339,7 @@ select:focus-visible {
 
 .profile-dropdown-divider {
     height: 1px;
-    background: #eef2ef;
+    background: var(--border-subtle);
     margin: 6px 0;
 }
 
@@ -394,14 +377,14 @@ select:focus-visible {
 
 .profile-signout,
 .sa-signout-btn {
-    color: var(--danger) !important;
+    color: var(--danger-text) !important;
 }
 
 @media (hover: hover) and (pointer: fine) {
     .profile-signout:hover,
     .sa-signout-btn:hover {
-        background: #fee2e2 !important;
-        color: #b91c1c !important;
+        background: var(--danger-light) !important;
+        color: var(--danger-text) !important;
     }
 }
 
@@ -670,9 +653,9 @@ select:focus-visible {
     flex-wrap: wrap;
     gap: 16px;
     padding: 24px 26px;
-    border: 1px solid #dce9de;
+    border: 1px solid var(--green-border-soft);
     border-radius: 18px;
-    background: #edf6ef;
+    background: var(--light-green);
     box-shadow: var(--shadow);
 }
 
@@ -680,7 +663,7 @@ select:focus-visible {
 .sa-executive-tag {
     display: block;
     margin-bottom: 5px;
-    color: #548564;
+    color: var(--green);
     font-size: 10px;
     font-weight: 800;
     letter-spacing: 1.3px;
@@ -717,7 +700,7 @@ select:focus-visible {
     padding: 10px 18px;
     border: 0;
     border-radius: 11px;
-    background: var(--accent-green);
+    background: var(--btn-primary-bg);
     box-shadow: 0 6px 15px rgba(45, 92, 57, 0.14);
     color: #ffffff;
     font-size: 12.5px;
@@ -725,25 +708,27 @@ select:focus-visible {
     text-align: center;
     text-decoration: none;
     cursor: pointer;
-    transition: transform 0.2s, box-shadow 0.2s;
+    transition: background-color 0.2s, transform 0.2s, box-shadow 0.2s;
 }
 
 @media (hover: hover) and (pointer: fine) {
     .primary-action-btn:hover,
     .sa-btn-gold:hover {
+        background: var(--btn-primary-hover);
         transform: translateY(-2px);
         box-shadow: 0 9px 18px rgba(45, 92, 57, 0.22);
     }
 }
 
 .sa-btn-danger {
-    background: #ef4444;
+    background: var(--danger-btn-bg);
     box-shadow: 0 6px 15px rgba(220, 38, 38, 0.18);
     color: #ffffff;
 }
 
 @media (hover: hover) and (pointer: fine) {
     .sa-btn-danger:hover:not(:disabled) {
+        background: var(--danger-btn-hover);
         box-shadow: 0 9px 18px rgba(220, 38, 38, 0.28);
     }
 }
@@ -765,7 +750,7 @@ select:focus-visible {
     padding: 10px 16px;
     border: 1px solid var(--border-color);
     border-radius: 11px;
-    background: #ffffff;
+    background: var(--surface);
     color: var(--green);
     font-size: 12.5px;
     font-weight: 700;
@@ -798,10 +783,10 @@ select:focus-visible {
     gap: 14px;
     min-width: 0;
     padding: 20px 17px;
-    border: 1px solid #e5ede7;
+    border: 1px solid var(--border-color);
     border-radius: 15px;
-    background: #ffffff;
-    box-shadow: 0 5px 17px rgba(0, 0, 0, 0.035);
+    background: var(--surface);
+    box-shadow: var(--shadow);
     transition: transform 0.2s, box-shadow 0.2s;
 }
 
@@ -871,9 +856,9 @@ select:focus-visible {
 .feature-card,
 .sa-card {
     min-width: 0;
-    border: 1px solid #e4ece5;
+    border: 1px solid var(--border-color);
     border-radius: 19px;
-    background: #ffffff;
+    background: var(--surface);
     box-shadow: var(--shadow);
     padding: 27px;
 }
@@ -921,9 +906,9 @@ select:focus-visible {
     align-items: center;
     gap: 14px;
     padding: 14px 16px;
-    border: 1px solid #e5eee6;
+    border: 1px solid var(--border-color);
     border-radius: 12px;
-    background: #f8faf8;
+    background: var(--surface-muted);
 }
 
 .authority-icon {
@@ -936,18 +921,18 @@ select:focus-visible {
 }
 
 .authority-icon.root-icon {
-    background: #fef3c7;
-    color: #b45309;
+    background: var(--accent-warm-light);
+    color: var(--accent-warm-dark);
 }
 
 .authority-icon.admin-icon {
-    background: #eef5ef;
+    background: var(--light-green);
     color: var(--green);
 }
 
 .authority-icon.user-icon {
-    background: #e0f2fe;
-    color: #0284c7;
+    background: var(--status-info-bg);
+    color: var(--status-info-text);
 }
 
 .authority-details {
@@ -970,7 +955,7 @@ select:focus-visible {
 }
 
 .authority-details code {
-    background: #eef2ef;
+    background: var(--surface-hover);
     padding: 2px 6px;
     border-radius: 4px;
     font-size: 11px;
@@ -984,7 +969,7 @@ select:focus-visible {
 }
 
 .text-gold {
-    color: #b45309;
+    color: var(--accent-warm-dark);
 }
 
 .text-muted {
@@ -1012,9 +997,9 @@ select:focus-visible {
     align-items: flex-start;
     min-width: 0;
     padding: 16px 14px;
-    border: 1px solid #e3ebe5;
+    border: 1px solid var(--border-color);
     border-radius: 14px;
-    background: #ffffff;
+    background: var(--surface);
     color: inherit;
     text-decoration: none;
     cursor: pointer;
@@ -1026,8 +1011,8 @@ select:focus-visible {
     .quick-action-item:hover,
     .sa-action-btn:hover {
         transform: translateY(-3px);
-        border-color: #a9cdb1;
-        background: #f9fcf9;
+        border-color: var(--green-border-soft);
+        background: var(--surface-hover);
     }
 }
 
@@ -1054,7 +1039,7 @@ select:focus-visible {
 
 .quick-action-item strong,
 .sa-action-btn strong {
-    color: #263b2c;
+    color: var(--text-dark);
     font-size: 12.5px;
     line-height: 1.5;
     font-weight: 700;
@@ -1114,7 +1099,7 @@ select:focus-visible {
 
 .filter-toolbar,
 .sa-table-toolbar {
-    background: #ffffff;
+    background: var(--surface);
     border: 1px solid var(--border-color);
     border-radius: 12px;
     padding: 16px 20px;
@@ -1124,7 +1109,7 @@ select:focus-visible {
     align-items: center;
     flex-wrap: wrap;
     gap: 16px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
+    box-shadow: var(--shadow);
 }
 
 .search-field,
@@ -1132,8 +1117,8 @@ select:focus-visible {
     display: flex;
     align-items: center;
     gap: 10px;
-    background: #f8faf8;
-    border: 1px solid var(--border-color);
+    background: var(--surface-input);
+    border: 1px solid var(--border-input);
     border-radius: 8px;
     padding: 8px 14px;
     min-width: 280px;
@@ -1161,8 +1146,8 @@ select:focus-visible {
 }
 
 .sa-select {
-    background: #f8faf8;
-    border: 1px solid var(--border-color);
+    background: var(--surface-input);
+    border: 1px solid var(--border-input);
     border-radius: 8px;
     padding: 8px 12px;
     font-size: 12.5px;
@@ -1174,7 +1159,7 @@ select:focus-visible {
 
 .sa-select:focus {
     border-color: var(--accent-green);
-    background: #ffffff;
+    background: var(--surface);
 }
 
 /* ============================================================== */
@@ -1183,7 +1168,7 @@ select:focus-visible {
 .table-card,
 .users-card,
 .sa-table-container {
-    background: #ffffff;
+    background: var(--surface);
     border: 1px solid var(--border-color);
     border-radius: 14px;
     overflow: hidden;
@@ -1205,7 +1190,7 @@ table,
 }
 
 th {
-    background: #f8faf8;
+    background: var(--surface-muted);
     color: var(--text-muted);
     font-size: 11px;
     font-weight: 700;
@@ -1217,7 +1202,7 @@ th {
 
 td {
     padding: 16px 18px;
-    border-bottom: 1px solid #edf2ee;
+    border-bottom: 1px solid var(--border-subtle);
     font-size: 13px;
     color: var(--text-dark);
     vertical-align: middle;
@@ -1225,7 +1210,7 @@ td {
 
 @media (hover: hover) and (pointer: fine) {
     tr:hover td {
-        background: #fafdfa;
+        background: var(--surface-hover);
     }
 }
 
@@ -1285,22 +1270,22 @@ td {
 
 @media (hover: hover) and (pointer: fine) {
     .btn-table-action:hover {
-        background: var(--green);
+        background: var(--btn-primary-bg);
         color: #ffffff;
-        border-color: var(--green);
+        border-color: var(--btn-primary-bg);
     }
 }
 
 .btn-table-action.danger {
-    background: #fee2e2;
-    border-color: #fecaca;
-    color: #b91c1c;
+    background: var(--danger-light);
+    border-color: var(--danger-border);
+    color: var(--danger-text);
 }
 
 @media (hover: hover) and (pointer: fine) {
     .btn-table-action.danger:hover {
-        background: #ef4444;
-        border-color: #ef4444;
+        background: var(--danger-btn-bg);
+        border-color: var(--danger-btn-bg);
         color: #ffffff;
     }
 }
@@ -1309,9 +1294,9 @@ td {
 .sa-badge-green {
     display: inline-block;
     padding: 4px 10px;
-    background: #dcfce7;
-    color: #15803d;
-    border: 1px solid #bbf7d0;
+    background: var(--status-success-bg);
+    color: var(--status-success-text);
+    border: 1px solid var(--status-success-border);
     border-radius: 6px;
     font-size: 11px;
     font-weight: 800;
@@ -1320,9 +1305,9 @@ td {
 .sa-badge-emerald {
     display: inline-block;
     padding: 4px 10px;
-    background: #eef5ef;
-    color: #1a3b23;
-    border: 1px solid #cbd9ce;
+    background: var(--light-green);
+    color: var(--dark-green);
+    border: 1px solid var(--green-border-soft);
     border-radius: 6px;
     font-size: 11px;
     font-weight: 800;
@@ -1331,9 +1316,9 @@ td {
 .sa-badge-gold {
     display: inline-block;
     padding: 4px 10px;
-    background: #fef3c7;
-    color: #92400e;
-    border: 1px solid #fde68a;
+    background: var(--accent-warm-light);
+    color: var(--accent-warm-dark);
+    border: 1px solid var(--accent-warm-border);
     border-radius: 6px;
     font-size: 11px;
     font-weight: 800;
@@ -1342,9 +1327,9 @@ td {
 .sa-badge-gray {
     display: inline-block;
     padding: 4px 10px;
-    background: #f1f5f9;
-    color: #64748b;
-    border: 1px solid #e2e8f0;
+    background: var(--status-neutral-bg);
+    color: var(--status-neutral-text);
+    border: 1px solid var(--status-neutral-border);
     border-radius: 6px;
     font-size: 11px;
     font-weight: 800;
@@ -1373,14 +1358,14 @@ td {
     flex-wrap: wrap;
     gap: 8px;
     padding: 12px 14px;
-    border: 1px solid #e5eee6;
+    border: 1px solid var(--border-color);
     border-radius: 10px;
-    background: #f8faf8;
+    background: var(--surface-muted);
     font-size: 12.5px;
 }
 
 .sa-diag-list code {
-    background: #eef2ef;
+    background: var(--surface-hover);
     padding: 3px 8px;
     border-radius: 5px;
     font-size: 11.5px;
@@ -1392,7 +1377,7 @@ td {
 .sa-perm-matrix {
     display: flex;
     flex-direction: column;
-    border: 1px solid #e5eee6;
+    border: 1px solid var(--border-color);
     border-radius: 12px;
     overflow-x: auto;
     overflow-y: hidden;
@@ -1405,7 +1390,7 @@ td {
     min-width: 440px;
     padding: 12px 16px;
     font-size: 12.5px;
-    border-bottom: 1px solid #edf2ee;
+    border-bottom: 1px solid var(--border-subtle);
     align-items: center;
 }
 
@@ -1414,7 +1399,7 @@ td {
 }
 
 .perm-row.header {
-    background: #f8faf8;
+    background: var(--surface-muted);
     font-weight: 800;
     color: var(--text-muted);
     font-size: 11px;
@@ -1423,7 +1408,7 @@ td {
 }
 
 .perm-row .check {
-    color: #16a34a;
+    color: var(--status-success-text);
     font-weight: 800;
     display: inline-flex;
     align-items: center;
@@ -1431,11 +1416,11 @@ td {
 }
 
 .perm-row .check.gold {
-    color: #d97706;
+    color: var(--accent-warm-dark);
 }
 
 .perm-row .cross {
-    color: #dc2626;
+    color: var(--danger-text);
     font-weight: 800;
     display: inline-flex;
     align-items: center;
@@ -1463,7 +1448,7 @@ td {
 }
 
 .sa-modal {
-    background: #ffffff;
+    background: var(--surface);
     border: 1px solid var(--border-color);
     border-radius: 16px;
     width: 100%;
@@ -1537,9 +1522,9 @@ td {
 .sa-form-group select {
     width: 100%;
     padding: 10px 14px;
-    border: 1px solid var(--border-color);
+    border: 1px solid var(--border-input);
     border-radius: 9px;
-    background: #fbfdfb;
+    background: var(--surface-input);
     font-size: 13px;
     color: var(--text-dark);
     outline: none;
@@ -1548,7 +1533,7 @@ td {
 .sa-form-group input:focus,
 .sa-form-group select:focus {
     border-color: var(--accent-green);
-    background: #ffffff;
+    background: var(--surface);
 }
 
 .sa-modal-footer {
@@ -1556,8 +1541,8 @@ td {
     justify-content: flex-end;
     gap: 12px;
     padding: 16px 24px;
-    background: #f9fbf9;
-    border-top: 1px solid #eef2ef;
+    background: var(--surface-muted);
+    border-top: 1px solid var(--border-subtle);
 }
 
 /* ============================================================== */
@@ -1577,22 +1562,22 @@ td {
     display: inline-flex;
     align-items: center;
     gap: 10px;
-    background: #ffffff;
-    border: 1px solid #bbf7d0;
-    border-left: 5px solid #16a34a;
+    background: var(--surface);
+    border: 1px solid var(--status-success-border);
+    border-left: 5px solid var(--emerald-primary);
     border-radius: 10px;
     padding: 12px 18px;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+    box-shadow: var(--shadow);
     font-size: 13px;
     font-weight: 600;
-    color: #15803d;
+    color: var(--status-success-text);
     animation: saSlideUp 0.25s ease-out;
 }
 
 .sa-toast.error {
-    border-color: #fecaca;
-    border-left-color: #dc2626;
-    color: #b91c1c;
+    border-color: var(--danger-border);
+    border-left-color: var(--danger);
+    color: var(--danger-text);
 }
 
 @keyframes saSlideUp {
@@ -1962,9 +1947,9 @@ td {
     height: 39px;
     padding: 0;
     border-radius: 50%;
-    border: 1px solid #d5e2d8;
-    background: #ffffff;
-    color: var(--green, #2d5c39);
+    border: 1px solid var(--border-color);
+    background: var(--surface);
+    color: var(--green);
     cursor: pointer;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
     transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease, transform 0.25s ease, box-shadow 0.3s ease;
@@ -1973,8 +1958,8 @@ td {
 
 @media (hover: hover) and (pointer: fine) {
     .theme-toggle-btn:hover {
-        background: #eef6f0;
-        border-color: var(--green, #2d5c39);
+        background: var(--light-green);
+        border-color: var(--green);
         transform: translateY(-1px);
         box-shadow: 0 4px 12px rgba(45, 92, 57, 0.14);
     }
@@ -2004,7 +1989,7 @@ td {
 .theme-icon-sun {
     opacity: 0;
     transform: rotate(75deg) scale(0.55);
-    color: #fbbf24;
+    color: var(--brand-gold);
 }
 
 html.dark-mode .theme-icon-moon {
@@ -2066,98 +2051,99 @@ html.theme-transitioning *::after {
     transition-delay: 0s !important;
 }
 
-html.dark-mode {
-    color-scheme: dark;
-    --bg-main: #0e1611;
-    --white: #16231b;
-    --green: #3ea35d;
-    --dark-green: #86efac;
-    --light-green: rgba(62, 163, 93, 0.18);
-    --accent-green: #6ee7b7;
-    --text-dark: #e7f0e9;
-    --text-muted: #9ab09f;
-    --border-color: #26392c;
-    --shadow: 0 12px 32px rgba(0, 0, 0, 0.45);
-}
-
 html.dark-mode body {
-    background-color: #0e1611;
-    color: #e7f0e9;
+    background-color: var(--bg-main);
+    color: var(--text-dark);
 }
 
 html.dark-mode .sa-topbar,
 html.dark-mode .admin-topbar {
-    background-color: #131f17;
-    border-bottom-color: #243629;
+    background-color: var(--topbar-bg);
+    border-bottom-color: var(--border-subtle);
 }
 
 html.dark-mode .menu-toggle {
-    color: #e7f0e9;
+    color: var(--text-dark);
+}
+
+html.dark-mode .sa-time-chip,
+html.dark-mode .sa-quick-btn {
+    background: var(--light-green);
+    border-color: var(--green-border-soft);
+    color: var(--dark-green);
+}
+
+@media (hover: hover) and (pointer: fine) {
+    html.dark-mode .sa-quick-btn:hover {
+        background: var(--light-green-hover);
+        border-color: var(--green);
+        color: var(--dark-green);
+    }
 }
 
 html.dark-mode .theme-toggle-btn {
-    background: #19281f;
-    border-color: #2b4031;
-    color: #e7f0e9;
+    background: var(--surface);
+    border-color: var(--border-color);
+    color: var(--text-dark);
 }
 
 @media (hover: hover) and (pointer: fine) {
     html.dark-mode .theme-toggle-btn:hover {
-        background: #22372a;
-        border-color: #4ade80;
-        color: #86efac;
+        background: var(--surface-hover);
+        border-color: var(--green);
+        color: var(--dark-green);
     }
 }
 
 html.dark-mode .profile-chevron,
 html.dark-mode .sa-chevron {
-    color: #cfe3d4 !important;
+    color: var(--text-secondary) !important;
 }
 
 html.dark-mode .authority-icon.root-icon {
-    background: rgba(245, 158, 11, 0.18) !important;
-    color: #fde68a !important;
+    background: var(--accent-warm-light) !important;
+    color: var(--accent-warm-dark) !important;
 }
 
 html.dark-mode .authority-icon.admin-icon,
 html.dark-mode .kpi-icon,
 html.dark-mode .add-icon,
 html.dark-mode .security-icon {
-    background: #1f3326 !important;
-    color: #86efac !important;
+    background: var(--light-green) !important;
+    color: var(--dark-green) !important;
 }
 
 html.dark-mode .authority-icon.user-icon {
-    background: rgba(59, 130, 246, 0.18) !important;
-    color: #93c5fd !important;
+    background: var(--status-info-bg) !important;
+    color: var(--status-info-text) !important;
 }
 
 html.dark-mode .sa-hamburger-btn {
-    color: #e7f0e9;
+    color: var(--text-dark);
 }
 
 html.dark-mode .sa-live-indicator {
-    background: rgba(62, 163, 93, 0.16);
-    border-color: #2f573b;
-    color: #86efac;
+    background: var(--light-green);
+    border-color: var(--green-border-soft);
+    color: var(--dark-green);
 }
 
 html.dark-mode .profile-dropdown,
 html.dark-mode .sa-dropdown-menu {
-    background: #16231b;
-    border-color: #293e2f;
-    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.65);
+    background: var(--surface);
+    border-color: var(--border-color);
+    box-shadow: var(--shadow);
 }
 
 html.dark-mode .profile-dropdown-divider,
 html.dark-mode .dropdown-divider {
-    background: #243629;
+    background: var(--border-color);
 }
 
 html.dark-mode .welcome-banner,
 html.dark-mode .sa-hero-card {
-    background: #16271d;
-    border-color: #284030;
+    background: var(--brand-banner-bg);
+    border-color: var(--brand-banner-border);
 }
 
 html.dark-mode .kpi-card,
@@ -2170,146 +2156,151 @@ html.dark-mode .table-card,
 html.dark-mode .users-card,
 html.dark-mode .sa-table-container,
 html.dark-mode .sa-modal {
-    background: #16231b;
-    border-color: #26392c;
-    color: #e7f0e9;
+    background: var(--surface);
+    border-color: var(--border-color);
+    color: var(--text-dark);
 }
 
 html.dark-mode .sa-authority-item,
 html.dark-mode .quick-action-item,
 html.dark-mode .sa-action-btn,
 html.dark-mode .sa-diag-list li,
+html.dark-mode .sa-role-change-summary {
+    background: var(--surface-muted);
+    border-color: var(--border-color);
+    color: var(--text-dark);
+}
+
 html.dark-mode .search-field,
 html.dark-mode .toolbar-search,
-html.dark-mode .sa-select,
-html.dark-mode .sa-role-change-summary {
-    background: #1b2b21;
-    border-color: #2b4031;
-    color: #e7f0e9;
+html.dark-mode .sa-select {
+    background: var(--surface-input);
+    border-color: var(--border-input);
+    color: var(--text-dark);
 }
 
 @media (hover: hover) and (pointer: fine) {
     html.dark-mode .quick-action-item:hover,
     html.dark-mode .sa-action-btn:hover {
-        background: #22372a;
-        border-color: #4ade80;
+        background: var(--surface-hover);
+        border-color: var(--green);
     }
 }
 
 html.dark-mode .quick-action-item strong,
 html.dark-mode .sa-action-btn strong,
 html.dark-mode .sa-modal-header h3 {
-    color: #eef6f0;
+    color: var(--text-dark);
 }
 
 html.dark-mode .authority-details code,
 html.dark-mode .sa-diag-list code {
-    background: #111b15;
-    color: #86efac;
+    background: var(--bg-main);
+    color: var(--dark-green);
 }
 
 html.dark-mode .sa-btn-outline {
-    background: #1b2b21;
-    border-color: #2f4736;
-    color: #86efac;
+    background: var(--surface-muted);
+    border-color: var(--border-strong);
+    color: var(--dark-green);
 }
 
 @media (hover: hover) and (pointer: fine) {
     html.dark-mode .sa-btn-outline:hover {
-        background: #243b2d;
-        border-color: #4ade80;
+        background: var(--surface-hover);
+        border-color: var(--green);
     }
 }
 
 html.dark-mode th,
 html.dark-mode .perm-row.header {
-    background: #1b2b21;
-    color: #9ab09f;
-    border-color: #26392c;
+    background: var(--surface-muted);
+    color: var(--text-muted);
+    border-color: var(--border-color);
 }
 
 html.dark-mode td,
 html.dark-mode .perm-row {
-    border-color: #223327;
-    color: #e7f0e9;
+    border-color: var(--border-subtle);
+    color: var(--text-dark);
 }
 
 @media (hover: hover) and (pointer: fine) {
     html.dark-mode tr:hover td {
-        background: #1d2e24;
+        background: var(--surface-hover);
     }
 }
 
 html.dark-mode .sa-modal-header,
 html.dark-mode .sa-modal-footer {
-    background: #131f17;
-    border-color: #243629;
+    background: var(--topbar-bg);
+    border-color: var(--border-color);
 }
 
 html.dark-mode .sa-modal-close {
-    background: #1f3125;
-    border-color: #2f4736;
-    color: #c2d4c6;
+    background: var(--surface-hover);
+    border-color: var(--border-strong);
+    color: var(--text-secondary);
 }
 
 html.dark-mode .sa-form-group input,
 html.dark-mode .sa-form-group select {
-    background: #111b15;
-    border-color: #2b4031;
-    color: #e7f0e9;
+    background: var(--surface-input);
+    border-color: var(--border-input);
+    color: var(--text-dark);
 }
 
 html.dark-mode .sa-badge-green {
-    background: rgba(34, 197, 94, 0.16);
-    color: #86efac;
-    border-color: rgba(74, 222, 128, 0.35);
+    background: var(--status-success-bg);
+    color: var(--status-success-text);
+    border-color: var(--status-success-border);
 }
 
 html.dark-mode .sa-badge-emerald {
-    background: #1c2e22;
-    color: #86efac;
-    border-color: #2f523a;
+    background: var(--light-green);
+    color: var(--dark-green);
+    border-color: var(--green-border-soft);
 }
 
 html.dark-mode .sa-badge-gold,
 html.dark-mode .root-pill {
-    background: rgba(245, 158, 11, 0.16);
-    color: #fde68a;
-    border-color: rgba(251, 191, 36, 0.35);
+    background: var(--accent-warm-light);
+    color: var(--accent-warm-dark);
+    border-color: var(--accent-warm-border);
 }
 
 html.dark-mode .sa-badge-gray {
-    background: rgba(148, 163, 184, 0.16);
-    color: #cbd5e1;
-    border-color: rgba(148, 163, 184, 0.32);
+    background: var(--status-neutral-bg);
+    color: var(--status-neutral-text);
+    border-color: var(--status-neutral-border);
 }
 
 html.dark-mode .btn-table-action.danger {
-    background: rgba(239, 68, 68, 0.16);
-    border-color: rgba(248, 113, 113, 0.35);
-    color: #fca5a5;
+    background: var(--danger-light);
+    border-color: var(--danger-border);
+    color: var(--danger-text);
 }
 
 @media (hover: hover) and (pointer: fine) {
     html.dark-mode .btn-table-action.danger:hover {
-        background: #ef4444;
-        border-color: #ef4444;
+        background: var(--danger-btn-bg);
+        border-color: var(--danger-btn-bg);
         color: #ffffff;
     }
 }
 
 html.dark-mode .sa-toast {
-    background: #16231b;
-    border-color: #2f573b;
-    border-left-color: #4ade80;
-    color: #eef6f0;
+    background: var(--surface);
+    border-color: var(--status-success-border);
+    border-left-color: var(--accent-green);
+    color: var(--text-dark);
 }
 
 html.dark-mode .sa-toast.error {
-    background: #231618;
-    border-color: rgba(248, 113, 113, 0.35);
-    border-left-color: #ef4444;
-    color: #fecaca;
+    background: var(--surface);
+    border-color: var(--danger-border);
+    border-left-color: var(--danger);
+    color: var(--danger-text);
 }
 
 /* ============================================================
@@ -2363,7 +2354,7 @@ html.dark-mode .sa-toast.error {
 .btn-sa-primary,
 .sa-btn-submit,
 .btn-save-user {
-    background: var(--green, #1f4928) !important;
+    background: var(--btn-primary-bg) !important;
     color: #ffffff !important;
     border: none !important;
     box-shadow: 0 4px 14px rgba(31, 73, 40, 0.28) !important;
@@ -2376,6 +2367,7 @@ html.dark-mode .sa-toast.error {
     .btn-sa-primary:hover,
     .sa-btn-submit:hover,
     .btn-save-user:hover {
+        background: var(--btn-primary-hover) !important;
         transform: translateY(-2px) !important;
         box-shadow: 0 6px 18px rgba(31, 73, 40, 0.38) !important;
     }
@@ -2391,17 +2383,17 @@ html.dark-mode .sa-toast.error {
 /* Warm Accent for Admin Role Badge (Rule 11) */
 .sa-badge-admin,
 .badge-role-admin {
-    background: var(--accent-warm-light, #fef3c7) !important;
-    color: var(--accent-warm-dark, #b45309) !important;
-    border: 1px solid var(--accent-warm-border, #fde68a) !important;
+    background: var(--accent-warm-light) !important;
+    color: var(--accent-warm-dark) !important;
+    border: 1px solid var(--accent-warm-border) !important;
     font-weight: 600 !important;
 }
 
 html.dark-mode .sa-badge-admin,
 html.dark-mode .badge-role-admin {
-    background: rgba(245, 158, 11, 0.16) !important;
-    color: #fbbf24 !important;
-    border-color: rgba(245, 158, 11, 0.35) !important;
+    background: var(--accent-warm-light) !important;
+    color: var(--accent-warm-dark) !important;
+    border-color: var(--accent-warm-border) !important;
 }
 
 /* Concentric Radius Math (Rule 14) */
@@ -2426,12 +2418,12 @@ html.dark-mode .badge-role-admin {
 /* Static Loading Skeleton (Rule 19) */
 .sa-skeleton-row {
     height: 44px;
-    background: #f1f5f9;
+    background: var(--border-subtle);
     border-radius: 6px;
     margin: 8px 0;
 }
 html.dark-mode .sa-skeleton-row {
-    background: #1c2b20;
+    background: var(--surface-hover);
 }
 
 

@@ -48,7 +48,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             renderUsers();
         } catch (err) {
             console.error('Failed to load users:', err);
-            tableBody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: #e53e3e; padding: 30px;">Error loading user directory.</td></tr>`;
+            tableBody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: var(--danger-text); padding: 30px;">Error loading user directory.</td></tr>`;
         }
     }
 
@@ -114,7 +114,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                         </div>
                     </td>
                     <td>
-                        <span style="color: #334155; font-weight: 500;">${escapeHtml(phone)}</span>
+                        <span style="color: var(--text-secondary); font-weight: 500;">${escapeHtml(phone)}</span>
                     </td>
                     <td>
                         <span class="role-badge ${roleBadgeClass}">${roleDisplay}</span>

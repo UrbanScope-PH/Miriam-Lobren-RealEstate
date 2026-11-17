@@ -50,7 +50,7 @@
 }
 
 .page-header p {
-    color: #526456;
+    color: var(--text-muted);
     font-size: 14px;
 }
 
@@ -62,10 +62,10 @@
 
     padding: 11px 17px;
 
-    border: 1px solid #d7dfd7;
+    border: 1px solid var(--border-strong);
     border-radius: 7px;
 
-    background: var(--white);
+    background: var(--surface);
     color: var(--accent-green);
 
     font-size: 13px;
@@ -78,8 +78,8 @@
 
 @media (hover: hover) and (pointer: fine) {
     .back-btn:hover {
-        background: #f0f5f0;
-        border-color: #b9cbbb;
+        background: var(--light-green);
+        border-color: var(--green-border-soft);
     }
 }
 
@@ -95,15 +95,15 @@
 
     overflow: hidden;
 
-    border: 1px solid #e4e8e4;
+    border: 1px solid var(--border-color);
     border-radius: 10px;
 
-    background: var(--white);
+    background: var(--surface);
 }
 
 .form-card-header {
     padding: 22px 25px;
-    border-bottom: 1px solid #e8ece8;
+    border-bottom: 1px solid var(--border-subtle);
 }
 
 .form-card-header h2 {
@@ -114,7 +114,7 @@
 }
 
 .form-card-header p {
-    color: #526456;
+    color: var(--text-muted);
     font-size: 13px;
 }
 
@@ -157,13 +157,13 @@
 /* Labels */
 
 .form-group label {
-    color: #39433c;
+    color: var(--text-secondary);
     font-size: 13px;
     font-weight: 600;
 }
 
 .form-group label span {
-    color: var(--danger);
+    color: var(--danger-text);
 }
 
 
@@ -179,11 +179,11 @@
 
     padding: 12px 13px;
 
-    border: 1px solid #d9e0d9;
+    border: 1px solid var(--border-input);
     border-radius: 7px;
 
-    background: var(--white);
-    color: #354039;
+    background: var(--surface-input);
+    color: var(--text-dark);
 
     font-family: inherit;
     font-size: 13px;
@@ -203,7 +203,7 @@
 
 .form-group input::placeholder,
 .form-group textarea::placeholder {
-    color: #a2aaa3;
+    color: var(--text-subtle);
 }
 
 .form-group select {
@@ -229,10 +229,10 @@
 
     overflow: hidden;
 
-    border: 1px solid #d9e0d9;
+    border: 1px solid var(--border-input);
     border-radius: 7px;
 
-    background: var(--white);
+    background: var(--surface-input);
 
     transition: border-color 0.2s ease,
                 box-shadow 0.2s ease;
@@ -247,7 +247,7 @@
     flex-shrink: 0;
     padding-left: 13px;
 
-    color: #596159;
+    color: var(--text-muted);
     font-size: 13px;
 }
 
@@ -278,10 +278,10 @@
 
     overflow: hidden;
 
-    border: 1px solid #d9e0d9;
+    border: 1px solid var(--border-input);
     border-radius: 7px;
 
-    background: var(--white);
+    background: var(--surface-input);
 
     transition: border-color 0.2s ease,
                 box-shadow 0.2s ease;
@@ -309,7 +309,7 @@
     flex-shrink: 0;
     padding-right: 13px;
 
-    color: #526456;
+    color: var(--text-muted);
     font-size: 12px;
 }
 
@@ -322,10 +322,10 @@
     width: 100%;
     padding: 40px 20px;
 
-    border: 2px dashed #d5ddd5;
+    border: 2px dashed var(--border-strong);
     border-radius: 9px;
 
-    background: #fafcfa;
+    background: var(--surface-muted);
     text-align: center;
 
     transition: border-color 0.2s ease,
@@ -335,7 +335,7 @@
 @media (hover: hover) and (pointer: fine) {
     .upload-area:hover {
         border-color: var(--accent-green);
-        background: #f7faf7;
+        background: var(--surface-hover);
     }
 }
 
@@ -364,7 +364,7 @@
 
 .upload-area p {
     margin-bottom: 18px;
-    color: #526456;
+    color: var(--text-muted);
     font-size: 13px;
 }
 
@@ -404,7 +404,7 @@
     display: block;
     margin-top: 12px;
 
-    color: #526456;
+    color: var(--text-muted);
     font-size: 11px;
 }
 
@@ -430,10 +430,10 @@
 
     overflow: hidden;
 
-    border: 1px solid #e1e5e1;
+    border: 1px solid var(--border-color);
     border-radius: 10px;
 
-    background: #f5f7f5;
+    background: var(--surface-muted);
 }
 
 .preview-item img {
@@ -484,27 +484,27 @@
 }
 
 .cancel-btn {
-    border-color: #d6ddd6;
-    background: var(--white);
-    color: #596159;
+    border-color: var(--border-strong);
+    background: var(--surface);
+    color: var(--text-muted);
 }
 
 @media (hover: hover) and (pointer: fine) {
     .cancel-btn:hover {
-        background: #f3f5f3;
+        background: var(--surface-hover);
     }
 }
 
 .save-btn {
-    border-color: var(--accent-green);
-    background: var(--accent-green);
-    color: var(--white);
+    border-color: var(--btn-primary-bg);
+    background: var(--btn-primary-bg);
+    color: #ffffff;
 }
 
 @media (hover: hover) and (pointer: fine) {
     .save-btn:hover {
-        border-color: var(--green);
-        background: var(--green);
+        border-color: var(--btn-primary-hover);
+        background: var(--btn-primary-hover);
     }
 }
 
@@ -919,7 +919,7 @@
 /* Emphasize Primary CTA (Rule 10) */
 .save-property-btn,
 .btn-publish {
-    background: var(--green, #1f4928) !important;
+    background: var(--btn-primary-bg) !important;
     color: #ffffff !important;
     box-shadow: 0 4px 14px rgba(31, 73, 40, 0.28) !important;
     border-radius: var(--radius-md, 8px) !important;
@@ -930,6 +930,7 @@
 @media (hover: hover) and (pointer: fine) {
     .save-property-btn:hover,
     .btn-publish:hover {
+        background: var(--btn-primary-hover) !important;
         transform: translateY(-2px) !important;
         box-shadow: 0 6px 18px rgba(31, 73, 40, 0.38) !important;
     }

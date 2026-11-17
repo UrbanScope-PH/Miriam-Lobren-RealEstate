@@ -7,7 +7,7 @@
 /* While the splash is up, hide the page underneath (it is revealed as the curtain lifts) */
 html.splash-pending,
 html.splash-pending body {
-    background: #1a3b23 !important;
+    background: var(--splash-bg-deep, #1a3b23) !important;
 }
 html.splash-pending body > *:not(#splash) {
     visibility: hidden;
@@ -27,7 +27,7 @@ html.splash-pending {
     cursor: pointer;
     font-family: 'Plus Jakarta Sans', 'Segoe UI', sans-serif;
     color: #fff;
-    background: #2d5c39;
+    background: var(--splash-bg, #2d5c39);
     border-radius: 0 0 0 0;
     transition: transform 0.9s cubic-bezier(0.77, 0, 0.18, 1), border-radius 0.9s cubic-bezier(0.77, 0, 0.18, 1);
     will-change: transform;
@@ -71,7 +71,7 @@ html.splash-pending {
     inset: -10px;
     border-radius: 50%;
     border: 2px solid transparent;
-    border-top-color: #e3c779;
+    border-top-color: var(--brand-gold, #e3c779);
     border-right-color: rgba(227, 199, 121, 0.4);
     animation: splashSpin 1.6s linear infinite;
 }
@@ -84,7 +84,7 @@ html.splash-pending {
     font-weight: 800;
     font-size: 2rem;
     letter-spacing: 1px;
-    color: #2d5c39;
+    color: var(--green, #2d5c39);
 }
 
 /* Agent name, revealed letter by letter */
@@ -111,7 +111,7 @@ html.splash-pending {
     height: 2px;
     width: 0;
     margin: 16px 0 14px;
-    background: #e3c779;
+    background: var(--brand-gold, #e3c779);
     animation: splashLine 0.9s ease-out 1.35s forwards;
 }
 
@@ -119,7 +119,7 @@ html.splash-pending {
     font-size: 0.82rem;
     font-weight: 600;
     letter-spacing: 6px;
-    color: #cfe5d3;
+    color: var(--brand-banner-muted, #d1e7d5);
     opacity: 0;
     animation: splashFade 0.8s ease-out 1.55s forwards;
 }
@@ -128,7 +128,7 @@ html.splash-pending {
     margin-top: 14px;
     font-family: 'Dancing Script', cursive;
     font-size: 1.5rem;
-    color: #e3c779;
+    color: var(--brand-gold, #e3c779);
     opacity: 0;
     animation: splashFade 0.9s ease-out 1.85s forwards;
 }
