@@ -26,7 +26,6 @@
     <link rel="stylesheet" href="property-detail.css">
     <link rel="stylesheet" href="../../shared/css/splash.css">
     <link rel="stylesheet" href="../../shared/css/session.css">
-    <link rel="stylesheet" href="../../shared/css/calculator.css">
     <link rel="stylesheet" href="../../shared/css/mobile-shell.css">
     <script src="../../shared/js/splash.js"></script>
     <script src="../../shared/js/supabase.js"></script>
@@ -206,9 +205,6 @@
             </div>
         </section>
 
-        <!-- INTERACTIVE AMORTIZATION CALCULATOR -->
-        <section class="amortization-calculator-section" id="propertyCalculator"></section>
-
         <!-- INQUIRY SECTION -->
         <section class="location-inquiry-grid">
             <!-- Interested in Property CTA Card -->
@@ -300,23 +296,6 @@
             '../../assets/images/kathleen-8.jpg',
             '../../assets/images/kathleen-9.jpg'
         ];
-    </script>
-    <script src="../../shared/js/calculator.js"></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            if (window.UrbanCalculator) {
-                UrbanCalculator.initPropertyCalculator('propertyCalculator', {
-                    tcp: 6200000,
-                    propertyTitle: 'Kathleen - Place 5',
-                    propertyId: 'kathleen',
-                    reservationFee: 50000,
-                    defaultDpPercent: 20,
-                    defaultTermYears: 20,
-                    defaultFinancing: 'bank',
-                    supportedFinancing: ['bank']
-                });
-            }
-        });
     </script>
     <script src="property-detail.js"></script>
 </body>

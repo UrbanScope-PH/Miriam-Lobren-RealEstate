@@ -821,7 +821,6 @@ body.superadmin-body {
 .sa-sidebar,
 .modal-body,
 .terms-modal-body,
-.bm-projects-list,
 .notif-dropdown-list,
 .custom-select-dropdown,
 .search-select-dropdown,
@@ -1089,66 +1088,6 @@ button,
     }
 }
 
-/* Budget Matcher Grid & Narrow Mobile Overflow Containment */
-@media (max-width: 960px) {
-    .budget-matcher-box {
-        grid-template-columns: minmax(0, 1fr) !important;
-        padding: 20px;
-    }
-
-    .budget-input-col,
-    .budget-results-col,
-    .budget-salary-display,
-    .budget-slider-wrap,
-    .budget-metrics-row,
-    .budget-metric-card,
-    .bm-projects-list,
-    .bm-project-item {
-        min-width: 0;
-        max-width: 100%;
-    }
-}
-
-@media (max-width: 520px) {
-    .budget-matcher-box {
-        padding: 16px;
-        gap: 20px;
-    }
-
-    .budget-salary-display {
-        padding: 14px;
-    }
-
-    .budget-slider-labels {
-        font-size: 11px;
-        gap: 4px;
-        flex-wrap: wrap;
-    }
-
-    .budget-results-col .bm-projects-list {
-        max-height: 433px !important;
-    }
-
-    .bm-project-item {
-        flex-wrap: wrap;
-        gap: 10px;
-        padding: 12px;
-    }
-
-    .bm-item-info {
-        min-width: 0;
-        flex: 1 1 160px;
-    }
-
-    .bm-item-act {
-        width: 100%;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 10px;
-    }
-}
-
 /* Narrow phone layout polish for long custom-select labels & floating actions */
 @media (max-width: 480px) {
     .custom-select-value {
@@ -1190,7 +1129,6 @@ button,
 .mobile-expand-wrap,
 .about-mobile-avatar,
 .mobile-inline-toggle,
-.calc-mobile-summary-bar,
 .mobile-property-cta-bar,
 .legal-mobile-jump,
 .legal-section-chevron,
@@ -1233,12 +1171,7 @@ button,
         line-height: 1.6;
     }
 
-    .calc-kpi-hint,
-    .budget-metric-hint,
-    .budget-salary-note,
-    .budget-slider-labels,
     .tcp-disclaimer,
-    .calc-footer-note p,
     .spec-label,
     .form-group small,
     .page-header p,
@@ -1447,23 +1380,6 @@ button,
         line-height: 1.3;
     }
 
-    /* Phase 2: Home - Compact Budget Matcher (2-up KPIs + directly scrollable ~2.5 homes) */
-    .budget-metrics-row {
-        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-        gap: 10px !important;
-    }
-
-    .budget-metric-card {
-        padding: 12px !important;
-    }
-
-    .bm-projects-list {
-        max-height: 240px !important;
-        overflow-y: auto !important;
-        -webkit-overflow-scrolling: touch;
-        overscroll-behavior-y: contain;
-    }
-
     /* Phase 2: Home - Compact About + Inline Avatar + Read More */
     .about {
         padding: 36px 5% !important;
@@ -1546,81 +1462,6 @@ button,
         grid-template-columns: repeat(2, minmax(0, 1fr));
         column-gap: 12px;
         row-gap: 8px;
-    }
-
-    .calc-mobile-summary-bar {
-        display: flex;
-        flex-direction: column;
-        gap: 10px;
-        padding: 14px 16px;
-        background: var(--surface-muted, #f4f8f5);
-        border-top: 1px solid var(--border-color, #d7e3da);
-        border-bottom: 1px solid var(--border-color, #d7e3da);
-    }
-
-    .calc-mobile-summary-info {
-        display: flex;
-        flex-direction: column;
-        gap: 2px;
-    }
-
-    .calc-mobile-summary-lbl {
-        font-size: 13px;
-        font-weight: 700;
-        text-transform: uppercase;
-        letter-spacing: 0.4px;
-        color: var(--text-muted, #526658);
-    }
-
-    .calc-mobile-summary-val {
-        font-size: 22px;
-        font-weight: 800;
-        color: var(--dark-green, #1a3b23);
-        line-height: 1.2;
-    }
-
-    .calc-mobile-summary-sub {
-        font-size: 13.5px;
-        color: var(--text-muted, #526658);
-    }
-
-    .calc-mobile-toggle-btn {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        width: 100%;
-        min-height: 46px;
-        padding: 10px 14px;
-        border-radius: 10px;
-        border: 1.5px solid var(--green, #2d5c39);
-        background: var(--surface, #ffffff);
-        color: var(--dark-green, #1a3b23);
-        font-family: inherit;
-        font-weight: 700;
-        font-size: 15px;
-        cursor: pointer;
-    }
-
-    .calc-mobile-toggle-btn svg {
-        transition: transform 0.2s ease;
-    }
-
-    .calc-card.mobile-calc-collapsed .calc-body,
-    .calc-card.mobile-calc-collapsed .calc-footer-note {
-        display: none !important;
-    }
-
-    .calc-card:not(.mobile-calc-collapsed) .calc-mobile-toggle-btn svg {
-        transform: rotate(180deg);
-    }
-
-    .calc-kpi-grid {
-        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-        gap: 10px !important;
-    }
-
-    .calc-kpi-card {
-        padding: 12px !important;
     }
 
     body.has-property-cta-bar .contact-fab {
@@ -2242,8 +2083,6 @@ button,
     /* Dark Mode Coverage for New Mobile UX Components */
     html.dark-mode .mobile-expand-btn,
     html[data-theme="dark"] .mobile-expand-btn,
-    html.dark-mode .calc-mobile-toggle-btn,
-    html[data-theme="dark"] .calc-mobile-toggle-btn,
     html.dark-mode .calendar-mobile-toggle,
     html[data-theme="dark"] .calendar-mobile-toggle,
     html.dark-mode .sa-mobile-collapse-btn,
@@ -2263,24 +2102,9 @@ button,
         color: var(--dark-green, #86efac);
     }
 
-    html.dark-mode .calc-mobile-summary-bar,
-    html[data-theme="dark"] .calc-mobile-summary-bar {
-        background: var(--surface-muted, #131f17);
-        border-color: var(--border-color, #273c2e);
-    }
-
-    html.dark-mode .calc-mobile-summary-lbl,
-    html[data-theme="dark"] .calc-mobile-summary-lbl,
-    html.dark-mode .calc-mobile-summary-sub,
-    html[data-theme="dark"] .calc-mobile-summary-sub,
     html.dark-mode .calendar-mobile-summary,
     html[data-theme="dark"] .calendar-mobile-summary {
         color: var(--text-muted, #9ab09f);
-    }
-
-    html.dark-mode .calc-mobile-summary-val,
-    html[data-theme="dark"] .calc-mobile-summary-val {
-        color: var(--dark-green, #86efac);
     }
 
     html.dark-mode .mobile-property-cta-bar,
@@ -2451,11 +2275,6 @@ button,
     .spec-pill,
     .search-field-label,
     .cta-question,
-    .bm-match-count,
-    .budget-metric-lbl,
-    .calc-tcp-label,
-    .calc-mobile-summary-lbl,
-    .calc-mobile-summary-sub,
     .status-badge,
     .inquiry-note {
         font-size: 14px !important;

@@ -528,9 +528,6 @@ function renderPropertyDetails(property) {
         mapLink.setAttribute('target', '_blank');
         mapLink.setAttribute('rel', 'noopener noreferrer');
     }
-
-    // Dynamic Amortization Calculator Rendering
-    renderPropertyCalculator(property);
 }
 
 async function loadPropertyFromDb() {
@@ -558,89 +555,11 @@ async function loadPropertyFromDb() {
             if (titleEl) titleEl.innerText = 'Property Listing Not Found';
             const descEl = document.querySelector('.detail-block p');
             if (descEl) descEl.innerText = 'This listing may have been removed or is unavailable.';
-            renderPropertyCalculator(null);
         }
         return;
     }
 
     renderPropertyDetails(property);
-}
-
-function parsePropertyPrice(priceVal) {
-    if (typeof priceVal === 'number') return priceVal;
-    if (!priceVal) return 2500000;
-    const cleaned = String(priceVal).replace(/,/g, '');
-    const match = cleaned.match(/\d+(\.\d+)?/);
-    return match ? Number(match[0]) : 2500000;
-}
-
-function renderPropertyCalculator(property) {
-    const calcContainer = document.getElementById('propertyCalculator');
-    if (!calcContainer || !window.UrbanCalculator) return;
-
-    const tcp = parsePropertyPrice(property ? property.price : 2500000);
-    const title = property ? (property.title || 'Property') : 'Casasuerte';
-    const id = property ? (property.id || '') : '';
-    const tLower = title.toLowerCase();
-
-    let resv = 20000;
-    let dp = 10;
-    let financing = 'pagibig';
-    let supported = ['pagibig', 'bank'];
-
-    if (tLower.includes('kathleen')) {
-        resv = 50000;
-        dp = 20;
-        financing = 'bank';
-        supported = ['bank'];
-    } else if (tLower.includes('airmen')) {
-        resv = 50000;
-        dp = 20;
-        financing = 'bank';
-        supported = ['bank'];
-    } else if (tLower.includes('liora')) {
-        resv = 15000;
-        dp = 10;
-        financing = 'pagibig';
-        supported = ['pagibig', 'bank'];
-    } else if (tLower.includes('suerte')) {
-        resv = 10000;
-        dp = 10;
-        financing = 'pagibig';
-        supported = ['pagibig', 'bank'];
-    } else if (tLower.includes('benecia')) {
-        resv = 50000;
-        dp = 20;
-        financing = 'bank';
-        supported = ['bank'];
-    } else if (tLower.includes('amore')) {
-        resv = 30000;
-        dp = 20;
-        financing = 'bank';
-        supported = ['bank'];
-    } else if (tLower.includes('midori')) {
-        resv = 0;
-        dp = 10;
-        financing = 'pagibig';
-        supported = ['pagibig', 'bank'];
-    }
-
-    if (calcContainer._setTcp) {
-        if (property) {
-            calcContainer._setTcp(tcp, title, id, resv);
-        }
-    } else {
-        UrbanCalculator.initPropertyCalculator('propertyCalculator', {
-            tcp: tcp,
-            propertyTitle: title,
-            propertyId: id,
-            reservationFee: resv,
-            defaultDpPercent: dp,
-            defaultTermYears: 20,
-            defaultFinancing: financing,
-            supportedFinancing: supported
-        });
-    }
 }
 
 function checkInquiryAuthNote(user) {
@@ -693,10 +612,6 @@ window.addEventListener('DOMContentLoaded', () => {
             renderPropertyDetails(staticFallback);
         }
         loadStaticPropertyAvailability();
-        const calcContainer = document.getElementById('propertyCalculator');
-        if (calcContainer && !calcContainer._setTcp) {
-            renderPropertyCalculator(null);
-        }
     }
     checkInquiryAuthNote();
     const searchToggle = document.getElementById('searchToggle');
