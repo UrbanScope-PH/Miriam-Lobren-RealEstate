@@ -878,8 +878,8 @@ body.sidebar-is-open {
     *::before,
     *::after {
         scroll-behavior: auto !important;
-        transition-duration: 0.01ms !important;
-        animation-duration: 0.01ms !important;
+        transition-duration: var(--motion-duration-fast) !important;
+        animation-duration: var(--motion-duration-ui) !important;
         animation-iteration-count: 1 !important;
     }
 }

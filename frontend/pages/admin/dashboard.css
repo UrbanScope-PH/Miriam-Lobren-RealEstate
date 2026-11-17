@@ -1251,7 +1251,7 @@
     cursor: pointer;
     text-decoration: none;
     box-shadow: 0 1px 2px rgba(18, 52, 28, 0.04);
-    transition: all 0.18s ease;
+    transition: var(--motion-transition-fast);
 }
 
 @media (hover: hover) and (pointer: fine) {
@@ -1353,7 +1353,7 @@
     align-items: center;
     gap: 4px;
     white-space: nowrap;
-    transition: all 0.15s ease;
+    transition: var(--motion-transition-fast);
 }
 
 .prop-action-view {
@@ -1853,7 +1853,7 @@
     box-shadow: 0 25px 65px rgba(10, 24, 15, 0.28), 0 6px 18px rgba(0, 0, 0, 0.08);
     border: 1px solid rgba(46, 125, 50, 0.15);
     transform: translateY(16px) scale(0.96);
-    transition: transform 0.24s cubic-bezier(0.16, 1, 0.3, 1);
+    transition: transform 0.24s var(--motion-ease-out);
     box-sizing: border-box;
 }
 
@@ -1919,7 +1919,7 @@
     transition: background-color 0.22s ease,
                 border-color 0.22s ease,
                 color 0.22s ease,
-                transform 0.25s cubic-bezier(0.16, 1, 0.3, 1),
+                transform 0.25s var(--motion-ease-out),
                 box-shadow 0.22s ease;
     flex-shrink: 0;
     margin-top: 2px;
@@ -1933,7 +1933,7 @@
     width: 18px;
     height: 18px;
     transform-origin: center center;
-    transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    transition: transform 0.25s var(--motion-ease-out);
 }
 
 @media (hover: hover) and (pointer: fine) {
@@ -1968,7 +1968,7 @@
 }
 
 .modal-overlay.open .modal-close {
-    animation: modalCloseEntrance 0.32s cubic-bezier(0.16, 1, 0.3, 1) 0.08s both;
+    animation: modalCloseEntrance 0.32s var(--motion-ease-out) 0.08s both;
 }
 
 @keyframes modalCloseEntrance {
@@ -2164,7 +2164,7 @@
     padding: 9px 18px;
     border-radius: 10px;
     cursor: pointer;
-    transition: all 0.15s ease;
+    transition: var(--motion-transition-fast);
 }
 
 @media (hover: hover) and (pointer: fine) {
@@ -2187,7 +2187,7 @@
     align-items: center;
     gap: 8px;
     text-decoration: none;
-    transition: all 0.2s ease;
+    transition: var(--motion-transition-ui);
     box-shadow: 0 4px 12px rgba(10, 24, 15, 0.15);
 }
 
@@ -2211,7 +2211,7 @@
     display: inline-flex;
     align-items: center;
     gap: 8px;
-    transition: all 0.2s ease;
+    transition: var(--motion-transition-ui);
     box-shadow: 0 4px 12px rgba(21, 128, 61, 0.2);
 }
 

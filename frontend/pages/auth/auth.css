@@ -564,8 +564,9 @@ body {
     margin-bottom: 1.5px;
     border: solid #ffffff;
     border-width: 0 2px 2px 0;
-    transform: rotate(45deg) scale(0);
-    transition: transform 0.12s cubic-bezier(0.22, 1, 0.36, 1);
+    opacity: 0;
+    transform: rotate(45deg) scale(0.92);
+    transition: opacity var(--motion-duration-fast) var(--motion-ease-out), transform var(--motion-duration-fast) var(--motion-ease-out);
 }
 
 .remember-label input[type="checkbox"]:checked {
@@ -574,6 +575,7 @@ body {
 }
 
 .remember-label input[type="checkbox"]:checked::after {
+    opacity: 1;
     transform: rotate(45deg) scale(1);
 }
 
@@ -1386,7 +1388,7 @@ body.terms-modal-open {
     overflow: hidden;
     margin: auto;
     transform: scale(0.94) translateY(10px);
-    transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+    transition: transform 0.28s var(--motion-ease-out);
 }
 
 .terms-modal-overlay.open .terms-modal-card {
@@ -1460,11 +1462,11 @@ body.terms-modal-open {
     width: 17px;
     height: 17px;
     flex-shrink: 0;
-    transition: transform 0.26s cubic-bezier(0.22, 1, 0.36, 1);
+    transition: transform 0.26s var(--motion-ease-out);
 }
 
 .terms-modal-overlay.open .terms-modal-close {
-    animation: termsClosePop 0.32s cubic-bezier(0.16, 1, 0.3, 1) both;
+    animation: termsClosePop 0.32s var(--motion-ease-out) both;
 }
 
 @keyframes termsClosePop {
@@ -1686,7 +1688,10 @@ body.terms-modal-open {
 
 .terms-scroll-hint .hint-icon-scroll {
     display: inline-block;
-    animation: termsArrowBounce 1.4s ease-in-out infinite;
+}
+
+.terms-modal-overlay.open .terms-scroll-hint:not(.is-ready) .hint-icon-scroll {
+    animation: termsArrowBounce 650ms var(--motion-ease-in-out) 1;
 }
 
 .terms-scroll-hint .hint-icon-ready {
@@ -1960,7 +1965,7 @@ body.terms-modal-open {
     color: #1f4928;
     font-size: 0.8rem;
     line-height: 1.35;
-    animation: noticeIn 0.45s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+    animation: noticeIn var(--motion-duration-enter) var(--motion-ease-out) both;
 }
 .auth-notice[hidden] { display: none; }
 @keyframes noticeIn {
@@ -2002,7 +2007,7 @@ body.terms-modal-open {
     box-shadow: 0 24px 70px rgba(12, 30, 18, 0.3);
     color: var(--text-primary);
     transform: translateY(10px) scale(0.98);
-    transition: transform 0.24s cubic-bezier(0.16, 1, 0.3, 1);
+    transition: transform 0.24s var(--motion-ease-out);
 }
 
 .otp-modal-overlay.open .otp-modal-card {
@@ -2195,7 +2200,7 @@ body.otp-modal-open {
     position: absolute;
     inset: 0;
     margin: auto;
-    transition: opacity 0.42s cubic-bezier(0.22, 1, 0.36, 1), transform 0.42s cubic-bezier(0.22, 1, 0.36, 1);
+    transition: opacity var(--motion-duration-theme) var(--motion-ease-out), transform var(--motion-duration-theme) var(--motion-ease-out);
 }
 
 .theme-icon-moon {
@@ -2242,8 +2247,8 @@ html.theme-vt-snap *::after {
 }
 
 ::view-transition-group(root) {
-    animation-duration: 0.42s;
-    animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+    animation-duration: var(--motion-duration-theme);
+    animation-timing-function: var(--motion-ease-out);
 }
 
 ::view-transition-old(root) {
@@ -2253,7 +2258,7 @@ html.theme-vt-snap *::after {
 }
 
 ::view-transition-new(root) {
-    animation: urbanScopeThemeFadeIn 0.42s cubic-bezier(0.22, 1, 0.36, 1) both;
+    animation: urbanScopeThemeFadeIn var(--motion-duration-theme) var(--motion-ease-out) both;
     mix-blend-mode: normal;
     z-index: 2;
 }
@@ -2263,8 +2268,8 @@ html.theme-transitioning *:not(.theme-icon),
 html.theme-transitioning *::before,
 html.theme-transitioning *::after {
     transition-property: background-color, color, border-color, box-shadow, fill, stroke, filter !important;
-    transition-duration: 0.48s !important;
-    transition-timing-function: cubic-bezier(0.22, 1, 0.36, 1) !important;
+    transition-duration: var(--motion-duration-theme) !important;
+    transition-timing-function: var(--motion-ease-out) !important;
     transition-delay: 0s !important;
 }
 
@@ -2583,7 +2588,7 @@ html.dark-mode .match-hint.ok {
 .btn-submit {
     background: var(--btn-primary-bg) !important;
     box-shadow: 0 4px 14px rgba(31, 73, 40, 0.28);
-    transition: transform 0.18s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.18s ease, background-color 0.18s ease;
+    transition: transform 0.18s var(--motion-ease-out), box-shadow 0.18s ease, background-color 0.18s ease;
 }
 
 @media (hover: hover) and (pointer: fine) {
@@ -2632,5 +2637,9 @@ html.dark-mode .match-hint.ok {
     display: none !important;
 }
 
-
-
+@media (prefers-reduced-motion: reduce) {
+    .terms-scroll-hint .hint-icon-scroll,
+    .terms-scroll-hint.pulse-attention {
+        animation: none !important;
+    }
+}

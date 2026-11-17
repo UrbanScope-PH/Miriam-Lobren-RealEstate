@@ -144,7 +144,7 @@
     font-size: 0.85rem;
     font-weight: 600;
     cursor: pointer;
-    transition: all 0.18s;
+    transition: var(--motion-transition-fast);
 }
 
 .status-tab-btn.active {
@@ -390,7 +390,7 @@ tr {
     flex-shrink: 0;
     color: inherit;
     opacity: 0.88;
-    transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+    transition: transform 0.22s var(--motion-ease-out);
 }
 
 .status-select-pill.is-open .status-select-chevron {
@@ -439,7 +439,7 @@ tr {
     padding: 6px;
     box-shadow: var(--shadow);
     box-sizing: border-box;
-    animation: statusMenuIn 0.16s cubic-bezier(0.16, 1, 0.3, 1);
+    animation: statusMenuIn 0.16s var(--motion-ease-out);
     transform-origin: top left;
 }
 
@@ -675,7 +675,7 @@ tr {
     transition: background-color 0.22s ease,
                 border-color 0.22s ease,
                 color 0.22s ease,
-                transform 0.25s cubic-bezier(0.16, 1, 0.3, 1),
+                transform 0.25s var(--motion-ease-out),
                 box-shadow 0.22s ease;
     flex-shrink: 0;
     margin-top: 2px;
@@ -689,7 +689,7 @@ tr {
     width: 18px;
     height: 18px;
     transform-origin: center center;
-    transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    transition: transform 0.25s var(--motion-ease-out);
 }
 
 @media (hover: hover) and (pointer: fine) {
@@ -724,7 +724,7 @@ tr {
 }
 
 .modal-overlay.open .modal-close {
-    animation: modalCloseEntrance 0.32s cubic-bezier(0.16, 1, 0.3, 1) 0.08s both;
+    animation: modalCloseEntrance 0.32s var(--motion-ease-out) 0.08s both;
 }
 
 @keyframes modalCloseEntrance {

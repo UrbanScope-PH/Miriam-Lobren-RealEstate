@@ -33,7 +33,7 @@
     text-decoration: none;
     cursor: pointer;
     box-shadow: 0 4px 14px rgba(45, 92, 57, 0.25);
-    transition: all 0.2s;
+    transition: var(--motion-transition-ui);
 }
 
 @media (hover: hover) and (pointer: fine) {
@@ -270,7 +270,7 @@
     text-decoration: none;
     cursor: pointer;
     white-space: nowrap;
-    transition: all 0.2s ease;
+    transition: var(--motion-transition-ui);
     font-family: inherit;
     line-height: 1.2;
 }
@@ -347,12 +347,13 @@
     padding: 20px;
     opacity: 0;
     visibility: hidden;
-    transition: all 0.25s ease;
+    transition: opacity var(--motion-duration-modal) var(--motion-ease-out), visibility 0s linear var(--motion-duration-modal);
 }
 
 .modal-backdrop.active {
     opacity: 1;
     visibility: visible;
+    transition: opacity var(--motion-duration-modal) var(--motion-ease-out), visibility 0s;
 }
 
 .modal-card {
