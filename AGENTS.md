@@ -60,7 +60,7 @@ frontend/              Everything the browser loads (served at /)
   pages/legal/         Terms of Service (terms.html) & Privacy Policy (privacy.html)
   pages/admin/         Dashboard, propertylist.html, add-property, edit-property, clients, profile, legacy login redirect (users.html redirects)
   pages/superadmin/    Master overview, system diagnostics, user account modification & RBAC management
-  shared/css/          tokens.css (canonical light/dark palette tokens), common.css (layout, spacing/radius tokens, navbar, footer), session.css, splash.css, mobile-shell.css
+  shared/css/          tokens.css (canonical light/dark palette and motion tokens), common.css (layout, spacing/radius tokens, navbar, footer), session.css, splash.css, mobile-shell.css
   shared/js/           supabase.js (API gateway), session.js, splash.js, api.js
   assets/images/       Photos, logos, icons
 supabase/              Supabase CLI project: config.toml, migrations/ (timestamped .sql), seed.sql, scripts/ (one-off SQL Editor fixes) — see DATABASE.md §10
@@ -1470,6 +1470,8 @@ path when rendering from a page.
 ---
 
 152. **Retired Monthly Amortization & Affordability Calculator (Nov 18, 2026):** Removed the property-page financing calculator, homepage salary-based affordability matcher, and calculator-generated inquiry prefill/banner flow. Property pricing, direct inquiries, and requested financing guidance remain available. The shared calculator JS/CSS paths are inert placeholders pending approval to delete files, as required by the repository safety rules.
+
+153. **Sitewide Motion System & Animation Polish (Nov 18, 2026):** Added shared easing, duration, and explicit-property transition tokens in `frontend/shared/css/tokens.css`; applied them across public, inquiry, auth, Admin, and Superadmin CSS. Replaced blanket `transition: all`, shortened scroll reveal timing and stagger, softened the profile chip and splash entrances/exits, changed success and splash ring feedback to one-shot motion, and kept reduced-motion preferences supported across shared and decorative effects. No browser dependency was added.
 
 ## Safety Rules
 

@@ -10,6 +10,22 @@
 :root {
     color-scheme: light;
 
+    /* Motion: short, consistent feedback for the crisp UrbanScope interface */
+    --motion-ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+    --motion-ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+    --motion-ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
+    --motion-duration-fast: 160ms;
+    --motion-duration-ui: 200ms;
+    --motion-duration-enter: 240ms;
+    --motion-duration-modal: 300ms;
+    --motion-duration-toast: 400ms;
+    --motion-duration-theme: 280ms;
+    --motion-duration-splash: 480ms;
+    --motion-duration-reveal: 420ms;
+    --motion-duration-celebration: 900ms;
+    --motion-transition-fast: color var(--motion-duration-fast) ease, background-color var(--motion-duration-fast) ease, border-color var(--motion-duration-fast) ease, outline-color var(--motion-duration-fast) ease, box-shadow var(--motion-duration-fast) ease, opacity var(--motion-duration-fast) var(--motion-ease-out), transform var(--motion-duration-fast) var(--motion-ease-out);
+    --motion-transition-ui: color var(--motion-duration-ui) ease, background-color var(--motion-duration-ui) ease, border-color var(--motion-duration-ui) ease, outline-color var(--motion-duration-ui) ease, box-shadow var(--motion-duration-ui) ease, opacity var(--motion-duration-ui) var(--motion-ease-out), transform var(--motion-duration-ui) var(--motion-ease-out);
+
     /* Core Brand Greens */
     --green: #2d5c39;
     --green-hover: #1f4928;
@@ -287,4 +303,39 @@ html[data-theme="dark"] {
     --us-scroll-track: #0e1611;
     --us-scroll-thumb: #2b4533;
     --us-scroll-thumb-hover: #3ea35d;
+}
+
+/* Reduced motion shortens interaction feedback and removes decorative movement. */
+@media (prefers-reduced-motion: reduce) {
+    :root {
+        --motion-duration-fast: 120ms;
+        --motion-duration-ui: 150ms;
+        --motion-duration-enter: 180ms;
+        --motion-duration-modal: 200ms;
+        --motion-duration-toast: 200ms;
+        --motion-duration-theme: 180ms;
+        --motion-duration-splash: 240ms;
+        --motion-duration-reveal: 200ms;
+        --motion-duration-celebration: 300ms;
+        --motion-ease-out: ease-out;
+        --motion-ease-in-out: ease-out;
+        --motion-ease-drawer: ease-out;
+    }
+
+    html {
+        scroll-behavior: auto !important;
+    }
+
+    *,
+    *::before,
+    *::after {
+        transition-duration: var(--motion-duration-fast) !important;
+        transition-delay: 0s !important;
+    }
+
+    .success-icon-badge,
+    .terms-scroll-hint .hint-icon-scroll,
+    .terms-scroll-hint.pulse-attention {
+        animation: none !important;
+    }
 }

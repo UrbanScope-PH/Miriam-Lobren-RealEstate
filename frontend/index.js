@@ -253,7 +253,7 @@ function showFeedbackToast(msg, icon = '✓') {
             pointer-events: none;
             backdrop-filter: blur(8px);
             -webkit-backdrop-filter: blur(8px);
-            transition: all 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+            transition: opacity var(--motion-duration-toast) ease, transform var(--motion-duration-toast) var(--motion-ease-out);
         `;
         document.body.appendChild(toast);
     }

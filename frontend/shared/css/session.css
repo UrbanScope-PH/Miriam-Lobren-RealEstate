@@ -338,7 +338,7 @@ html.auth-checking body {
     font-family: inherit;
     color: var(--text-dark);
     transition: border-color 0.2s, box-shadow 0.2s, transform 0.2s;
-    animation: profileIn 0.45s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+    animation: profileIn var(--motion-duration-enter) var(--motion-ease-out) both;
 }
 
 .profile-menu.open .profile-chip {
@@ -506,7 +506,7 @@ html.auth-checking body {
 @keyframes profileIn {
     from {
         opacity: 0;
-        transform: translateY(-6px) scale(0.96);
+        transform: translateY(-3px) scale(0.98);
     }
 
     to {
@@ -611,8 +611,8 @@ html[data-auth-state="logged-in"] .inquiry-note,
 
 .theme-icon {
     position: absolute;
-    transition: opacity 0.42s cubic-bezier(0.22, 1, 0.36, 1),
-                transform 0.42s cubic-bezier(0.22, 1, 0.36, 1);
+    transition: opacity var(--motion-duration-theme) var(--motion-ease-out),
+                transform var(--motion-duration-theme) var(--motion-ease-out);
 }
 
 .theme-icon-moon {
@@ -660,8 +660,8 @@ html.theme-vt-snap *::after {
 }
 
 ::view-transition-group(root) {
-    animation-duration: 0.42s;
-    animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+    animation-duration: var(--motion-duration-theme);
+    animation-timing-function: var(--motion-ease-out);
 }
 
 ::view-transition-old(root) {
@@ -671,7 +671,7 @@ html.theme-vt-snap *::after {
 }
 
 ::view-transition-new(root) {
-    animation: urbanScopeThemeFadeIn 0.42s cubic-bezier(0.22, 1, 0.36, 1) both;
+    animation: urbanScopeThemeFadeIn var(--motion-duration-theme) var(--motion-ease-out) both;
     mix-blend-mode: normal;
     z-index: 2;
 }
@@ -682,8 +682,8 @@ html.theme-transitioning *:not(.theme-icon),
 html.theme-transitioning *::before,
 html.theme-transitioning *::after {
     transition-property: background-color, color, border-color, box-shadow, fill, stroke, filter !important;
-    transition-duration: 0.48s !important;
-    transition-timing-function: cubic-bezier(0.22, 1, 0.36, 1) !important;
+    transition-duration: var(--motion-duration-theme) !important;
+    transition-timing-function: var(--motion-ease-out) !important;
     transition-delay: 0s !important;
 }
 
@@ -1470,7 +1470,7 @@ body.has-contact-fab .toast-notice {
     justify-content: center;
     position: relative;
     pointer-events: auto;
-    transition: transform 0.25s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.25s ease, background 0.25s ease;
+    transition: transform 0.25s var(--motion-ease-out), box-shadow 0.25s ease, background 0.25s ease;
 }
 
 @media (hover: hover) and (pointer: fine) {
@@ -1491,7 +1491,7 @@ body.has-contact-fab .toast-notice {
     align-items: center;
     justify-content: center;
     position: absolute;
-    transition: transform 0.25s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.2s ease;
+    transition: transform 0.25s var(--motion-ease-out), opacity 0.2s ease;
 }
 
 .fab-icon-chat {
@@ -1524,8 +1524,8 @@ body.has-contact-fab .toast-notice {
     visibility: hidden;
     transform: translateY(12px) scale(0.92);
     pointer-events: none;
-    transition: opacity 0.24s cubic-bezier(0.2, 0.8, 0.2, 1),
-                transform 0.24s cubic-bezier(0.2, 0.8, 0.2, 1),
+    transition: opacity 0.24s var(--motion-ease-out),
+                transform 0.24s var(--motion-ease-out),
                 visibility 0s linear 0.24s;
 }
 
@@ -1534,8 +1534,8 @@ body.has-contact-fab .toast-notice {
     visibility: visible;
     transform: translateY(0) scale(1);
     pointer-events: auto;
-    transition: opacity 0.24s cubic-bezier(0.2, 0.8, 0.2, 1),
-                transform 0.24s cubic-bezier(0.2, 0.8, 0.2, 1),
+    transition: opacity 0.24s var(--motion-ease-out),
+                transform 0.24s var(--motion-ease-out),
                 visibility 0s linear 0s;
 }
 

@@ -31,7 +31,7 @@
     align-items: center;
     justify-content: center;
     flex-shrink: 0;
-    transition: all 0.2s;
+    transition: var(--motion-transition-ui);
 }
 
 @media (hover: hover) and (pointer: fine) {
@@ -168,13 +168,14 @@
     opacity: 0;
     visibility: hidden;
     transform: translateX(-20px);
-    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    transition: transform var(--motion-duration-enter) var(--motion-ease-drawer), opacity var(--motion-duration-enter) var(--motion-ease-out), visibility 0s linear var(--motion-duration-enter);
 }
 
 .filter-drawer.open {
     opacity: 1;
     visibility: visible;
     transform: translateX(0);
+    transition: transform var(--motion-duration-enter) var(--motion-ease-drawer), opacity var(--motion-duration-enter) var(--motion-ease-out), visibility 0s;
 }
 
 .filter-drawer-header {
@@ -285,12 +286,13 @@
     z-index: 40;
     opacity: 0;
     visibility: hidden;
-    transition: all 0.25s;
+    transition: opacity var(--motion-duration-ui) var(--motion-ease-out), visibility 0s linear var(--motion-duration-ui);
 }
 
 .drawer-backdrop.active {
     opacity: 1;
     visibility: visible;
+    transition: opacity var(--motion-duration-ui) var(--motion-ease-out), visibility 0s;
 }
 
 /* LISTING GRID */

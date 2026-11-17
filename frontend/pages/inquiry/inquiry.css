@@ -94,7 +94,7 @@ body {
     font-weight: 700;
     text-decoration: none;
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03);
-    transition: all 0.2s ease;
+    transition: var(--motion-transition-ui);
 }
 
 @media (hover: hover) and (pointer: fine) {
@@ -131,7 +131,7 @@ body {
     font-weight: 700;
     color: var(--text-muted);
     cursor: pointer;
-    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    transition: var(--motion-transition-ui);
     white-space: nowrap;
 }
 
@@ -361,7 +361,7 @@ body {
     font-size: 15px;
     font-weight: 600;
     cursor: pointer;
-    transition: all 0.2s;
+    transition: var(--motion-transition-ui);
 }
 
 @media (hover: hover) and (pointer: fine) {
@@ -385,7 +385,7 @@ body {
     letter-spacing: 0.2px;
     cursor: pointer;
     box-shadow: 0 4px 14px rgba(21, 128, 61, 0.32);
-    transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s ease, background 0.2s ease;
+    transition: transform 0.2s var(--motion-ease-out), box-shadow 0.2s ease, background 0.2s ease;
 }
 
 @media (hover: hover) and (pointer: fine) {
@@ -602,7 +602,7 @@ body {
     -webkit-overflow-scrolling: touch;
     margin: auto;
     transform: scale(0.93) translateY(12px);
-    transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+    transition: transform 0.28s var(--motion-ease-out);
 }
 
 .modal-overlay.active .modal-box {
@@ -623,7 +623,7 @@ body {
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    transition: all 0.18s ease;
+    transition: var(--motion-transition-fast);
     z-index: 2;
     text-decoration: none;
 }
@@ -650,7 +650,7 @@ body {
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    transition: all 0.18s ease;
+    transition: var(--motion-transition-fast);
     z-index: 2;
 }
 
@@ -681,7 +681,7 @@ body {
     justify-content: center;
     margin-bottom: 16px;
     box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4);
-    animation: successPulse 2s infinite cubic-bezier(0.66, 0, 0, 1);
+    animation: successPulse var(--motion-duration-celebration) ease-out 1;
 }
 
 @keyframes successPulse {
@@ -892,7 +892,7 @@ body {
     text-decoration: none;
     border: none;
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: var(--motion-transition-ui);
 }
 
 @media (hover: hover) and (pointer: fine) {
@@ -916,7 +916,7 @@ body {
     font-weight: 700;
     font-family: inherit;
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: var(--motion-transition-ui);
     text-decoration: none;
 }
 
@@ -996,7 +996,7 @@ body {
     z-index: 1100;
     transform: translateY(100px);
     opacity: 0;
-    transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.28s ease;
+    transition: transform 0.28s var(--motion-ease-out), opacity 0.28s ease;
     pointer-events: none;
 }
 
@@ -1312,7 +1312,7 @@ html.dark-mode .guest-inquiry-banner a {
     background-color: #ffffff;
     user-select: none;
     font-weight: 500;
-    transition: all 0.2s ease;
+    transition: var(--motion-transition-ui);
 }
 
 .custom-datepicker-input::placeholder {
@@ -1367,7 +1367,7 @@ html.dark-mode .guest-inquiry-banner a {
     z-index: 1050;
     font-family: inherit;
     box-sizing: border-box;
-    animation: urbanDatepickerFade 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+    animation: urbanDatepickerFade 0.18s var(--motion-ease-out);
     transform-origin: top left;
 }
 
@@ -1408,7 +1408,7 @@ html.dark-mode .guest-inquiry-banner a {
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    transition: all 0.15s ease;
+    transition: var(--motion-transition-fast);
     padding: 0;
 }
 
@@ -1470,7 +1470,7 @@ html.dark-mode .guest-inquiry-banner a {
     cursor: pointer;
     background: transparent;
     border: 1.5px solid transparent;
-    transition: all 0.12s ease;
+    transition: var(--motion-transition-fast);
     padding: 0;
     width: 100%;
 }
@@ -1526,7 +1526,7 @@ html.dark-mode .guest-inquiry-banner a {
     cursor: pointer;
     padding: 4px 8px;
     border-radius: 6px;
-    transition: all 0.15s ease;
+    transition: var(--motion-transition-fast);
     font-family: inherit;
 }
 
@@ -1704,7 +1704,7 @@ html.dark-mode .datepicker-action-today {
     background-color: #ffffff;
     font-family: inherit;
     outline: none;
-    transition: all 0.2s ease;
+    transition: var(--motion-transition-ui);
     box-sizing: border-box;
     cursor: pointer;
     display: flex;
@@ -1747,7 +1747,7 @@ html.dark-mode .datepicker-action-today {
     align-items: center;
     justify-content: center;
     color: var(--text-muted);
-    transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), color 0.15s ease;
+    transition: transform 0.2s var(--motion-ease-out), color 0.15s ease;
     flex-shrink: 0;
 }
 
@@ -1770,7 +1770,7 @@ html.dark-mode .datepicker-action-today {
     z-index: 1060;
     font-family: inherit;
     box-sizing: border-box;
-    animation: urbanSelectFade 0.16s cubic-bezier(0.16, 1, 0.3, 1);
+    animation: urbanSelectFade 0.16s var(--motion-ease-out);
     transform-origin: top left;
 }
 
@@ -1802,7 +1802,7 @@ html.dark-mode .datepicker-action-today {
     font-weight: 500;
     color: var(--text-dark);
     cursor: pointer;
-    transition: all 0.12s ease;
+    transition: var(--motion-transition-fast);
     user-select: none;
 }
 

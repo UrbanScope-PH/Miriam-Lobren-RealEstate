@@ -37,7 +37,7 @@
     --sa-radius-md: var(--radius-md);
     --sa-radius-lg: var(--radius-lg);
     --sa-radius-pill: var(--radius-pill);
-    --sa-transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    --sa-transition: var(--motion-transition-ui);
 }
 
 html {
@@ -1265,7 +1265,7 @@ td {
     font-weight: 700;
     text-decoration: none;
     cursor: pointer;
-    transition: all 0.18s;
+    transition: var(--motion-transition-fast);
 }
 
 @media (hover: hover) and (pointer: fine) {
@@ -1978,7 +1978,7 @@ td {
     position: absolute;
     inset: 0;
     margin: auto;
-    transition: opacity 0.42s cubic-bezier(0.22, 1, 0.36, 1), transform 0.42s cubic-bezier(0.22, 1, 0.36, 1);
+    transition: opacity var(--motion-duration-theme) var(--motion-ease-out), transform var(--motion-duration-theme) var(--motion-ease-out);
 }
 
 .theme-icon-moon {
@@ -2025,8 +2025,8 @@ html.theme-vt-snap *::after {
 }
 
 ::view-transition-group(root) {
-    animation-duration: 0.42s;
-    animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+    animation-duration: var(--motion-duration-theme);
+    animation-timing-function: var(--motion-ease-out);
 }
 
 ::view-transition-old(root) {
@@ -2036,7 +2036,7 @@ html.theme-vt-snap *::after {
 }
 
 ::view-transition-new(root) {
-    animation: urbanScopeThemeFadeIn 0.42s cubic-bezier(0.22, 1, 0.36, 1) both;
+    animation: urbanScopeThemeFadeIn var(--motion-duration-theme) var(--motion-ease-out) both;
     mix-blend-mode: normal;
     z-index: 2;
 }
@@ -2046,8 +2046,8 @@ html.theme-transitioning *:not(.theme-icon),
 html.theme-transitioning *::before,
 html.theme-transitioning *::after {
     transition-property: background-color, color, border-color, box-shadow, fill, stroke, filter !important;
-    transition-duration: 0.48s !important;
-    transition-timing-function: cubic-bezier(0.22, 1, 0.36, 1) !important;
+    transition-duration: var(--motion-duration-theme) !important;
+    transition-timing-function: var(--motion-ease-out) !important;
     transition-delay: 0s !important;
 }
 
@@ -2360,7 +2360,7 @@ html.dark-mode .sa-toast.error {
     box-shadow: 0 4px 14px rgba(31, 73, 40, 0.28) !important;
     font-weight: 600 !important;
     border-radius: var(--radius-md, 8px) !important;
-    transition: transform 0.18s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.18s ease !important;
+    transition: transform 0.18s var(--motion-ease-out), box-shadow 0.18s ease !important;
 }
 
 @media (hover: hover) and (pointer: fine) {
