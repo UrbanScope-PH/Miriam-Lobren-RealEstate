@@ -1243,7 +1243,7 @@ function renderDashboardProperties(list) {
     if (!tbody) return;
 
     if (!list || list.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding: 30px; color:#6b7f70;">No property records found. Click "+ Add Property" to create one.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding: 30px; color:var(--text-muted);">No property records found. Click "+ Add Property" to create one.</td></tr>`;
         return;
     }
 
@@ -1279,14 +1279,14 @@ function renderDashboardProperties(list) {
                 <div style="display:flex; align-items:center; gap:12px;">
                     <img src="${escapeHTML(imgSrc)}" alt="${safeTitle}" style="width:44px; height:44px; border-radius:6px; object-fit:cover; ${isSold ? 'filter:grayscale(1); opacity:0.8;' : ''}" onerror="this.src='../../assets/images/property1.jpg'">
                     <div>
-                        <strong style="${isSold ? 'color:var(--text-muted, #64748b);' : 'color:var(--text-dark, #1b2e21);'} font-size:0.92rem;">${safeTitle}</strong><br>
-                        <small style="color:var(--text-muted, #6b7f70);">ID #${safeId}</small>
+                        <strong style="color:${isSold ? 'var(--text-muted)' : 'var(--text-dark)'}; font-size:0.92rem;">${safeTitle}</strong><br>
+                        <small style="color:var(--text-muted);">ID #${safeId}</small>
                     </div>
                 </div>
             </td>
-            <td style="color:var(--text-dark, #2d3748); font-size:0.9rem;">${safeLoc}</td>
-            <td><span style="padding:4px 9px; border-radius:4px; background:var(--light-green, #eef5ef); color:var(--dark-green, #1a3b23); font-size:0.8rem; font-weight:600;">${safeType}</span></td>
-            <td style="font-weight:700; color:var(--text-dark, #1b2e21);">${safePrice}</td>
+            <td style="color:var(--text-secondary); font-size:0.9rem;">${safeLoc}</td>
+            <td><span style="padding:4px 9px; border-radius:4px; background:var(--light-green); color:var(--dark-green); font-size:0.8rem; font-weight:600;">${safeType}</span></td>
+            <td style="font-weight:700; color:var(--text-dark);">${safePrice}</td>
             <td>
                 <span class="status-badge-table ${isSold ? 'status-badge-sold' : 'status-badge-available'}">
                     <span class="status-badge-dot"></span>

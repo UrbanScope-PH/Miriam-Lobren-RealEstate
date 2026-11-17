@@ -60,7 +60,7 @@ frontend/              Everything the browser loads (served at /)
   pages/legal/         Terms of Service (terms.html) & Privacy Policy (privacy.html)
   pages/admin/         Dashboard, propertylist.html, add-property, edit-property, clients, profile, legacy login redirect (users.html redirects)
   pages/superadmin/    Master overview, system diagnostics, user account modification & RBAC management
-  shared/css/          common.css (design tokens, navbar, footer), session.css, splash.css
+  shared/css/          tokens.css (canonical light/dark palette tokens), common.css (layout, spacing/radius tokens, navbar, footer), session.css, splash.css, calculator.css, mobile-shell.css
   shared/js/           supabase.js (API gateway), session.js, splash.js, api.js
   assets/images/       Photos, logos, icons
 supabase/              Supabase CLI project: config.toml, migrations/ (timestamped .sql), seed.sql, scripts/ (one-off SQL Editor fixes) — see DATABASE.md §10
@@ -134,7 +134,7 @@ path when rendering from a page.
 ## Conventions
 
 - **No new browser dependencies or frameworks** (no React, Tailwind, jQuery) unless the user asks. Deployment-only packages are allowed when required by the hosting platform; keep the browser frontend dependency-free.
-- **CSS:** reuse tokens and components from `frontend/shared/css/common.css`; feature styles go in the
+- **CSS:** reuse color tokens from `frontend/shared/css/tokens.css` and shared layout components from `frontend/shared/css/common.css`; feature styles go in the
   feature's own `.css` file. Keep the existing premium look and responsive layouts.
 - **JS:** vanilla ES6, IIFE or plain scripts, no modules/bundling. Escape user-provided text before
   inserting into HTML (see `esc()` in `session.js`).
@@ -1460,6 +1460,12 @@ path when rendering from a page.
 150. **Sitewide Solid-Color Styling (`frontend/**/*.css`, `README.md`):**
   - Replaced all frontend CSS gradient backgrounds and overlays with solid colors, including hero and CTA overlays, cards, buttons, sidebars, splash screen, legal pages, inquiry flows, property details, calculators, and admin consoles.
   - Converted animated gradient skeleton shimmer placeholders to static, theme-matched solid-color placeholders. Removed the intro splash screen's blurred glow orbs, which created gradient-like color fields despite having solid fills. Sidebar styling now uses the single `--sidebar-bg` token. This current styling supersedes earlier notes describing gradient effects.
+151. **Unified Sitewide Light & Dark Color Palette (`frontend/shared/css/tokens.css` across Client, Admin, and Superadmin Portals):**
+  - Created `frontend/shared/css/tokens.css` as the single source of truth for Light Mode (`:root`) and Dark Mode (`html.dark-mode, html[data-theme="dark"]`) color tokens, imported by `shared/css/common.css`, `pages/admin/admin-shell.css`, and `pages/superadmin/dashboard.css`.
+  - Consolidated and removed conflicting `:root` and `html.dark-mode` color redefinitions from `common.css`, `session.css`, `calculator.css`, `legal.css`, `inquiry.css`, `history.css`, `auth.css`, `admin-shell.css`, `edit-property.css`, and `superadmin/dashboard.css` (keeping only layout spacing/radius scales and `superadmin` `--sa-*` aliases mapped onto `tokens.css`).
+  - Introduced semantic contrast-safe action and banner tokens (`--btn-primary-bg` / `--btn-primary-hover`, `--brand-banner-bg` / `--brand-banner-border` / `--brand-banner-muted`, `--footer-bg`, `--accent-warm-solid`, `--danger-btn-bg` / `--danger-btn-hover`, `--danger-text`, `--status-{success,warning,info,purple,neutral}-*`, `--sidebar-bg`, and scrollbar `--us-scroll-*`), eliminating dark-mode contrast regressions where `#ffffff` button/CTA text sat on mint `--dark-green` (`#86efac`), bright `--green` (`#3ea35d`), or pale yellow `--accent-warm-dark` (`#fde68a` on `.badge-rfo`), undefined `--danger` / `--bg-tint` / `--surface-tint` references, Material green `#2e7d32` drift, `.sa-quick-btn:hover` light-mode bleed in Superadmin Dark Mode, and off-palette inline HTML/JS colors (`profile.html`, `history.html`, `dashboard.html`, `propertylist.html`, `users.html`, `properties.js`, `dashboard.js`, `clients.js`, `users.js`, `admin-shell.js`, `superadmin/dashboard.js`, `index.js`, `properties/properties.js`).
+  - Harmonized Dark Mode component surfaces across Client, Admin, and Superadmin pages (`admin-shell.css` frameless `.admin-profile-badge`, `.row-sold`, `.prop-actions-menu-*`, `.btn-change-avatar`; `profile.css` `.card-header-icon.warm`; `superadmin/dashboard.css` `.theme-toggle-btn`, `.sa-time-chip`, `.sa-quick-btn`, `.sa-select`/search inputs on `--surface-input`/`--border-input`, and `--green` hover borders; `session.css` `--us-scroll-*` notification scrollbar; `inquiry.css` dark datepicker selected day; `history.css` skeleton card; `auth.css` dark strength/match feedback; `mobile-shell.css` dark tokens).
+  - Aligned auth light `theme-color` (`#f4f8f5`) across `auth/{login,register,forgot-password}.html` and `shared/js/{supabase,api,session}.js`, preserved solid-color compliance (zero CSS `gradient(...)`) and transparent dark-mode crossfade surfaces.
 
 ---
 

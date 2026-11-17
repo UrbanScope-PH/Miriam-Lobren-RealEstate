@@ -63,7 +63,7 @@ function normalizePropertyRowMeta(property) {
 
 async function loadSavedProperties() {
     if (!propertyTableBody) return;
-    propertyTableBody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding: 24px; color:#526456;">Loading listings...</td></tr>`;
+    propertyTableBody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding: 24px; color:var(--text-muted);">Loading listings...</td></tr>`;
     if (propertiesMobileList) {
         propertiesMobileList.innerHTML = `<div class="mobile-empty-state">Loading listings...</div>`;
     }
@@ -123,7 +123,7 @@ function renderPropertyRecords(list) {
     if (propertiesMobileList) propertiesMobileList.innerHTML = "";
 
     if (!list || list.length === 0) {
-        propertyTableBody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding: 30px; color:#526456;">No property records found matching your filter.</td></tr>`;
+        propertyTableBody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding: 30px; color:var(--text-muted);">No property records found matching your filter.</td></tr>`;
         if (propertiesMobileList) {
             propertiesMobileList.innerHTML = `<div class="mobile-empty-state">No property records found matching your filter.</div>`;
         }
@@ -225,7 +225,7 @@ function addPropertyRow(property) {
 
     const row = document.createElement("tr");
     if (isSold) {
-        row.style.background = "#fcfdfc";
+        row.classList.add("row-sold");
     }
 
     const actionsCellHtml = (window.UrbanPropertyActionMenu && typeof window.UrbanPropertyActionMenu.renderTrigger === "function")
@@ -256,18 +256,17 @@ function addPropertyRow(property) {
                     <img src="${escapePropHtml(imgSrc)}" alt="${safeTitle}" style="width:100%;height:100%;object-fit:cover;${isSold ? 'filter:grayscale(1); opacity:0.8;' : ''}" onerror="this.src='../../assets/images/property1.jpg'">
                 </div>
                 <div>
-                    <strong style="${isSold ? 'color:var(--text-muted, #526456);' : 'color:var(--text-dark, #1b2e21);'} font-size:0.92rem; display:block; line-height:1.3;">${safeTitle}</strong>
-                    <small style="color:var(--text-muted, #526456); font-size:0.78rem;">ID #${safeId}</small>
+                    <strong style="color:${isSold ? 'var(--text-muted)' : 'var(--text-dark)'}; font-size:0.92rem; display:block; line-height:1.3;">${safeTitle}</strong>
+                    <small style="color:var(--text-muted); font-size:0.78rem;">ID #${safeId}</small>
                 </div>
             </div>
         </td>
-        <td style="color:var(--text-dark, #2d3748); font-size:0.88rem; font-weight:500;">${safeLoc}</td>
-        <td><span style="padding:4px 9px; border-radius:6px; background:var(--light-green, #eef5ef); color:var(--dark-green, #1a3b23); font-size:0.78rem; font-weight:600; display:inline-block;">${safeType}</span></td>
-        <td style="font-weight:700; color:var(--text-dark, #1b2e21); font-size:0.9rem;">${safePrice}</td>
+        <td style="color:var(--text-secondary); font-size:0.88rem; font-weight:500;">${safeLoc}</td>
+        <td><span style="padding:4px 9px; border-radius:6px; background:var(--light-green); color:var(--dark-green); font-size:0.78rem; font-weight:600; display:inline-block;">${safeType}</span></td>
+        <td style="font-weight:700; color:var(--text-dark); font-size:0.9rem;">${safePrice}</td>
         <td>
-            <span class="status-badge-table ${isSold ? 'status-badge-sold' : 'status-badge-available'}"
-                style="${isSold ? 'background:#fee2e2; color:#b91c1c; border:1px solid #fecaca;' : 'background:#dcfce7; color:#15803d; border:1px solid #bbf7d0;'} padding:4px 10px; border-radius:12px; font-weight:600; font-size:0.78rem; display:inline-flex; align-items:center; gap:5px;">
-                <span style="width:6px; height:6px; border-radius:50%; background:${isSold ? '#ef4444' : '#22c55e'}; display:inline-block;"></span>
+            <span class="status-badge-table ${isSold ? 'status-badge-sold' : 'status-badge-available'}">
+                <span class="status-badge-dot"></span>
                 ${safeStatus}
             </span>
         </td>

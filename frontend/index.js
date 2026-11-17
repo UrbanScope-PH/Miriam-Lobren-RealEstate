@@ -237,7 +237,8 @@ function showFeedbackToast(msg, icon = '✓') {
             bottom: 30px;
             left: 50%;
             transform: translateX(-50%) translateY(20px);
-            background: rgba(15, 23, 42, 0.94);
+            background: var(--brand-banner-bg, #1a3b23);
+            border: 1px solid var(--brand-banner-border, #264831);
             color: #ffffff;
             font-size: 13.5px;
             font-weight: 600;
@@ -256,7 +257,7 @@ function showFeedbackToast(msg, icon = '✓') {
         `;
         document.body.appendChild(toast);
     }
-    toast.innerHTML = `<span style="color: #4ade80; font-weight: 800;">${_escHtml(icon)}</span> <span>${_escHtml(msg)}</span>`;
+    toast.innerHTML = `<span style="color: var(--emerald-bright, #4ade80); font-weight: 800;">${_escHtml(icon)}</span> <span>${_escHtml(msg)}</span>`;
     requestAnimationFrame(() => {
         toast.style.opacity = '1';
         toast.style.transform = 'translateX(-50%) translateY(0)';
@@ -346,14 +347,14 @@ function renderFeaturedGrid(list) {
 
     if (!list || list.length === 0) {
         grid.innerHTML = `
-            <div class="home-empty-state" style="grid-column: 1 / -1; text-align: center; padding: 50px 20px; background: #fdfdfd; border-radius: 12px; border: 1px dashed #cbd5e1; margin: 10px 0;">
-                <svg width="42" height="42" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="margin-bottom: 10px; color: #94a3b8;">
+            <div class="home-empty-state" style="grid-column: 1 / -1; text-align: center; padding: 50px 20px; background: var(--surface-muted); border-radius: 12px; border: 1px dashed var(--border-strong); margin: 10px 0;">
+                <svg width="42" height="42" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="margin-bottom: 10px; color: var(--text-subtle);">
                     <circle cx="11" cy="11" r="8"></circle>
                     <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
                 </svg>
-                <h4 style="font-size: 1.15rem; color: var(--text-dark, #1e293b); margin-bottom: 6px;">No properties found matching your criteria</h4>
-                <p style="font-size: 0.9rem; color: var(--text-muted, #64748b); margin-bottom: 14px;">Try selecting a different property type, location, or clearing search keywords.</p>
-                <button onclick="resetHomeCategory()" style="background: var(--green, #1f4928); color: #fff; border: none; padding: 9px 20px; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 0.88rem; transition: background 0.2s;">Reset Filters</button>
+                <h4 style="font-size: 1.15rem; color: var(--text-dark); margin-bottom: 6px;">No properties found matching your criteria</h4>
+                <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 14px;">Try selecting a different property type, location, or clearing search keywords.</p>
+                <button onclick="resetHomeCategory()" style="background: var(--btn-primary-bg); color: #ffffff; border: none; padding: 9px 20px; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 0.88rem; transition: background 0.2s;">Reset Filters</button>
             </div>
         `;
         updateMobilePropertiesExpandUi(0, false);

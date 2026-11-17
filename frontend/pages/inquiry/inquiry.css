@@ -6,15 +6,7 @@
     padding: 0;
 }
 
-:root {
-    --green: #2d5c39;
-    --dark-green: #1a3b23;
-    --light-green: #eef5ef;
-    --accent-green: #347c47;
-    --text-dark: #1b2e21;
-    --text-muted: #526456;
-    --border-color: #cbd9ce;
-}
+/* Inquiry tokens inherit canonical palette from ../../shared/css/tokens.css via common.css */
 
 html {
     zoom: 1.25;
@@ -29,7 +21,7 @@ body {
     max-width: 100%;
     overflow-x: hidden;
     font-family: 'Plus Jakarta Sans', Arial, sans-serif;
-    background-color: #f4f8f5;
+    background-color: var(--bg-main);
     color: var(--text-dark);
     line-height: 1.6;
 }
@@ -45,23 +37,23 @@ body {
     display: flex;
     align-items: center;
     gap: 10px;
-    background: #eef6f0;
-    border: 1px solid #c8dece;
+    background: var(--light-green);
+    border: 1px solid var(--green-border-soft);
     border-radius: 10px;
     padding: 10px 14px;
     font-size: 0.88rem;
-    color: #1e3f27;
+    color: var(--dark-green);
     margin-bottom: 16px;
     line-height: 1.4;
 }
 
 .guest-inquiry-banner svg {
-    color: #2d5c39;
+    color: var(--green);
     flex-shrink: 0;
 }
 
 .guest-inquiry-banner a {
-    color: #1f582f;
+    color: var(--green);
     font-weight: 700;
     text-decoration: underline;
 }
@@ -94,10 +86,10 @@ body {
     align-items: center;
     gap: 7px;
     padding: 8px 16px;
-    background: #ffffff;
-    border: 1px solid #cbe0d1;
+    background: var(--surface);
+    border: 1px solid var(--green-border-soft);
     border-radius: 999px;
-    color: #1e5c33;
+    color: var(--green);
     font-size: 0.85rem;
     font-weight: 700;
     text-decoration: none;
@@ -107,8 +99,8 @@ body {
 
 @media (hover: hover) and (pointer: fine) {
     .history-pill-link:hover {
-        background: #f0f7f2;
-        border-color: #a8ceb2;
+        background: var(--light-green);
+        border-color: var(--border-strong);
         transform: translateY(-1px);
     }
 }
@@ -116,12 +108,12 @@ body {
 /* INQUIRY MODE SELECTOR TABS */
 .inquiry-mode-selector {
     display: inline-flex;
-    background: #e9f2eb;
+    background: var(--light-green);
     padding: 5px;
     border-radius: 14px;
     gap: 6px;
     margin-bottom: 24px;
-    border: 1px solid #d4e5d8;
+    border: 1px solid var(--border-color);
     box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.04);
     max-width: 100%;
 }
@@ -137,7 +129,7 @@ body {
     font-family: inherit;
     font-size: 14px;
     font-weight: 700;
-    color: #4b6652;
+    color: var(--text-muted);
     cursor: pointer;
     transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
     white-space: nowrap;
@@ -145,14 +137,14 @@ body {
 
 @media (hover: hover) and (pointer: fine) {
     .mode-tab:hover {
-        color: #1a3b23;
+        color: var(--dark-green);
         background: rgba(255, 255, 255, 0.6);
     }
 }
 
 .mode-tab.active {
-    background: #ffffff;
-    color: #1e5c33;
+    background: var(--surface);
+    color: var(--green);
     box-shadow: 0 3px 10px rgba(30, 92, 51, 0.12);
 }
 
@@ -161,11 +153,11 @@ body {
 }
 
 .inquiry-form-card {
-    background: #ffffff;
+    background: var(--surface);
     border-radius: 20px;
     padding: 36px 40px;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.06);
-    border: 1px solid #e7eee8;
+    box-shadow: var(--card-shadow);
+    border: 1px solid var(--border-subtle);
 }
 
 .form-section {
@@ -249,19 +241,19 @@ body {
     display: flex;
     gap: 20px;
     padding: 16px;
-    background-color: #f8faf8;
+    background-color: var(--surface-muted);
     border-radius: 14px;
-    border: 1px solid #e1ebe3;
+    border: 1px solid var(--border-subtle);
     align-items: center;
 }
 
 .sold-property-notice {
     margin: 14px 0;
     padding: 12px 14px;
-    border: 1px solid #fecaca;
+    border: 1px solid var(--danger-border);
     border-radius: 10px;
-    background: #fef2f2;
-    color: #991b1b;
+    background: var(--danger-light);
+    color: var(--danger-text);
     font-size: 0.9rem;
     line-height: 1.5;
 }
@@ -335,7 +327,7 @@ body {
     border-radius: 8px;
     font-size: 14px;
     color: var(--text-dark);
-    background-color: #ffffff;
+    background-color: var(--surface-input);
     font-family: inherit;
     outline: none;
     transition: border-color 0.2s;
@@ -357,12 +349,12 @@ body {
     align-items: center;
     margin-top: 36px;
     padding-top: 24px;
-    border-top: 1px solid #edf4ee;
+    border-top: 1px solid var(--border-subtle);
 }
 
 .cancel-btn {
     padding: 12px 34px;
-    background-color: #e2ede5;
+    background-color: var(--light-green);
     color: var(--green);
     border: none;
     border-radius: 24px;
@@ -374,7 +366,7 @@ body {
 
 @media (hover: hover) and (pointer: fine) {
     .cancel-btn:hover {
-        background-color: #d1e2d5;
+        background-color: var(--light-green-hover);
     }
 }
 
@@ -384,7 +376,7 @@ body {
     justify-content: center;
     gap: 8px;
     padding: 13px 36px;
-    background: #1e5c33;
+    background: var(--btn-primary-bg);
     color: #ffffff;
     border: none;
     border-radius: 24px;
@@ -398,7 +390,7 @@ body {
 
 @media (hover: hover) and (pointer: fine) {
     .submit-btn:hover {
-        background: #164826;
+        background: var(--btn-primary-hover);
         transform: translateY(-2px);
         box-shadow: 0 8px 22px rgba(21, 128, 61, 0.42);
     }
@@ -673,17 +665,17 @@ body {
 .success-modal-hero {
     text-align: center;
     padding: 34px 28px 16px;
-    background: #f0f7f2;
-    border-bottom: 1px solid #eef4f0;
+    background: var(--light-green);
+    border-bottom: 1px solid var(--border-subtle);
 }
 
 .success-icon-badge {
     width: 64px;
     height: 64px;
     border-radius: 50%;
-    background: #ecfdf5;
-    border: 2px solid #a7f3d0;
-    color: #059669;
+    background: var(--status-success-bg);
+    border: 2px solid var(--status-success-border);
+    color: var(--status-success-text);
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -724,8 +716,8 @@ body {
 }
 
 .success-card {
-    background: #f8faf8;
-    border: 1px solid #e1ebe3;
+    background: var(--surface-muted);
+    border: 1px solid var(--border-subtle);
     border-radius: 14px;
     padding: 18px 20px;
 }
@@ -736,16 +728,16 @@ body {
     justify-content: space-between;
     margin-bottom: 14px;
     padding-bottom: 12px;
-    border-bottom: 1px solid #ebf2ec;
+    border-bottom: 1px solid var(--border-subtle);
 }
 
 .success-status-pill {
     display: inline-flex;
     align-items: center;
     gap: 6px;
-    background: #fef3c7;
-    color: #92400e;
-    border: 1px solid #fde68a;
+    background: var(--status-warning-bg);
+    color: var(--status-warning-text);
+    border: 1px solid var(--status-warning-border);
     padding: 4px 12px;
     border-radius: 999px;
     font-size: 0.8rem;
@@ -756,7 +748,7 @@ body {
     width: 7px;
     height: 7px;
     border-radius: 50%;
-    background: #d97706;
+    background: var(--status-warning-dot);
 }
 
 .success-date {
@@ -790,9 +782,9 @@ body {
     display: inline-flex;
     align-items: center;
     gap: 8px;
-    background: #eef7f1;
-    border: 1px solid #cce5d4;
-    color: #1e5c33;
+    background: var(--light-green);
+    border: 1px solid var(--green-border-soft);
+    color: var(--green);
     padding: 6px 12px;
     border-radius: 8px;
     font-size: 0.84rem;
@@ -804,8 +796,8 @@ body {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
     gap: 12px;
-    background: #ffffff;
-    border: 1px solid #e7efe9;
+    background: var(--surface);
+    border: 1px solid var(--border-subtle);
     border-radius: 10px;
     padding: 12px 14px;
     margin-bottom: 14px;
@@ -833,8 +825,8 @@ body {
     align-items: flex-start;
     gap: 9px;
     font-size: 0.8rem;
-    color: #4b6352;
-    background: #f0f7f2;
+    color: var(--text-muted);
+    background: var(--light-green);
     padding: 10px 12px;
     border-radius: 8px;
     line-height: 1.4;
@@ -856,7 +848,7 @@ body {
     display: block;
     font-size: 0.81rem;
     font-weight: 700;
-    color: #1e5c33;
+    color: var(--green);
     line-height: 1.35;
 }
 
@@ -866,7 +858,7 @@ body {
     justify-content: center;
     gap: 12px;
     padding: 18px 26px 24px;
-    border-top: 1px solid #eef4f0;
+    border-top: 1px solid var(--border-subtle);
     flex-wrap: wrap;
 }
 
@@ -890,7 +882,7 @@ body {
     display: inline-flex;
     align-items: center;
     gap: 8px;
-    background-color: var(--green);
+    background-color: var(--btn-primary-bg);
     color: #ffffff;
     padding: 10px 18px;
     border-radius: 10px;
@@ -915,9 +907,9 @@ body {
     display: inline-flex;
     align-items: center;
     gap: 6px;
-    background-color: #f0f7f2;
+    background-color: var(--light-green);
     color: var(--green);
-    border: 1px solid #cbe0d1;
+    border: 1px solid var(--green-border-soft);
     padding: 10px 16px;
     border-radius: 10px;
     font-size: 0.88rem;
@@ -930,15 +922,15 @@ body {
 
 @media (hover: hover) and (pointer: fine) {
     .btn-secondary:hover {
-        background-color: #e2ede5;
+        background-color: var(--light-green-hover);
         color: var(--dark-green);
     }
 }
 
 .btn-secondary:disabled {
-    background-color: #f0f7f2;
+    background-color: var(--light-green);
     color: var(--text-muted);
-    border-color: #dce8df;
+    border-color: var(--border-color);
     cursor: not-allowed;
     transform: none;
     box-shadow: none;
@@ -946,9 +938,9 @@ body {
 
 @media (hover: hover) and (pointer: fine) {
     .btn-secondary:disabled:hover {
-        background-color: #f0f7f2;
+        background-color: var(--light-green);
         color: var(--text-muted);
-        border-color: #dce8df;
+        border-color: var(--border-color);
         cursor: not-allowed;
         transform: none;
         box-shadow: none;
@@ -991,7 +983,7 @@ body {
     position: fixed;
     bottom: 24px;
     right: 24px;
-    background: #1b2e21;
+    background: var(--brand-banner-bg);
     color: #ffffff;
     padding: 14px 20px;
     border-radius: 12px;
@@ -1015,7 +1007,7 @@ body {
 }
 
 .toast-notice.error {
-    background: #991b1b;
+    background: var(--danger-btn-bg);
 }
 
 @media (max-width: 600px) {
@@ -1078,231 +1070,231 @@ body {
    Dark Mode Overrides for Submit Inquiry Page
    ========================================================================== */
 html.dark-mode body {
-    background-color: #0e1611;
-    color: #e7f0e9;
+    background-color: var(--bg-main);
+    color: var(--text-dark);
 }
 
 html.dark-mode .page-heading,
 html.dark-mode .section-title {
-    color: #eef6f0;
+    color: var(--text-dark);
 }
 
 html.dark-mode .history-pill-link {
-    background: #17261c;
-    border-color: #2e4b37;
-    color: #86efac;
+    background: var(--surface);
+    border-color: var(--border-strong);
+    color: var(--dark-green);
 }
 
 @media (hover: hover) and (pointer: fine) {
     html.dark-mode .history-pill-link:hover {
-        background: #213628;
-        border-color: #4ade80;
-        color: #bbf7d0;
+        background: var(--surface-hover);
+        border-color: var(--green);
+        color: var(--dark-green);
     }
 }
 
 html.dark-mode .inquiry-mode-selector {
-    background: #142119;
-    border-color: #26392c;
+    background: var(--surface-muted);
+    border-color: var(--border-color);
 }
 
 html.dark-mode .mode-tab {
     background: transparent;
-    color: #a8bdb0;
+    color: var(--text-secondary);
 }
 
 @media (hover: hover) and (pointer: fine) {
     html.dark-mode .mode-tab:hover {
-        background: rgba(134, 239, 172, 0.08);
-        color: #e7f0e9;
+        background: var(--light-green);
+        color: var(--text-dark);
     }
 }
 
 html.dark-mode .mode-tab.active {
-    background: #233b2b;
-    border: 1px solid #3ea35d;
-    color: #86efac;
-    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);
+    background: var(--surface-hover);
+    border: 1px solid var(--green);
+    color: var(--dark-green);
+    box-shadow: var(--shadow-sm);
 }
 
 html.dark-mode .inquiry-form-card {
-    background: #16231b;
-    border-color: #26392c;
-    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.45);
+    background: var(--surface);
+    border-color: var(--border-color);
+    box-shadow: var(--shadow);
 }
 
 html.dark-mode .property-summary-box {
-    background-color: #121d16;
-    border-color: #26392c;
+    background-color: var(--surface-muted);
+    border-color: var(--border-color);
 }
 
 html.dark-mode .summary-details h2 {
-    color: #86efac;
+    color: var(--dark-green);
 }
 
 html.dark-mode .summary-specs {
-    color: #d8ebe0;
+    color: var(--text-secondary);
 }
 
 html.dark-mode .input-field label,
 html.dark-mode .textarea-field label {
-    color: #d6e6da;
+    color: var(--text-secondary);
 }
 
 html.dark-mode .form-select,
 html.dark-mode .form-input,
 html.dark-mode .input-field input,
 html.dark-mode .textarea-field textarea {
-    background-color: #111b15;
-    border-color: #2b4031;
-    color: #e7f0e9;
+    background-color: var(--surface-input);
+    border-color: var(--border-input);
+    color: var(--text-dark);
 }
 
 html.dark-mode .form-actions-row {
-    border-top-color: #243629;
+    border-top-color: var(--border-color);
 }
 
 html.dark-mode .cancel-btn {
-    background-color: #1c2d22;
-    border: 1px solid #2f4736;
-    color: #e7f0e9;
+    background-color: var(--surface-muted);
+    border: 1px solid var(--border-strong);
+    color: var(--text-dark);
 }
 
 @media (hover: hover) and (pointer: fine) {
     html.dark-mode .cancel-btn:hover {
-        background-color: #263d2e;
-        border-color: #4ade80;
-        color: #86efac;
+        background-color: var(--surface-hover);
+        border-color: var(--green);
+        color: var(--dark-green);
     }
 }
 
 html.dark-mode .submit-btn {
-    background-color: #3ea35d;
+    background-color: var(--btn-primary-bg);
     color: #ffffff;
 }
 
 @media (hover: hover) and (pointer: fine) {
     html.dark-mode .submit-btn:hover {
-        background-color: #2f8548;
+        background-color: var(--btn-primary-hover);
         color: #ffffff;
     }
 }
 
 html.dark-mode .modal-box {
-    background: #16231b;
-    border: 1px solid #283d2e;
-    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.6);
+    background: var(--surface);
+    border: 1px solid var(--border-color);
+    box-shadow: var(--shadow-xl);
 }
 
 html.dark-mode .modal-back-btn,
 html.dark-mode .modal-close-btn {
-    background: #1c2d22;
-    border-color: #2f4736;
-    color: #e7f0e9;
+    background: var(--surface-muted);
+    border-color: var(--border-strong);
+    color: var(--text-dark);
 }
 
 @media (hover: hover) and (pointer: fine) {
     html.dark-mode .modal-back-btn:hover,
     html.dark-mode .modal-close-btn:hover {
-        background: #2d5c39;
+        background: var(--btn-primary-bg);
         color: #ffffff;
     }
 }
 
 html.dark-mode .success-modal-hero {
-    background: #1b2e22;
-    border-bottom-color: #243629;
+    background: var(--surface-muted);
+    border-bottom-color: var(--border-color);
 }
 
 html.dark-mode .success-icon-badge {
-    background: rgba(16, 185, 129, 0.16);
-    border-color: rgba(74, 222, 128, 0.4);
-    color: #86efac;
+    background: var(--status-success-bg);
+    border-color: var(--status-success-border);
+    color: var(--dark-green);
 }
 
 html.dark-mode .success-modal-hero h3,
 html.dark-mode .success-property-title {
-    color: #eef6f0;
+    color: var(--text-dark);
 }
 
 html.dark-mode .success-card {
-    background: #121d16;
-    border-color: #243629;
+    background: var(--bg-subtle);
+    border-color: var(--border-color);
 }
 
 html.dark-mode .success-card-header {
-    border-bottom-color: #243629;
+    border-bottom-color: var(--border-color);
 }
 
 html.dark-mode .success-status-pill {
-    background: rgba(245, 158, 11, 0.16);
-    color: #fde68a;
-    border-color: rgba(251, 191, 36, 0.35);
+    background: var(--status-warning-bg);
+    color: var(--status-warning-text);
+    border-color: var(--status-warning-border);
 }
 
 html.dark-mode .success-schedule-box {
-    background: rgba(62, 163, 93, 0.16);
-    border-color: rgba(134, 239, 172, 0.32);
-    color: #86efac;
+    background: var(--light-green);
+    border-color: var(--green-border-soft);
+    color: var(--dark-green);
 }
 
 html.dark-mode .success-client-row {
-    background: #16231b;
-    border-color: #26392c;
+    background: var(--surface);
+    border-color: var(--border-color);
 }
 
 html.dark-mode .client-meta-item span {
-    color: #eef6f0;
+    color: var(--text-dark);
 }
 
 html.dark-mode .success-note {
-    background: #17261c;
-    color: #c2d4c6;
+    background: var(--surface-muted);
+    color: var(--text-secondary);
 }
 
 html.dark-mode .success-sla-notice {
-    color: #86efac;
+    color: var(--dark-green);
 }
 
 html.dark-mode .modal-footer.success-modal-footer {
-    border-top-color: #243629;
+    border-top-color: var(--border-color);
 }
 
 html.dark-mode .btn-success-primary {
-    background-color: #3ea35d;
+    background-color: var(--btn-primary-bg);
     color: #ffffff;
 }
 
 @media (hover: hover) and (pointer: fine) {
     html.dark-mode .btn-success-primary:hover {
-        background-color: #2f8548;
+        background-color: var(--btn-primary-hover);
         color: #ffffff;
     }
 }
 
 html.dark-mode .btn-secondary {
-    background-color: #1c2d22;
-    border-color: #2f4736;
-    color: #e7f0e9;
+    background-color: var(--surface-muted);
+    border-color: var(--border-strong);
+    color: var(--text-dark);
 }
 
 @media (hover: hover) and (pointer: fine) {
     html.dark-mode .btn-secondary:hover {
-        background-color: #263d2e;
-        border-color: #4ade80;
-        color: #86efac;
+        background-color: var(--surface-hover);
+        border-color: var(--green);
+        color: var(--dark-green);
     }
 }
 
 html.dark-mode .guest-inquiry-banner {
-    background: #17261d;
-    border-color: #27402f;
-    color: #d1e3d6;
+    background: var(--light-green);
+    border-color: var(--green-border-soft);
+    color: var(--text-secondary);
 }
 
 html.dark-mode .guest-inquiry-banner svg,
 html.dark-mode .guest-inquiry-banner a {
-    color: #86efac;
+    color: var(--dark-green);
 }
 
 /* ============================================================
@@ -1498,9 +1490,9 @@ html.dark-mode .guest-inquiry-banner a {
 }
 
 .datepicker-day-cell.is-selected {
-    background: var(--green) !important;
+    background: var(--btn-primary-bg) !important;
     color: #ffffff !important;
-    border-color: var(--green) !important;
+    border-color: var(--btn-primary-bg) !important;
     font-weight: 700;
     box-shadow: 0 3px 8px rgba(45, 92, 57, 0.28);
 }
@@ -1562,121 +1554,121 @@ html.dark-mode .guest-inquiry-banner a {
 
 /* Dark Mode Styles */
 html.dark-mode .custom-datepicker-input {
-    background-color: #111b15;
-    border-color: #2b4031;
-    color: #e7f0e9;
+    background-color: var(--surface-input);
+    border-color: var(--border-input);
+    color: var(--text-dark);
 }
 
 html.dark-mode .custom-datepicker-input::placeholder {
-    color: #8da495;
+    color: var(--text-muted);
     opacity: 0.7;
 }
 
 @media (hover: hover) and (pointer: fine) {
     html.dark-mode .custom-datepicker-wrap:hover .custom-datepicker-input {
-        border-color: #48bb78;
+        border-color: var(--green);
     }
 }
 
 html.dark-mode .datepicker-trigger-btn {
-    color: #48bb78;
+    color: var(--emerald-bright);
 }
 
 @media (hover: hover) and (pointer: fine) {
     html.dark-mode .datepicker-trigger-btn:hover {
-        background: rgba(72, 187, 120, 0.15);
+        background: var(--light-green);
     }
 }
 
 html.dark-mode .urban-datepicker-popup {
-    background: #142219;
-    border-color: #2b4232;
-    box-shadow: 0 18px 40px -4px rgba(0, 0, 0, 0.7), 0 8px 16px -4px rgba(0, 0, 0, 0.4);
+    background: var(--surface);
+    border-color: var(--border-color);
+    box-shadow: var(--shadow-xl);
 }
 
 html.dark-mode .datepicker-title {
-    color: #e7f0e9;
+    color: var(--text-dark);
 }
 
 html.dark-mode .datepicker-nav-btn {
-    background: #1a2c20;
-    border-color: #2b4232;
-    color: #e7f0e9;
+    background: var(--surface-muted);
+    border-color: var(--border-color);
+    color: var(--text-dark);
 }
 
 @media (hover: hover) and (pointer: fine) {
     html.dark-mode .datepicker-nav-btn:hover:not(:disabled) {
-        background: #233b2b;
-        border-color: #48bb78;
-        color: #48bb78;
+        background: var(--surface-hover);
+        border-color: var(--emerald-bright);
+        color: var(--emerald-bright);
     }
 }
 
 html.dark-mode .datepicker-nav-btn:disabled {
     opacity: 0.25;
-    background: #121f17;
+    background: var(--bg-subtle);
 }
 
 html.dark-mode .datepicker-weekday {
-    color: #8da495;
+    color: var(--text-muted);
 }
 
 html.dark-mode .datepicker-day-cell {
-    color: #e7f0e9;
+    color: var(--text-dark);
 }
 
 @media (hover: hover) and (pointer: fine) {
     html.dark-mode .datepicker-day-cell:hover:not(.is-disabled) {
-        background: rgba(72, 187, 120, 0.18);
-        color: #86efac;
+        background: var(--light-green);
+        color: var(--dark-green);
     }
 }
 
 html.dark-mode .datepicker-day-cell.is-today {
-    border-color: #48bb78;
-    color: #86efac;
+    border-color: var(--emerald-bright);
+    color: var(--dark-green);
 }
 
 html.dark-mode .datepicker-day-cell.is-selected {
-    background: #48bb78 !important;
-    color: #0d1e14 !important;
-    border-color: #48bb78 !important;
+    background: var(--btn-primary-bg) !important;
+    color: #ffffff !important;
+    border-color: var(--btn-primary-bg) !important;
     font-weight: 800;
-    box-shadow: 0 3px 10px rgba(72, 187, 120, 0.35);
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.35);
 }
 
 html.dark-mode .datepicker-day-cell.is-disabled {
-    color: #3b5042;
+    color: var(--text-subtle);
     opacity: 0.35;
 }
 
 html.dark-mode .datepicker-day-cell.is-other-month {
-    color: #3b5042;
+    color: var(--text-subtle);
     opacity: 0.2;
 }
 
 html.dark-mode .datepicker-footer {
-    border-top-color: #243629;
+    border-top-color: var(--border-color);
 }
 
 html.dark-mode .datepicker-action-clear {
-    color: #8da495;
+    color: var(--text-muted);
 }
 
 @media (hover: hover) and (pointer: fine) {
     html.dark-mode .datepicker-action-clear:hover {
-        color: #f87171;
-        background: rgba(248, 113, 113, 0.12);
+        color: var(--danger-text);
+        background: var(--danger-light);
     }
 }
 
 html.dark-mode .datepicker-action-today {
-    color: #48bb78;
+    color: var(--emerald-bright);
 }
 
 @media (hover: hover) and (pointer: fine) {
     html.dark-mode .datepicker-action-today:hover {
-        background: rgba(72, 187, 120, 0.15);
+        background: var(--light-green);
     }
 }
 
@@ -1862,54 +1854,54 @@ html.dark-mode .datepicker-action-today {
 
 /* Dark Mode Support for Custom Select */
 html.dark-mode .custom-select-trigger {
-    background-color: #111b15;
-    border-color: #2b4031;
-    color: #e7f0e9;
+    background-color: var(--surface-input);
+    border-color: var(--border-input);
+    color: var(--text-dark);
 }
 
 @media (hover: hover) and (pointer: fine) {
     html.dark-mode .custom-select-wrap:hover .custom-select-trigger {
-        border-color: #48bb78;
+        border-color: var(--emerald-bright);
     }
 }
 
 html.dark-mode .custom-select-wrap.is-open .custom-select-trigger {
-    border-color: #48bb78;
+    border-color: var(--emerald-bright);
     box-shadow: 0 0 0 3px rgba(72, 187, 120, 0.18);
 }
 
 html.dark-mode .custom-select-value svg,
 html.dark-mode .custom-select-option-icon svg,
 html.dark-mode .custom-select-check {
-    color: #48bb78;
+    color: var(--emerald-bright);
 }
 
 html.dark-mode .custom-select-arrow {
-    color: #8da495;
+    color: var(--text-muted);
 }
 
 html.dark-mode .custom-select-wrap.is-open .custom-select-arrow {
-    color: #48bb78;
+    color: var(--emerald-bright);
 }
 
 html.dark-mode .custom-select-dropdown {
-    background: #142219;
-    border-color: #2b4232;
-    box-shadow: 0 18px 40px -4px rgba(0, 0, 0, 0.7), 0 8px 16px -4px rgba(0, 0, 0, 0.4);
+    background: var(--surface);
+    border-color: var(--border-color);
+    box-shadow: var(--shadow-xl);
 }
 
 html.dark-mode .custom-select-option {
-    color: #e7f0e9;
+    color: var(--text-dark);
 }
 
 @media (hover: hover) and (pointer: fine) {
     html.dark-mode .custom-select-option:hover {
-        background: rgba(72, 187, 120, 0.16);
-        color: #86efac;
+        background: var(--light-green);
+        color: var(--dark-green);
     }
 }
 
 html.dark-mode .custom-select-option.is-selected {
-    background: rgba(72, 187, 120, 0.18);
-    color: #86efac;
+    background: var(--light-green-hover);
+    color: var(--dark-green);
 }

@@ -124,14 +124,14 @@ function renderProperties(list) {
 
     if (!list || list.length === 0) {
         grid.innerHTML = `
-            <div style="grid-column: 1 / -1; text-align: center; padding: 60px 20px; background: #f9fbf9; border-radius: 12px; border: 1px dashed #cbd5e1; margin: 20px 0;">
-                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="1.8" style="margin-bottom: 12px;">
+            <div style="grid-column: 1 / -1; text-align: center; padding: 60px 20px; background: var(--surface-muted); border-radius: 12px; border: 1px dashed var(--border-strong); margin: 20px 0;">
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="margin-bottom: 12px; color: var(--text-subtle);">
                     <circle cx="11" cy="11" r="8"></circle>
                     <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
                 </svg>
-                <h3 style="font-size: 1.25rem; color: #1e293b; margin-bottom: 8px;">No properties found</h3>
-                <p style="font-size: 0.95rem; color: #64748b; margin-bottom: 16px;">We couldn't find any listings matching your search criteria.</p>
-                <button onclick="clearFilters()" style="background: #1f4928; color: #fff; border: none; padding: 10px 22px; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 0.9rem;">Reset Filters</button>
+                <h3 style="font-size: 1.25rem; color: var(--text-dark); margin-bottom: 8px;">No properties found</h3>
+                <p style="font-size: 0.95rem; color: var(--text-muted); margin-bottom: 16px;">We couldn't find any listings matching your search criteria.</p>
+                <button onclick="clearFilters()" style="background: var(--btn-primary-bg); color: #ffffff; border: none; padding: 10px 22px; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 0.9rem;">Reset Filters</button>
             </div>
         `;
         return;

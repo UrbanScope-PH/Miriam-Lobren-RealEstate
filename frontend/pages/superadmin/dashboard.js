@@ -488,7 +488,7 @@
                 }
                 if (elements.diagFkViolations) {
                     elements.diagFkViolations.textContent = `${data.foreign_key_violations || 0} Violations`;
-                    elements.diagFkViolations.style.color = (data.foreign_key_violations === 0) ? '#15803d' : '#b91c1c';
+                    elements.diagFkViolations.style.color = (data.foreign_key_violations === 0) ? 'var(--status-success-text)' : 'var(--danger-text)';
                 }
                 if (elements.diagTriggerStatus) {
                     elements.diagTriggerStatus.textContent = data.trigger_active ? 'Active & Enforcing' : 'Inactive';

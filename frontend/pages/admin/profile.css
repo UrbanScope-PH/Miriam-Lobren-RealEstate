@@ -31,15 +31,15 @@
 }
 .alert-box.success {
     display: flex;
-    background: #dcfce7;
-    border: 1px solid #86efac;
-    color: #15803d;
+    background: var(--status-success-bg);
+    border: 1px solid var(--status-success-border);
+    color: var(--status-success-text);
 }
 .alert-box.error {
     display: flex;
-    background: #fee2e2;
-    border: 1px solid #fca5a5;
-    color: #b91c1c;
+    background: var(--danger-light);
+    border: 1px solid var(--danger-border);
+    color: var(--danger-text);
 }
 
 /* GRID LAYOUT FOR PROFILE SETTINGS */
@@ -50,7 +50,7 @@
 }
 
 .settings-card {
-    background: #ffffff;
+    background: var(--surface);
     border: 1px solid var(--border-color);
     border-radius: 14px;
     padding: 28px;
@@ -63,7 +63,7 @@
     gap: 12px;
     margin-bottom: 22px;
     padding-bottom: 14px;
-    border-bottom: 1px solid #edf2ee;
+    border-bottom: 1px solid var(--border-subtle);
 }
 .card-header-icon {
     width: 40px;
@@ -74,6 +74,16 @@
     display: flex;
     align-items: center;
     justify-content: center;
+}
+.card-header-icon.warm {
+    background: var(--accent-warm-light);
+    color: var(--accent-warm-dark);
+}
+
+html.dark-mode .card-header-icon.warm {
+    background: var(--accent-warm-light) !important;
+    border-color: var(--accent-warm-border) !important;
+    color: var(--accent-warm-dark) !important;
 }
 .card-header h2 {
     font-size: 1.25rem;
@@ -91,8 +101,8 @@
     gap: 22px;
     margin-bottom: 24px;
     padding: 20px;
-    background: #fafdfa;
-    border: 1px solid #e2ebe3;
+    background: var(--surface-muted);
+    border: 1px solid var(--border-color);
     border-radius: 14px;
     flex-wrap: wrap;
 }
@@ -177,8 +187,8 @@
 
 @media (hover: hover) and (pointer: fine) {
     .btn-change-avatar:hover {
-        background: #dff0e3;
-        border-color: #9fccaa;
+        background: var(--light-green-hover);
+        border-color: var(--green-border-soft);
         color: var(--dark-green);
         transform: translateY(-1px);
     }
@@ -188,8 +198,8 @@
     display: inline-flex;
     align-items: center;
     background: transparent;
-    color: #64748b;
-    border: 1px solid #cbd5e1;
+    color: var(--text-muted);
+    border: 1px solid var(--border-strong);
     font-size: 0.78rem;
     font-weight: 600;
     padding: 7px 12px;
@@ -200,9 +210,9 @@
 
 @media (hover: hover) and (pointer: fine) {
     .btn-reset-avatar:hover {
-        background: #fee2e2;
-        border-color: #fca5a5;
-        color: #dc2626;
+        background: var(--danger-light);
+        border-color: var(--danger-border);
+        color: var(--danger-text);
     }
 }
 
@@ -213,7 +223,7 @@
 }
 .profile-badge-pill {
     display: inline-block;
-    background: var(--green);
+    background: var(--btn-primary-bg);
     color: #fff;
     font-size: 0.72rem;
     font-weight: 700;
@@ -251,9 +261,9 @@ label {
 input, textarea, select {
     width: 100%;
     padding: 11px 14px;
-    border: 1px solid var(--border-color);
+    border: 1px solid var(--border-input);
     border-radius: 8px;
-    background: #ffffff;
+    background: var(--surface-input);
     font-size: 0.92rem;
     color: var(--text-dark);
     font-family: inherit;
@@ -291,7 +301,7 @@ textarea {
     padding: 6px 8px;
     margin: 0;
     cursor: pointer;
-    color: #64748b;
+    color: var(--text-muted);
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -303,13 +313,13 @@ textarea {
 
 @media (hover: hover) and (pointer: fine) {
     .password-toggle-btn:hover {
-        color: var(--dark-green, #1a3b23);
-        background-color: rgba(45, 92, 57, 0.08);
+        color: var(--dark-green);
+        background-color: var(--light-green);
     }
 }
 
 .password-toggle-btn:focus-visible {
-    outline: 2px solid var(--green, #2d5c39);
+    outline: 2px solid var(--green);
     outline-offset: 1px;
 }
 
@@ -330,11 +340,11 @@ textarea {
     gap: 12px;
     margin-top: 24px;
     padding-top: 18px;
-    border-top: 1px solid #edf2ee;
+    border-top: 1px solid var(--border-subtle);
 }
 
 .btn-primary {
-    background: var(--green);
+    background: var(--btn-primary-bg);
     color: #ffffff;
     border: none;
     border-radius: 8px;
@@ -349,7 +359,7 @@ textarea {
 }
 @media (hover: hover) and (pointer: fine) {
     .btn-primary:hover {
-        background: var(--dark-green);
+        background: var(--btn-primary-hover);
     }
 }
 .btn-primary:disabled {
@@ -476,7 +486,7 @@ textarea {
 /* CTA Emphasis: Save Profile (Rule 10) */
 .save-btn,
 .btn-save-profile {
-    background: var(--green, #1f4928) !important;
+    background: var(--btn-primary-bg) !important;
     box-shadow: 0 4px 14px rgba(31, 73, 40, 0.28) !important;
     font-weight: 600 !important;
     transition: transform 0.18s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.18s ease !important;
@@ -485,6 +495,7 @@ textarea {
 @media (hover: hover) and (pointer: fine) {
     .save-btn:hover,
     .btn-save-profile:hover {
+        background: var(--btn-primary-hover) !important;
         transform: translateY(-2px) !important;
         box-shadow: 0 6px 18px rgba(31, 73, 40, 0.38) !important;
     }

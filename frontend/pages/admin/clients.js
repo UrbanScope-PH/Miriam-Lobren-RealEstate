@@ -112,7 +112,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             renderTable();
         } catch (err) {
             console.error('Error loading inquiries:', err);
-            tableBody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: #e53e3e; padding: 30px;">Failed to load inquiries. Please check network connection.</td></tr>`;
+            tableBody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--danger-text); padding: 30px;">Failed to load inquiries. Please check network connection.</td></tr>`;
         }
     }
 
@@ -643,22 +643,22 @@ document.addEventListener('DOMContentLoaded', async () => {
                     </div>
                     <div>
                         <strong style="display: block; color: var(--text-muted); font-size: 0.78rem; text-transform: uppercase;">Property of Interest</strong>
-                        <span style="font-weight: 600; color: var(--text-dark, #1e293b);">${escapeHtml(propTitle)}</span>
+                        <span style="font-weight: 600; color: var(--text-dark);">${escapeHtml(propTitle)}</span>
                     </div>
                     <div>
                         <strong style="display: block; color: var(--text-muted); font-size: 0.78rem; text-transform: uppercase;">Preferred Tour Schedule</strong>
-                        <span style="font-weight: 600; color: var(--text-dark, #1e293b);">${escapeHtml(schedule)}</span>
+                        <span style="font-weight: 600; color: var(--text-dark);">${escapeHtml(schedule)}</span>
                     </div>
                 </div>
 
                 <div>
                     <strong style="display: block; color: var(--text-muted); font-size: 0.78rem; text-transform: uppercase; margin-bottom: 6px;">Message / Client Notes</strong>
-                    <div class="inquiry-message-box" style="background: var(--surface-hover, #f8fafc); border: 1px solid var(--border-color); border-radius: 8px; padding: 14px; font-size: 0.92rem; line-height: 1.6; color: var(--text-dark, #334155); white-space: pre-wrap;">${escapeHtml(message)}</div>
+                    <div class="inquiry-message-box" style="background: var(--surface-hover); border: 1px solid var(--border-color); border-radius: 8px; padding: 14px; font-size: 0.92rem; line-height: 1.6; color: var(--text-secondary); white-space: pre-wrap;">${escapeHtml(message)}</div>
                 </div>
 
-                <div style="display: flex; justify-content: flex-end; align-items: center; gap: 10px; margin-top: 10px; padding-top: 14px; border-top: 1px solid var(--border-color, #edf2ee);">
+                <div style="display: flex; justify-content: flex-end; align-items: center; gap: 10px; margin-top: 10px; padding-top: 14px; border-top: 1px solid var(--border-subtle);">
                     ${actionButtonHtml}
-                    <a href="mailto:${encodeURIComponent(email)}?subject=Re:%20Inquiry%20regarding%20${encodeURIComponent(propTitle)}" class="action-btn" style="background: var(--green); color: white; padding: 9px 18px; font-size: 0.9rem; text-decoration: none; border-radius: 8px;">
+                    <a href="mailto:${encodeURIComponent(email)}?subject=Re:%20Inquiry%20regarding%20${encodeURIComponent(propTitle)}" class="action-btn" style="background: var(--btn-primary-bg); color: #ffffff; padding: 9px 18px; font-size: 0.9rem; text-decoration: none; border-radius: 8px;">
                         Reply via Email
                     </a>
                 </div>

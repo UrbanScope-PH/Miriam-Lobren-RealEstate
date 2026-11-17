@@ -1,19 +1,5 @@
 @import url('admin-shell.css');
 
-:root {
-    --green-50: #eef5ef;
-    --green-100: #dceee0;
-    --green-600: #347c47;
-    --green-700: #2d5c39;
-    --green-800: #245331;
-    --green-950: #1a3b23;
-    --surface: #ffffff;
-    --border: #e4ece5;
-    --border-dark: #cbd9ce;
-    --text-primary: #1b2e21;
-    --text-secondary: #5e7163;
-}
-
 /* ================================
    PAGE CONTENT
 ================================ */
@@ -70,7 +56,7 @@
     padding: 10px 15px;
     border: 1px solid var(--border-dark);
     border-radius: 9px;
-    background: #fff;
+    background: var(--surface);
     color: var(--text-primary);
     font-size: 11px;
     font-weight: 700;
@@ -170,14 +156,14 @@
 }
 
 .form-group label {
-    color: #34483a;
+    color: var(--text-secondary);
     font-size: 11px;
     font-weight: 800;
 }
 
 .required {
     margin-left: 2px;
-    color: #c45151;
+    color: var(--danger-text);
 }
 
 .form-group input,
@@ -185,10 +171,10 @@
 .form-group textarea {
     width: 100%;
     min-width: 0;
-    border: 1px solid var(--border-dark);
+    border: 1px solid var(--border-input);
     border-radius: 8px;
     outline: none;
-    background: #fff;
+    background: var(--surface-input);
     color: var(--text-primary);
     font-size: 12px;
     transition:
@@ -211,7 +197,7 @@
 
 .form-group input::placeholder,
 .form-group textarea::placeholder {
-    color: #a3ada6;
+    color: var(--text-subtle);
 }
 
 .form-group input:focus,
@@ -249,8 +235,8 @@
     justify-content: center;
     min-width: 47px;
     padding: 0 12px;
-    border: 1px solid var(--border-dark);
-    background: #f7f9f7;
+    border: 1px solid var(--border-input);
+    background: var(--surface-muted);
     color: var(--text-secondary);
     font-size: 12px;
 }
@@ -339,7 +325,7 @@
     padding: 10px;
     border: 1px dashed var(--border-dark);
     border-radius: 8px;
-    background: #fafcfb;
+    background: var(--surface-muted);
     color: var(--text-muted);
     font-size: 10px;
     text-align: center;
@@ -354,9 +340,9 @@
     flex-direction: column;
     align-items: center;
     padding: 28px 20px;
-    border: 1.5px dashed #cbd9ce;
+    border: 1.5px dashed var(--border-strong);
     border-radius: 11px;
-    background: #fbfdfb;
+    background: var(--surface-muted);
     text-align: center;
 }
 
@@ -402,9 +388,9 @@
     min-height: 40px;
     margin-top: 17px;
     padding: 10px 18px;
-    border: 1px solid var(--green-700);
+    border: 1px solid var(--btn-primary-bg);
     border-radius: 8px;
-    background: var(--green-800);
+    background: var(--btn-primary-bg);
     color: #fff;
     font-size: 11px;
     font-weight: 800;
@@ -416,7 +402,8 @@
 
 @media (hover: hover) and (pointer: fine) {
     .upload-btn:hover {
-        background: var(--green-950);
+        background: var(--btn-primary-hover);
+        border-color: var(--btn-primary-hover);
     }
 }
 
@@ -478,27 +465,27 @@
 
 .cancel-btn {
     border: 1px solid var(--border-dark);
-    background: #fff;
-    color: #536258;
+    background: var(--surface);
+    color: var(--text-muted);
 }
 
 @media (hover: hover) and (pointer: fine) {
     .cancel-btn:hover {
-        border-color: #aab9ad;
-        background: #f8faf8;
+        border-color: var(--border-strong);
+        background: var(--surface-hover);
     }
 }
 
 .save-btn {
-    border: 1px solid var(--green-800);
-    background: var(--green-800);
+    border: 1px solid var(--btn-primary-bg);
+    background: var(--btn-primary-bg);
     color: #fff;
 }
 
 @media (hover: hover) and (pointer: fine) {
     .save-btn:hover:not(:disabled) {
-        border-color: var(--green-950);
-        background: var(--green-950);
+        border-color: var(--btn-primary-hover);
+        background: var(--btn-primary-hover);
     }
 }
 
@@ -917,7 +904,7 @@ body.sidebar-is-open {
 
 /* Emphasize Save Changes CTA (Rule 10) */
 .save-btn {
-    background: var(--green, #1f4928) !important;
+    background: var(--btn-primary-bg) !important;
     color: #ffffff !important;
     box-shadow: 0 4px 14px rgba(31, 73, 40, 0.28) !important;
     border-radius: var(--radius-md, 8px) !important;
@@ -927,6 +914,7 @@ body.sidebar-is-open {
 
 @media (hover: hover) and (pointer: fine) {
     .save-btn:hover {
+        background: var(--btn-primary-hover) !important;
         transform: translateY(-2px) !important;
         box-shadow: 0 6px 18px rgba(31, 73, 40, 0.38) !important;
     }

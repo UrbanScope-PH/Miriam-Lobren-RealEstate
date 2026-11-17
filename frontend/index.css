@@ -334,18 +334,18 @@
 
 .search-select-option.is-selected .search-select-option-main,
 .search-select-option.is-selected .search-select-option-sub {
-    color: #15803d;
+    color: var(--emerald-primary);
     font-weight: 700;
 }
 
 html.dark-mode .search-select-option-main,
 html.dark-mode .search-select-option-sub {
-    color: #e7f0e9;
+    color: var(--text-dark);
 }
 
 html.dark-mode .search-select-option.is-selected .search-select-option-main,
 html.dark-mode .search-select-option.is-selected .search-select-option-sub {
-    color: #86efac;
+    color: var(--dark-green);
     font-weight: 700;
 }
 
@@ -353,7 +353,7 @@ html.dark-mode .search-select-option.is-selected .search-select-option-sub {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    color: #15803d;
+    color: var(--emerald-primary);
     flex-shrink: 0;
     opacity: 0;
     transition: opacity 0.15s ease;
@@ -369,7 +369,7 @@ html.dark-mode .search-select-option.is-selected .search-select-option-sub {
     align-items: center;
     justify-content: center;
     gap: 8px;
-    background: #1e5c33;
+    background: var(--btn-primary-bg);
     color: #ffffff;
     border: none;
     /* Inner radius = outer (60px) - padding (12px) = 48px */
@@ -388,7 +388,7 @@ html.dark-mode .search-select-option.is-selected .search-select-option-sub {
     .search-submit:hover {
         transform: translateY(-2px);
         box-shadow: 0 8px 22px rgba(21, 128, 61, 0.42);
-        background: #164826;
+        background: var(--btn-primary-hover);
     }
 }
 
@@ -406,7 +406,7 @@ html.dark-mode .search-select-option.is-selected .search-select-option-sub {
     position: relative;
     z-index: 20;
     padding: 100px 6% 70px;
-    background-color: #ffffff;
+    background-color: var(--bg-page);
     scroll-margin-top: 90px;
 }
 
@@ -426,19 +426,19 @@ html.dark-mode .search-select-option.is-selected .search-select-option-sub {
     display: flex;
     align-items: center;
     gap: 12px;
-    border: 1px solid #c9d6cb;
+    border: 1px solid var(--border-color);
     border-radius: 14px;
     padding: 6px 10px;
     margin-bottom: 34px;
-    background-color: #fafdfa;
+    background-color: var(--surface-muted);
 }
 
 .cat-arrow {
     width: 32px;
     height: 32px;
     border-radius: 50%;
-    border: 1px solid #b2c4b5;
-    background: #ffffff;
+    border: 1px solid var(--border-strong);
+    background: var(--surface);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -476,7 +476,7 @@ html.dark-mode .search-select-option.is-selected .search-select-option-sub {
     padding: 8px 18px;
     font-size: 14px;
     font-weight: 500;
-    color: #4b6151;
+    color: var(--text-muted);
     cursor: pointer;
     white-space: nowrap;
     border-radius: 8px; /* Inner radius = 14px - 6px = 8px */
@@ -586,7 +586,7 @@ html.dark-mode .search-select-option.is-selected .search-select-option-sub {
 
 /* Standout Warm Accent RFO Badge (Rule 11) */
 .property-status-badge.badge-rfo {
-    background: #b45309;
+    background: var(--accent-warm-solid);
     color: #ffffff;
     border: 1px solid rgba(254, 243, 199, 0.45);
     box-shadow: 0 4px 12px rgba(180, 83, 9, 0.32);
@@ -594,15 +594,15 @@ html.dark-mode .search-select-option.is-selected .search-select-option-sub {
 
 /* Sold Out badge */
 .property-status-badge.badge-sold {
-    background: rgba(185, 28, 28, 0.94);
+    background: var(--danger-btn-bg);
     color: #ffffff;
     border: 1px solid rgba(254, 202, 202, 0.45);
 }
 
 /* Greyed-out treatment for Sold property cards */
 .property-card.card-sold {
-    background: #f8fafc;
-    border: 1px solid #e2e8f0;
+    background: var(--surface-muted);
+    border: 1px solid var(--border-subtle);
     opacity: 0.82;
     transition: transform 0.25s ease, box-shadow 0.25s ease, opacity 0.25s ease;
 }
@@ -620,12 +620,12 @@ html.dark-mode .search-select-option.is-selected .search-select-option-sub {
 }
 
 .property-card.card-sold .property-info {
-    background: #f8fafc;
+    background: var(--surface-muted);
 }
 
 .property-card.card-sold .property-details span,
 .property-card.card-sold .property-location {
-    color: #94a3b8;
+    color: var(--text-subtle);
 }
 
 @media (hover: hover) and (pointer: fine) {
@@ -765,9 +765,9 @@ html.dark-mode .search-select-option.is-selected .search-select-option-sub {
 
 /* Static Skeleton Loaders (Rule 19: Add loading states) */
 .property-skeleton-card {
-    background: #ffffff;
+    background: var(--surface);
     border-radius: 18px;
-    border: 1px solid rgba(45, 92, 57, 0.08);
+    border: 1px solid var(--border-subtle);
     overflow: hidden;
     display: flex;
     flex-direction: column;
@@ -775,7 +775,7 @@ html.dark-mode .search-select-option.is-selected .search-select-option-sub {
 
 .property-skeleton-img {
     height: 240px;
-    background: #f0f3f1;
+    background: var(--border-subtle);
 }
 
 .property-skeleton-info {
@@ -787,32 +787,32 @@ html.dark-mode .search-select-option.is-selected .search-select-option-sub {
 
 .skeleton-bar {
     border-radius: 6px;
-    background: #f0f3f1;
+    background: var(--border-subtle);
 }
 
 html.dark-mode .property-skeleton-card {
-    background: #16231b;
-    border-color: #26392c;
+    background: var(--surface);
+    border-color: var(--border-color);
 }
 
 html.dark-mode .property-skeleton-img,
 html.dark-mode .skeleton-bar {
-    background: #1b2c21;
+    background: var(--surface-muted);
 }
 
 html.dark-mode .property-status-badge.badge-rfo {
-    background: rgba(245, 158, 11, 0.22);
-    color: #fde68a;
-    border-color: rgba(251, 191, 36, 0.45);
+    background: var(--accent-warm-solid);
+    color: #ffffff;
+    border-color: var(--accent-warm-border);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
 }
 
 .view-all-pill {
     display: inline-block;
     padding: 12px 42px;
-    border: 1.5px solid #9fb3a3;
+    border: 1.5px solid var(--border-strong);
     border-radius: 30px;
-    background: #ffffff;
+    background: var(--surface);
     color: var(--text-dark);
     font-size: 15px;
     font-weight: 600;
@@ -832,7 +832,7 @@ html.dark-mode .property-status-badge.badge-rfo {
 /* ABOUT ME SECTION */
 .about {
     padding: 80px 6%;
-    background-color: #f7faf7;
+    background-color: var(--bg-subtle);
 }
 
 .about-content {
@@ -853,7 +853,7 @@ html.dark-mode .property-status-badge.badge-rfo {
 
 .about-text p {
     font-size: 15.5px;
-    color: #415546;
+    color: var(--text-secondary);
     line-height: 1.7;
     margin-bottom: 18px;
     text-align: justify;
@@ -864,7 +864,7 @@ html.dark-mode .property-status-badge.badge-rfo {
     display: inline-flex;
     align-items: center;
     gap: 10px;
-    background-color: var(--green);
+    background-color: var(--btn-primary-bg);
     color: #ffffff;
     padding: 14px 34px;
     border-radius: 30px;
@@ -877,7 +877,7 @@ html.dark-mode .property-status-badge.badge-rfo {
 
 @media (hover: hover) and (pointer: fine) {
     .learn-more-btn:hover {
-        background-color: var(--dark-green);
+        background-color: var(--btn-primary-hover);
     }
 }
 
@@ -962,9 +962,9 @@ html.dark-mode .property-status-badge.badge-rfo {
    ======================================================== */
 .faqs-section {
     padding: 85px 6%;
-    background-color: #ffffff;
-    border-top: 1px solid #eef4f0;
-    border-bottom: 1px solid #eef4f0;
+    background-color: var(--bg-page);
+    border-top: 1px solid var(--border-subtle);
+    border-bottom: 1px solid var(--border-subtle);
 }
 
 .faqs-container {
@@ -980,7 +980,7 @@ html.dark-mode .property-status-badge.badge-rfo {
 .faqs-badge {
     display: inline-block;
     padding: 6px 16px;
-    background-color: #dcf2e3;
+    background-color: var(--light-green);
     color: var(--green);
     border-radius: 999px;
     font-size: 13px;
@@ -1014,12 +1014,12 @@ html.dark-mode .property-status-badge.badge-rfo {
 
 
 .faq-item {
-    background: #ffffff;
+    background: var(--surface);
     border-radius: 14px;
-    border: 1px solid #e3ede5;
+    border: 1px solid var(--border-subtle);
     overflow: hidden;
     transition: all 0.25s ease;
-    box-shadow: 0 3px 12px rgba(0, 0, 0, 0.03);
+    box-shadow: var(--shadow-sm);
 }
 
 .faq-item.hidden-by-category {
@@ -1028,13 +1028,13 @@ html.dark-mode .property-status-badge.badge-rfo {
 
 @media (hover: hover) and (pointer: fine) {
     .faq-item:hover {
-        border-color: #cde0d2;
-        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.06);
+        border-color: var(--green-border-soft);
+        box-shadow: var(--shadow-md);
     }
 }
 
 .faq-item.active {
-    border-color: #a3d2ae;
+    border-color: var(--accent-green);
     box-shadow: 0 8px 24px rgba(45, 92, 57, 0.09);
 }
 
@@ -1086,7 +1086,7 @@ html.dark-mode .property-status-badge.badge-rfo {
 
 .faq-item.active .faq-icon {
     transform: rotate(45deg);
-    background: var(--green);
+    background: var(--btn-primary-bg);
     color: #ffffff;
 }
 
@@ -1794,7 +1794,7 @@ html.dark-mode .property-status-badge.badge-rfo {
 }
 
 .intent-modal-box {
-    background: #ffffff;
+    background: var(--surface);
     width: 100%;
     max-width: 680px;
     max-height: calc(100vh - 32px);
@@ -1803,8 +1803,8 @@ html.dark-mode .property-status-badge.badge-rfo {
     -webkit-overflow-scrolling: touch;
     border-radius: 22px;
     padding: 28px 30px;
-    box-shadow: 0 25px 65px rgba(10, 24, 15, 0.32), 0 6px 20px rgba(0, 0, 0, 0.08);
-    border: 1px solid rgba(46, 125, 50, 0.18);
+    box-shadow: var(--shadow-xl);
+    border: 1px solid var(--border-color);
     transform: translateY(20px) scale(0.97);
     transition: transform 0.24s cubic-bezier(0.16, 1, 0.3, 1);
     box-sizing: border-box;
@@ -1820,7 +1820,7 @@ html.dark-mode .property-status-badge.badge-rfo {
     align-items: flex-start;
     padding-bottom: 16px;
     margin-bottom: 22px;
-    border-bottom: 1px solid #edf2ee;
+    border-bottom: 1px solid var(--border-subtle);
 }
 
 .modal-title-group {
@@ -1833,19 +1833,19 @@ html.dark-mode .property-status-badge.badge-rfo {
     width: 44px;
     height: 44px;
     border-radius: 12px;
-    background: #eef6f0;
-    color: #1e5c33;
+    background: var(--light-green);
+    color: var(--green);
     display: inline-flex;
     align-items: center;
     justify-content: center;
     flex-shrink: 0;
-    border: 1px solid #cbe0d1;
+    border: 1px solid var(--green-border-soft);
 }
 
 .modal-title-group h3 {
     font-size: 1.25rem;
     font-weight: 800;
-    color: #14351e;
+    color: var(--dark-green);
     margin: 0;
     letter-spacing: -0.3px;
     line-height: 1.25;
@@ -1853,18 +1853,18 @@ html.dark-mode .property-status-badge.badge-rfo {
 
 .modal-subtitle {
     font-size: 0.88rem;
-    color: #5e7163;
+    color: var(--text-muted);
     margin: 3px 0 0;
 }
 
 .modal-close {
-    background: #f1f5f2;
-    border: 1px solid #e1ebe3;
+    background: var(--surface-muted);
+    border: 1px solid var(--border-subtle);
     width: 36px;
     height: 36px;
     border-radius: 50%;
     cursor: pointer;
-    color: #5e7163;
+    color: var(--text-muted);
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -1945,8 +1945,8 @@ html.dark-mode .property-status-badge.badge-rfo {
     display: flex;
     flex-direction: column;
     padding: 22px 20px;
-    background: #fbfdfb;
-    border: 1.5px solid #d8e5dc;
+    background: var(--surface-muted);
+    border: 1.5px solid var(--border-color);
     border-radius: 16px;
     text-decoration: none;
     color: inherit;
@@ -1958,9 +1958,9 @@ html.dark-mode .property-status-badge.badge-rfo {
 @media (hover: hover) and (pointer: fine) {
     .intent-card:hover {
         transform: translateY(-4px);
-        border-color: #2e7d32;
-        box-shadow: 0 12px 28px rgba(30, 92, 51, 0.12);
-        background: #ffffff;
+        border-color: var(--green);
+        box-shadow: var(--shadow-md);
+        background: var(--surface);
     }
 }
 
@@ -1972,17 +1972,17 @@ html.dark-mode .property-status-badge.badge-rfo {
     font-weight: 700;
     padding: 3px 9px;
     border-radius: 999px;
-    background: #eef5f0;
-    color: #2e7d32;
-    border: 1px solid #c8dece;
+    background: var(--light-green);
+    color: var(--green);
+    border: 1px solid var(--green-border-soft);
     text-transform: uppercase;
     letter-spacing: 0.4px;
 }
 
 .intent-card-badge.featured {
-    background: #e9f5ec;
-    color: #1b5e20;
-    border-color: #a8d5b1;
+    background: var(--status-success-bg);
+    color: var(--status-success-text);
+    border-color: var(--status-success-border);
 }
 
 .intent-icon-wrap {
@@ -2003,28 +2003,28 @@ html.dark-mode .property-status-badge.badge-rfo {
 }
 
 .icon-general {
-    background: #e8f5e9;
-    color: #1e5c33;
-    border: 1px solid #b7deb9;
+    background: var(--light-green);
+    color: var(--green);
+    border: 1px solid var(--green-border-soft);
 }
 
 .icon-property {
-    background: #e0f2f1;
-    color: #004d40;
-    border: 1px solid #80cbc4;
+    background: var(--status-success-bg);
+    color: var(--dark-green);
+    border: 1px solid var(--status-success-border);
 }
 
 .intent-info h4 {
     font-size: 1.05rem;
     font-weight: 700;
-    color: #163821;
+    color: var(--text-dark);
     margin: 0 0 8px;
     line-height: 1.3;
 }
 
 .intent-info p {
     font-size: 0.86rem;
-    color: #586b5e;
+    color: var(--text-muted);
     line-height: 1.5;
     margin: 0 0 16px;
     flex: 1;
@@ -2036,13 +2036,13 @@ html.dark-mode .property-status-badge.badge-rfo {
     gap: 6px;
     font-size: 0.88rem;
     font-weight: 700;
-    color: #2d5c39;
+    color: var(--green);
     margin-top: auto;
 }
 
 @media (hover: hover) and (pointer: fine) {
     .intent-card:hover .intent-link-text {
-        color: #1a3b23;
+        color: var(--dark-green);
     }
 }
 
@@ -2079,85 +2079,85 @@ html.dark-mode .property-status-badge.badge-rfo {
    ========================================================================== */
 html.dark-mode .featured,
 html.dark-mode .testimonials-section {
-    background-color: #0e1611;
+    background-color: var(--bg-page);
 }
 
 html.dark-mode .about,
 html.dark-mode .faqs-section {
-    background-color: #121c16;
-    border-top-color: #213226;
-    border-bottom-color: #213226;
+    background-color: var(--bg-subtle);
+    border-top-color: var(--border-subtle);
+    border-bottom-color: var(--border-subtle);
 }
 
 html.dark-mode .featured-title,
 html.dark-mode .about-text h2,
 html.dark-mode .testimonials-heading h2,
 html.dark-mode .faqs-heading h2 {
-    color: #6ee7b7;
+    color: var(--accent-green);
 }
 
 html.dark-mode .home-sort-control label,
 html.dark-mode .testimonials-heading p,
 html.dark-mode .faqs-heading p {
-    color: #9ab09f;
+    color: var(--text-muted);
 }
 
 html.dark-mode .home-sort-control select {
-    background: #16231b;
-    border-color: #2b4031;
-    color: #e7f0e9;
+    background: var(--surface);
+    border-color: var(--border-color);
+    color: var(--text-dark);
 }
 
 html.dark-mode .home-sort-control select:focus {
-    border-color: #4ade80;
+    border-color: var(--green);
     box-shadow: 0 0 0 3px rgba(74, 222, 128, 0.16);
 }
 
 @media (hover: hover) and (pointer: fine) {
     html.dark-mode .home-sort-control select:hover {
-        border-color: #4ade80;
+        border-color: var(--green);
         box-shadow: 0 0 0 3px rgba(74, 222, 128, 0.16);
     }
 }
 
 html.dark-mode .category-tabs-container {
-    background-color: #152119;
-    border-color: #26392c;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+    background-color: var(--surface);
+    border-color: var(--border-color);
+    box-shadow: var(--shadow);
 }
 
 html.dark-mode .cat-arrow {
-    background: #1c2d22;
-    border-color: #2f4736;
-    color: #86efac;
+    background: var(--surface-muted);
+    border-color: var(--border-strong);
+    color: var(--dark-green);
 }
 
 @media (hover: hover) and (pointer: fine) {
     html.dark-mode .cat-arrow:hover {
-        background: #3ea35d;
-        border-color: #3ea35d;
+        background: var(--btn-primary-bg);
+        border-color: var(--green);
         color: #ffffff;
     }
 }
 
 html.dark-mode .cat-tab,
 html[data-theme="dark"] .cat-tab {
-    color: #a5b9aa;
+    color: var(--text-muted);
 }
 
 @media (hover: hover) and (pointer: fine) {
     html.dark-mode .cat-tab:hover,
     html[data-theme="dark"] .cat-tab:hover {
-        color: #e7f0e9;
+        color: var(--text-dark);
         background: rgba(134, 239, 172, 0.08);
     }
 }
 
 html.dark-mode .cat-tab.active,
 html[data-theme="dark"] .cat-tab.active {
-    color: #86efac;
-    background: #233b2b;
-    box-shadow: inset 0 0 0 1px #3ea35d, 0 2px 8px rgba(0, 0, 0, 0.3);
+    color: var(--dark-green);
+    background: var(--surface-hover);
+    box-shadow: inset 0 0 0 1px var(--green), 0 2px 8px rgba(0, 0, 0, 0.3);
 }
 
 html.dark-mode .cat-tab.active::after,
@@ -2166,20 +2166,20 @@ html[data-theme="dark"] .cat-tab.active::after {
 }
 
 html.dark-mode .property-card {
-    background: #16231b;
-    border-color: #26392c;
-    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.42);
+    background: var(--surface);
+    border-color: var(--border-color);
+    box-shadow: var(--shadow-md);
 }
 
 @media (hover: hover) and (pointer: fine) {
     html.dark-mode .property-card:hover {
-        border-color: #3ea35d;
-        box-shadow: 0 18px 38px rgba(0, 0, 0, 0.55);
+        border-color: var(--green);
+        box-shadow: var(--shadow-lg);
     }
 }
 
 html.dark-mode .property-image {
-    background-color: #0f1812;
+    background-color: var(--bg-subtle);
 }
 
 html.dark-mode .property-image img {
@@ -2198,8 +2198,8 @@ html.dark-mode .property-image::after {
 }
 
 html.dark-mode .property-card.card-sold {
-    background: #131c16;
-    border-color: #233227;
+    background: var(--surface-muted);
+    border-color: var(--border-subtle);
 }
 
 html.dark-mode .property-card.card-sold .property-image img {
@@ -2207,7 +2207,7 @@ html.dark-mode .property-card.card-sold .property-image img {
 }
 
 html.dark-mode .property-card.card-sold .property-info {
-    background: #131c16;
+    background: var(--surface-muted);
 }
 
 html.dark-mode .about-image-card img {
@@ -2216,145 +2216,145 @@ html.dark-mode .about-image-card img {
 }
 
 html.dark-mode .property-info h3 {
-    color: #86efac;
+    color: var(--dark-green);
 }
 
 html.dark-mode .property-location {
-    color: #a5b9aa;
+    color: var(--text-muted);
 }
 
 html.dark-mode .property-details {
-    color: #bfd0c3;
-    border-bottom-color: #243629;
+    color: var(--text-secondary);
+    border-bottom-color: var(--border-color);
 }
 
 html.dark-mode .property-price {
-    color: #e7f0e9;
+    color: var(--text-dark);
 }
 
 html.dark-mode .tcp-pill-tag {
-    background: rgba(62, 163, 93, 0.2);
-    color: #86efac;
-    border-color: #2f573b;
+    background: var(--light-green);
+    color: var(--dark-green);
+    border-color: var(--green-border-soft);
 }
 
 html.dark-mode .price-prefix,
 html.dark-mode .tcp-subtext {
-    color: #9ab09f;
+    color: var(--text-muted);
 }
 
 html.dark-mode .view-all-pill {
-    background: #16231b;
-    border-color: #2f4736;
-    color: #e7f0e9;
+    background: var(--surface);
+    border-color: var(--border-strong);
+    color: var(--text-dark);
 }
 
 @media (hover: hover) and (pointer: fine) {
     html.dark-mode .view-all-pill:hover {
-        background: #22372a;
-        border-color: #4ade80;
-        color: #86efac;
+        background: var(--surface-hover);
+        border-color: var(--green);
+        color: var(--dark-green);
     }
 }
 
 html.dark-mode .about-text p {
-    color: #c2d4c6;
+    color: var(--text-secondary);
 }
 
 html.dark-mode .testimonial-card {
-    background: #16231b;
-    border-color: #26392c;
-    box-shadow: 0 10px 28px rgba(0, 0, 0, 0.4);
+    background: var(--surface);
+    border-color: var(--border-color);
+    box-shadow: var(--shadow-md);
 }
 
 @media (hover: hover) and (pointer: fine) {
     html.dark-mode .testimonial-card:hover {
-        border-color: #3ea35d;
+        border-color: var(--green);
     }
 }
 
 html.dark-mode .testimonial-quote {
-    color: #c7d8cb;
+    color: var(--text-secondary);
 }
 
 html.dark-mode .author-info strong {
-    color: #eef6f0;
+    color: var(--text-dark);
 }
 
 html.dark-mode .author-info span {
-    color: #9ab09f;
+    color: var(--text-muted);
 }
 
 html.dark-mode .faqs-badge {
-    background: rgba(62, 163, 93, 0.18);
-    border-color: #2e5439;
-    color: #86efac;
+    background: var(--light-green);
+    border-color: var(--green-border-soft);
+    color: var(--dark-green);
 }
 
 html.dark-mode .faq-item {
-    background: #16231b;
-    border-color: #26392c;
+    background: var(--surface);
+    border-color: var(--border-color);
 }
 
 html.dark-mode .faq-item.active {
-    border-color: #3ea35d;
-    box-shadow: 0 10px 28px rgba(0, 0, 0, 0.45);
+    border-color: var(--green);
+    box-shadow: var(--shadow-md);
 }
 
 @media (hover: hover) and (pointer: fine) {
     html.dark-mode .faq-item:hover {
-        border-color: #3ea35d;
-        box-shadow: 0 10px 28px rgba(0, 0, 0, 0.45);
+        border-color: var(--green);
+        box-shadow: var(--shadow-md);
     }
 }
 
 html.dark-mode .faq-question {
-    color: #eef6f0;
+    color: var(--text-dark);
 }
 
 html.dark-mode .faq-icon {
-    background: #1f3326;
-    color: #86efac;
+    background: var(--light-green);
+    color: var(--dark-green);
 }
 
 html.dark-mode .faq-item.active .faq-icon {
-    background: #3ea35d;
+    background: var(--btn-primary-bg);
     color: #ffffff;
 }
 
 html.dark-mode .faq-answer-inner {
-    color: #c2d4c6;
+    color: var(--text-secondary);
 }
 
 html.dark-mode .faq-item.active .faq-answer-inner {
-    box-shadow: inset 0 1px 0 #243629;
+    box-shadow: inset 0 1px 0 var(--border-color);
 }
 
 html.dark-mode .faq-answer-inner strong {
-    color: #86efac;
+    color: var(--dark-green);
 }
 
 html.dark-mode .faq-note {
-    color: #a5b9aa;
+    color: var(--text-muted);
 }
 
 html.dark-mode .faq-disclaimer-note {
-    background: #111b15;
-    border-left-color: #4ade80;
-    color: #c2d4c6;
+    background: var(--bg-subtle);
+    border-left-color: var(--green);
+    color: var(--text-secondary);
 }
 
 @media (hover: hover) and (pointer: fine) {
     html.dark-mode .search-submit:hover,
     html.dark-mode .learn-more-btn:hover {
-        background: #3ea35d;
+        background: var(--btn-primary-hover);
         color: #ffffff;
     }
 }
 
 /* CTA Banner to Footer Seamless Transition in Dark Mode */
 html.dark-mode .cta-banner {
-    background-color: #090f0b;
+    background-color: var(--footer-bg);
     border-bottom: none;
 }
 
@@ -2365,8 +2365,8 @@ html.dark-mode .cta-overlay {
 
 @media (hover: hover) and (pointer: fine) {
     html.dark-mode .cta-consult-btn:hover {
-        background: #3ea35d;
-        border-color: #4ade80;
+        background: var(--btn-primary-hover);
+        border-color: var(--green);
         color: #ffffff;
     }
 }
@@ -2377,132 +2377,133 @@ html.dark-mode .footer {
 
 /* Consultation Intent Modal Dark Mode */
 html.dark-mode .intent-modal-box {
-    background: #16231b;
-    border: 1px solid #293e2f;
-    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.65);
+    background: var(--surface);
+    border: 1px solid var(--border-color);
+    box-shadow: var(--shadow-xl);
 }
 
 html.dark-mode .modal-header {
-    border-bottom-color: #243629;
+    border-bottom-color: var(--border-color);
 }
 
 html.dark-mode .modal-header-icon {
-    background: #1f3326;
-    border-color: #2f4e39;
-    color: #86efac;
+    background: var(--light-green);
+    border-color: var(--green-border-soft);
+    color: var(--dark-green);
 }
 
 html.dark-mode .icon-general {
-    background: #1b3524;
-    color: #86efac;
-    border-color: #2f573b;
+    background: var(--light-green);
+    color: var(--dark-green);
+    border-color: var(--green-border-soft);
 }
 
 html.dark-mode .icon-property {
-    background: #163330;
-    color: #5eead4;
-    border-color: #28544f;
+    background: var(--status-info-bg);
+    color: var(--accent-green);
+    border-color: var(--status-info-border);
 }
 
 html.dark-mode .modal-close {
-    background: #1c2d22;
-    border-color: #2f4736;
-    color: #d8ebe0;
+    background: var(--surface-muted);
+    border-color: var(--border-strong);
+    color: var(--text-secondary);
 }
 
 html.dark-mode .card-icon-btn {
     background: rgba(14, 24, 18, 0.78);
-    border: 1px solid rgba(134, 239, 172, 0.32);
-    color: #eef6f0;
+    border: 1px solid var(--green-border-soft);
+    color: var(--text-dark);
 }
 
 @media (hover: hover) and (pointer: fine) {
     html.dark-mode .card-icon-btn:hover {
-        background: #2d5c39;
-        border-color: #86efac;
+        background: var(--btn-primary-bg);
+        border-color: var(--dark-green);
         color: #ffffff;
     }
 }
 
 html.dark-mode .property-card.card-sold {
-    background: #131c16;
-    border-color: #253429;
+    background: var(--surface-muted);
+    border-color: var(--border-subtle);
 }
 
 html.dark-mode .property-card.card-sold .property-info {
-    background: #131c16;
+    background: var(--surface-muted);
 }
 
 html.dark-mode .property-card.card-sold .property-info h3,
 html.dark-mode .property-card.card-sold .property-info .property-price {
-    color: #94a99b;
+    color: var(--text-muted);
 }
 
 html.dark-mode .property-card.card-sold .property-details span,
 html.dark-mode .property-card.card-sold .property-location {
-    color: #7c9183;
+    color: var(--text-subtle);
 }
 
 html.dark-mode .home-empty-state {
-    background: #16231b !important;
-    border-color: #2b4232 !important;
+    background: var(--surface) !important;
+    border-color: var(--border-color) !important;
 }
 
 html.dark-mode .modal-title-group h3 {
-    color: #eef6f0;
+    color: var(--text-dark);
 }
 
 html.dark-mode .modal-subtitle {
-    color: #9ab09f;
+    color: var(--text-muted);
 }
 
 html.dark-mode .modal-close {
-    background: #1f3125;
-    border-color: #2f4736;
-    color: #c2d4c6;
+    background: var(--surface-muted);
+    border-color: var(--border-strong);
+    color: var(--text-secondary);
 }
 
 @media (hover: hover) and (pointer: fine) {
     html.dark-mode .modal-close:hover {
-        background: #283f30;
-        color: #ffffff;
+        background: var(--danger-light);
+        border-color: var(--danger-border);
+        color: var(--danger-text);
     }
 }
 
 html.dark-mode .intent-card {
-    background: #1b2b21;
-    border-color: #2d4534;
+    background: var(--surface-muted);
+    border-color: var(--border-color);
 }
 
 @media (hover: hover) and (pointer: fine) {
     html.dark-mode .intent-card:hover {
-        background: #203327;
-        border-color: #4ade80;
+        background: var(--surface-hover);
+        border-color: var(--green);
     }
 }
 
 html.dark-mode .intent-card-badge,
 html.dark-mode .intent-card-badge.featured {
-    background: rgba(62, 163, 93, 0.2);
-    border-color: #2f573b;
-    color: #86efac;
+    background: var(--light-green);
+    border-color: var(--green-border-soft);
+    color: var(--dark-green);
 }
 
 html.dark-mode .intent-info h4 {
-    color: #eef6f0;
+    color: var(--text-dark);
 }
 
 html.dark-mode .intent-info p {
-    color: #b4c8b9;
+    color: var(--text-secondary);
 }
 
 html.dark-mode .intent-link-text {
-    color: #86efac;
+    color: var(--dark-green);
 }
 
 @media (hover: hover) and (pointer: fine) {
     html.dark-mode .intent-card:hover .intent-link-text {
-        color: #86efac;
+        color: var(--dark-green);
     }
 }
 
@@ -2512,105 +2513,105 @@ html.dark-mode .intent-link-text {
 
 html.dark-mode .property-details span,
 html.dark-mode .property-details .spec-pill {
-    background: #18281d;
-    border-color: #28442f;
-    color: #c0d8c4;
+    background: var(--surface-muted);
+    border-color: var(--border-color);
+    color: var(--text-secondary);
 }
 
 html.dark-mode .property-details span svg,
 html.dark-mode .property-details .spec-pill svg {
-    color: #48bb78;
+    color: var(--emerald-bright);
 }
 
 /* Dark Mode overrides for Search Bar & Custom Search Select */
 html.dark-mode .search-bar {
-    background: rgba(18, 30, 22, 0.96);
-    border-color: rgba(45, 75, 52, 0.6);
-    box-shadow: 0 18px 45px rgba(0, 0, 0, 0.5);
+    background: var(--surface);
+    border-color: var(--border-color);
+    box-shadow: var(--shadow-lg);
 }
 
 html.dark-mode .search-bar label {
-    border-right-color: #27402f;
-    border-bottom-color: #27402f;
+    border-right-color: var(--border-color);
+    border-bottom-color: var(--border-color);
 }
 
 html.dark-mode .search-field-label {
-    color: #e2ede5;
+    color: var(--text-secondary);
 }
 
 html.dark-mode .search-select-trigger {
-    color: #e7f0e9;
+    color: var(--text-dark);
 }
 
 html.dark-mode .search-select-wrap.is-open .search-select-trigger {
-    color: #86efac;
+    color: var(--dark-green);
 }
 
 @media (hover: hover) and (pointer: fine) {
     html.dark-mode .search-select-wrap:hover .search-select-trigger {
-        color: #86efac;
+        color: var(--dark-green);
     }
 }
 
 html.dark-mode .search-select-icon,
 html.dark-mode .search-select-option-icon,
 html.dark-mode .search-select-check {
-    color: #86efac;
+    color: var(--dark-green);
 }
 
 html.dark-mode .search-select-arrow {
-    color: #8fa896;
+    color: var(--text-muted);
 }
 
 html.dark-mode .search-select-wrap.is-open .search-select-arrow {
-    color: #86efac;
+    color: var(--dark-green);
 }
 
 html.dark-mode .search-select-dropdown {
-    background: #142219;
-    border-color: #2b4232;
-    box-shadow: 0 20px 45px -4px rgba(0, 0, 0, 0.7), 0 8px 18px -4px rgba(0, 0, 0, 0.4);
+    background: var(--surface);
+    border-color: var(--border-color);
+    box-shadow: var(--shadow-xl);
 }
 
 html.dark-mode .search-select-option {
-    color: #e7f0e9;
+    color: var(--text-dark);
 }
 
 @media (hover: hover) and (pointer: fine) {
     html.dark-mode .search-select-option:hover {
-        background: rgba(72, 187, 120, 0.15);
-        color: #86efac;
+        background: var(--light-green);
+        color: var(--dark-green);
     }
 }
 
 html.dark-mode .search-select-option.is-selected {
-    background: rgba(72, 187, 120, 0.22);
-    color: #86efac;
+    background: var(--light-green-hover);
+    color: var(--dark-green);
 }
 
 html.dark-mode .search-bar input {
-    color: #e7f0e9;
+    color: var(--text-dark);
 }
 
 html.dark-mode .search-bar input::placeholder {
-    color: #8fa896;
+    color: var(--text-muted);
 }
 
 /* Dark Mode overrides for Sort Select */
 html.dark-mode .sort-select-trigger {
-    background: #16231b;
-    border-color: #2b4031;
-    color: #e7f0e9;
+    background: var(--surface);
+    border-color: var(--border-color);
+    color: var(--text-dark);
 }
 
 html.dark-mode .sort-select-wrap.is-open .sort-select-trigger {
-    border-color: #4ade80;
+    border-color: var(--green);
     box-shadow: 0 0 0 3px rgba(74, 222, 128, 0.16);
 }
 
 @media (hover: hover) and (pointer: fine) {
     html.dark-mode .sort-select-wrap:hover .sort-select-trigger {
-        border-color: #4ade80;
+        border-color: var(--green);
         box-shadow: 0 0 0 3px rgba(74, 222, 128, 0.16);
     }
 }
@@ -2618,37 +2619,37 @@ html.dark-mode .sort-select-wrap.is-open .sort-select-trigger {
 html.dark-mode .sort-select-icon,
 html.dark-mode .sort-select-option-icon,
 html.dark-mode .sort-select-check {
-    color: #86efac;
+    color: var(--dark-green);
 }
 
 html.dark-mode .sort-select-arrow {
-    color: #8fa896;
+    color: var(--text-muted);
 }
 
 html.dark-mode .sort-select-wrap.is-open .sort-select-arrow {
-    color: #86efac;
+    color: var(--dark-green);
 }
 
 html.dark-mode .sort-select-dropdown {
-    background: #142219;
-    border-color: #2b4232;
-    box-shadow: 0 20px 45px -4px rgba(0, 0, 0, 0.7), 0 8px 18px -4px rgba(0, 0, 0, 0.4);
+    background: var(--surface);
+    border-color: var(--border-color);
+    box-shadow: var(--shadow-xl);
 }
 
 html.dark-mode .sort-select-option {
-    color: #e7f0e9;
+    color: var(--text-dark);
 }
 
 @media (hover: hover) and (pointer: fine) {
     html.dark-mode .sort-select-option:hover {
-        background: rgba(72, 187, 120, 0.15);
-        color: #86efac;
+        background: var(--light-green);
+        color: var(--dark-green);
     }
 }
 
 html.dark-mode .sort-select-option.is-selected {
-    background: rgba(72, 187, 120, 0.22);
-    color: #86efac;
+    background: var(--light-green-hover);
+    color: var(--dark-green);
 }
 
 

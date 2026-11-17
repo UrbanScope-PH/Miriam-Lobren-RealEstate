@@ -63,7 +63,7 @@
         try {
             const p = String(location.pathname || '').toLowerCase().replace(/\\/g, '/');
             const darkColor = (p.includes('/pages/admin/') || p.includes('/pages/superadmin/')) ? '#131f17' : '#0e1611';
-            const lightColor = p.includes('/pages/auth/') ? '#f6faf6' : '#ffffff';
+            const lightColor = p.includes('/pages/auth/') ? '#f4f8f5' : '#ffffff';
             const targetColor = isDark ? darkColor : lightColor;
             if (document.documentElement && document.documentElement.style) {
                 document.documentElement.style.colorScheme = isDark ? 'dark' : 'light';
