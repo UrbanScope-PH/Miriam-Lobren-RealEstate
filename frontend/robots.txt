@@ -3,6 +3,9 @@ Allow: /
 Allow: /pages/properties/
 Allow: /pages/legal/
 Allow: /pages/inquiry/inquiry.html
+Allow: /pages/auth/login.html
+Allow: /pages/auth/register.html
+Disallow: /pages/auth/forgot-password.html
 Disallow: /pages/inquiry/history.html
 Disallow: /pages/admin/
 Disallow: /pages/superadmin/

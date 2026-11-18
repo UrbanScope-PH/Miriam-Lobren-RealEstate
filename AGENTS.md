@@ -48,12 +48,15 @@ Verify changes with Python (`backend/`) / Node (`api/`, `lib/`, `proxy.js`) chec
 ```text
 run.py                 Starts FastAPI + static site (uvicorn backend.app:app)
 proxy.js               Vercel Routing Middleware protecting admin/superadmin HTML routes
-api/auth/              Vercel Node Function for signed hosted admin sessions
-lib/admin-session.js   Shared signed-session cookie and token helpers
+vercel.json            Canonical Vercel headers, CSP, redirects, and static rewrites
+api/                   Vercel Node.js Serverless Functions: session.js, properties.js, inquiries.js, auth/ (edge-session, register/*, password/reset/*, admin-password/change), superadmin/users.js
+lib/                   Shared server-side Node helpers: admin-session.js, email-auth.js, server-security.js
 package.json           ESM mode and Vercel Routing Middleware helper dependency
-backend/               app.py (FastAPI assembler), middleware.py (RBAC guard), routers/ (system, auth, properties, inquiries, superadmin, web), database.py, models.py, auth.py, seed_rbac.py, migration_rbac.sql
+backend/               app.py (FastAPI assembler), middleware.py (RBAC guard), routers/ (system, auth, properties, inquiries, superadmin, web), database.py, models.py, auth.py, auth_otp.py, security.py, seed_rbac.py, migration_rbac.sql
 frontend/              Everything the browser loads (served at /)
   index.html/.css/.js  Home page
+  robots.txt           Search engine crawler rules
+  sitemap.xml          Public XML sitemap (index, 7 showcases, property-detail, inquiry, login, register, legal)
   pages/properties/    property-detail (?id=N), casasuerte.html, kathleen.html, Liora.html, Airmen.html, benecia.html, amore-classico.html & midori.html showcases (properties.html catalog was removed)
   pages/inquiry/       Inquiry form (inquiry.html) & client history (history.html) (requires login: <html data-require-auth>)
   pages/auth/          Unified login (auto-routes by role), register, and forgot-password flow
@@ -1469,9 +1472,11 @@ path when rendering from a page.
 
 ---
 
-152. **Retired Monthly Amortization & Affordability Calculator (Nov 18, 2026):** Removed the property-page financing calculator, homepage salary-based affordability matcher, and calculator-generated inquiry prefill/banner flow. Property pricing, direct inquiries, and requested financing guidance remain available. The shared calculator JS/CSS paths are inert placeholders pending approval to delete files, as required by the repository safety rules.
+152. **Retired Monthly Amortization & Affordability Calculator (Nov 18, 2026):** Removed the property-page financing calculator, homepage salary-based affordability matcher, and calculator-generated inquiry prefill/banner flow. Property pricing, direct inquiries, and requested financing guidance remain available. (The legacy inert `calculator.css` and `calculator.js` stubs were subsequently removed on Nov 18, 2026.)
 
 153. **Sitewide Motion System & Animation Polish (Nov 18, 2026):** Added shared easing, duration, and explicit-property transition tokens in `frontend/shared/css/tokens.css`; applied them across public, inquiry, auth, Admin, and Superadmin CSS. Replaced blanket `transition: all`, shortened scroll reveal timing and stagger, softened the profile chip and splash entrances/exits, changed success and splash ring feedback to one-shot motion, and kept reduced-motion preferences supported across shared and decorative effects. No browser dependency was added.
+
+154. **Repository Folder/File Cleanup, `sitemap.xml` / `robots.txt` Refresh & Structure Docs Sync (Nov 18, 2026):** Removed unreferenced raw `PROPERTIES/` photo archive (all production assets live in `frontend/assets/images/`), deleted retired 1-line `frontend/shared/{css,js}/calculator.*` placeholders, and removed duplicate `frontend/vercel.json` (retaining root `vercel.json` as canonical Vercel config). Refreshed `frontend/sitemap.xml` (`lastmod` `2026-11-18`, added `property-detail.html`, `auth/login.html`, `auth/register.html`) and `frontend/robots.txt` (`Allow` public auth pages, `Disallow: /pages/auth/forgot-password.html`). Synchronized `README.md`, `AGENTS.md`, and `CHANGELOG.md` project trees.
 
 ## Safety Rules
 

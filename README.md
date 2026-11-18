@@ -126,23 +126,50 @@ To reset local SQLite data, delete `backend/urbanscope.db` and restart the serve
 ## 📂 Project Structure
 
 ```text
-├── run.py              # Starts the server (site + API)
-├── proxy.js            # Vercel Admin/Superadmin route guard
-├── package.json        # Vercel middleware dependency (ESM)
-├── api/                # Vercel Serverless Functions (session, auth, properties, inquiries, superadmin)
-├── lib/                # Shared server-side helpers (sessions, email codes, security)
-├── backend/            # FastAPI app, RBAC middleware, modular routers/, database, models, auth
-│   └── routers/        # Feature API & web routers (system, auth, properties, inquiries, superadmin, web)
-├── frontend/
-│   ├── index.html      # Home page
-│   ├── pages/          # One folder per feature (auth, properties, inquiry, legal, admin, superadmin)
-│   ├── shared/         # Shared CSS & JS (navbar, session, splash, API client)
-│   └── assets/images/  # Photos, logos, icons
-├── supabase/           # Supabase CLI migrations, seed data, and SQL scripts
-├── DATABASE.md         # Database schema & seed data
-├── CHANGELOG.md        # Session changelog & feature log
-├── CONTRIBUTING.md     # Development & contributing guidelines
-└── AGENTS.md           # Developer & agent guidelines
+├── run.py                  # Starts local FastAPI server + static site
+├── proxy.js                # Vercel Routing Middleware guarding Admin/Superadmin HTML routes
+├── vercel.json             # Vercel headers, CSP, redirects, and static rewrites
+├── package.json            # Vercel middleware dependency (ESM)
+├── api/                    # Vercel Node.js Serverless Functions
+│   ├── session.js          # Login, logout, session, Google OAuth, profile & lead-agent API
+│   ├── properties.js       # Property catalog CRUD & accredited listing sync
+│   ├── inquiries.js        # Client inquiries, status workflow & notifications API
+│   ├── auth/               # Signed admin edge session, registration OTP & password reset
+│   └── superadmin/         # Superadmin user & RBAC management (`users.js`)
+├── lib/                    # Shared server-side Node helpers
+│   ├── admin-session.js    # Signed HttpOnly session cookie & token utilities
+│   ├── email-auth.js       # Resend OTP email sender & HMAC code verification
+│   └── server-security.js  # Rate limiting, CSRF/origin validation & input guards
+├── backend/                # Local Python FastAPI backend
+│   ├── app.py              # FastAPI app assembler, CORS, security headers & static mounts
+│   ├── middleware.py       # Server-side RBAC route guard for `/admin` & `/superadmin`
+│   ├── auth.py             # PBKDF2 hashing, JWT tokens & Google OAuth verification
+│   ├── auth_otp.py         # Local registration & password-reset OTP handlers
+│   ├── security.py         # Local rate limiting & request validation helpers
+│   ├── database.py         # SQLite connection, schema init & canonical seed sync
+│   ├── models.py           # Pydantic v2 request/response schemas
+│   ├── requirements.txt    # Python dependencies
+│   └── routers/            # Modular API & web routers (system, auth, properties, inquiries, superadmin, web)
+├── frontend/               # Static browser frontend (served at `/`)
+│   ├── index.html/.css/.js # Home page, hero search bar & featured property catalog
+│   ├── robots.txt          # Search crawler rules
+│   ├── sitemap.xml         # Public XML sitemap
+│   ├── pages/
+│   │   ├── properties/     # 7 accredited showcases (`casasuerte`, `kathleen`, `Liora`, `Airmen`, `benecia`, `amore-classico`, `midori`) & dynamic `property-detail`
+│   │   ├── inquiry/        # Dual-mode consultation/property inquiry form (`inquiry.*`) & client history (`history.*`)
+│   │   ├── auth/           # Unified sign-in (`login.*`), registration (`register.*`) & recovery (`forgot-password.*`)
+│   │   ├── legal/          # RESA Terms of Service (`terms.html`) & DPA Privacy Policy (`privacy.html`)
+│   │   ├── admin/          # Agent dashboard, `propertylist`, `add-property`, `edit-property`, `clients` & `profile`
+│   │   └── superadmin/     # Master overview, RBAC user governance & system health (`dashboard.*`)
+│   ├── shared/
+│   │   ├── css/            # `tokens.css`, `common.css`, `session.css`, `splash.css`, `mobile-shell.css`
+│   │   └── js/             # `supabase.js` (API gateway), `session.js`, `splash.js`, `api.js`
+│   └── assets/images/      # Optimized property galleries, brand logos & agent avatars
+├── supabase/               # Supabase CLI project (`config.toml`, atomic `migrations/`, `seed.sql`, `scripts/`)
+├── DATABASE.md             # Database schema, RLS architecture & seed documentation
+├── CHANGELOG.md            # Feature & session changelog
+├── CONTRIBUTING.md         # Development & contributing guidelines
+└── AGENTS.md               # Architecture & AI coding agent reference
 ```
 
 ---
