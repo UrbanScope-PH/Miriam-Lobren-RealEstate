@@ -14,7 +14,7 @@ Built for **Miriam Lobren, Real Estate Salesperson** (CD Miranda Realty, Las Pi�
 
 ## ✨ Features
 
-- **Property Showcase** — featured accredited listings (Casasuerte, Kathleen, Liora Homes, Airmen's Village Triplex, Benecia Single-Attached, Amore Classico – Benedetto Residences, and Midori Mid-Rise Condo – Zone 1) with category tabs, photo galleries, current pricing, and location maps. Sold listings remain visible with a Sold Out label but no longer accept new inquiries.
+- **Property Showcase** — featured accredited listings (Casasuerte, Kathleen, Liora Homes, Airmen's Village Triplex, Benecia Single-Attached, Amore Classico – Benedetto Residences, and Midori Mid-Rise Condo – Zone 1) with a hero search bar (property type, location, sort, and keywords), photo galleries, current pricing, and location maps. Sold listings remain visible with a Sold Out label but no longer accept new inquiries.
 - **Modern UI, Motion & Clean Search** — shared motion tokens keep hover, menu, modal, toast, theme, and scroll-reveal timing consistent across public and admin pages; reduced-motion preferences shorten transitions and remove decorative movement. Also includes responsive viewport metrics, a floating back-to-top button with SVG scroll progress, quick-contact FAB, glassmorphic hero search, and CSS Grid FAQ accordion with category filters.
 - **Solid-Color Visual System** — flat-color backgrounds, controls, overlays, and loading placeholders across public, client, Admin, and Superadmin pages; gradient effects have been removed.
 - **Client Accounts & Google Sign-In** — email-code verification for password registration, one-time-code password recovery, PH phone validation, and one-click **Google Authentication** (OAuth 2.0 via Google Identity Services); unified sign-in that routes users by role.
@@ -35,16 +35,18 @@ Built for **Miriam Lobren, Real Estate Salesperson** (CD Miranda Realty, Las Pi�
 
 | Layer | Technology |
 | :--- | :--- |
-| Frontend | HTML5, vanilla CSS3, vanilla JavaScript (ES6) |
-| Backend | Python 3, FastAPI, Uvicorn |
-| Database | SQLite (auto-created and seeded on first run) |
-| Auth | PBKDF2 password hashing, Google Identity Services (OAuth 2.0), JWT (PyJWT) |
+| Frontend | HTML5, vanilla CSS3, vanilla JavaScript (ES6) — no framework or bundler |
+| Backend (local) | Python 3, FastAPI, Uvicorn |
+| Backend (hosted) | Vercel static hosting, Node.js Serverless Functions (`api/`), Routing Middleware (`proxy.js`) |
+| Database | SQLite for local development (auto-created and seeded); Supabase PostgreSQL for the hosted site |
+| Auth | PBKDF2 password hashing, Google Identity Services (OAuth 2.0), JWT (PyJWT), signed `HttpOnly` session cookies |
+| Email | Resend (registration and password-recovery codes) |
 
 ---
 
 ## 🚀 Getting Started
 
-**Requirements:** Python 3.9+
+**Requirements:** Python 3.9+ (Node.js is only needed for Vercel deployments)
 
 ```bash
 pip install -r backend/requirements.txt
@@ -93,7 +95,7 @@ To reset local SQLite data, delete `backend/urbanscope.db` and restart the serve
 ## 📖 User & Administrator Manual
 
 ### 1. Client / Homebuyer Guide
-- **Browsing Properties:** Visit the home page to view showcased listings, filter by property type (Houses, Townhouses, Lots, Commercial), or use search keywords. Click any property card to view high-resolution photos, pricing, lot/floor area, amenities, and location details.
+- **Browsing Properties:** Visit the home page to view showcased listings, use the search bar to filter by property type (Townhouses, Triplex, House & Lot, Condominium) and location, sort by featured, newest, or price, or search by keyword. Click any property card to view high-resolution photos, pricing, lot/floor area, amenities, and location details.
 - **Client Registration & Login:** Click **Sign In** in the top navigation bar. Password registration verifies email ownership with a one-time code before creating an account; **Forgot password** sends a separate recovery code. Users can also register via **Sign up with Google**. Manual account creation and Google OAuth require accepting the **Terms of Service and Privacy Policy** before proceeding.
 - **Consultations & Dual-Mode Inquiries:** On the homepage, clicking **Book a Free Consultation** opens an interactive intent modal allowing clients to choose between *General Consultation / Question* (free site viewing, loan pre-approval, general advice) or *Inquire About a Specific Property* with dynamic listing selection, photo previews, and automated pricing details.
 - **Inquiry History & Management:** Access **Inquiry History** via the client profile menu or topbar to track submitted requests, filter by status (*Under Review*, *Approved*, *Contacted*, *Cancelled*), view agent approval notices, modify inquiry messages or contact phones, cancel active requests, or permanently delete records.
@@ -126,8 +128,9 @@ To reset local SQLite data, delete `backend/urbanscope.db` and restart the serve
 ```text
 ├── run.py              # Starts the server (site + API)
 ├── proxy.js            # Vercel Admin/Superadmin route guard
-├── api/auth/           # Vercel signed admin-session function
-├── lib/                # Shared server-side session helpers
+├── package.json        # Vercel middleware dependency (ESM)
+├── api/                # Vercel Serverless Functions (session, auth, properties, inquiries, superadmin)
+├── lib/                # Shared server-side helpers (sessions, email codes, security)
 ├── backend/            # FastAPI app, RBAC middleware, modular routers/, database, models, auth
 │   └── routers/        # Feature API & web routers (system, auth, properties, inquiries, superadmin, web)
 ├── frontend/
@@ -146,7 +149,7 @@ To reset local SQLite data, delete `backend/urbanscope.db` and restart the serve
 
 ## 📄 Credits
 
-- **Agent:** Miriam Lobren (Real Estate Agent)
+- **Agent:** Miriam Lobren (Real Estate Salesperson, CD Miranda Realty)
 - **Platform:** UrbanScope
 
 &copy; 2026 UrbanScope. All rights reserved.
