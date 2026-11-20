@@ -681,7 +681,7 @@ body {
     justify-content: center;
     margin-bottom: 16px;
     box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4);
-    animation: successPulse var(--motion-duration-celebration) ease-out 1;
+    animation: successPulse 2s cubic-bezier(0.66, 0, 0, 1) infinite;
 }
 
 @keyframes successPulse {

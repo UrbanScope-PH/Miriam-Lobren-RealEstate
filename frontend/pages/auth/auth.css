@@ -1691,7 +1691,7 @@ body.terms-modal-open {
 }
 
 .terms-modal-overlay.open .terms-scroll-hint:not(.is-ready) .hint-icon-scroll {
-    animation: termsArrowBounce 650ms var(--motion-ease-in-out) 1;
+    animation: termsArrowBounce 1.4s var(--motion-ease-in-out, ease-in-out) infinite;
 }
 
 .terms-scroll-hint .hint-icon-ready {
