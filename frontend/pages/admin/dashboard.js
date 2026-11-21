@@ -503,12 +503,13 @@ function updateInquiryDonut(inquiries) {
     let underReview = 0;
     let approved = 0;
     let completed = 0;
+    let cancelled = 0;
 
     inquiries.forEach(i => {
         const s = (i.status || '').toLowerCase();
         if (s.includes('approv')) approved++;
         else if (s.includes('complete')) completed++;
-        else if (s.includes('cancel')) { /* cancelled */ }
+        else if (s.includes('cancel') || s.includes('reject')) cancelled++;
         else underReview++;
     });
 
@@ -522,6 +523,8 @@ function updateInquiryDonut(inquiries) {
     if (lApp) lApp.textContent = approved;
     const lComp = document.getElementById('legendCompletedCount');
     if (lComp) lComp.textContent = completed;
+    const lCanc = document.getElementById('legendCancelledCount');
+    if (lCanc) lCanc.textContent = cancelled;
 
     const C = 377; // 2 * PI * 60
     const safeTotal = total > 0 ? total : 1;
@@ -539,6 +542,7 @@ function updateInquiryDonut(inquiries) {
     setSlice('donutUnderReview', underReview);
     setSlice('donutApproved', approved);
     setSlice('donutCompleted', completed);
+    setSlice('donutCancelled', cancelled);
 }
 
 /* INQUIRY TABLE */
