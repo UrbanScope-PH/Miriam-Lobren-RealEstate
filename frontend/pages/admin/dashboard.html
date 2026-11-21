@@ -426,7 +426,7 @@
             </div>
         </section>
 
-        <!-- RECENT INQUIRIES (LIMITED PREVIEW + SEARCH & SORTING) -->
+        <!-- RECENT INQUIRIES (LIMITED PREVIEW) -->
         <section class="panel table-panel" id="recentInquiries">
             <div class="panel-heading">
                 <div class="panel-heading-title-row">
@@ -436,55 +436,6 @@
                 <a href="clients.html" class="view-all-pill-btn">
                     View All Inquiries &rarr;
                 </a>
-            </div>
-
-            <!-- INQUIRY SEARCH & SORTING BAR (MATCHES RECENT INQUIRIES COLUMNS) -->
-            <div class="dash-prop-filters" id="dashInqFiltersBar" aria-label="Filter and sort recent inquiries">
-                <div class="dash-filter-search">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                        <circle cx="11" cy="11" r="8"></circle>
-                        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-                    </svg>
-                    <input type="search" id="dashInqSearch" placeholder="Search inquiry ID, client name, or property..."
-                        inputmode="search" autocapitalize="none" autocorrect="off" spellcheck="false" aria-label="Search recent inquiries">
-                </div>
-
-                <div class="dash-filter-control">
-                    <select id="dashInqStatusFilter" aria-label="Filter by inquiry status">
-                        <option value="">All Statuses</option>
-                        <option value="under review">Under Review</option>
-                        <option value="approved">Approved</option>
-                        <option value="completed">Completed</option>
-                        <option value="cancelled">Cancelled</option>
-                    </select>
-                </div>
-
-                <div class="dash-filter-control">
-                    <select id="dashInqPropertyFilter" aria-label="Filter by property or inquiry type">
-                        <option value="">All Properties &amp; Types</option>
-                        <option value="specific property inquiry">Specific Property Inquiry</option>
-                        <option value="general">General Consultation</option>
-                    </select>
-                </div>
-
-                <div class="dash-filter-control">
-                    <select id="dashInqSortFilter" aria-label="Sort recent inquiries">
-                        <option value="newest">Date Submitted: Newest</option>
-                        <option value="oldest">Date Submitted: Oldest</option>
-                        <option value="id-desc">Inquiry ID: Latest</option>
-                        <option value="client-asc">Client Name: A–Z</option>
-                        <option value="property-asc">Property: A–Z</option>
-                        <option value="status-asc">Status: A–Z</option>
-                    </select>
-                </div>
-
-                <div class="dash-filter-control dash-filter-date">
-                    <input type="date" id="dashInqDateFilter" aria-label="Filter by date submitted" title="Filter by date submitted">
-                </div>
-
-                <button type="button" class="dash-filter-reset-btn" id="dashInqResetBtn" hidden>
-                    Reset
-                </button>
             </div>
 
             <div class="mobile-cards-list" id="recentInquiriesMobileList" aria-label="Recent inquiries mobile list"></div>
@@ -503,13 +454,6 @@
                     <tbody id="recentInquiryRows">
                     </tbody>
                 </table>
-            </div>
-
-            <div class="dash-panel-footer" id="dashInqFooter" hidden>
-                <span class="dash-footer-summary" id="dashInqFooterSummary">Showing top 4 inquiries</span>
-                <a href="clients.html" class="view-all-footer-link">
-                    View All Inquiries &rarr;
-                </a>
             </div>
         </section>
 
@@ -549,13 +493,6 @@
                         </tr>
                     </tbody>
                 </table>
-            </div>
-
-            <div class="dash-panel-footer" id="dashPropFooter" hidden>
-                <span class="dash-footer-summary" id="dashPropFooterSummary">Showing top 4 properties</span>
-                <a href="propertylist.html?view=all" class="view-all-footer-link" id="dashPropFooterViewAll">
-                    View All Properties &rarr;
-                </a>
             </div>
         </section>
 
