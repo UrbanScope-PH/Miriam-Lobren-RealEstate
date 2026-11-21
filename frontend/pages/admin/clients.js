@@ -418,7 +418,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (event) event.stopPropagation();
         const menu = ensureStatusMenu();
         const targetId = String(inquiryId);
-        const trigger = (event && event.currentTarget) || document.getElementById(`badge-${targetId}`) || document.getElementById(`mobile-badge-${targetId}`);
+        const trigger =
+            (event && event.target && typeof event.target.closest === 'function' && event.target.closest('.status-select-pill')) ||
+            (event && event.currentTarget && event.currentTarget.classList && event.currentTarget.classList.contains('status-select-pill') ? event.currentTarget : null) ||
+            document.getElementById(`badge-${targetId}`) ||
+            document.getElementById(`mobile-badge-${targetId}`);
         if (!trigger) return;
 
         if (!menu.hidden && activeMenuId === targetId) {
@@ -474,7 +478,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         const vpWidth = (document.documentElement.clientWidth || (window.innerWidth / zoomScale));
         const vpHeight = (window.innerHeight / zoomScale);
 
-        const menuWidth = Math.max(Math.round(tWidth), 184);
+        const menuWidth = Math.min(200, Math.max(Math.round(tWidth), 184));
         menu.style.width = `${menuWidth}px`;
 
         const menuHeight = menu.offsetHeight || 200;
