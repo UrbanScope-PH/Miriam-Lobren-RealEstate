@@ -318,8 +318,6 @@
                 <div class="donut-chart-container">
                     <svg viewBox="0 0 160 160" width="200" height="200" id="inquiryDonutSvg">
                         <circle r="60" cx="80" cy="80" fill="none" stroke="var(--border-color)" stroke-width="24" />
-                        <circle id="donutSubmitted" r="60" cx="80" cy="80" fill="none" stroke="#3b82f6" stroke-width="24" stroke-dasharray="0 377" stroke-dashoffset="0" />
-                        <circle id="donutReqSubmitted" r="60" cx="80" cy="80" fill="none" stroke="#a855f7" stroke-width="24" stroke-dasharray="0 377" stroke-dashoffset="0" />
                         <circle id="donutUnderReview" r="60" cx="80" cy="80" fill="none" stroke="#f59e0b" stroke-width="24" stroke-dasharray="0 377" stroke-dashoffset="0" />
                         <circle id="donutApproved" r="60" cx="80" cy="80" fill="none" stroke="#22c55e" stroke-width="24" stroke-dasharray="0 377" stroke-dashoffset="0" />
                         <circle id="donutCompleted" r="60" cx="80" cy="80" fill="none" stroke="#15803d" stroke-width="24" stroke-dasharray="0 377" stroke-dashoffset="0" />
@@ -328,16 +326,6 @@
                     </svg>
 
                     <div class="donut-legend">
-                        <div class="legend-item">
-                            <span class="dot blue"></span>
-                            <span class="legend-label">Submitted</span>
-                            <span class="legend-count">(<span id="legendSubmittedCount">0</span>)</span>
-                        </div>
-                        <div class="legend-item">
-                            <span class="dot purple"></span>
-                            <span class="legend-label">Requirements Submitted</span>
-                            <span class="legend-count">(<span id="legendReqCount">0</span>)</span>
-                        </div>
                         <div class="legend-item">
                             <span class="dot orange"></span>
                             <span class="legend-label">Under Review</span>
@@ -464,8 +452,6 @@
                 <div class="dash-filter-control">
                     <select id="dashInqStatusFilter" aria-label="Filter by inquiry status">
                         <option value="">All Statuses</option>
-                        <option value="submitted">Submitted</option>
-                        <option value="requirements submitted">Requirements Submitted</option>
                         <option value="under review">Under Review</option>
                         <option value="approved">Approved</option>
                         <option value="completed">Completed</option>

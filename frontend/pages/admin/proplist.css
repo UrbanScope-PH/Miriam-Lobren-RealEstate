@@ -330,6 +330,7 @@
 }
 
 @media (hover: hover) and (pointer: fine) {
+
     .data-table tbody tr:hover td,
     #propertiesTable tbody tr:hover td {
         background: var(--surface-hover);
@@ -408,6 +409,7 @@
     color: var(--status-success-text);
     border: 1px solid var(--status-success-border);
 }
+
 @media (hover: hover) and (pointer: fine) {
     #propertiesTable .view-btn:hover {
         background: var(--light-green-hover);
@@ -420,6 +422,7 @@
     color: var(--text-secondary);
     border: 1px solid var(--border-strong);
 }
+
 @media (hover: hover) and (pointer: fine) {
     #propertiesTable .edit-btn:hover {
         background: var(--surface-hover);
@@ -432,6 +435,7 @@
     color: var(--status-warning-text);
     border: 1px solid var(--status-warning-border);
 }
+
 @media (hover: hover) and (pointer: fine) {
     #propertiesTable .status-toggle-btn.btn-make-sold:hover {
         background: var(--accent-warm-light);
@@ -444,6 +448,7 @@
     color: var(--status-success-text);
     border: 1px solid var(--status-success-border);
 }
+
 @media (hover: hover) and (pointer: fine) {
     #propertiesTable .status-toggle-btn.btn-make-available:hover {
         background: var(--light-green-hover);
@@ -456,6 +461,7 @@
     color: var(--danger-text);
     border: 1px solid var(--danger-border);
 }
+
 @media (hover: hover) and (pointer: fine) {
     #propertiesTable .delete-btn:hover {
         background: var(--danger-border);
@@ -589,8 +595,11 @@
    RESPONSIVE DESIGN (TABLET & MOBILE BREAKPOINTS)
    ========================================================== */
 @media (max-width: 768px) {
+
     /* Prevent iOS zoom on input focus */
-    input, select, textarea {
+    input,
+    select,
+    textarea {
         font-size: 16px !important;
     }
 

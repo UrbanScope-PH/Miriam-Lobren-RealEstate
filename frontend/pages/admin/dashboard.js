@@ -500,18 +500,13 @@ function getStatusClass(status) {
 function updateInquiryDonut(inquiries) {
     if (!Array.isArray(inquiries)) return;
 
-    let submitted = 0;
-    let reqSubmitted = 0;
     let underReview = 0;
     let approved = 0;
     let completed = 0;
 
     inquiries.forEach(i => {
         const s = (i.status || '').toLowerCase();
-        if (s.includes('require')) reqSubmitted++;
-        else if (s.includes('submit')) submitted++;
-        else if (s.includes('review') || s.includes('pending')) underReview++;
-        else if (s.includes('approv')) approved++;
+        if (s.includes('approv')) approved++;
         else if (s.includes('complete')) completed++;
         else if (s.includes('cancel')) { /* cancelled */ }
         else underReview++;
@@ -521,10 +516,6 @@ function updateInquiryDonut(inquiries) {
     const totalEl = document.getElementById('donutTotalInquiries');
     if (totalEl) totalEl.textContent = total;
 
-    const lSub = document.getElementById('legendSubmittedCount');
-    if (lSub) lSub.textContent = submitted;
-    const lReq = document.getElementById('legendReqCount');
-    if (lReq) lReq.textContent = reqSubmitted;
     const lRev = document.getElementById('legendReviewCount');
     if (lRev) lRev.textContent = underReview;
     const lApp = document.getElementById('legendApprovedCount');
@@ -545,8 +536,6 @@ function updateInquiryDonut(inquiries) {
         offset += len;
     };
 
-    setSlice('donutSubmitted', submitted);
-    setSlice('donutReqSubmitted', reqSubmitted);
     setSlice('donutUnderReview', underReview);
     setSlice('donutApproved', approved);
     setSlice('donutCompleted', completed);
