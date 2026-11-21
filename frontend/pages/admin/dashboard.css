@@ -1467,6 +1467,109 @@
     color: var(--danger-text);
 }
 
+/* DASHBOARD RECENT INQUIRIES STATUS PILLS & INLINE APPROVE / CANCEL ACTIONS */
+.status-pill {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 5px 11px;
+    border-radius: 999px;
+    font-size: 11.5px;
+    font-weight: 700;
+    line-height: 1.2;
+    white-space: nowrap;
+}
+
+.status-pill.green {
+    background: var(--status-success-bg);
+    color: var(--status-success-text);
+    border: 1px solid var(--status-success-border);
+}
+
+.status-pill.orange {
+    background: var(--status-warning-bg);
+    color: var(--status-warning-text);
+    border: 1px solid var(--status-warning-border);
+}
+
+.status-pill.blue {
+    background: var(--status-info-bg);
+    color: var(--status-info-text);
+    border: 1px solid var(--status-info-border);
+}
+
+.status-pill.red {
+    background: var(--danger-light);
+    color: var(--danger-text);
+    border: 1px solid var(--danger-border);
+}
+
+.status-pill.gray {
+    background: var(--surface-muted);
+    color: var(--text-muted);
+    border: 1px solid var(--border-color);
+}
+
+.dash-inquiry-actions {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: nowrap;
+    white-space: nowrap;
+}
+
+.action-approve-btn,
+.action-cancel-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    padding: 7px 11px;
+    border-radius: 8px;
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 700;
+    line-height: 1;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: var(--motion-transition-fast);
+}
+
+.action-approve-btn {
+    background: var(--status-success-bg);
+    color: var(--status-success-text);
+    border: 1px solid var(--status-success-border);
+}
+
+.action-cancel-btn {
+    background: var(--danger-light);
+    color: var(--danger-text);
+    border: 1px solid var(--danger-border);
+}
+
+@media (hover: hover) and (pointer: fine) {
+    .action-approve-btn:hover:not(:disabled) {
+        background: var(--btn-primary-bg);
+        border-color: var(--btn-primary-bg);
+        color: #ffffff;
+        transform: translateY(-1px);
+    }
+
+    .action-cancel-btn:hover:not(:disabled) {
+        background: var(--danger-btn-bg);
+        border-color: var(--danger-btn-bg);
+        color: #ffffff;
+        transform: translateY(-1px);
+    }
+}
+
+.action-approve-btn:disabled,
+.action-cancel-btn:disabled {
+    opacity: 0.55;
+    cursor: default;
+    transform: none;
+}
+
 /* ACTION BUTTON */
 .table-panel .action-button,
 .table-panel .action-view-btn,
@@ -2469,7 +2572,8 @@
     box-shadow: none;
 }
 
-.btn-modal-cancelled {
+.btn-modal-cancelled,
+.btn-modal-cancel {
     background: var(--danger-light);
     color: var(--danger-text);
     border: 1px solid var(--danger-border);
@@ -2477,10 +2581,28 @@
     font-size: 0.88rem;
     padding: 9px 18px;
     border-radius: 10px;
-    cursor: not-allowed;
+    cursor: pointer;
     display: inline-flex;
     align-items: center;
     gap: 8px;
+    transition: var(--motion-transition-ui);
+}
+
+@media (hover: hover) and (pointer: fine) {
+    .btn-modal-cancel:hover:not(:disabled) {
+        background: var(--danger-btn-bg);
+        border-color: var(--danger-btn-bg);
+        color: #ffffff;
+        transform: translateY(-1px);
+    }
+}
+
+.btn-modal-cancelled,
+.btn-modal-cancel:disabled,
+.btn-modal-cancel.is-cancelled {
+    opacity: 0.65;
+    cursor: default;
+    transform: none;
 }
 
 @media (max-width: 600px) {
