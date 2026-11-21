@@ -804,9 +804,7 @@ def login_user(payload: UserLogin, request: Request, response: Response):
     # Set cookie for server-side page navigation guards
     _set_auth_cookies(response, request, token)
 
-    if user_role == "superadmin" and user_email in AUTHORIZED_SUPERADMIN_EMAILS:
-        redirect_url = "/pages/superadmin/dashboard.html"
-    elif user_role in AUTHORIZED_ADMIN_ROLES or user_email in AUTHORIZED_ADMIN_EMAILS:
+    if user_role in AUTHORIZED_ADMIN_ROLES or user_email in AUTHORIZED_ADMIN_EMAILS or user_email in AUTHORIZED_SUPERADMIN_EMAILS:
         redirect_url = "/pages/admin/dashboard.html"
     else:
         redirect_url = "/index.html"
@@ -916,9 +914,7 @@ def google_authenticate(payload: GoogleAuthRequest, request: Request, response: 
 
         _set_auth_cookies(response, request, token)
 
-        if user_role == "superadmin" and user_email in AUTHORIZED_SUPERADMIN_EMAILS:
-            redirect_url = "/pages/superadmin/dashboard.html"
-        elif user_role in AUTHORIZED_ADMIN_ROLES or user_email in AUTHORIZED_ADMIN_EMAILS:
+        if user_role in AUTHORIZED_ADMIN_ROLES or user_email in AUTHORIZED_ADMIN_EMAILS or user_email in AUTHORIZED_SUPERADMIN_EMAILS:
             redirect_url = "/pages/admin/dashboard.html"
         else:
             redirect_url = "/index.html"
@@ -1068,9 +1064,7 @@ def complete_google_registration(payload: GoogleRegistrationComplete, request: R
 
     _set_auth_cookies(response, request, token)
 
-    if user_role == "superadmin" and user_email in AUTHORIZED_SUPERADMIN_EMAILS:
-        redirect_url = "/pages/superadmin/dashboard.html"
-    elif user_role in AUTHORIZED_ADMIN_ROLES or user_email in AUTHORIZED_ADMIN_EMAILS:
+    if user_role in AUTHORIZED_ADMIN_ROLES or user_email in AUTHORIZED_ADMIN_EMAILS or user_email in AUTHORIZED_SUPERADMIN_EMAILS:
         redirect_url = "/pages/admin/dashboard.html"
     else:
         redirect_url = "/index.html"

@@ -165,8 +165,7 @@
                                 activeAdminSession = await apiGetHostedAdminSession();
                             }
                             if (activeAdminSession || (typeof isLocalDevHost === 'function' && isLocalDevHost())) {
-                                var isSuper = (role === 'superadmin' || email === 'urbanscope.cvsu@gmail.com');
-                                var target = isSuper ? (getBasePath() + 'pages/superadmin/dashboard.html') : (getBasePath() + 'pages/admin/dashboard.html');
+                                var target = getBasePath() + 'pages/admin/dashboard.html';
                                 location.replace(target);
                                 return null;
                             } else {

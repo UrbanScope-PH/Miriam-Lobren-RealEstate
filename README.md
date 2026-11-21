@@ -23,9 +23,8 @@ Built for **Miriam Lobren, Real Estate Salesperson** (CD Miranda Realty, Las Pi�
 - **Search Engine Optimization & Social Sharing** — full Open Graph and Twitter Card link previews across all public pages, dynamic JSON-LD `RealEstateAgent` schema markup, canonical URLs, `robots.txt`, and automated `sitemap.xml`.
 - **High-Performance Assets** — compressed progressive JPEG imagery, responsive preloading on key banners, and native `loading="lazy" decoding="async"` on all below-the-fold property thumbnails.
 - **System-Wide Dark Mode** — seamless dark theme with multi-layer preference persistence (`localStorage`, 1-year cookie, and window session), smooth crossfade transitions, comfortable photo dimming, and high-contrast accessible controls.
-- **Admin Dashboard** — KPI cards, inquiry charts, property CRUD, client inquiry tracking, and user overview.
-- **Superadmin Console** — focused account and role governance, privileged-account overview, and database health checks. Property and inquiry workflows stay in the Agent Admin portal.
-- **Administrative Access Control** — Vercel checks a signed, HttpOnly session before serving Admin and Superadmin pages. Hosted admin sign-in requires Google verification for an approved staff account; normal client sign-ins and editable browser storage cannot grant administrative access.
+- **Admin Dashboard & Accounts/Role Management** — KPI cards, inquiry charts, property CRUD, client inquiry tracking, and full RBAC **Accounts & Role Access** governance (`/pages/admin/users.html`: create accounts, edit profiles, promote/demote roles, reset passwords, and delete accounts).
+- **Administrative Access Control** — Vercel checks a signed, HttpOnly session before serving Admin pages. Hosted admin sign-in requires Google verification for an approved staff account; normal client sign-ins and editable browser storage cannot grant administrative access.
 - **Legal & Privacy Hub** — comprehensive Terms of Service (aligned with RESA RA 9646) and Privacy Policy (compliant with Philippine Data Privacy Act RA 10173).
 - **Responsive Design** — optimized for desktop, tablet, and mobile with a shared mobile navigation shell across public, client, Admin, and Superadmin pages, dynamic viewport sizing (`100dvh`), safe-area insets, mobile keyboard hints, touch-friendly (`@media (pointer: coarse)`) 44px+ controls, high-contrast WCAG AA typography, progressive mobile expand toggles and section accordions, sticky property quick-CTA actions, and stacked Admin/Superadmin mobile cards.
 
@@ -103,7 +102,7 @@ To reset local SQLite data, delete `backend/urbanscope.db` and restart the serve
 
 ### 2. Administrator Guide (Miriam Lobren & Team)
 - **Unified Sign-In:** Log in via `/pages/auth/login.html`. Authorized administrative accounts are automatically routed to the Admin Dashboard.
-- **Shared Admin Navigation:** Dashboard, Properties, Clients, Inquiries, and Profile & Security use the same sidebar icons, section labels, active state, and UrbanScope green palette across admin screens.
+- **Shared Admin Navigation:** Dashboard, Properties, Client Inquiries, Accounts & Roles, and Profile & Security use the same sidebar icons, section labels, active state, and UrbanScope green palette across admin screens.
 - **Dashboard Overview & Inquiry Modal:** Monitor business health with key metrics: Total Properties, Total Inquiries, Pending Follow-ups, and recent activity streams. Click **View** on any inquiry to open an interactive modal with full message details, tour schedule, direct email reply, and instant **Approve Inquiry** action that immediately updates the client's inquiry history in real time.
 - **Property Viewing Calendar:** Opens on today's browser-local date, marks the current day, supports month and date selection, and shows configured appointments plus client inquiry requests with preferred dates and times.
 - **Managing Properties (CRUD):**
@@ -112,14 +111,8 @@ To reset local SQLite data, delete `backend/urbanscope.db` and restart the serve
   - **Edit Property:** Select **Edit** on any listing card (`edit-property.html`) to update pricing, specifications, or replace photos.
   - **Delete Property:** Remove unlisted or sold properties with immediate database and cache synchronization.
 - **Client Inquiries & CRM:** Review client inquiries under `clients.html`, inspect contact information, track message details, approve client requests via the modal or inline select, and update inquiry follow-up statuses (e.g., *Under Review*, *Approved*, *Completed*).
-- **Profile Picture Upload & Settings:** Visit `profile.html` to update contact details, change passwords, and upload custom profile photos (< 5MB limit) with automatic canvas optimization, live topbar avatar synchronization, and one-click photo reset. User account directory and role management are reserved for the Superadmin.
-
-### 3. Superadministrator Guide
-- **Console Navigation & Visuals:** The sidebar contains only Overview, Accounts & Roles, and System Health. Its navigation, icons, KPI tiles, and governance actions use the shared UrbanScope green treatment.
-- **Master Overview:** Access `/pages/superadmin/dashboard.html` for account totals, privileged-role counts, and database storage status across local FastAPI/SQLite and cloud deployments.
-- **Console Sections:** Use **Accounts & Roles** to manage user accounts and access levels, and **System Health** to run database integrity and role-trigger checks. Property listings and client inquiries are handled through the linked Admin Portal.
-- **RBAC Role & Account Management:** Full user account governance (create client/admin accounts, edit full name, email, contact phone, account role `user`/`admin`/`superadmin`, promote/demote permissions, delete non-protected accounts, and reset passwords) synchronized across local SQLite and Supabase Cloud with protected root superadmin credentials.
-- **System Health:** Run live diagnostics on database storage, foreign-key/schema integrity, role triggers, and API connectivity.
+- **Accounts & Role Access (RBAC):** Access `users.html` (`Accounts & Roles` in the Admin sidebar) for full user account governance — create client/admin accounts, edit full name, email, contact phone, and account role (`user`/`admin`), promote/demote permissions, delete non-protected accounts, and reset passwords synchronized across local SQLite and Supabase Cloud.
+- **Profile Picture Upload & Settings:** Visit `profile.html` to update contact details, change passwords, and upload custom profile photos (< 5MB limit) with automatic canvas optimization, live topbar avatar synchronization, and one-click photo reset.
 
 ---
 
@@ -159,8 +152,7 @@ To reset local SQLite data, delete `backend/urbanscope.db` and restart the serve
 │   │   ├── inquiry/        # Dual-mode consultation/property inquiry form (`inquiry.*`) & client history (`history.*`)
 │   │   ├── auth/           # Unified sign-in (`login.*`), registration (`register.*`) & recovery (`forgot-password.*`)
 │   │   ├── legal/          # RESA Terms of Service (`terms.html`) & DPA Privacy Policy (`privacy.html`)
-│   │   ├── admin/          # Agent dashboard, `propertylist`, `add-property`, `edit-property`, `clients` & `profile`
-│   │   └── superadmin/     # Master overview, RBAC user governance & system health (`dashboard.*`)
+│   │   └── admin/          # Agent dashboard, `propertylist`, `add-property`, `edit-property`, `clients`, `users` (Accounts & Roles RBAC) & `profile`
 │   ├── shared/
 │   │   ├── css/            # `tokens.css`, `common.css`, `session.css`, `splash.css`, `mobile-shell.css`
 │   │   └── js/             # `supabase.js` (API gateway), `session.js`, `splash.js`, `api.js`

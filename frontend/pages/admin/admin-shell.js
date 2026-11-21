@@ -858,6 +858,8 @@
             activeSection = "properties";
         } else if (path.includes("clients.html")) {
             activeSection = "clients";
+        } else if (path.includes("users.html")) {
+            activeSection = "users";
         } else if (path.includes("profile.html")) {
             activeSection = "settings";
         }
@@ -873,7 +875,9 @@
                 match = true;
             } else if (activeSection === "clients" && (label === "client inquiries" || label === "clients" || label === "inquiries" || href.includes("clients.html"))) {
                 match = true;
-            } else if (activeSection === "settings" && (label === "settings" || href.includes("profile.html"))) {
+            } else if (activeSection === "users" && (label.includes("accounts") || label === "users" || href.includes("users.html"))) {
+                match = true;
+            } else if (activeSection === "settings" && (label === "settings" || label.includes("profile") || href.includes("profile.html"))) {
                 match = true;
             }
 
