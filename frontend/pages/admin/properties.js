@@ -32,14 +32,17 @@ function sanitizeAdminPropImg(rawUrl, fallback = '../../assets/images/property1.
     return fallback;
 }
 
-function matchesPropertyAmountRange(priceVal, filterKey) {
-    if (!filterKey) return true;
-    const num = Number(priceVal) || 0;
-    if (filterKey === 'under-3m') return num > 0 && num < 3000000;
-    if (filterKey === '3m-6m') return num >= 3000000 && num <= 6000000;
-    if (filterKey === '6m-9m') return num > 6000000 && num <= 9000000;
-    if (filterKey === 'above-9m') return num > 9000000;
-    return true;
+function matchesPropertyTypeFilter(rawType, filterTypeVal) {
+    if (!filterTypeVal) return true;
+    const normProp = String(rawType || "").toLowerCase().replace(/[-_]+/g, " ").trim();
+    const normFilter = String(filterTypeVal || "").toLowerCase().replace(/[-_]+/g, " ").trim();
+    if (!normFilter) return true;
+    if (normFilter.includes("condo")) return normProp.includes("condo");
+    if (normFilter.includes("single attached")) return normProp.includes("single attached");
+    if (normFilter.includes("house") && normFilter.includes("lot")) {
+        return normProp.includes("house") && normProp.includes("lot");
+    }
+    return normProp.includes(normFilter);
 }
 
 function normalizePropertyRowMeta(property) {
@@ -122,11 +125,196 @@ async function loadSavedProperties() {
     }
 
     currentLoadedProperties = properties;
+    syncCustomFilterDropdowns();
     filterTable();
 }
 
 
-function renderPropertyRecords(list, totalFilteredCount) {
+// ================================
+// CUSTOM DROPDOWN UI FOR FILTERS
+// ================================
+
+const propCustomSelectControllers = [];
+
+function getStatusDotClass(val) {
+    const v = String(val || "").toLowerCase();
+    if (v === "available") return "dot-available";
+    if (v === "under review") return "dot-review";
+    if (v === "reserved") return "dot-reserved";
+    if (v === "sold") return "dot-sold";
+    return "dot-all";
+}
+
+function getPropertyOptionCount(kind, optionVal) {
+    if (!Array.isArray(currentLoadedProperties) || currentLoadedProperties.length === 0) return 0;
+    if (!optionVal) return currentLoadedProperties.length;
+    return currentLoadedProperties.filter((property) => {
+        const meta = normalizePropertyRowMeta(property);
+        if (kind === "status") {
+            const normStatus = meta.displayStatus.toLowerCase();
+            const target = optionVal.toLowerCase();
+            return normStatus === target || (target === "sold" && meta.isSold);
+        }
+        return matchesPropertyTypeFilter(meta.type, optionVal);
+    }).length;
+}
+
+function closeAllPropCustomSelects(exceptWrap = null) {
+    propCustomSelectControllers.forEach((ctrl) => {
+        if (ctrl.wrap !== exceptWrap) {
+            ctrl.close();
+        }
+    });
+}
+
+function initPropListCustomSelect(selectId, kind, headerText) {
+    const selectEl = document.getElementById(selectId);
+    if (!selectEl || selectEl.dataset.customSelectReady === "1") return;
+    const cardWrap = selectEl.closest(".status-select-card");
+    if (!cardWrap) return;
+
+    selectEl.dataset.customSelectReady = "1";
+    cardWrap.classList.add("has-custom-select");
+
+    const triggerBtn = document.createElement("button");
+    triggerBtn.type = "button";
+    triggerBtn.className = "proplist-custom-trigger";
+    triggerBtn.setAttribute("aria-haspopup", "listbox");
+    triggerBtn.setAttribute("aria-expanded", "false");
+
+    const menuEl = document.createElement("div");
+    menuEl.className = "proplist-custom-menu";
+    menuEl.setAttribute("role", "listbox");
+    menuEl.setAttribute("aria-label", headerText);
+    menuEl.hidden = true;
+
+    cardWrap.appendChild(triggerBtn);
+    cardWrap.appendChild(menuEl);
+
+    function renderTriggerAndOptions() {
+        const selectedOption = selectEl.options[selectEl.selectedIndex] || selectEl.options[0];
+        const selectedVal = selectEl.value || "";
+        const selectedLabel = selectedOption ? selectedOption.textContent.trim() : "";
+
+        const leadIconHtml = kind === "status"
+            ? `<span class="proplist-status-dot ${getStatusDotClass(selectedVal)}" aria-hidden="true"></span>`
+            : `<span class="proplist-type-icon" aria-hidden="true">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                    <polyline points="9 22 9 12 15 12 15 22"></polyline>
+                </svg>
+               </span>`;
+
+        triggerBtn.innerHTML = `
+            <span class="proplist-trigger-left">
+                ${leadIconHtml}
+                <span class="proplist-trigger-label">${escapePropHtml(selectedLabel)}</span>
+            </span>
+            <svg class="proplist-trigger-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <polyline points="6 9 12 15 18 9"></polyline>
+            </svg>
+        `;
+        triggerBtn.classList.toggle("is-filtered", Boolean(selectedVal));
+
+        const optionsHtml = Array.from(selectEl.options).map((opt) => {
+            const val = opt.value;
+            const label = opt.textContent.trim();
+            const isSelected = val === selectedVal;
+            const count = getPropertyOptionCount(kind, val);
+
+            const optLeadHtml = kind === "status"
+                ? `<span class="proplist-status-dot ${getStatusDotClass(val)}" aria-hidden="true"></span>`
+                : `<span class="proplist-option-type-bullet" aria-hidden="true"></span>`;
+
+            return `
+                <button type="button"
+                        class="proplist-custom-option${isSelected ? " is-selected" : ""}"
+                        role="option"
+                        aria-selected="${isSelected ? "true" : "false"}"
+                        data-value="${escapePropHtml(val)}">
+                    <span class="proplist-option-left">
+                        ${optLeadHtml}
+                        <span class="proplist-option-label">${escapePropHtml(label)}</span>
+                    </span>
+                    <span class="proplist-option-right">
+                        <span class="proplist-option-count">${count}</span>
+                        <svg class="proplist-option-check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <polyline points="20 6 9 17 4 12"></polyline>
+                        </svg>
+                    </span>
+                </button>
+            `;
+        }).join("");
+
+        menuEl.innerHTML = `
+            <div class="proplist-custom-menu-list">${optionsHtml}</div>
+        `;
+    }
+
+    function openMenu() {
+        closeAllPropCustomSelects(cardWrap);
+        renderTriggerAndOptions();
+        menuEl.hidden = false;
+        cardWrap.classList.add("is-open");
+        triggerBtn.setAttribute("aria-expanded", "true");
+    }
+
+    function closeMenu() {
+        menuEl.hidden = true;
+        cardWrap.classList.remove("is-open");
+        triggerBtn.setAttribute("aria-expanded", "false");
+    }
+
+    triggerBtn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        if (menuEl.hidden) {
+            openMenu();
+        } else {
+            closeMenu();
+        }
+    });
+
+    menuEl.addEventListener("click", (e) => {
+        e.stopPropagation();
+        const optBtn = e.target.closest(".proplist-custom-option");
+        if (!optBtn) return;
+        const nextVal = optBtn.getAttribute("data-value") ?? "";
+        selectEl.value = nextVal;
+        renderTriggerAndOptions();
+        closeMenu();
+        window.filterTable();
+    });
+
+    propCustomSelectControllers.push({
+        wrap: cardWrap,
+        selectEl,
+        refresh: renderTriggerAndOptions,
+        close: closeMenu
+    });
+
+    renderTriggerAndOptions();
+}
+
+function syncCustomFilterDropdowns() {
+    initPropListCustomSelect("statusFilter", "status", "Filter by Status");
+    initPropListCustomSelect("typeFilter", "type", "Filter by Property Type");
+    propCustomSelectControllers.forEach((ctrl) => ctrl.refresh());
+}
+
+document.addEventListener("click", (e) => {
+    if (!e.target.closest(".status-select-card.has-custom-select")) {
+        closeAllPropCustomSelects(null);
+    }
+});
+
+document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") {
+        closeAllPropCustomSelects(null);
+    }
+});
+
+
+function renderPropertyRecords(list) {
     if (window.UrbanPropertyActionMenu && typeof window.UrbanPropertyActionMenu.close === "function") {
         window.UrbanPropertyActionMenu.close(false);
     }
@@ -135,17 +323,10 @@ function renderPropertyRecords(list, totalFilteredCount) {
     if (propertiesMobileList) propertiesMobileList.innerHTML = "";
 
     const countBadge = document.getElementById("propListCountBadge");
-    const toggleBtn = document.getElementById("toggleViewAllPropsBtn");
-    const footerEl = document.getElementById("propListFooter");
-    const footerSummary = document.getElementById("propListFooterSummary");
-    const footerBtn = document.getElementById("propListFooterBtn");
-
-    const totalCount = typeof totalFilteredCount === "number" ? totalFilteredCount : (list ? list.length : 0);
+    const totalCount = Array.isArray(currentLoadedProperties) ? currentLoadedProperties.length : (list ? list.length : 0);
 
     if (!list || list.length === 0) {
         if (countBadge) countBadge.textContent = "0 listings";
-        if (toggleBtn) toggleBtn.hidden = true;
-        if (footerEl) footerEl.hidden = true;
         propertyTableBody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding: 30px; color:var(--text-muted);">No property records found matching your filter.</td></tr>`;
         if (propertiesMobileList) {
             propertiesMobileList.innerHTML = `<div class="mobile-empty-state">No property records found matching your filter.</div>`;
@@ -154,22 +335,9 @@ function renderPropertyRecords(list, totalFilteredCount) {
     }
 
     if (countBadge) {
-        countBadge.textContent = `Showing ${list.length} of ${totalCount}`;
-    }
-
-    const canToggleLimit = totalCount > PROPLIST_DEFAULT_LIMIT;
-    if (toggleBtn) {
-        toggleBtn.hidden = !canToggleLimit;
-        toggleBtn.textContent = isShowingAllProperties ? "Show Limited (5)" : `View All (${totalCount}) →`;
-    }
-    if (footerEl) {
-        footerEl.hidden = !canToggleLimit;
-        if (footerSummary) {
-            footerSummary.textContent = `Showing ${list.length} of ${totalCount} properties`;
-        }
-        if (footerBtn) {
-            footerBtn.textContent = isShowingAllProperties ? "Show Fewer Listings" : `View All ${totalCount} Properties →`;
-        }
+        countBadge.textContent = list.length === totalCount
+            ? `${totalCount} ${totalCount === 1 ? 'listing' : 'listings'}`
+            : `Showing ${list.length} of ${totalCount}`;
     }
 
     list.forEach(function (property) {
@@ -179,20 +347,14 @@ function renderPropertyRecords(list, totalFilteredCount) {
 }
 
 
-window.toggleViewAllProperties = function () {
-    isShowingAllProperties = !isShowingAllProperties;
-    window.filterTable();
-};
-
 window.resetPropertyFilters = function () {
     const searchEl = document.getElementById("propSearch");
     const statusEl = document.getElementById("statusFilter");
     const typeEl = document.getElementById("typeFilter");
-    const amountEl = document.getElementById("amountFilter");
     if (searchEl) searchEl.value = "";
     if (statusEl) statusEl.value = "";
     if (typeEl) typeEl.value = "";
-    if (amountEl) amountEl.value = "";
+    syncCustomFilterDropdowns();
     window.filterTable();
 };
 
@@ -200,17 +362,17 @@ window.filterTable = function () {
     const searchEl = document.getElementById("propSearch");
     const statusEl = document.getElementById("statusFilter");
     const typeEl = document.getElementById("typeFilter");
-    const amountEl = document.getElementById("amountFilter");
     const resetBtn = document.getElementById("resetPropFiltersBtn");
 
     const query = (searchEl ? searchEl.value : "").trim().toLowerCase();
     const statusFilterVal = (statusEl ? statusEl.value : "").trim().toLowerCase();
-    const typeFilterVal = (typeEl ? typeEl.value : "").trim().toLowerCase();
-    const amountFilterVal = (amountEl ? amountEl.value : "").trim();
+    const typeFilterVal = (typeEl ? typeEl.value : "").trim();
 
     if (resetBtn) {
-        resetBtn.hidden = !(query || statusFilterVal || typeFilterVal || amountFilterVal);
+        resetBtn.hidden = !(query || statusFilterVal || typeFilterVal);
     }
+
+    propCustomSelectControllers.forEach((ctrl) => ctrl.refresh());
 
     const filtered = currentLoadedProperties.filter((property) => {
         const meta = normalizePropertyRowMeta(property);
@@ -225,16 +387,12 @@ window.filterTable = function () {
             normStatus === statusFilterVal ||
             (statusFilterVal === 'sold' && meta.isSold);
 
-        const matchesType = !typeFilterVal ||
-            meta.type.toLowerCase().includes(typeFilterVal);
+        const matchesType = matchesPropertyTypeFilter(meta.type, typeFilterVal);
 
-        const matchesAmount = matchesPropertyAmountRange(property.price, amountFilterVal);
-
-        return matchesQuery && matchesStatus && matchesType && matchesAmount;
+        return matchesQuery && matchesStatus && matchesType;
     });
 
-    const displayed = isShowingAllProperties ? filtered : filtered.slice(0, PROPLIST_DEFAULT_LIMIT);
-    renderPropertyRecords(displayed, filtered.length);
+    renderPropertyRecords(filtered);
 };
 
 
