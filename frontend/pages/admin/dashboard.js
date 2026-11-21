@@ -799,6 +799,11 @@ function applyDashboardInquiryFilters() {
             : "Date unavailable";
 
         const status = escapeHTML(inquiry.status || "Pending");
+        const normStatusLower = String(inquiry.status || "Pending").toLowerCase().trim();
+        const isApproved = normStatusLower === "approved";
+        const isCancelled = normStatusLower === "cancelled" || normStatusLower === "rejected";
+        const isCompleted = normStatusLower === "completed";
+        const safeRawId = escapeHTML(inquiry.id);
 
         const statusClass = getStatusClass(inquiry.status);
 
@@ -823,6 +828,41 @@ function applyDashboardInquiryFilters() {
             parsedSchedule.display || ""
         );
 
+        const approveActionHtml = !isCompleted ? `
+            <button
+                class="action-approve-btn${isApproved ? ' is-done' : ''}"
+                type="button"
+                data-dash-inq-action="approve"
+                data-raw-id="${safeRawId}"
+                data-inquiry-id="${inquiryId}"
+                ${isApproved ? 'disabled' : ''}
+                aria-label="${isApproved ? 'Already approved' : `Approve inquiry from ${clientName}`}"
+            >
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <polyline points="20 6 9 17 4 12"></polyline>
+                </svg>
+                <span>${isApproved ? 'Approved' : 'Approve'}</span>
+            </button>
+        ` : '';
+
+        const cancelActionHtml = !isCompleted ? `
+            <button
+                class="action-cancel-btn${isCancelled ? ' is-done' : ''}"
+                type="button"
+                data-dash-inq-action="cancel"
+                data-raw-id="${safeRawId}"
+                data-inquiry-id="${inquiryId}"
+                ${isCancelled ? 'disabled' : ''}
+                aria-label="${isCancelled ? 'Already cancelled' : `Cancel inquiry from ${clientName}`}"
+            >
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+                <span>${isCancelled ? 'Cancelled' : 'Cancel'}</span>
+            </button>
+        ` : '';
+
         mobileCardsHtml.push(`
             <article class="mobile-data-card mobile-dash-inquiry-card">
                 <div class="mobile-card-top">
@@ -834,10 +874,12 @@ function applyDashboardInquiryFilters() {
                 </div>
                 <p class="mobile-dash-prop">${propertyTitle}</p>
                 <div class="mobile-card-actions-bar">
+                    ${approveActionHtml}
+                    ${cancelActionHtml}
                     <button
                         class="action-view-btn"
                         type="button"
-                        data-raw-id="${escapeHTML(inquiry.id)}"
+                        data-raw-id="${safeRawId}"
                         data-inquiry-id="${inquiryId}"
                         data-client-name="${clientName}"
                         data-property-title="${propertyTitle}"
@@ -877,28 +919,32 @@ function applyDashboardInquiryFilters() {
                 </td>
 
                 <td>
-                    <button
-                        class="action-view-btn"
-                        type="button"
-                        data-raw-id="${escapeHTML(inquiry.id)}"
-                        data-inquiry-id="${inquiryId}"
-                        data-client-name="${clientName}"
-                        data-property-title="${propertyTitle}"
-                        data-created-at="${escapeHTML(createdAt)}"
-                        data-status="${status}"
-                        data-status-class="${statusClass}"
-                        data-inquiry-phone="${phone}"
-                        data-inquiry-email="${email}"
-                        data-inquiry-message="${message}"
-                        data-schedule-date="${scheduleDate}"
-                        aria-label="View inquiry from ${clientName}"
-                    >
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-                            <circle cx="12" cy="12" r="3"></circle>
-                        </svg>
-                        <span>View</span>
-                    </button>
+                    <div class="dash-inquiry-actions">
+                        ${approveActionHtml}
+                        ${cancelActionHtml}
+                        <button
+                            class="action-view-btn"
+                            type="button"
+                            data-raw-id="${safeRawId}"
+                            data-inquiry-id="${inquiryId}"
+                            data-client-name="${clientName}"
+                            data-property-title="${propertyTitle}"
+                            data-created-at="${escapeHTML(createdAt)}"
+                            data-status="${status}"
+                            data-status-class="${statusClass}"
+                            data-inquiry-phone="${phone}"
+                            data-inquiry-email="${email}"
+                            data-inquiry-message="${message}"
+                            data-schedule-date="${scheduleDate}"
+                            aria-label="View inquiry from ${clientName}"
+                        >
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                <circle cx="12" cy="12" r="3"></circle>
+                            </svg>
+                            <span>View</span>
+                        </button>
+                    </div>
                 </td>
             </tr>
         `;
@@ -909,6 +955,36 @@ function applyDashboardInquiryFilters() {
     }
 
     updateInquiryEmptyState();
+}
+
+async function updateDashboardInquiryStatus(rawId, nextStatus) {
+    if (!rawId || !nextStatus) return false;
+    try {
+        const existingRead = JSON.parse(localStorage.getItem("admin_notifs_read_ids") || "[]");
+        const readSet = new Set(Array.isArray(existingRead) ? existingRead.map(String) : []);
+        readSet.add(String(rawId));
+        readSet.add(`new_inquiry_${rawId}`);
+        readSet.add(`${String(nextStatus).toLowerCase()}_${rawId}`);
+        localStorage.setItem("admin_notifs_read_ids", JSON.stringify(Array.from(readSet)));
+    } catch (_) {}
+
+    if (typeof apiUpdateInquiryStatus === "function") {
+        await apiUpdateInquiryStatus(rawId, nextStatus);
+    }
+
+    if (typeof window.showFeedbackToast === "function") {
+        const msg = nextStatus === "Approved"
+            ? "Inquiry approved successfully."
+            : nextStatus === "Cancelled"
+                ? "Inquiry cancelled."
+                : `Inquiry updated to ${nextStatus}.`;
+        window.showFeedbackToast(msg, nextStatus === "Cancelled" ? "warn" : "success");
+    }
+
+    if (typeof loadDashboardData === "function") {
+        await loadDashboardData({ forceInquiries: true });
+    }
+    return true;
 }
 
 /* INQUIRY DETAILS MODAL UI */
@@ -935,9 +1011,12 @@ function openInquiryModal(data) {
         .filter(Boolean)
         .slice(0, 2)
         .map(w => w[0].toUpperCase())
+        .join("") || "CL";
     const rawId = data.rawId || data.inquiryId?.replace('INQ-', '') || '';
-    const isApproved = String(status || '').toLowerCase().trim() === 'approved';
-    const isCancelled = String(status || '').toLowerCase().trim() === 'cancelled';
+    const normStatus = String(status || '').toLowerCase().trim();
+    const isApproved = normStatus === 'approved';
+    const isCancelled = normStatus === 'cancelled' || normStatus === 'rejected';
+    const isCompleted = normStatus === 'completed';
 
     modalContent.innerHTML = `
         <div class="inquiry-modal-detail">
@@ -1025,25 +1104,21 @@ function openInquiryModal(data) {
                 <button type="button" class="btn-modal-secondary btn-close-modal" id="modalCloseActionBtn">
                     Close
                 </button>
-                ${isCancelled ? `
-                    <button type="button" class="btn-modal-cancelled" disabled>
-                        <span>Cancelled by Client</span>
+                ${!isCompleted ? `
+                    <button type="button" class="btn-modal-cancel${isCancelled ? ' is-cancelled' : ''}" id="modalCancelInquiryBtn" data-raw-id="${escapeHTML(rawId)}" ${isCancelled ? 'disabled' : ''}>
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                            <line x1="18" y1="6" x2="6" y2="18"></line>
+                            <line x1="6" y1="6" x2="18" y2="18"></line>
+                        </svg>
+                        <span>${isCancelled ? 'Cancelled' : 'Cancel Inquiry'}</span>
                     </button>
-                ` : !isApproved ? `
-                    <button type="button" class="btn-modal-approve" id="modalApproveInquiryBtn" data-raw-id="${escapeHTML(rawId)}">
+                    <button type="button" class="btn-modal-approve${isApproved ? ' approved' : ''}" id="modalApproveInquiryBtn" data-raw-id="${escapeHTML(rawId)}" ${isApproved ? 'disabled' : ''}>
                         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
                             <polyline points="20 6 9 17 4 12"></polyline>
                         </svg>
-                        <span>Approve Inquiry</span>
+                        <span>${isApproved ? 'Approved' : 'Approve Inquiry'}</span>
                     </button>
-                ` : `
-                    <button type="button" class="btn-modal-approve approved" disabled>
-                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                            <polyline points="20 6 9 17 4 12"></polyline>
-                        </svg>
-                        <span>Approved</span>
-                    </button>
-                `}
+                ` : ''}
                 ${email ? `
                     <a href="mailto:${encodeURIComponent(email)}?subject=Re:%20Inquiry%20regarding%20${encodeURIComponent(propertyTitle)}" class="btn-modal-primary" target="_blank" rel="noopener">
                         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -1061,63 +1136,65 @@ function openInquiryModal(data) {
         </div>
     `;
 
-    // Hook up approve action inside modal
+    // Hook up approve & cancel actions inside modal
     const approveBtn = modalContent.querySelector("#modalApproveInquiryBtn");
-    if (approveBtn) {
-        approveBtn.addEventListener("click", async () => {
-            approveBtn.disabled = true;
-            approveBtn.innerHTML = `<span>Approving...</span>`;
-            try {
-                try {
-                    const existingRead = JSON.parse(localStorage.getItem("admin_notifs_read_ids") || "[]");
-                    const readSet = new Set(Array.isArray(existingRead) ? existingRead.map(String) : []);
-                    readSet.add(String(rawId));
-                    readSet.add(`new_inquiry_${rawId}`);
-                    readSet.add(`approved_${rawId}`);
-                    localStorage.setItem("admin_notifs_read_ids", JSON.stringify(Array.from(readSet)));
-                } catch (_) {}
+    const cancelBtn = modalContent.querySelector("#modalCancelInquiryBtn");
 
-                if (typeof apiUpdateInquiryStatus === 'function') {
-                    await apiUpdateInquiryStatus(rawId, 'Approved');
-                }
-                approveBtn.className = "btn-modal-approve approved";
+    async function handleModalStatusAction(targetStatus) {
+        const activeBtn = targetStatus === "Approved" ? approveBtn : cancelBtn;
+        const otherBtn = targetStatus === "Approved" ? cancelBtn : approveBtn;
+        if (!activeBtn) return;
+
+        activeBtn.disabled = true;
+        if (otherBtn) otherBtn.disabled = true;
+        activeBtn.innerHTML = `<span>${targetStatus === "Approved" ? "Approving..." : "Cancelling..."}</span>`;
+
+        try {
+            await updateDashboardInquiryStatus(rawId, targetStatus);
+
+            const statusPill = modalContent.querySelector('.inquiry-banner-meta .status-pill');
+            if (statusPill) {
+                statusPill.textContent = targetStatus;
+                statusPill.className = `status-pill ${getStatusClass(targetStatus)}`;
+            }
+
+            if (approveBtn) {
+                const nowApproved = targetStatus === "Approved";
+                approveBtn.disabled = nowApproved;
+                approveBtn.className = `btn-modal-approve${nowApproved ? ' approved' : ''}`;
                 approveBtn.innerHTML = `
                     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
                         <polyline points="20 6 9 17 4 12"></polyline>
                     </svg>
-                    <span>Approved</span>
+                    <span>${nowApproved ? 'Approved' : 'Approve Inquiry'}</span>
                 `;
-                // Update modal status pill
-                const statusPill = modalContent.querySelector('.inquiry-banner-meta .status-pill');
-                if (statusPill) {
-                    statusPill.textContent = 'Approved';
-                    statusPill.className = 'status-pill green';
-                }
-                // Update corresponding table row in Recent Inquiries
-                const rowBtn = document.querySelector(`.action-view-btn[data-raw-id="${rawId}"]`) ||
-                               document.querySelector(`.action-view-btn[data-inquiry-id="${inquiryId}"]`);
-                if (rowBtn) {
-                    rowBtn.dataset.status = "Approved";
-                    rowBtn.dataset.statusClass = "green";
-                    const tr = rowBtn.closest('tr');
-                    if (tr) {
-                        const badge = tr.querySelector('.status-pill');
-                        if (badge) {
-                            badge.textContent = 'Approved';
-                            badge.className = 'status-pill green';
-                        }
-                    }
-                }
-                // Re-hydrate dashboard data
-                if (typeof loadDashboardData === 'function') {
-                    loadDashboardData();
-                }
-            } catch (err) {
-                console.error('Failed to approve inquiry from dashboard modal:', err);
-                approveBtn.disabled = false;
-                approveBtn.innerHTML = `<span>Retry Approve</span>`;
             }
-        });
+
+            if (cancelBtn) {
+                const nowCancelled = targetStatus === "Cancelled";
+                cancelBtn.disabled = nowCancelled;
+                cancelBtn.className = `btn-modal-cancel${nowCancelled ? ' is-cancelled' : ''}`;
+                cancelBtn.innerHTML = `
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                    <span>${nowCancelled ? 'Cancelled' : 'Cancel Inquiry'}</span>
+                `;
+            }
+        } catch (err) {
+            console.error(`Failed to set inquiry status (${targetStatus}) from dashboard modal:`, err);
+            activeBtn.disabled = false;
+            if (otherBtn) otherBtn.disabled = false;
+            activeBtn.innerHTML = `<span>Retry ${targetStatus === "Approved" ? "Approve" : "Cancel"}</span>`;
+        }
+    }
+
+    if (approveBtn) {
+        approveBtn.addEventListener("click", () => handleModalStatusAction("Approved"));
+    }
+    if (cancelBtn) {
+        cancelBtn.addEventListener("click", () => handleModalStatusAction("Cancelled"));
     }
 
     modal.hidden = false;
@@ -1139,7 +1216,29 @@ function closeInquiryModal() {
     document.body.style.overflow = "";
 }
 
-document.addEventListener("click", event => {
+document.addEventListener("click", async event => {
+    const quickActionBtn = event.target.closest("button[data-dash-inq-action]");
+    if (quickActionBtn) {
+        event.preventDefault();
+        if (quickActionBtn.disabled) return;
+        const action = quickActionBtn.getAttribute("data-dash-inq-action");
+        const rawId = quickActionBtn.getAttribute("data-raw-id");
+        const nextStatus = action === "approve" ? "Approved" : action === "cancel" ? "Cancelled" : "";
+        if (!rawId || !nextStatus) return;
+
+        const prevHtml = quickActionBtn.innerHTML;
+        quickActionBtn.disabled = true;
+        quickActionBtn.innerHTML = `<span>${nextStatus === "Approved" ? "Approving..." : "Cancelling..."}</span>`;
+        try {
+            await updateDashboardInquiryStatus(rawId, nextStatus);
+        } catch (err) {
+            console.error(`Failed to ${action} inquiry from dashboard row:`, err);
+            quickActionBtn.disabled = false;
+            quickActionBtn.innerHTML = prevHtml;
+        }
+        return;
+    }
+
     const viewButton = event.target.closest(".action-view-btn");
     if (viewButton) {
         event.preventDefault();
