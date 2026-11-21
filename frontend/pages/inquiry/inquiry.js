@@ -287,7 +287,12 @@ function setPropertySelection(prop, noticeText = '') {
     const summary = document.getElementById('propertySummaryBox');
     const notice = document.getElementById('soldPropertyNotice');
 
-    if (select) select.value = prop ? String(prop.id) : '';
+    if (select) {
+        select.value = prop ? String(prop.id) : '';
+        if (typeof select._urbanSelectUpdate === 'function') {
+            select._urbanSelectUpdate();
+        }
+    }
     if (summary) summary.style.display = prop ? 'flex' : 'none';
     if (notice) {
         notice.hidden = !noticeText;
@@ -304,16 +309,23 @@ function renderAvailablePropertyOptions(selectedId = '') {
         ? '<option value="">Choose an available listing</option>'
         : '<option value="">No available properties to inquire about</option>';
     const options = loadedProperties.map(property => {
-        const title = escInquiryHtml(property.title || property.propertyName || 'Property');
-        const location = property.location ? ` - ${escInquiryHtml(property.location)}` : '';
-        const price = property.price ? ` (₱${escInquiryHtml(Number(property.price).toLocaleString())})` : '';
-        return `<option value="${escInquiryHtml(String(property.id ?? ''))}">${title}${location}${price}</option>`;
+        const rawTitle = escInquiryHtml(property.title || property.propertyName || 'Property');
+        const rawLocation = escInquiryHtml(property.location || '');
+        const rawPrice = property.price ? `₱${escInquiryHtml(Number(property.price).toLocaleString())}` : '';
+        const rawType = escInquiryHtml(property.property_type || 'Residential');
+        const rawThumb = escInquiryHtml(resolvePropImage(property.image_url));
+        const locationSuffix = rawLocation ? ` - ${rawLocation}` : '';
+        const priceSuffix = rawPrice ? ` (${rawPrice})` : '';
+        return `<option value="${escInquiryHtml(String(property.id ?? ''))}" data-title="${rawTitle}" data-location="${rawLocation}" data-price="${rawPrice}" data-type="${rawType}" data-thumb="${rawThumb}">${rawTitle}${locationSuffix}${priceSuffix}</option>`;
     }).join('');
 
     select.innerHTML = placeholder + options;
     select.value = selectedId && loadedProperties.some(property => String(property.id) === String(selectedId))
         ? String(selectedId)
         : '';
+    if (typeof select._urbanSelectUpdate === 'function') {
+        select._urbanSelectUpdate();
+    }
 }
 
 function onPropertySelectionChange() {
@@ -1126,8 +1138,22 @@ function initUrbanSelect(selectEl) {
     wrap.appendChild(trigger);
 
     let dropdownEl = null;
+    const isPropertyListingSelect = selectEl.id === 'propertySelect';
+    if (isPropertyListingSelect) {
+        wrap.classList.add('custom-select-wrap-property');
+    }
 
-    function getOptionIcon(val, text) {
+    function getOptionIcon(val, text, opt) {
+        if (isPropertyListingSelect) {
+            const typeLower = String(opt?.dataset?.type || text || '').toLowerCase();
+            if (!val) {
+                return `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>`;
+            }
+            if (typeLower.includes('condo')) {
+                return `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="9" y1="6" x2="9.01" y2="6"/><line x1="15" y1="6" x2="15.01" y2="6"/><line x1="9" y1="10" x2="9.01" y2="10"/><line x1="15" y1="10" x2="15.01" y2="10"/><line x1="9" y1="14" x2="9.01" y2="14"/><line x1="15" y1="14" x2="15.01" y2="14"/><path d="M9 22v-4h6v4"/></svg>`;
+            }
+            return `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>`;
+        }
         const lower = (String(val || '') + ' ' + String(text || '')).toLowerCase();
         if (lower.includes('morning') || lower.includes('9:00 am')) {
             return `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>`;
@@ -1162,8 +1188,17 @@ function initUrbanSelect(selectEl) {
     function updateDisplay() {
         const selectedOpt = selectEl.options[selectEl.selectedIndex] || selectEl.options[0];
         if (!selectedOpt) return;
-        const icon = getOptionIcon(selectedOpt.value, selectedOpt.text);
-        valueSpan.innerHTML = (icon ? icon + ' ' : '') + `<span>${escInquiryHtml(selectedOpt.text)}</span>`;
+        const icon = getOptionIcon(selectedOpt.value, selectedOpt.text, selectedOpt);
+        if (isPropertyListingSelect && selectedOpt.value && selectedOpt.dataset.title) {
+            const titleText = escInquiryHtml(selectedOpt.dataset.title);
+            const locText = selectedOpt.dataset.location ? ` <span class="custom-select-trigger-loc">· ${escInquiryHtml(selectedOpt.dataset.location)}</span>` : '';
+            const priceBadge = selectedOpt.dataset.price ? `<span class="custom-select-trigger-price">${escInquiryHtml(selectedOpt.dataset.price)}</span>` : '';
+            valueSpan.innerHTML = `${icon ? icon + ' ' : ''}<span class="custom-select-trigger-main">${titleText}${locText}</span>${priceBadge}`;
+            trigger.classList.remove('is-placeholder');
+        } else {
+            valueSpan.innerHTML = (icon ? icon + ' ' : '') + `<span>${escInquiryHtml(selectedOpt.text)}</span>`;
+            trigger.classList.toggle('is-placeholder', isPropertyListingSelect && !selectedOpt.value);
+        }
     }
 
     function openDropdown() {
@@ -1175,7 +1210,8 @@ function initUrbanSelect(selectEl) {
         trigger.setAttribute('aria-expanded', 'true');
 
         dropdownEl = document.createElement('div');
-        dropdownEl.className = 'custom-select-dropdown';
+        dropdownEl.className = 'custom-select-dropdown' + (isPropertyListingSelect ? ' custom-select-dropdown-property' : '');
+        dropdownEl.setAttribute('role', 'listbox');
 
         const rect = wrap.getBoundingClientRect();
         if (rect.left + 260 > window.innerWidth - 16) {
@@ -1186,21 +1222,52 @@ function initUrbanSelect(selectEl) {
         Array.from(selectEl.options).forEach(opt => {
             const isSel = opt.value === currentVal;
             const optRow = document.createElement('div');
-            optRow.className = 'custom-select-option' + (isSel ? ' is-selected' : '');
+            optRow.className = 'custom-select-option'
+                + (isSel ? ' is-selected' : '')
+                + (isPropertyListingSelect && opt.value ? ' is-property-option' : '')
+                + (isPropertyListingSelect && !opt.value ? ' is-placeholder-option' : '');
             optRow.setAttribute('role', 'option');
             optRow.setAttribute('aria-selected', String(isSel));
             optRow.setAttribute('data-value', opt.value);
 
-            const iconSvg = getOptionIcon(opt.value, opt.text);
-            optRow.innerHTML = `
-                <div class="custom-select-option-content">
-                    ${iconSvg ? `<span class="custom-select-option-icon">${iconSvg}</span>` : ''}
-                    <span class="custom-select-option-text">${escInquiryHtml(opt.text)}</span>
-                </div>
-                <svg class="custom-select-check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                    <polyline points="20 6 9 17 4 12"></polyline>
-                </svg>
-            `;
+            const iconSvg = getOptionIcon(opt.value, opt.text, opt);
+            if (isPropertyListingSelect && opt.value && opt.dataset.title) {
+                const thumbUrl = escInquiryHtml(opt.dataset.thumb || '../../assets/images/property1.jpg');
+                const titleHtml = escInquiryHtml(opt.dataset.title);
+                const locHtml = escInquiryHtml(opt.dataset.location || 'Cavite / Las Piñas');
+                const typeHtml = escInquiryHtml(opt.dataset.type || 'Residential');
+                const priceHtml = opt.dataset.price ? `<span class="custom-select-price-pill">${escInquiryHtml(opt.dataset.price)}</span>` : '';
+
+                optRow.innerHTML = `
+                    <div class="custom-select-option-content custom-select-property-content">
+                        <img src="${thumbUrl}" alt="" class="custom-select-property-thumb" loading="lazy" onerror="this.onerror=null;this.src='../../assets/images/property1.jpg';">
+                        <div class="custom-select-property-meta">
+                            <div class="custom-select-property-top">
+                                <span class="custom-select-property-title">${titleHtml}</span>
+                                ${priceHtml}
+                            </div>
+                            <div class="custom-select-property-sub">
+                                <span class="custom-select-property-type">${typeHtml}</span>
+                                <span class="custom-select-property-dot" aria-hidden="true">·</span>
+                                <span class="custom-select-property-loc">${locHtml}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <svg class="custom-select-check" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="20 6 9 17 4 12"></polyline>
+                    </svg>
+                `;
+            } else {
+                optRow.innerHTML = `
+                    <div class="custom-select-option-content">
+                        ${iconSvg ? `<span class="custom-select-option-icon">${iconSvg}</span>` : ''}
+                        <span class="custom-select-option-text">${escInquiryHtml(opt.text)}</span>
+                    </div>
+                    <svg class="custom-select-check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="20 6 9 17 4 12"></polyline>
+                    </svg>
+                `;
+            }
 
             optRow.addEventListener('click', (e) => {
                 e.stopPropagation();
@@ -1255,6 +1322,7 @@ function initUrbanSelect(selectEl) {
     });
 
     selectEl.addEventListener('change', updateDisplay);
+    selectEl._urbanSelectUpdate = updateDisplay;
     updateDisplay();
 }
 
@@ -1322,7 +1390,9 @@ window.addEventListener('DOMContentLoaded', () => {
 
     // Initialize custom UrbanScope UI dropdown selects
     const topicSelect = document.getElementById('consultationTopic');
+    const propertySelect = document.getElementById('propertySelect');
     if (topicSelect) initUrbanSelect(topicSelect);
+    if (propertySelect) initUrbanSelect(propertySelect);
     if (timeSelect) initUrbanSelect(timeSelect);
     if (propTimeSelect) initUrbanSelect(propTimeSelect);
 
