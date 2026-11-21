@@ -47,6 +47,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const statPending = document.getElementById('statPendingInquiries');
     const statApproved = document.getElementById('statApprovedInquiries');
     const statCompleted = document.getElementById('statCompletedInquiries');
+    const statCancelled = document.getElementById('statCancelledInquiries');
     const notifCount = document.getElementById('topbarInquiryCount');
 
     // Parse URL parameter for status filter
@@ -124,11 +125,16 @@ document.addEventListener('DOMContentLoaded', async () => {
         }).length;
         const approved = inquiries.filter(i => (i.status || '').toLowerCase().trim() === 'approved').length;
         const completed = inquiries.filter(i => (i.status || '').toLowerCase().trim() === 'completed').length;
+        const cancelled = inquiries.filter(i => {
+            const s = (i.status || '').toLowerCase().trim();
+            return s === 'cancelled' || s === 'canceled' || s === 'rejected';
+        }).length;
 
         if (statTotal) statTotal.textContent = total;
         if (statPending) statPending.textContent = pending;
         if (statApproved) statApproved.textContent = approved;
         if (statCompleted) statCompleted.textContent = completed;
+        if (statCancelled) statCancelled.textContent = cancelled;
         if (typeof window.loadAdminNotifications === 'function') {
             window.loadAdminNotifications(inquiries);
         }
