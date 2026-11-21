@@ -255,7 +255,7 @@ async def rbac_admin_guard_middleware(request: Request, call_next):
     """
     path = request.url.path
 
-    # Public landing page: authenticated administrators / superadmin are redirected to their portal
+    # Public landing page: authenticated administrators are redirected to their portal
     is_root_landing = path in ("/", "/index.html", "/frontend/index.html")
     if is_root_landing:
         token = extract_token_from_request(request)
@@ -263,18 +263,18 @@ async def rbac_admin_guard_middleware(request: Request, call_next):
             user_info = get_authenticated_user_role(token)
             if user_info:
                 user_email, user_role = user_info
-                if user_email in AUTHORIZED_SUPERADMIN_EMAILS or user_role == "superadmin":
-                    return RedirectResponse(url="/pages/superadmin/dashboard.html", status_code=status.HTTP_302_FOUND)
-                elif user_role in AUTHORIZED_ADMIN_ROLES or user_email in AUTHORIZED_ADMIN_EMAILS:
+                if user_role in AUTHORIZED_ADMIN_ROLES or user_email in AUTHORIZED_ADMIN_EMAILS or user_email in AUTHORIZED_SUPERADMIN_EMAILS:
                     return RedirectResponse(url="/pages/admin/dashboard.html", status_code=status.HTTP_302_FOUND)
 
-    # Check if request targets superadmin portal page
+    # Check if request targets legacy superadmin portal page -> redirect to Admin Accounts & Roles
     is_superadmin_path = (
         path == "/superadmin" or
         path.startswith("/superadmin/") or
         path == "/pages/superadmin" or
         path.startswith("/pages/superadmin/")
     )
+    if is_superadmin_path:
+        return RedirectResponse(url="/pages/admin/users.html", status_code=status.HTTP_302_FOUND)
 
     # Check if request targets an admin portal page
     is_admin_path = (

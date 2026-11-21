@@ -583,9 +583,7 @@ document.addEventListener("DOMContentLoaded", () => {
         ].includes(cleanEmail);
         const isAdminUser = role === "admin" || role === "superadmin" || isAuthorizedStaffEmail;
 
-        if (cleanEmail === "urbanscope.cvsu@gmail.com") {
-            window.location.href = "../superadmin/dashboard.html";
-        } else if (isAdminUser) {
+        if (isAdminUser) {
             window.location.href = "../admin/dashboard.html";
         } else if (safeNext && safeNext !== "index.html") {
             window.location.href = "../../" + safeNext;

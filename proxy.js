@@ -58,23 +58,15 @@ export default async function proxy(request) {
     const url = new URL(request.url);
     const pathname = url.pathname.replace(/\/+$/, '') || '/';
 
-    // When an active admin or superadmin accesses the landing page, route directly to their dashboard
+    // When an active admin accesses the landing page, route directly to the admin dashboard
     const isRootLanding = pathname === '/' || pathname === '/index.html' || pathname === '/frontend/index.html';
     if (isRootLanding) {
         const session = readAdminSession(request);
-        if (session) {
-            if (session.role === 'superadmin' && session.email === SUPERADMIN_EMAIL) {
-                return new Response(null, {
-                    status: 302,
-                    headers: { Location: '/pages/superadmin/dashboard.html', 'Cache-Control': 'private, no-store, max-age=0' }
-                });
-            }
-            if (['admin', 'superadmin'].includes(session.role)) {
-                return new Response(null, {
-                    status: 302,
-                    headers: { Location: '/pages/admin/dashboard.html', 'Cache-Control': 'private, no-store, max-age=0' }
-                });
-            }
+        if (session && ['admin', 'superadmin'].includes(session.role)) {
+            return new Response(null, {
+                status: 302,
+                headers: { Location: '/pages/admin/dashboard.html', 'Cache-Control': 'private, no-store, max-age=0' }
+            });
         }
         return next();
     }
@@ -85,13 +77,15 @@ export default async function proxy(request) {
     const session = readAdminSession(request);
     if (!session) return redirectToLogin(request, Boolean(request.headers.get('cookie')));
 
-    if (kind === 'superadmin' &&
-        (session.email !== SUPERADMIN_EMAIL || session.role !== 'superadmin')) {
+    if (!['admin', 'superadmin'].includes(session.role)) {
         return forbiddenResponse();
     }
 
-    if (kind === 'admin' && !['admin', 'superadmin'].includes(session.role)) {
-        return forbiddenResponse();
+    if (kind === 'superadmin') {
+        return new Response(null, {
+            status: 302,
+            headers: { Location: '/pages/admin/users.html', 'Cache-Control': 'private, no-store, max-age=0' }
+        });
     }
 
     return next({

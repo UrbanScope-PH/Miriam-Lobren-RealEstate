@@ -29,9 +29,10 @@ shortcut_router = APIRouter()
 
 @shortcut_router.get("/superadmin", include_in_schema=False)
 @shortcut_router.get("/superadmin/", include_in_schema=False)
+@shortcut_router.get("/pages/superadmin/{path:path}", include_in_schema=False)
 def redirect_superadmin():
-    """Shortcut redirect to the superadmin dashboard."""
-    return RedirectResponse(url="/pages/superadmin/dashboard.html", status_code=status.HTTP_302_FOUND)
+    """Redirects legacy superadmin routes to the Admin Accounts & Roles page."""
+    return RedirectResponse(url="/pages/admin/users.html", status_code=status.HTTP_302_FOUND)
 
 
 @shortcut_router.get("/admin", include_in_schema=False)
@@ -65,14 +66,10 @@ def redirect_admin_login_html(request: Request):
     return RedirectResponse(url=target, status_code=status.HTTP_302_FOUND)
 
 
-@shortcut_router.get("/pages/admin/users.html", include_in_schema=False)
 @shortcut_router.get("/admin/users.html", include_in_schema=False)
-def redirect_admin_users_html(request: Request):
-    """User management is centralized under superadmin governance."""
-    user = get_current_user_from_request(request)
-    if user and user.get("role") == "superadmin":
-        return RedirectResponse(url="/pages/superadmin/dashboard.html#users", status_code=status.HTTP_302_FOUND)
-    return RedirectResponse(url="/pages/admin/dashboard.html", status_code=status.HTTP_302_FOUND)
+def redirect_admin_users_html():
+    """Redirects legacy /admin/users.html to /pages/admin/users.html."""
+    return RedirectResponse(url="/pages/admin/users.html", status_code=status.HTTP_302_FOUND)
 
 
 # ==========================================================
@@ -103,28 +100,24 @@ for _section in ["properties", "inquiry", "auth", "admin"]:
 
 @public_web_router.get("/", include_in_schema=False)
 def serve_home(request: Request):
-    """Serves root landing page index.html (redirects authenticated admin/superadmin to their dashboard)."""
+    """Serves root landing page index.html (redirects authenticated admin to dashboard)."""
     user = get_current_user_from_request(request)
     if user:
         role = user.get("role", "")
         email = (user.get("email") or "").lower().strip()
-        if role == "superadmin" or email in AUTHORIZED_SUPERADMIN_EMAILS:
-            return RedirectResponse(url="/pages/superadmin/dashboard.html", status_code=status.HTTP_302_FOUND)
-        if role in AUTHORIZED_ADMIN_ROLES or email in AUTHORIZED_ADMIN_EMAILS:
+        if role in AUTHORIZED_ADMIN_ROLES or email in AUTHORIZED_ADMIN_EMAILS or email in AUTHORIZED_SUPERADMIN_EMAILS:
             return RedirectResponse(url="/pages/admin/dashboard.html", status_code=status.HTTP_302_FOUND)
     return FileResponse(str(FRONTEND_DIR / "index.html"))
 
 
 @public_web_router.get("/index.html", include_in_schema=False)
 def serve_index(request: Request):
-    """Serves index.html (redirects authenticated admin/superadmin to their dashboard)."""
+    """Serves index.html (redirects authenticated admin to dashboard)."""
     user = get_current_user_from_request(request)
     if user:
         role = user.get("role", "")
         email = (user.get("email") or "").lower().strip()
-        if role == "superadmin" or email in AUTHORIZED_SUPERADMIN_EMAILS:
-            return RedirectResponse(url="/pages/superadmin/dashboard.html", status_code=status.HTTP_302_FOUND)
-        if role in AUTHORIZED_ADMIN_ROLES or email in AUTHORIZED_ADMIN_EMAILS:
+        if role in AUTHORIZED_ADMIN_ROLES or email in AUTHORIZED_ADMIN_EMAILS or email in AUTHORIZED_SUPERADMIN_EMAILS:
             return RedirectResponse(url="/pages/admin/dashboard.html", status_code=status.HTTP_302_FOUND)
     return FileResponse(str(FRONTEND_DIR / "index.html"))
 

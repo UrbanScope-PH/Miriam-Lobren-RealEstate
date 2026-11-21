@@ -3347,7 +3347,7 @@
                 session: true,
                 user: sessionUser,
                 token: serverRes.token || '',
-                redirect_url: serverRes.redirect_url || (role === 'superadmin' ? '/pages/superadmin/dashboard.html' : (role === 'admin' ? '/pages/admin/dashboard.html' : '/index.html'))
+                redirect_url: serverRes.redirect_url || ((role === 'admin' || role === 'superadmin') ? '/pages/admin/dashboard.html' : '/index.html')
             }
         };
     }
@@ -3585,9 +3585,9 @@
             }
 
             const redirectUrl = authRes.redirect_url || (
-                role === 'superadmin'
-                    ? '/pages/superadmin/dashboard.html'
-                    : (role === 'admin' ? '/pages/admin/dashboard.html' : '/index.html')
+                (role === 'admin' || role === 'superadmin')
+                    ? '/pages/admin/dashboard.html'
+                    : '/index.html'
             );
 
             return {
@@ -3704,9 +3704,9 @@
             }
 
             const redirectUrl = authRes.redirect_url || (
-                resolvedRole === 'superadmin'
-                    ? '/pages/superadmin/dashboard.html'
-                    : (resolvedRole === 'admin' ? '/pages/admin/dashboard.html' : '/index.html')
+                (resolvedRole === 'admin' || resolvedRole === 'superadmin')
+                    ? '/pages/admin/dashboard.html'
+                    : '/index.html'
             );
 
             return {
@@ -3800,7 +3800,7 @@
                         session: true,
                         user: sessionUser,
                         token: authRes.token || '',
-                        redirect_url: authRes.redirect_url || (role === 'superadmin' ? '/pages/superadmin/dashboard.html' : (role === 'admin' ? '/pages/admin/dashboard.html' : '/index.html'))
+                        redirect_url: authRes.redirect_url || ((role === 'admin' || role === 'superadmin') ? '/pages/admin/dashboard.html' : '/index.html')
                     }
                 };
             }

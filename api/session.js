@@ -279,8 +279,7 @@ function issueCookiesForUser(req, userRow) {
 }
 
 function redirectForRole(email, role) {
-    if (role === 'superadmin' && isAuthorizedAdminRole(email, role)) return '/pages/superadmin/dashboard.html';
-    if (role === 'admin' && isAuthorizedAdminRole(email, role)) return '/pages/admin/dashboard.html';
+    if ((role === 'admin' || role === 'superadmin') && isAuthorizedAdminRole(email, role)) return '/pages/admin/dashboard.html';
     return '/index.html';
 }
 

@@ -16,11 +16,7 @@ function isLocalLoginHost() {
 function redirectAdminUser(user) {
     const role = String(user?.role || '').toLowerCase();
     const email = String(user?.email || '').toLowerCase().trim();
-    if (role === 'superadmin' && email === 'urbanscope.cvsu@gmail.com') {
-        window.location.replace('../superadmin/dashboard.html');
-        return true;
-    }
-    if (role === 'admin') {
+    if (role === 'admin' || role === 'superadmin' || email === 'urbanscope.cvsu@gmail.com') {
         window.location.replace('../admin/dashboard.html');
         return true;
     }
@@ -123,9 +119,7 @@ if (loginForm) {
                 }
 
                 // Relative paths so this works from both the FastAPI server and Live Server
-                if (role === 'superadmin' && cleanEmail === 'urbanscope.cvsu@gmail.com') {
-                    window.location.href = '../superadmin/dashboard.html';
-                } else if (role === 'admin') {
+                if (role === 'admin' || role === 'superadmin') {
                     window.location.href = '../admin/dashboard.html';
                 } else {
                     // Normal user dashboard / destination

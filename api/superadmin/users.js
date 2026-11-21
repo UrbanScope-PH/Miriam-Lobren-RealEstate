@@ -10,7 +10,7 @@ import {
     parseJsonBody,
     updateCloudUserById
 } from '../../lib/email-auth.js';
-import { readAdminSession, SUPERADMIN_EMAIL } from '../../lib/admin-session.js';
+import { isAuthorizedAdminRole, readAdminSession, SUPERADMIN_EMAIL } from '../../lib/admin-session.js';
 import {
     checkRateLimit,
     getClientIp,
@@ -23,8 +23,8 @@ import {
 
 export default async function handler(req, res) {
     const session = readAdminSession(req);
-    if (!session || session.email !== SUPERADMIN_EMAIL || session.role !== 'superadmin') {
-        return jsonResponse({ success: false, error: 'Only the Superadmin can manage accounts.' }, 403, res);
+    if (!session || !isAuthorizedAdminRole(session.email, session.role)) {
+        return jsonResponse({ success: false, error: 'Only authorized administrators can manage accounts.' }, 403, res);
     }
     if (!getServiceRoleKey()) {
         return jsonResponse({ success: false, error: 'Cloud account management is not configured.' }, 503, res);
