@@ -116,6 +116,134 @@
     pointer-events: none;
 }
 
+.date-input-card {
+    background: var(--surface);
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    padding: 0 14px;
+    display: flex;
+    align-items: center;
+    height: 44px;
+    box-shadow: var(--shadow);
+}
+
+.date-input-card input[type="date"] {
+    border: none;
+    outline: none;
+    background: transparent;
+    color: var(--text-dark);
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.reset-filter-btn {
+    height: 44px;
+    padding: 0 16px;
+    border-radius: 10px;
+    border: 1px solid var(--border-color);
+    background: var(--surface);
+    color: var(--danger-text);
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: var(--shadow);
+    transition: background 0.18s ease, border-color 0.18s ease;
+}
+
+@media (hover: hover) and (pointer: fine) {
+    .reset-filter-btn:hover {
+        background: var(--danger-light);
+        border-color: var(--danger-border);
+    }
+}
+
+.proplist-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.proplist-header-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.proplist-card-header h3 {
+    margin: 0 !important;
+}
+
+.proplist-count-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 10px;
+    border-radius: 999px;
+    background: var(--light-green);
+    color: var(--dark-green);
+    border: 1px solid var(--green-border-soft);
+    font-size: 11.5px;
+    font-weight: 700;
+}
+
+.proplist-view-all-btn {
+    padding: 7px 14px;
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+    background: var(--surface-muted);
+    color: var(--accent-green);
+    font-family: inherit;
+    font-size: 12.5px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.18s ease, border-color 0.18s ease;
+}
+
+@media (hover: hover) and (pointer: fine) {
+    .proplist-view-all-btn:hover {
+        background: var(--light-green);
+        border-color: var(--green-border-soft);
+    }
+}
+
+.proplist-table-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 10px;
+    padding: 14px 20px;
+    border-top: 1px solid var(--border-subtle);
+    background: var(--surface-muted);
+}
+
+.proplist-footer-summary {
+    color: var(--text-muted);
+    font-size: 12.5px;
+    font-weight: 600;
+}
+
+.proplist-footer-view-btn {
+    border: none;
+    background: transparent;
+    color: var(--accent-green);
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 800;
+    cursor: pointer;
+}
+
+@media (hover: hover) and (pointer: fine) {
+    .proplist-footer-view-btn:hover {
+        text-decoration: underline;
+    }
+}
+
 /* TABLE CARD & CONTAINER */
 .table-card {
     background: var(--surface);
@@ -225,8 +353,8 @@
 
 #propertiesTable th:nth-child(3),
 #propertiesTable td:nth-child(3) {
-    width: 11%;
-    min-width: 85px;
+    width: 13%;
+    min-width: 90px;
     text-align: left;
 }
 
@@ -246,7 +374,7 @@
 
 #propertiesTable th:nth-child(6),
 #propertiesTable td:nth-child(6) {
-    width: 14%;
+    width: 12%;
     min-width: 120px;
     text-align: left;
 }
