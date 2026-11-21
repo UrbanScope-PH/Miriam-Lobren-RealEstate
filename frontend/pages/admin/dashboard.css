@@ -199,6 +199,7 @@
 .dot.orange { background: var(--accent-warm); }
 .dot.green { background: #22c55e; }
 .dot.dark-green { background: var(--emerald-primary); }
+.dot.red { background: #ef4444; }
 
 @media (max-width: 992px) {
     .analytics-row {
