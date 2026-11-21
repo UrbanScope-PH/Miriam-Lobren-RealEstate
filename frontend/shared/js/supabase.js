@@ -1341,6 +1341,30 @@
         }
     }
 
+    const INQUIRY_CANCELLED_BY_KEY = 'urbanscope_inquiry_cancelled_by';
+
+    function getInquiryCancelledByMap() {
+        try {
+            const parsed = JSON.parse(localStorage.getItem(INQUIRY_CANCELLED_BY_KEY) || '{}');
+            return (parsed && typeof parsed === 'object') ? parsed : {};
+        } catch (_) {
+            return {};
+        }
+    }
+
+    function setInquiryCancelledBy(id, actor) {
+        try {
+            const map = getInquiryCancelledByMap();
+            const key = String(id);
+            if (actor === 'admin' || actor === 'client') {
+                map[key] = actor;
+            } else {
+                delete map[key];
+            }
+            localStorage.setItem(INQUIRY_CANCELLED_BY_KEY, JSON.stringify(map));
+        } catch (_) {}
+    }
+
     function saveInquiryOverride(id, patch) {
         try {
             const overrides = getInquiryOverrides();
@@ -1356,6 +1380,7 @@
         const deletedUserEmails = new Set(getDeletedUserEmails());
         const deletedUserIds = new Set(getDeletedUserIds());
         const overrides = getInquiryOverrides();
+        const cancelledByMap = getInquiryCancelledByMap();
         let cached = [];
         try {
             cached = JSON.parse(localStorage.getItem('inquiries') || '[]');
@@ -1387,6 +1412,9 @@
                             localStorage.setItem(INQUIRY_OVERRIDES_KEY, JSON.stringify(overrides));
                         } catch (_) {}
                     }
+                    if (cancelledByMap[key]) {
+                        setInquiryCancelledBy(key, null);
+                    }
                 } else if (overrides[key]) {
                     const ov = overrides[key];
                     if (merged.updated_at && ov.updated_at && new Date(merged.updated_at) >= new Date(ov.updated_at)) {
@@ -1397,6 +1425,15 @@
                     } else {
                         merged = { ...merged, ...ov };
                     }
+                }
+
+                const finalStatus = String(merged.status || '').toLowerCase().trim();
+                if (finalStatus === 'cancelled') {
+                    if (!merged.cancelled_by && cancelledByMap[key]) {
+                        merged.cancelled_by = cancelledByMap[key];
+                    }
+                } else {
+                    merged.cancelled_by = null;
                 }
                 return merged;
             });
@@ -1964,18 +2001,20 @@
     async function apiUpdateInquiryStatus(id, newStatus) {
         let updated = false;
         const nowIso = new Date().toISOString();
+        const isCancelling = String(newStatus || '').toLowerCase().trim() === 'cancelled';
+        const cancelledBy = isCancelling ? 'admin' : null;
 
         try {
             if (isLocalBackendReachableHost()) {
                 const res = await localApiFetch(`/inquiries/${encodeURIComponent(id)}`, {
                     method: 'PATCH',
-                    body: JSON.stringify({ status: newStatus })
+                    body: JSON.stringify({ status: newStatus, cancelled_by: cancelledBy })
                 });
                 if (res.ok) updated = true;
             } else {
                 const res = await hostedApiFetch('/api/inquiries', {
                     method: 'POST',
-                    body: JSON.stringify({ action: 'update-status', id, status: newStatus })
+                    body: JSON.stringify({ action: 'update-status', id, status: newStatus, cancelled_by: cancelledBy })
                 });
                 if (res.ok) updated = true;
             }
@@ -1985,6 +2024,8 @@
 
         if (!updated) return false;
 
+        setInquiryCancelledBy(id, cancelledBy);
+
         // Update localStorage cache & overrides after confirmed server mutation
         let targetInquiry = null;
         try {
@@ -1992,13 +2033,14 @@
             const idx = cached.findIndex(i => String(i.id) === String(id));
             if (idx !== -1) {
                 cached[idx].status = newStatus;
+                cached[idx].cancelled_by = cancelledBy;
                 cached[idx].updated_at = nowIso;
                 targetInquiry = cached[idx];
                 localStorage.setItem('inquiries', JSON.stringify(cached));
             }
         } catch (_) {}
 
-        saveInquiryOverride(id, { status: newStatus, updated_at: nowIso });
+        saveInquiryOverride(id, { status: newStatus, cancelled_by: cancelledBy, updated_at: nowIso });
 
         if (String(newStatus || '').toLowerCase().trim() === 'approved') {
             try {
@@ -2266,7 +2308,7 @@
 
         let res;
         if (isLocalBackendReachableHost()) {
-            res = await apiUpdateMyInquiry(id, { status: 'Cancelled' }, email);
+            res = await apiUpdateMyInquiry(id, { status: 'Cancelled', cancelled_by: 'client' }, email);
         } else {
             try {
                 const hostedRes = await hostedApiFetch('/api/inquiries', {
@@ -2278,7 +2320,7 @@
                     ? { success: true, data: body.data || body }
                     : { success: false, error: body.error || 'Unable to cancel inquiry.' };
                 if (res.success) {
-                    saveInquiryOverride(id, { status: 'Cancelled', updated_at: new Date().toISOString() });
+                    saveInquiryOverride(id, { status: 'Cancelled', cancelled_by: 'client', updated_at: new Date().toISOString() });
                 }
             } catch (e) {
                 res = { success: false, error: e.message || 'Unable to cancel inquiry.' };
@@ -2286,6 +2328,7 @@
         }
 
         if (res && res.success) {
+            setInquiryCancelledBy(id, 'client');
             const code = (targetInq && targetInq.inquiry_code) || `INQ-2026-${String(id).padStart(3, '0')}`;
             const clientName = (targetInq && (targetInq.client_name || targetInq.name)) || cleanEmail.split('@')[0] || 'Client';
             const propTitle = (targetInq && (targetInq.property_title || targetInq.propertyTitle)) || 'General Inquiry';

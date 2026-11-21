@@ -268,6 +268,14 @@
             const isApproved = statusLower === 'approved' || statusLower === 'scheduled';
             const isCancelled = statusLower === 'cancelled';
             const isClosed = statusLower === 'closed' || statusLower === 'completed';
+            const cancelledActor = String(item.cancelled_by || '').toLowerCase().trim();
+            const displayStatus = isCancelled
+                ? (cancelledActor === 'admin'
+                    ? 'Cancelled by Admin'
+                    : cancelledActor === 'client'
+                        ? 'Cancelled by Client'
+                        : 'Cancelled')
+                : rawStatus;
 
             return `
                 <article class="inquiry-card" data-id="${safeId}">
@@ -291,7 +299,7 @@
 
                         <div class="status-pill ${escHtml(statusClass)}">
                             <span class="status-dot"></span>
-                            <span>${escHtml(rawStatus)}</span>
+                            <span>${escHtml(displayStatus)}</span>
                         </div>
                     </div>
 
@@ -490,6 +498,7 @@
             const idx = allInquiries.findIndex(i => String(i.id) === String(id));
             if (idx !== -1) {
                 allInquiries[idx].status = 'Cancelled';
+                allInquiries[idx].cancelled_by = 'client';
                 allInquiries[idx].updated_at = new Date().toISOString();
             }
             closeCancelModal();

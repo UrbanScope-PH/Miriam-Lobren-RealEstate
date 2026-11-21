@@ -243,6 +243,7 @@ class InquiryResponse(BaseModel):
     property_title: Optional[str] = "General Inquiry"
     message: str
     status: str = "Under Review"
+    cancelled_by: Optional[str] = None
     created_at: Optional[str] = None
     updated_at: Optional[str] = None
 
@@ -252,6 +253,7 @@ class InquiryUpdate(BaseModel):
     client_phone: Optional[str] = Field(default=None, max_length=40)
     message: Optional[str] = Field(default=None, max_length=3000)
     status: Optional[str] = Field(default=None, max_length=40)
+    cancelled_by: Optional[str] = Field(default=None, max_length=20)
 
 
 # ==========================================================

@@ -562,6 +562,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         const found = inquiries.find(i => String(i.id) === String(inquiryId));
         if (found) {
             found.status = newStatus;
+            found.cancelled_by = String(newStatus || '').toLowerCase().trim() === 'cancelled' ? 'admin' : null;
         }
         updateKPIs();
 
@@ -611,10 +612,16 @@ document.addEventListener('DOMContentLoaded', async () => {
                 </button>
             `;
         } else if (normStatus === 'Cancelled') {
+            const actor = String(inq.cancelled_by || '').toLowerCase().trim();
+            const cancelledLabel = actor === 'admin'
+                ? 'Cancelled by Admin'
+                : actor === 'client'
+                    ? 'Cancelled by Client'
+                    : 'Cancelled';
             actionButtonHtml = `
                 <button type="button" class="action-btn btn-modal-cancelled" disabled style="padding: 9px 18px; font-size: 0.9rem; border-radius: 8px;">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"></circle><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"></line></svg>
-                    Cancelled by Client
+                    ${cancelledLabel}
                 </button>
             `;
         } else {
