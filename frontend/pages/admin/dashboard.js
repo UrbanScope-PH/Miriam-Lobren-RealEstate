@@ -800,6 +800,7 @@ function applyDashboardInquiryFilters() {
 
         const status = escapeHTML(inquiry.status || "Pending");
         const safeRawId = escapeHTML(inquiry.id);
+        const safeCancelledBy = escapeHTML(String(inquiry.cancelled_by || "").toLowerCase().trim());
 
         const statusClass = getStatusClass(inquiry.status);
 
@@ -845,6 +846,7 @@ function applyDashboardInquiryFilters() {
                         data-created-at="${escapeHTML(createdAt)}"
                         data-status="${status}"
                         data-status-class="${statusClass}"
+                        data-cancelled-by="${safeCancelledBy}"
                         data-inquiry-phone="${phone}"
                         data-inquiry-email="${email}"
                         data-inquiry-message="${message}"
@@ -888,6 +890,7 @@ function applyDashboardInquiryFilters() {
                         data-created-at="${escapeHTML(createdAt)}"
                         data-status="${status}"
                         data-status-class="${statusClass}"
+                        data-cancelled-by="${safeCancelledBy}"
                         data-inquiry-phone="${phone}"
                         data-inquiry-email="${email}"
                         data-inquiry-message="${message}"
@@ -972,6 +975,13 @@ function openInquiryModal(data) {
     const isApproved = normStatus === 'approved';
     const isCancelled = normStatus === 'cancelled' || normStatus === 'rejected';
     const isCompleted = normStatus === 'completed';
+    const cancelledBy = String(data.cancelledBy || '').toLowerCase().trim();
+    const cancelledDecisionLabel = cancelledBy === 'admin'
+        ? 'Cancelled by Admin'
+        : cancelledBy === 'client'
+            ? 'Cancelled by Client'
+            : 'Cancelled';
+    const displayStatusLabel = isCancelled ? cancelledDecisionLabel : status;
 
     modalContent.innerHTML = `
         <div class="inquiry-modal-detail">
@@ -991,7 +1001,7 @@ function openInquiryModal(data) {
                     </div>
                 </div>
                 <div class="inquiry-banner-meta">
-                    <span class="status-pill ${escapeHTML(statusClass)}">${escapeHTML(status)}</span>
+                    <span class="status-pill ${escapeHTML(statusClass)}">${escapeHTML(displayStatusLabel)}</span>
                     <span class="inquiry-id-tag">${escapeHTML(inquiryId)}</span>
                 </div>
             </div>
@@ -1067,7 +1077,7 @@ function openInquiryModal(data) {
                                 aria-haspopup="listbox"
                                 aria-expanded="false">
                             <span class="modal-status-dot" aria-hidden="true"></span>
-                            <span class="modal-status-trigger-label">${isApproved ? 'Approved' : isCancelled ? 'Cancelled' : 'Set Decision'}</span>
+                            <span class="modal-status-trigger-label">${isApproved ? 'Approved' : isCancelled ? escapeHTML(cancelledDecisionLabel) : 'Set Decision'}</span>
                             <svg class="modal-status-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                                 <polyline points="6 9 12 15 18 9"></polyline>
                             </svg>
@@ -1156,16 +1166,18 @@ function openInquiryModal(data) {
             try {
                 await updateDashboardInquiryStatus(rawId, targetStatus);
 
+                const nowApproved = targetStatus === "Approved";
+                const nowCancelled = targetStatus === "Cancelled";
+                const updatedLabel = nowCancelled ? "Cancelled by Admin" : targetStatus;
+
                 const statusPill = modalContent.querySelector(".inquiry-banner-meta .status-pill");
                 if (statusPill) {
-                    statusPill.textContent = targetStatus;
+                    statusPill.textContent = updatedLabel;
                     statusPill.className = `status-pill ${getStatusClass(targetStatus)}`;
                 }
 
-                const nowApproved = targetStatus === "Approved";
-                const nowCancelled = targetStatus === "Cancelled";
                 statusTriggerBtn.className = `modal-status-trigger ${nowApproved ? "is-approved" : nowCancelled ? "is-cancelled" : "is-pending"}`;
-                if (labelEl) labelEl.textContent = targetStatus;
+                if (labelEl) labelEl.textContent = updatedLabel;
 
                 statusMenu.querySelectorAll(".modal-status-option").forEach((btn) => {
                     const isMatch = btn.getAttribute("data-next-status") === targetStatus;

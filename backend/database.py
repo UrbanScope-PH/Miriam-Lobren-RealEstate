@@ -210,6 +210,7 @@ def init_db():
             client_phone TEXT,
             message TEXT NOT NULL,
             status TEXT DEFAULT 'Under Review',
+            cancelled_by TEXT,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );
@@ -217,6 +218,8 @@ def init_db():
 
     cursor.execute("PRAGMA table_info(inquiries)")
     existing_inq_cols = {col[1] for col in cursor.fetchall()}
+    if "cancelled_by" not in existing_inq_cols:
+        cursor.execute("ALTER TABLE inquiries ADD COLUMN cancelled_by TEXT")
     if "updated_at" not in existing_inq_cols:
         cursor.execute("ALTER TABLE inquiries ADD COLUMN updated_at TIMESTAMP")
         cursor.execute("UPDATE inquiries SET updated_at = created_at WHERE updated_at IS NULL")

@@ -548,6 +548,26 @@ export default async function handler(req, res) {
         return jsonWithCookies({ success: false, error: 'You are not authorized to modify this inquiry.' }, 403, res);
     }
 
+    async function patchInquiryWithCancelledByFallback(id, patchPayload) {
+        let updateRes = await fetch(restUrl('inquiries', { id: `eq.${id}` }), {
+            method: 'PATCH',
+            headers: serviceHeaders({ Prefer: 'return=representation' }, true),
+            body: JSON.stringify(patchPayload)
+        });
+        if (!updateRes.ok && Object.prototype.hasOwnProperty.call(patchPayload, 'cancelled_by')) {
+            const errBody = await updateRes.text().catch(() => '');
+            if (/cancelled_by/i.test(errBody)) {
+                const { cancelled_by: _ignored, ...fallbackPatch } = patchPayload;
+                updateRes = await fetch(restUrl('inquiries', { id: `eq.${id}` }), {
+                    method: 'PATCH',
+                    headers: serviceHeaders({ Prefer: 'return=representation' }, true),
+                    body: JSON.stringify(fallbackPatch)
+                });
+            }
+        }
+        return updateRes;
+    }
+
     if (action === 'update-status') {
         if (!session.isStaff) {
             return jsonWithCookies({ success: false, error: 'Only administrators can update inquiry status.' }, 403, res);
@@ -557,16 +577,19 @@ export default async function handler(req, res) {
             return jsonWithCookies({ success: false, error: 'Invalid inquiry status value.' }, 400, res);
         }
 
-        const updateRes = await fetch(restUrl('inquiries', { id: `eq.${inquiryId}` }), {
-            method: 'PATCH',
-            headers: serviceHeaders({ Prefer: 'return=representation' }, true),
-            body: JSON.stringify({ status: newStatus, updated_at: new Date().toISOString() })
+        const isCancelling = newStatus.toLowerCase() === 'cancelled';
+        const cancelledByVal = isCancelling ? 'admin' : null;
+        const updateRes = await patchInquiryWithCancelledByFallback(inquiryId, {
+            status: newStatus,
+            cancelled_by: cancelledByVal,
+            updated_at: new Date().toISOString()
         });
         if (!updateRes.ok) {
             return jsonWithCookies({ success: false, error: 'Unable to update inquiry status.' }, 502, res);
         }
         const rows = await updateRes.json().catch(() => []);
-        const updated = Array.isArray(rows) ? rows[0] : { ...existing, status: newStatus };
+        const updatedRaw = Array.isArray(rows) ? rows[0] : { ...existing, status: newStatus };
+        const updated = { ...updatedRaw, cancelled_by: cancelledByVal };
 
         if (newStatus.toLowerCase() === 'approved' && ownerEmail) {
             const code = `INQ-2026-${String(inquiryId).padStart(3, '0')}`;
@@ -597,22 +620,39 @@ export default async function handler(req, res) {
                     clientName
                 })
             ]);
+        } else if (isCancelling && String(existing.status || '').toLowerCase() !== 'cancelled' && ownerEmail) {
+            const code = `INQ-2026-${String(inquiryId).padStart(3, '0')}`;
+            const propTitle = updated.property_title || 'General Inquiry';
+            const clientName = updated.client_name || 'Client';
+            await insertNotificationSafe({
+                recipient_role: 'client',
+                recipient_email: ownerEmail,
+                type: 'cancelled',
+                inquiry_id: Number(inquiryId),
+                property_title: propTitle,
+                client_name: clientName,
+                title: `Inquiry ${code} Cancelled by Admin`,
+                message: `Your inquiry for "${propTitle}" was cancelled by the administrator.`,
+                is_read: false,
+                is_seen: false
+            }, 'return=minimal');
         }
 
         return jsonWithCookies({ success: true, data: updated }, 200, res);
     }
 
     if (action === 'cancel-my') {
-        const updateRes = await fetch(restUrl('inquiries', { id: `eq.${inquiryId}` }), {
-            method: 'PATCH',
-            headers: serviceHeaders({ Prefer: 'return=representation' }, true),
-            body: JSON.stringify({ status: 'Cancelled', updated_at: new Date().toISOString() })
+        const updateRes = await patchInquiryWithCancelledByFallback(inquiryId, {
+            status: 'Cancelled',
+            cancelled_by: 'client',
+            updated_at: new Date().toISOString()
         });
         if (!updateRes.ok) {
             return jsonWithCookies({ success: false, error: 'Unable to cancel inquiry.' }, 502, res);
         }
         const rows = await updateRes.json().catch(() => []);
-        const updated = Array.isArray(rows) ? rows[0] : { ...existing, status: 'Cancelled' };
+        const updatedRaw = Array.isArray(rows) ? rows[0] : { ...existing, status: 'Cancelled' };
+        const updated = { ...updatedRaw, cancelled_by: 'client' };
         if (String(existing.status || '').toLowerCase() !== 'cancelled') {
             await notifyAdminCancelled(updated);
         }

@@ -168,6 +168,7 @@ Client consultation / viewing requests submitted from `frontend/pages/inquiry/in
 | `client_phone` | TEXT | — | |
 | `message` | TEXT | NOT NULL | |
 | `status` | TEXT | `'Under Review'` | See lifecycle below |
+| `cancelled_by` | TEXT | `NULL` | `'client'` or `'admin'` when `status = 'Cancelled'`, cleared on re-approval (*added by migration*) |
 | `created_at` | TIMESTAMP | `CURRENT_TIMESTAMP` | |
 | `updated_at` | TIMESTAMP | `CURRENT_TIMESTAMP` | Updated on status or detail modifications (*added by migration*) |
 
@@ -440,6 +441,12 @@ supabase/
                                              Locks private tables (users, inquiries, inquiry_documents, appointments, saved_properties, notifications) & property writes strictly to service_role; keeps public SELECT only on properties/property_images; adds security_rate_limits, check_and_increment_rate_limit, and check_auth_email_challenge RPCs
   migrations/20261115143500_otp_service_role_rls_policies.sql
                                              Adds explicit service_role RLS policies on auth_email_challenges and auth_email_challenge_requests and reloads the PostgREST schema cache
+  migrations/20261116084500_add_midori_and_update_property_cards.sql
+                                             Adds Midori Mid-Rise Condo – Zone 1 and refreshes accredited property card metadata
+  migrations/20261116093000_update_gallery_images_kathleen_place_5_and_remove_rfo.sql
+                                             Updates Kathleen - Place 5 gallery imagery and removes legacy RFO metadata
+  migrations/20261121232500_add_inquiry_cancelled_by.sql
+                                             Adds inquiries.cancelled_by ('client' | 'admin') column and CHECK constraint to distinguish client vs. admin cancellations
   seed.sql                                   Demo data (users, 6 properties, inquiries, ...)
   scripts/                                   One-off data fixes to paste into the SQL Editor (never auto-run)
 ```

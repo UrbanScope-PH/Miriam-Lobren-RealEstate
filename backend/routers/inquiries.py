@@ -305,6 +305,7 @@ def modify_inquiry(
         updates.append("property_title = ?")
         params.append(clean_title)
 
+    cancelled_actor: Optional[str] = None
     if requested_status is not None:
         if not is_admin:
             if requested_status != "Cancelled":
@@ -321,6 +322,18 @@ def modify_inquiry(
             )
         updates.append("status = ?")
         params.append(requested_status)
+        if requested_status.lower() == "cancelled":
+            requested_actor = str(payload.get("cancelled_by") or "").strip().lower()
+            if not is_admin:
+                cancelled_actor = "client"
+            elif requested_actor in ("client", "admin"):
+                cancelled_actor = requested_actor
+            else:
+                cancelled_actor = "admin"
+            updates.append("cancelled_by = ?")
+            params.append(cancelled_actor)
+        else:
+            updates.append("cancelled_by = NULL")
 
     if not updates:
         conn.close()
@@ -339,19 +352,34 @@ def modify_inquiry(
     code = f"INQ-2026-{str(inquiry_id).zfill(3)}"
 
     if requested_status and requested_status.lower() == "cancelled" and current_status != "cancelled":
-        cursor.execute("""
-            INSERT INTO notifications (recipient_role, recipient_email, type, inquiry_id, property_title, client_name, title, message, is_read, is_seen)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0, 0)
-        """, (
-            "admin",
-            "miriamalobren@gmail.com",
-            "cancelled",
-            inquiry_id,
-            prop_title,
-            client_name,
-            f"Inquiry {code} cancelled by {client_name}",
-            f"{client_name} cancelled their inquiry for {prop_title}."
-        ))
+        if cancelled_actor == "client":
+            cursor.execute("""
+                INSERT INTO notifications (recipient_role, recipient_email, type, inquiry_id, property_title, client_name, title, message, is_read, is_seen)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0, 0)
+            """, (
+                "admin",
+                "miriamalobren@gmail.com",
+                "cancelled",
+                inquiry_id,
+                prop_title,
+                client_name,
+                f"Inquiry {code} cancelled by {client_name}",
+                f"{client_name} cancelled their inquiry for {prop_title}."
+            ))
+        elif cancelled_actor == "admin" and inq_email:
+            cursor.execute("""
+                INSERT INTO notifications (recipient_role, recipient_email, type, inquiry_id, property_title, client_name, title, message, is_read, is_seen)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0, 0)
+            """, (
+                "client",
+                inq_email,
+                "cancelled",
+                inquiry_id,
+                prop_title,
+                client_name,
+                f"Inquiry {code} Cancelled by Admin",
+                f"Your inquiry for \"{prop_title}\" was cancelled by the administrator."
+            ))
     elif requested_status and requested_status.lower() == "approved" and current_status != "approved":
         cursor.execute("""
             INSERT INTO notifications (recipient_role, recipient_email, type, inquiry_id, property_title, client_name, title, message, is_read, is_seen)
