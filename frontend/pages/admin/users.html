@@ -188,11 +188,13 @@
 
             <div class="toolbar-filters">
                 <label for="userRoleFilter">Role Filter:</label>
-                <select id="userRoleFilter" class="sa-select">
-                    <option value="all">All Roles</option>
-                    <option value="admin">Admin</option>
-                    <option value="user">User (Client)</option>
-                </select>
+                <div class="role-filter-select-wrap" id="userRoleFilterWrap">
+                    <select id="userRoleFilter" class="sa-select" aria-label="Filter accounts by role">
+                        <option value="all">All Roles</option>
+                        <option value="admin">Admin</option>
+                        <option value="user">User (Client)</option>
+                    </select>
+                </div>
             </div>
         </div>
 
