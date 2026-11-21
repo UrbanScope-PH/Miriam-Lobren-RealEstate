@@ -254,9 +254,9 @@
     }
 
     function formatTimeAgo(dateInput) {
-        if (!dateInput) return "Recently";
+        if (!dateInput) return "";
         const date = new Date(dateInput);
-        if (isNaN(date.getTime())) return "Recently";
+        if (isNaN(date.getTime())) return "";
         const seconds = Math.floor((Date.now() - date.getTime()) / 1000);
         if (seconds < 45) return "Just now";
         const minutes = Math.floor(seconds / 60);

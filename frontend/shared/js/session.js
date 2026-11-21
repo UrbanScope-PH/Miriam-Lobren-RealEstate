@@ -128,17 +128,17 @@
     }
 
     function formatRelativeTime(dateStr) {
-        if (!dateStr) return 'Recently';
+        if (!dateStr) return '';
         try {
             var d = new Date(dateStr);
-            if (isNaN(d.getTime())) return 'Recently';
+            if (isNaN(d.getTime())) return '';
             var diffSec = Math.floor((Date.now() - d.getTime()) / 1000);
             if (diffSec < 60) return 'Just now';
             if (diffSec < 3600) return Math.floor(diffSec / 60) + 'm ago';
             if (diffSec < 86400) return Math.floor(diffSec / 3600) + 'h ago';
             return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
         } catch (e) {
-            return 'Recently';
+            return '';
         }
     }
 
@@ -491,7 +491,6 @@
                             '<div class="client-notif-body">' +
                             '<strong>' + esc(n.title || 'Inquiry Approved!') + '</strong>' +
                             '<p>' + esc(n.message || 'Your inquiry has been approved by Miriam Lobren.') + '</p>' +
-                            '<span class="client-notif-time">' + esc(formatRelativeTime(n.created_at)) + '</span>' +
                             '</div>' +
                             '</a>';
                     }).join('');
