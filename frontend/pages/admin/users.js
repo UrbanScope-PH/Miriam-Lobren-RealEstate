@@ -168,6 +168,7 @@
                     ...u,
                     role: normalizeRole(u.role, u.email)
                 }));
+                refreshRoleFilterDropdown();
                 applyUserFilters();
             } else if (elements.usersTableBody) {
                 elements.usersTableBody.innerHTML = `<tr><td colspan="6" class="text-center py-4" style="color:var(--danger-text)">Unable to load user accounts.</td></tr>`;
@@ -598,8 +599,125 @@
         });
     });
 
+    // Custom Role Filter Dropdown UI
+    let roleFilterMenuEl = null;
+    let roleFilterTriggerBtn = null;
+    const roleFilterWrap = document.getElementById('userRoleFilterWrap');
+
+    function getRoleDotClass(val) {
+        if (val === 'admin') return 'dot-admin';
+        if (val === 'user') return 'dot-user';
+        return 'dot-all';
+    }
+
+    function getRoleCount(val) {
+        if (!Array.isArray(allUsers)) return 0;
+        if (val === 'all') return allUsers.length;
+        return allUsers.filter(u => normalizeRole(u.role, u.email) === val).length;
+    }
+
+    function closeRoleFilterMenu() {
+        if (!roleFilterMenuEl || !roleFilterTriggerBtn || !roleFilterWrap) return;
+        roleFilterMenuEl.hidden = true;
+        roleFilterWrap.classList.remove('is-open');
+        roleFilterTriggerBtn.setAttribute('aria-expanded', 'false');
+    }
+
+    function refreshRoleFilterDropdown() {
+        if (!elements.userRoleFilter || !roleFilterWrap) return;
+        if (!roleFilterTriggerBtn) {
+            roleFilterWrap.classList.add('has-custom-select');
+            roleFilterTriggerBtn = document.createElement('button');
+            roleFilterTriggerBtn.type = 'button';
+            roleFilterTriggerBtn.className = 'role-filter-trigger';
+            roleFilterTriggerBtn.setAttribute('aria-haspopup', 'listbox');
+            roleFilterTriggerBtn.setAttribute('aria-expanded', 'false');
+
+            roleFilterMenuEl = document.createElement('div');
+            roleFilterMenuEl.className = 'role-filter-menu';
+            roleFilterMenuEl.setAttribute('role', 'listbox');
+            roleFilterMenuEl.setAttribute('aria-label', 'Filter accounts by role');
+            roleFilterMenuEl.hidden = true;
+
+            roleFilterWrap.appendChild(roleFilterTriggerBtn);
+            roleFilterWrap.appendChild(roleFilterMenuEl);
+
+            roleFilterTriggerBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const willOpen = roleFilterMenuEl.hidden;
+                if (willOpen) {
+                    refreshRoleFilterDropdown();
+                    roleFilterMenuEl.hidden = false;
+                    roleFilterWrap.classList.add('is-open');
+                    roleFilterTriggerBtn.setAttribute('aria-expanded', 'true');
+                } else {
+                    closeRoleFilterMenu();
+                }
+            });
+
+            roleFilterMenuEl.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const optBtn = e.target.closest('.role-filter-option[data-value]');
+                if (!optBtn) return;
+                const nextVal = optBtn.getAttribute('data-value') || 'all';
+                elements.userRoleFilter.value = nextVal;
+                refreshRoleFilterDropdown();
+                closeRoleFilterMenu();
+                applyUserFilters();
+            });
+
+            document.addEventListener('click', (e) => {
+                if (!e.target.closest('#userRoleFilterWrap')) {
+                    closeRoleFilterMenu();
+                }
+            });
+        }
+
+        const selectEl = elements.userRoleFilter;
+        const selectedOption = selectEl.options[selectEl.selectedIndex] || selectEl.options[0];
+        const selectedVal = selectEl.value || 'all';
+        const selectedLabel = selectedOption ? selectedOption.textContent.trim() : 'All Roles';
+
+        roleFilterTriggerBtn.innerHTML = `
+            <span class="role-trigger-left">
+                <span class="role-filter-dot ${getRoleDotClass(selectedVal)}" aria-hidden="true"></span>
+                <span class="role-trigger-label">${escapeHtml(selectedLabel)}</span>
+            </span>
+            <svg class="role-trigger-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <polyline points="6 9 12 15 18 9"></polyline>
+            </svg>
+        `;
+        roleFilterTriggerBtn.classList.toggle('is-filtered', selectedVal !== 'all');
+
+        roleFilterMenuEl.innerHTML = Array.from(selectEl.options).map((opt) => {
+            const val = opt.value;
+            const label = opt.textContent.trim();
+            const isSelected = val === selectedVal;
+            const count = getRoleCount(val);
+            return `
+                <button type="button"
+                        class="role-filter-option${isSelected ? ' is-selected' : ''}"
+                        role="option"
+                        aria-selected="${isSelected ? 'true' : 'false'}"
+                        data-value="${escapeHtml(val)}">
+                    <span class="role-option-left">
+                        <span class="role-filter-dot ${getRoleDotClass(val)}" aria-hidden="true"></span>
+                        <span class="role-option-label">${escapeHtml(label)}</span>
+                    </span>
+                    <span class="role-option-right">
+                        <span class="role-option-count">${count}</span>
+                        <svg class="role-option-check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <polyline points="20 6 9 17 4 12"></polyline>
+                        </svg>
+                    </span>
+                </button>
+            `;
+        }).join('');
+    }
+
     document.addEventListener('keydown', (e) => {
         if (e.key === 'Escape') {
+            closeRoleFilterMenu();
             if (elements.createUserModal && !elements.createUserModal.hidden) elements.createUserModal.hidden = true;
             if (editModalEl && !editModalEl.hidden) editModalEl.hidden = true;
             if (elements.roleChangeModal && !elements.roleChangeModal.hidden) elements.roleChangeModal.hidden = true;
@@ -627,7 +745,12 @@
     }
 
     if (elements.userFilterInput) elements.userFilterInput.addEventListener('input', applyUserFilters);
-    if (elements.userRoleFilter) elements.userRoleFilter.addEventListener('change', applyUserFilters);
+    if (elements.userRoleFilter) elements.userRoleFilter.addEventListener('change', () => {
+        refreshRoleFilterDropdown();
+        applyUserFilters();
+    });
+
+    refreshRoleFilterDropdown();
 
     async function init() {
         const isAuthorized = await verifyAdminAccess();

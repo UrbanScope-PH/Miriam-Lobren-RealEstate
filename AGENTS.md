@@ -1489,6 +1489,8 @@ path when rendering from a page.
 
   - Added `inquiries.cancelled_by` (`'client'` | `'admin'` | `NULL`) tracking across SQLite (`backend/database.py`), Pydantic (`backend/models.py`), FastAPI (`backend/routers/inquiries.py`), Supabase migration (`supabase/migrations/20261121232500_add_inquiry_cancelled_by.sql`), Vercel API (`api/inquiries.js` with pre-migration graceful fallback), and frontend gateways (`supabase.js` / `api.js` with `urbanscope_inquiry_cancelled_by` local state merge) so Admin Dashboard (`dashboard.js`), Client Inquiries (`clients.js`), and Client Inquiry History (`history.js`) accurately display **`Cancelled by Admin`**, **`Cancelled by Client`**, or **`Cancelled`** (for legacy records), and added a **Cancelled** KPI stat pill (`#statCancelledInquiries`) to `.stats-strip` on `/pages/admin/clients.html`.
 
+  - Added custom UrbanScope dropdown UI (`refreshRoleFilterDropdown`) to the **Role Filter** (`#userRoleFilter`) on `/pages/admin/users.html` (`All Roles`, `Admin`, `User (Client)` with semantic dots, live role counts, and active checkmarks).
+
 ## Safety Rules
 
 - Do **not** commit `backend/urbanscope.db`, `.env`, or virtualenvs (already in `.gitignore`).
