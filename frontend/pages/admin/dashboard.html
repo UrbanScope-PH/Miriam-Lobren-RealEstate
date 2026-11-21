@@ -316,30 +316,30 @@
                 </div>
 
                 <div class="donut-chart-container">
-                    <svg viewBox="0 0 160 160" width="200" height="200" id="inquiryDonutSvg">
+                    <svg viewBox="0 0 160 160" width="205" height="205" id="inquiryDonutSvg">
                         <circle r="60" cx="80" cy="80" fill="none" stroke="var(--border-color)" stroke-width="24" />
                         <circle id="donutUnderReview" r="60" cx="80" cy="80" fill="none" stroke="#f59e0b" stroke-width="24" stroke-dasharray="0 377" stroke-dashoffset="0" />
                         <circle id="donutApproved" r="60" cx="80" cy="80" fill="none" stroke="#22c55e" stroke-width="24" stroke-dasharray="0 377" stroke-dashoffset="0" />
                         <circle id="donutCompleted" r="60" cx="80" cy="80" fill="none" stroke="#15803d" stroke-width="24" stroke-dasharray="0 377" stroke-dashoffset="0" />
-                        <text x="80" y="76" text-anchor="middle" font-size="25" font-weight="800" fill="var(--text-dark)" id="donutTotalInquiries">0</text>
-                        <text x="80" y="93" text-anchor="middle" font-size="9.5" font-weight="600" fill="var(--text-muted)" letter-spacing="0.3">Total Inquiries</text>
+                        <text x="80" y="75" text-anchor="middle" font-size="30" font-weight="800" fill="var(--text-dark)" id="donutTotalInquiries">0</text>
+                        <text x="80" y="95" text-anchor="middle" font-size="11" font-weight="700" fill="var(--text-muted)" letter-spacing="0.2">Total Inquiries</text>
                     </svg>
 
                     <div class="donut-legend">
                         <div class="legend-item">
                             <span class="dot orange"></span>
                             <span class="legend-label">Under Review</span>
-                            <span class="legend-count">(<span id="legendReviewCount">0</span>)</span>
+                            <span class="legend-count" id="legendReviewCount">0</span>
                         </div>
                         <div class="legend-item">
                             <span class="dot green"></span>
                             <span class="legend-label">Approved</span>
-                            <span class="legend-count">(<span id="legendApprovedCount">0</span>)</span>
+                            <span class="legend-count" id="legendApprovedCount">0</span>
                         </div>
                         <div class="legend-item">
                             <span class="dot dark-green"></span>
                             <span class="legend-label">Completed</span>
-                            <span class="legend-count">(<span id="legendCompletedCount">0</span>)</span>
+                            <span class="legend-count" id="legendCompletedCount">0</span>
                         </div>
                     </div>
                 </div>
@@ -452,45 +452,6 @@
                         </tr>
                     </thead>
                     <tbody id="recentInquiryRows">
-                    </tbody>
-                </table>
-            </div>
-        </section>
-
-        <!-- MANAGED PROPERTY LISTINGS (LIMITED PREVIEW) -->
-        <section class="panel table-panel" id="managedPropertiesPanel">
-            <div class="panel-heading">
-                <div class="panel-heading-title-row">
-                    <h2>Property Listings</h2>
-                    <span class="dash-count-badge" id="dashPropCountBadge">Loading...</span>
-                </div>
-                <div class="panel-heading-actions">
-                    <a href="add-property.html" class="dash-add-prop-btn">
-                        + Add Property
-                    </a>
-                    <a href="propertylist.html?view=all" class="view-all-pill-btn" id="dashViewAllPropertiesLink">
-                        View All Properties &rarr;
-                    </a>
-                </div>
-            </div>
-
-            <div class="table-scroll">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>PROPERTY</th>
-                            <th>LOCATION</th>
-                            <th>TYPE</th>
-                            <th>AMOUNT</th>
-                            <th>STATUS</th>
-                            <th>ACTIONS</th>
-                        </tr>
-                    </thead>
-                    <tbody id="dashboardPropertyTableBody">
-                        <tr>
-                            <td colspan="6" style="text-align: center; padding: 24px; color: var(--text-muted);">Loading
-                                listings...</td>
-                        </tr>
                     </tbody>
                 </table>
             </div>

@@ -114,9 +114,9 @@
 }
 
 .analytics-card .card-header h3 {
-    font-size: 17px;
-    font-weight: 700;
-    color: var(--text-dark);
+    font-size: 18.5px;
+    font-weight: 800;
+    color: var(--dark-green);
     margin: 0;
 }
 
@@ -130,15 +130,15 @@
 .donut-chart-container {
     display: flex;
     align-items: center;
-    gap: 36px;
+    gap: 32px;
     flex: 1;
     justify-content: center;
-    padding: 10px 12px;
+    padding: 8px 10px;
 }
 
 #inquiryDonutSvg {
-    width: clamp(190px, 16vw, 225px);
-    height: clamp(190px, 16vw, 225px);
+    width: clamp(190px, 16vw, 215px);
+    height: clamp(190px, 16vw, 215px);
     flex-shrink: 0;
     filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.04));
     transition: transform 0.25s ease;
@@ -153,35 +153,43 @@
 .donut-legend {
     display: flex;
     flex-direction: column;
-    gap: 12px;
-    font-size: 13.5px;
-    color: var(--text-secondary);
+    gap: 16px;
+    flex: 1;
+    max-width: 260px;
     min-width: 210px;
+    background: transparent;
 }
 
 .legend-item {
     display: flex;
     align-items: center;
-    gap: 10px;
-    font-weight: 500;
+    gap: 12px;
+    padding: 0;
+    background: transparent;
+    border: none;
 }
 
 .legend-label {
     flex: 1;
-    color: var(--text-secondary);
+    color: var(--text-dark);
+    font-size: 16px;
+    font-weight: 600;
     letter-spacing: -0.1px;
 }
 
 .legend-count {
     color: var(--text-dark);
-    font-weight: 600;
-    font-size: 13px;
-    margin-left: 6px;
+    font-weight: 800;
+    font-size: 16px;
+    margin-left: 8px;
+    background: transparent;
+    border: none;
+    font-variant-numeric: tabular-nums;
 }
 
 .dot {
-    width: 10px;
-    height: 10px;
+    width: 12px;
+    height: 12px;
     border-radius: 50%;
     flex-shrink: 0;
 }

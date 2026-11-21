@@ -92,8 +92,250 @@
     display: flex;
     align-items: center;
     height: 44px;
-    min-width: 180px;
+    min-width: 205px;
     box-shadow: var(--shadow);
+}
+
+.status-select-card.has-custom-select {
+    padding: 0;
+    border: none;
+    background: transparent;
+    box-shadow: none;
+}
+
+.status-select-card.has-custom-select select,
+.status-select-card.has-custom-select .native-select-chevron {
+    display: none !important;
+}
+
+.proplist-custom-trigger {
+    width: 100%;
+    height: 44px;
+    padding: 0 14px;
+    border-radius: 10px;
+    border: 1px solid var(--border-color);
+    background: var(--surface);
+    color: var(--text-dark);
+    font-family: inherit;
+    font-size: 13.5px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    cursor: pointer;
+    box-shadow: var(--shadow);
+    transition: border-color 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
+}
+
+.proplist-custom-trigger.is-filtered {
+    border-color: var(--green-border-soft);
+    background: var(--light-green);
+    color: var(--dark-green);
+}
+
+.status-select-card.is-open .proplist-custom-trigger,
+.proplist-custom-trigger:focus-visible {
+    outline: none;
+    border-color: var(--accent-green);
+    box-shadow: 0 0 0 3px rgba(45, 92, 57, 0.14);
+}
+
+.proplist-trigger-left {
+    display: inline-flex;
+    align-items: center;
+    gap: 9px;
+    min-width: 0;
+}
+
+.proplist-trigger-label {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.proplist-trigger-chevron {
+    color: var(--text-muted);
+    flex-shrink: 0;
+    transition: transform 0.2s ease;
+}
+
+.status-select-card.is-open .proplist-trigger-chevron {
+    transform: rotate(180deg);
+    color: var(--accent-green);
+}
+
+.proplist-type-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--accent-green);
+    flex-shrink: 0;
+}
+
+.proplist-status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    display: inline-block;
+}
+
+.proplist-status-dot.dot-all {
+    background: var(--accent-green);
+}
+
+.proplist-status-dot.dot-available {
+    background: #22c55e;
+}
+
+.proplist-status-dot.dot-review {
+    background: #f59e0b;
+}
+
+.proplist-status-dot.dot-reserved {
+    background: #3b82f6;
+}
+
+.proplist-status-dot.dot-sold {
+    background: #ef4444;
+}
+
+.proplist-custom-menu {
+    position: absolute;
+    top: calc(100% + 8px);
+    left: 0;
+    z-index: 1500;
+    min-width: 100%;
+    width: max-content;
+    max-width: 280px;
+    background: var(--surface);
+    border: 1px solid var(--border-color);
+    border-radius: 14px;
+    padding: 7px;
+    box-shadow: 0 14px 32px rgba(15, 35, 22, 0.14);
+    animation: proplistMenuFadeIn 0.16s ease-out;
+}
+
+.proplist-custom-menu[hidden] {
+    display: none !important;
+}
+
+@keyframes proplistMenuFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-5px) scale(0.98);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+.proplist-custom-menu-header {
+    padding: 6px 10px 7px;
+    font-size: 10.5px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    color: var(--text-muted);
+    border-bottom: 1px solid var(--border-subtle);
+    margin-bottom: 5px;
+}
+
+.proplist-custom-menu-list {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    max-height: 290px;
+    overflow-y: auto;
+}
+
+.proplist-custom-option {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 8px 10px;
+    border: none;
+    border-radius: 9px;
+    background: transparent;
+    color: var(--text-dark);
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    text-align: left;
+    transition: background 0.14s ease, color 0.14s ease;
+}
+
+@media (hover: hover) and (pointer: fine) {
+    .proplist-custom-option:hover {
+        background: var(--light-green);
+        color: var(--dark-green);
+    }
+}
+
+.proplist-custom-option.is-selected {
+    background: var(--light-green);
+    color: var(--dark-green);
+    font-weight: 700;
+}
+
+.proplist-option-left {
+    display: inline-flex;
+    align-items: center;
+    gap: 9px;
+    min-width: 0;
+}
+
+.proplist-option-type-bullet {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--border-strong);
+    flex-shrink: 0;
+}
+
+.proplist-custom-option.is-selected .proplist-option-type-bullet {
+    background: var(--accent-green);
+}
+
+.proplist-option-right {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    flex-shrink: 0;
+}
+
+.proplist-option-count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 22px;
+    height: 20px;
+    padding: 0 6px;
+    border-radius: 999px;
+    background: var(--surface-muted);
+    color: var(--text-muted);
+    font-size: 11px;
+    font-weight: 700;
+}
+
+.proplist-custom-option.is-selected .proplist-option-count {
+    background: var(--surface);
+    color: var(--dark-green);
+}
+
+.proplist-option-check {
+    opacity: 0;
+    color: var(--accent-green);
+    transition: opacity 0.14s ease;
+}
+
+.proplist-custom-option.is-selected .proplist-option-check {
+    opacity: 1;
 }
 
 .status-select-card select {
@@ -109,7 +351,7 @@
     cursor: pointer;
 }
 
-.status-select-card svg {
+.status-select-card > .native-select-chevron {
     position: absolute;
     right: 14px;
     color: var(--text-muted);
