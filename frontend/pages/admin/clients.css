@@ -31,7 +31,7 @@
 /* KPI PILLS */
 .stats-strip {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(185px, 1fr));
     gap: 16px;
     margin-bottom: 28px;
 }
@@ -74,6 +74,11 @@
 .stat-pill-icon.purple {
     background: var(--status-purple-bg);
     color: var(--status-purple-text);
+}
+
+.stat-pill-icon.red {
+    background: var(--danger-light);
+    color: var(--danger-text);
 }
 
 .stat-pill strong {
