@@ -574,13 +574,118 @@ function formatInquiryLabel(rawTitle) {
     return `Specific Property Inquiry: ${clean}`;
 }
 
+const DASHBOARD_INQUIRY_LIMIT = 4;
+let allDashboardInquiries = [];
+
+function getInquiryIsoDate(inquiry) {
+    const raw = inquiry && inquiry.created_at ? inquiry.created_at : "";
+    if (!raw) return "";
+    const parsed = new Date(raw);
+    if (!Number.isNaN(parsed.getTime())) {
+        const yyyy = parsed.getFullYear();
+        const mm = String(parsed.getMonth() + 1).padStart(2, "0");
+        const dd = String(parsed.getDate()).padStart(2, "0");
+        return `${yyyy}-${mm}-${dd}`;
+    }
+    const m = String(raw).match(/^(\d{4}-\d{2}-\d{2})/);
+    return m ? m[1] : "";
+}
+
+function normalizeInquiryStatusFilterMatch(rawStatus, filterVal) {
+    if (!filterVal) return true;
+    const s = String(rawStatus || "Pending").toLowerCase().trim();
+    if (filterVal === "submitted") {
+        return s === "submitted" || s === "new";
+    }
+    if (filterVal === "requirements submitted") {
+        return s.includes("requirement");
+    }
+    if (filterVal === "under review") {
+        return s === "pending" || s.includes("review");
+    }
+    if (filterVal === "approved") {
+        return s.includes("approved");
+    }
+    if (filterVal === "completed") {
+        return s.includes("completed");
+    }
+    if (filterVal === "cancelled") {
+        return s.includes("cancel") || s.includes("reject");
+    }
+    return s === filterVal;
+}
+
+function syncInquiryPropertyFilterOptions(inquiries) {
+    const propSelect = document.getElementById("dashInqPropertyFilter");
+    if (!propSelect || !Array.isArray(inquiries)) return;
+    const prevValue = propSelect.value;
+
+    const distinctProps = new Set();
+    inquiries.forEach(inq => {
+        const label = formatInquiryLabel(inq.property_title);
+        const match = label.match(/^Specific Property Inquiry:\s*(.+)$/i);
+        if (match && match[1]) {
+            distinctProps.add(match[1].trim());
+        }
+    });
+
+    const baseOptions = [
+        `<option value="">All Properties &amp; Types</option>`,
+        `<option value="specific property inquiry">Specific Property Inquiry</option>`,
+        `<option value="general">General Consultation</option>`
+    ];
+    Array.from(distinctProps).sort((a, b) => a.localeCompare(b)).forEach(name => {
+        const safeVal = escapeHTML(name.toLowerCase());
+        const safeLabel = escapeHTML(name);
+        baseOptions.push(`<option value="${safeVal}">${safeLabel}</option>`);
+    });
+
+    propSelect.innerHTML = baseOptions.join("");
+    if (prevValue && Array.from(propSelect.options).some(o => o.value === prevValue)) {
+        propSelect.value = prevValue;
+    }
+}
+
 function renderInquiryRows(inquiries) {
+    if (Array.isArray(inquiries)) {
+        allDashboardInquiries = inquiries;
+        syncInquiryPropertyFilterOptions(inquiries);
+    }
+    applyDashboardInquiryFilters();
+}
+
+function applyDashboardInquiryFilters() {
     const tbody = document.getElementById("recentInquiriesBody") || document.getElementById("recentInquiryRows");
     const mobileList = document.getElementById("recentInquiriesMobileList");
+    const countBadge = document.getElementById("dashInqCountBadge");
+    const footerEl = document.getElementById("dashInqFooter");
+    const footerSummary = document.getElementById("dashInqFooterSummary");
+
+    const searchInput = document.getElementById("dashInqSearch");
+    const statusSelect = document.getElementById("dashInqStatusFilter");
+    const propSelect = document.getElementById("dashInqPropertyFilter");
+    const sortSelect = document.getElementById("dashInqSortFilter");
+    const dateInput = document.getElementById("dashInqDateFilter");
+    const resetBtn = document.getElementById("dashInqResetBtn");
 
     if (!tbody) return;
 
-    if (!Array.isArray(inquiries) || inquiries.length === 0) {
+    const q = (searchInput ? searchInput.value : "").trim().toLowerCase();
+    const statusVal = (statusSelect ? statusSelect.value : "").trim().toLowerCase();
+    const propVal = (propSelect ? propSelect.value : "").trim().toLowerCase();
+    const sortVal = (sortSelect ? sortSelect.value : "newest").trim();
+    const dateVal = (dateInput ? dateInput.value : "").trim();
+
+    const hasActiveFilter = Boolean(q || statusVal || propVal || dateVal || (sortVal && sortVal !== "newest"));
+    if (resetBtn) {
+        resetBtn.hidden = !hasActiveFilter;
+    }
+
+    const totalCount = Array.isArray(allDashboardInquiries) ? allDashboardInquiries.length : 0;
+
+    if (totalCount === 0) {
+        if (countBadge) countBadge.textContent = "0 inquiries";
+        if (footerEl) footerEl.hidden = true;
         tbody.innerHTML = `
             <tr>
                 <td colspan="6" class="empty-table-message">
@@ -597,9 +702,91 @@ function renderInquiryRows(inquiries) {
         return;
     }
 
+    const filtered = allDashboardInquiries.filter(inquiry => {
+        const inquiryId = String(inquiry.inquiry_id || `INQ-${inquiry.id ?? "N/A"}`).toLowerCase();
+        const clientName = String(inquiry.client_name || "Client").toLowerCase();
+        const propLabel = String(formatInquiryLabel(inquiry.property_title)).toLowerCase();
+        const statusStr = String(inquiry.status || "Pending").toLowerCase();
+        const isoDate = getInquiryIsoDate(inquiry);
+
+        const matchesQuery = !q ||
+            inquiryId.includes(q) ||
+            clientName.includes(q) ||
+            propLabel.includes(q) ||
+            statusStr.includes(q);
+
+        const matchesStatus = normalizeInquiryStatusFilterMatch(inquiry.status, statusVal);
+
+        let matchesProp = true;
+        if (propVal === "general") {
+            matchesProp = propLabel.includes("general") || propLabel.includes("consultation");
+        } else if (propVal === "specific property inquiry") {
+            matchesProp = propLabel.includes("specific property inquiry");
+        } else if (propVal) {
+            matchesProp = propLabel.includes(propVal);
+        }
+
+        const matchesDate = !dateVal || isoDate === dateVal;
+
+        return matchesQuery && matchesStatus && matchesProp && matchesDate;
+    });
+
+    filtered.sort((a, b) => {
+        if (sortVal === "oldest") {
+            return (new Date(a.created_at || 0).getTime() || 0) - (new Date(b.created_at || 0).getTime() || 0);
+        }
+        if (sortVal === "id-desc") {
+            return (Number(b.id) || 0) - (Number(a.id) || 0);
+        }
+        if (sortVal === "client-asc") {
+            return String(a.client_name || "").localeCompare(String(b.client_name || ""));
+        }
+        if (sortVal === "property-asc") {
+            return formatInquiryLabel(a.property_title).localeCompare(formatInquiryLabel(b.property_title));
+        }
+        if (sortVal === "status-asc") {
+            return String(a.status || "").localeCompare(String(b.status || ""));
+        }
+        // default: newest
+        return (new Date(b.created_at || 0).getTime() || 0) - (new Date(a.created_at || 0).getTime() || 0);
+    });
+
+    const limitedInquiries = filtered.slice(0, DASHBOARD_INQUIRY_LIMIT);
+    if (countBadge) {
+        countBadge.textContent = hasActiveFilter
+            ? `Showing ${limitedInquiries.length} of ${filtered.length} matching (${totalCount} total)`
+            : `Showing ${limitedInquiries.length} of ${totalCount}`;
+    }
+
+    if (footerEl) {
+        if (filtered.length > DASHBOARD_INQUIRY_LIMIT) {
+            footerEl.hidden = false;
+            if (footerSummary) {
+                footerSummary.textContent = `Showing ${limitedInquiries.length} of ${filtered.length} inquiries`;
+            }
+        } else {
+            footerEl.hidden = true;
+        }
+    }
+
+    if (limitedInquiries.length === 0) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="6" class="empty-table-message">
+                    No inquiries match the selected search or sorting filters.
+                </td>
+            </tr>
+        `;
+        if (mobileList) {
+            mobileList.innerHTML = `<div class="mobile-empty-state">No inquiries match the selected filters.</div>`;
+        }
+        updateInquiryEmptyState();
+        return;
+    }
+
     const mobileCardsHtml = [];
 
-    tbody.innerHTML = inquiries.slice(0, 5).map(inquiry => {
+    tbody.innerHTML = limitedInquiries.map(inquiry => {
         const inquiryId = escapeHTML(
             inquiry.inquiry_id || `INQ-${inquiry.id ?? "N/A"}`
         );
@@ -1235,26 +1422,120 @@ function sanitizeAdminPropImg(rawUrl, fallback = '../../assets/images/property1.
     return fallback;
 }
 
+const DASHBOARD_PROPERTY_LIMIT = 4;
+let allDashboardProperties = [];
+
+function matchesDashboardAmountFilter(priceVal, filterKey) {
+    if (!filterKey) return true;
+    const num = Number(priceVal) || 0;
+    if (filterKey === 'under-3m') return num > 0 && num < 3000000;
+    if (filterKey === '3m-6m') return num >= 3000000 && num <= 6000000;
+    if (filterKey === '6m-9m') return num > 6000000 && num <= 9000000;
+    if (filterKey === 'above-9m') return num > 9000000;
+    return true;
+}
+
 function renderDashboardProperties(list) {
+    if (Array.isArray(list)) {
+        allDashboardProperties = list;
+    }
+    applyDashboardPropertyFilters();
+}
+
+function applyDashboardPropertyFilters() {
     if (window.UrbanPropertyActionMenu && typeof window.UrbanPropertyActionMenu.close === 'function') {
         window.UrbanPropertyActionMenu.close(false);
     }
     const tbody = document.getElementById("dashboardPropertyTableBody");
     if (!tbody) return;
 
-    if (!list || list.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding: 30px; color:var(--text-muted);">No property records found. Click "+ Add Property" to create one.</td></tr>`;
+    const searchInput = document.getElementById("dashPropSearch");
+    const statusSelect = document.getElementById("dashPropStatusFilter");
+    const typeSelect = document.getElementById("dashPropTypeFilter");
+    const amountSelect = document.getElementById("dashPropAmountFilter");
+    const resetBtn = document.getElementById("dashPropResetBtn");
+    const countBadge = document.getElementById("dashPropCountBadge");
+    const footerEl = document.getElementById("dashPropFooter");
+    const footerSummary = document.getElementById("dashPropFooterSummary");
+
+    const q = (searchInput ? searchInput.value : "").trim().toLowerCase();
+    const statusFilter = (statusSelect ? statusSelect.value : "").trim().toLowerCase();
+    const typeFilter = (typeSelect ? typeSelect.value : "").trim().toLowerCase();
+    const amountFilter = (amountSelect ? amountSelect.value : "").trim();
+
+    const hasActiveFilter = Boolean(q || statusFilter || typeFilter || amountFilter);
+    if (resetBtn) {
+        resetBtn.hidden = !hasActiveFilter;
+    }
+
+    const totalCount = Array.isArray(allDashboardProperties) ? allDashboardProperties.length : 0;
+
+    if (totalCount === 0) {
+        if (countBadge) countBadge.textContent = "0 listings";
+        if (footerEl) footerEl.hidden = true;
+        tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding: 28px; color:var(--text-muted);">No property records found. Click "+ Add Property" to create one.</td></tr>`;
         return;
     }
 
-    tbody.innerHTML = list.map(p => {
+    const filtered = allDashboardProperties.filter(p => {
+        const title = String(p.title || p.propertyName || "Listing");
+        const type = String(p.property_type || "—");
+        const loc = String(p.location || "—");
+        const idStr = String(p.id ?? "");
+        const rawStatus = String(p.status || "Available").trim();
+        const isSold = rawStatus.toLowerCase() === 'sold' || rawStatus.toLowerCase() === 'sold out';
+        const displayStatus = isSold ? 'Sold' : (rawStatus || 'Available');
+
+        const matchesQuery = !q ||
+            title.toLowerCase().includes(q) ||
+            loc.toLowerCase().includes(q) ||
+            type.toLowerCase().includes(q) ||
+            idStr.toLowerCase().includes(q);
+
+        const matchesStatus = !statusFilter ||
+            displayStatus.toLowerCase() === statusFilter ||
+            (statusFilter === 'sold' && isSold);
+
+        const matchesType = !typeFilter ||
+            type.toLowerCase().includes(typeFilter);
+
+        const matchesAmount = matchesDashboardAmountFilter(p.price, amountFilter);
+
+        return matchesQuery && matchesStatus && matchesType && matchesAmount;
+    });
+
+    const displayed = filtered.slice(0, DASHBOARD_PROPERTY_LIMIT);
+
+    if (countBadge) {
+        countBadge.textContent = hasActiveFilter
+            ? `Showing ${displayed.length} of ${filtered.length} matching (${totalCount} total)`
+            : `Showing ${displayed.length} of ${totalCount}`;
+    }
+
+    if (footerEl) {
+        if (filtered.length > DASHBOARD_PROPERTY_LIMIT) {
+            footerEl.hidden = false;
+            if (footerSummary) {
+                footerSummary.textContent = `Showing ${displayed.length} of ${filtered.length} property listings`;
+            }
+        } else {
+            footerEl.hidden = true;
+        }
+    }
+
+    if (displayed.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding: 28px; color:var(--text-muted);">No properties match the selected filters.</td></tr>`;
+        return;
+    }
+
+    tbody.innerHTML = displayed.map(p => {
         const title = p.title || p.propertyName || "Listing";
         const type = p.property_type || "—";
         const loc = p.location || "—";
         const price = p.price ? "₱" + Number(p.price).toLocaleString() : "—";
         const rawStatus = (p.status || "Available").trim();
         const isSold = rawStatus.toLowerCase() === 'sold' || rawStatus.toLowerCase() === 'sold out';
-        const displayStatus = isSold ? 'Sold' : 'Available';
+        const displayStatus = isSold ? 'Sold' : (rawStatus || 'Available');
 
         const safeTitle = escapeHTML(title);
         const safeLoc = escapeHTML(loc);
@@ -1276,17 +1557,17 @@ function renderDashboardProperties(list) {
         return `
         <tr class="${isSold ? 'row-sold' : ''}">
             <td>
-                <div style="display:flex; align-items:center; gap:12px;">
-                    <img src="${escapeHTML(imgSrc)}" alt="${safeTitle}" style="width:44px; height:44px; border-radius:6px; object-fit:cover; ${isSold ? 'filter:grayscale(1); opacity:0.8;' : ''}" onerror="this.src='../../assets/images/property1.jpg'">
+                <div style="display:flex; align-items:center; gap:10px;">
+                    <img src="${escapeHTML(imgSrc)}" alt="${safeTitle}" style="width:40px; height:40px; border-radius:6px; object-fit:cover; ${isSold ? 'filter:grayscale(1); opacity:0.8;' : ''}" onerror="this.src='../../assets/images/property1.jpg'">
                     <div>
-                        <strong style="color:${isSold ? 'var(--text-muted)' : 'var(--text-dark)'}; font-size:0.92rem;">${safeTitle}</strong><br>
-                        <small style="color:var(--text-muted);">ID #${safeId}</small>
+                        <strong style="color:${isSold ? 'var(--text-muted)' : 'var(--text-dark)'}; font-size:0.88rem;">${safeTitle}</strong><br>
+                        <small style="color:var(--text-muted); font-size:0.75rem;">ID #${safeId}</small>
                     </div>
                 </div>
             </td>
-            <td style="color:var(--text-secondary); font-size:0.9rem;">${safeLoc}</td>
-            <td><span style="padding:4px 9px; border-radius:4px; background:var(--light-green); color:var(--dark-green); font-size:0.8rem; font-weight:600;">${safeType}</span></td>
-            <td style="font-weight:700; color:var(--text-dark);">${safePrice}</td>
+            <td style="color:var(--text-secondary); font-size:0.85rem;">${safeLoc}</td>
+            <td><span style="padding:3px 8px; border-radius:4px; background:var(--light-green); color:var(--dark-green); font-size:0.76rem; font-weight:600;">${safeType}</span></td>
+            <td style="font-weight:700; color:var(--text-dark); font-size:0.88rem;">${safePrice}</td>
             <td>
                 <span class="status-badge-table ${isSold ? 'status-badge-sold' : 'status-badge-available'}">
                     <span class="status-badge-dot"></span>
@@ -1431,6 +1712,29 @@ document.addEventListener("DOMContentLoaded", () => {
     syncCalendarToToday();
     loadCalendarAppointments();
     loadDashboardData();
+
+    const dashInqSearch = document.getElementById("dashInqSearch");
+    const dashInqStatus = document.getElementById("dashInqStatusFilter");
+    const dashInqProperty = document.getElementById("dashInqPropertyFilter");
+    const dashInqSort = document.getElementById("dashInqSortFilter");
+    const dashInqDate = document.getElementById("dashInqDateFilter");
+    const dashInqReset = document.getElementById("dashInqResetBtn");
+
+    if (dashInqSearch) dashInqSearch.addEventListener("input", applyDashboardInquiryFilters);
+    if (dashInqStatus) dashInqStatus.addEventListener("change", applyDashboardInquiryFilters);
+    if (dashInqProperty) dashInqProperty.addEventListener("change", applyDashboardInquiryFilters);
+    if (dashInqSort) dashInqSort.addEventListener("change", applyDashboardInquiryFilters);
+    if (dashInqDate) dashInqDate.addEventListener("change", applyDashboardInquiryFilters);
+    if (dashInqReset) {
+        dashInqReset.addEventListener("click", () => {
+            if (dashInqSearch) dashInqSearch.value = "";
+            if (dashInqStatus) dashInqStatus.value = "";
+            if (dashInqProperty) dashInqProperty.value = "";
+            if (dashInqSort) dashInqSort.value = "newest";
+            if (dashInqDate) dashInqDate.value = "";
+            applyDashboardInquiryFilters();
+        });
+    }
 
     document.querySelectorAll('.profile-signout, .logout-link').forEach(el => {
         el.addEventListener('click', () => {

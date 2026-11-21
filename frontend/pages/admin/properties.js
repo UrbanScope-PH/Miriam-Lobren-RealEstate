@@ -6,6 +6,8 @@ const propertyTableBody =
     document.getElementById("propertyTableBody") || document.getElementById("propTableBody");
 const propertiesMobileList = document.getElementById("propertiesMobileList");
 let currentLoadedProperties = [];
+const PROPLIST_DEFAULT_LIMIT = 5;
+let isShowingAllProperties = new URLSearchParams(window.location.search).get("view") === "all";
 
 
 function escapePropHtml(str) {
@@ -28,6 +30,16 @@ function sanitizeAdminPropImg(rawUrl, fallback = '../../assets/images/property1.
         return '../../' + cleaned;
     }
     return fallback;
+}
+
+function matchesPropertyAmountRange(priceVal, filterKey) {
+    if (!filterKey) return true;
+    const num = Number(priceVal) || 0;
+    if (filterKey === 'under-3m') return num > 0 && num < 3000000;
+    if (filterKey === '3m-6m') return num >= 3000000 && num <= 6000000;
+    if (filterKey === '6m-9m') return num > 6000000 && num <= 9000000;
+    if (filterKey === 'above-9m') return num > 9000000;
+    return true;
 }
 
 function normalizePropertyRowMeta(property) {
@@ -114,7 +126,7 @@ async function loadSavedProperties() {
 }
 
 
-function renderPropertyRecords(list) {
+function renderPropertyRecords(list, totalFilteredCount) {
     if (window.UrbanPropertyActionMenu && typeof window.UrbanPropertyActionMenu.close === "function") {
         window.UrbanPropertyActionMenu.close(false);
     }
@@ -122,12 +134,42 @@ function renderPropertyRecords(list) {
     propertyTableBody.innerHTML = "";
     if (propertiesMobileList) propertiesMobileList.innerHTML = "";
 
+    const countBadge = document.getElementById("propListCountBadge");
+    const toggleBtn = document.getElementById("toggleViewAllPropsBtn");
+    const footerEl = document.getElementById("propListFooter");
+    const footerSummary = document.getElementById("propListFooterSummary");
+    const footerBtn = document.getElementById("propListFooterBtn");
+
+    const totalCount = typeof totalFilteredCount === "number" ? totalFilteredCount : (list ? list.length : 0);
+
     if (!list || list.length === 0) {
+        if (countBadge) countBadge.textContent = "0 listings";
+        if (toggleBtn) toggleBtn.hidden = true;
+        if (footerEl) footerEl.hidden = true;
         propertyTableBody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding: 30px; color:var(--text-muted);">No property records found matching your filter.</td></tr>`;
         if (propertiesMobileList) {
             propertiesMobileList.innerHTML = `<div class="mobile-empty-state">No property records found matching your filter.</div>`;
         }
         return;
+    }
+
+    if (countBadge) {
+        countBadge.textContent = `Showing ${list.length} of ${totalCount}`;
+    }
+
+    const canToggleLimit = totalCount > PROPLIST_DEFAULT_LIMIT;
+    if (toggleBtn) {
+        toggleBtn.hidden = !canToggleLimit;
+        toggleBtn.textContent = isShowingAllProperties ? "Show Limited (5)" : `View All (${totalCount}) →`;
+    }
+    if (footerEl) {
+        footerEl.hidden = !canToggleLimit;
+        if (footerSummary) {
+            footerSummary.textContent = `Showing ${list.length} of ${totalCount} properties`;
+        }
+        if (footerBtn) {
+            footerBtn.textContent = isShowingAllProperties ? "Show Fewer Listings" : `View All ${totalCount} Properties →`;
+        }
     }
 
     list.forEach(function (property) {
@@ -137,11 +179,38 @@ function renderPropertyRecords(list) {
 }
 
 
+window.toggleViewAllProperties = function () {
+    isShowingAllProperties = !isShowingAllProperties;
+    window.filterTable();
+};
+
+window.resetPropertyFilters = function () {
+    const searchEl = document.getElementById("propSearch");
+    const statusEl = document.getElementById("statusFilter");
+    const typeEl = document.getElementById("typeFilter");
+    const amountEl = document.getElementById("amountFilter");
+    if (searchEl) searchEl.value = "";
+    if (statusEl) statusEl.value = "";
+    if (typeEl) typeEl.value = "";
+    if (amountEl) amountEl.value = "";
+    window.filterTable();
+};
+
 window.filterTable = function () {
     const searchEl = document.getElementById("propSearch");
     const statusEl = document.getElementById("statusFilter");
+    const typeEl = document.getElementById("typeFilter");
+    const amountEl = document.getElementById("amountFilter");
+    const resetBtn = document.getElementById("resetPropFiltersBtn");
+
     const query = (searchEl ? searchEl.value : "").trim().toLowerCase();
     const statusFilterVal = (statusEl ? statusEl.value : "").trim().toLowerCase();
+    const typeFilterVal = (typeEl ? typeEl.value : "").trim().toLowerCase();
+    const amountFilterVal = (amountEl ? amountEl.value : "").trim();
+
+    if (resetBtn) {
+        resetBtn.hidden = !(query || statusFilterVal || typeFilterVal || amountFilterVal);
+    }
 
     const filtered = currentLoadedProperties.filter((property) => {
         const meta = normalizePropertyRowMeta(property);
@@ -156,10 +225,16 @@ window.filterTable = function () {
             normStatus === statusFilterVal ||
             (statusFilterVal === 'sold' && meta.isSold);
 
-        return matchesQuery && matchesStatus;
+        const matchesType = !typeFilterVal ||
+            meta.type.toLowerCase().includes(typeFilterVal);
+
+        const matchesAmount = matchesPropertyAmountRange(property.price, amountFilterVal);
+
+        return matchesQuery && matchesStatus && matchesType && matchesAmount;
     });
 
-    renderPropertyRecords(filtered);
+    const displayed = isShowingAllProperties ? filtered : filtered.slice(0, PROPLIST_DEFAULT_LIMIT);
+    renderPropertyRecords(displayed, filtered.length);
 };
 
 
