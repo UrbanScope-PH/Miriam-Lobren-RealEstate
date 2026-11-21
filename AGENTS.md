@@ -1478,6 +1478,8 @@ path when rendering from a page.
 
 154. **Repository Folder/File Cleanup, `sitemap.xml` / `robots.txt` Refresh & Structure Docs Sync (Nov 18, 2026):** Removed unreferenced raw `PROPERTIES/` photo archive (all production assets live in `frontend/assets/images/`), deleted retired 1-line `frontend/shared/{css,js}/calculator.*` placeholders, and removed duplicate `frontend/vercel.json` (retaining root `vercel.json` as canonical Vercel config). Refreshed `frontend/sitemap.xml` (`lastmod` `2026-11-18`, added `property-detail.html`, `auth/login.html`, `auth/register.html`) and `frontend/robots.txt` (`Allow` public auth pages, `Disallow: /pages/auth/forgot-password.html`). Synchronized `README.md`, `AGENTS.md`, and `CHANGELOG.md` project trees.
 
+155. **Specific Property Inquiry Custom `UrbanSelect` Listing Dropdown UI (`frontend/pages/inquiry/inquiry.js`, `frontend/pages/inquiry/inquiry.css`):** Wired `#propertySelect` (`Select Listing*`) into `initUrbanSelect()` with live `_urbanSelectUpdate` synchronization inside `renderAvailablePropertyOptions()` and `setPropertySelection()`, replacing the unstyled native OS `<select>` menu with a rich custom UrbanScope dropdown featuring property thumbnail previews, property titles, price pills (`₱...`), property type + location sub-labels, and selected checkmarks. Aligned `.consultation-fields-grid` (`align-items: end` and balanced column tracks) so `Select Listing*`, `Preferred Date`, and `Preferred Time / Slot` sit on the same horizontal row without label wrapping or date placeholder clipping.
+
 ## Safety Rules
 
 - Do **not** commit `backend/urbanscope.db`, `.env`, or virtualenvs (already in `.gitignore`).
