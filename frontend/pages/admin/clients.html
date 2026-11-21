@@ -222,52 +222,23 @@
             </div>
         </section>
 
-        <!-- FILTER & SORT CONTROLS -->
-        <section class="filter-toolbar" id="clientsFiltersBar" aria-label="Filter and sort client inquiries">
+        <!-- FILTER CONTROLS -->
+        <section class="filter-toolbar">
             <div class="search-field">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <circle cx="11" cy="11" r="8"></circle>
                     <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
                 </svg>
-                <input type="search" id="clientSearchInput" inputmode="search" enterkeyhint="search" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="Search inquiry ID, client name, or property..." aria-label="Search client inquiries">
+                <input type="search" id="clientSearchInput" inputmode="search" enterkeyhint="search" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="Search client name, email, phone, or property...">
             </div>
 
-            <div class="client-filter-control">
-                <select id="clientStatusFilter" aria-label="Filter by inquiry status">
-                    <option value="">All Statuses</option>
-                    <option value="Under Review">Under Review</option>
-                    <option value="Approved">Approved</option>
-                    <option value="Completed">Completed</option>
-                    <option value="Cancelled">Cancelled</option>
-                </select>
+            <div class="status-tabs" id="statusTabs">
+                <button class="status-tab-btn active" data-status="All">All Inquiries</button>
+                <button class="status-tab-btn" data-status="Under Review">Pending Review</button>
+                <button class="status-tab-btn" data-status="Approved">Approved</button>
+                <button class="status-tab-btn" data-status="Completed">Completed</button>
+                <button class="status-tab-btn" data-status="Cancelled">Cancelled</button>
             </div>
-
-            <div class="client-filter-control">
-                <select id="clientPropertyFilter" aria-label="Filter by property or inquiry type">
-                    <option value="">All Properties &amp; Types</option>
-                    <option value="specific property inquiry">Specific Property Inquiry</option>
-                    <option value="general">General Consultation</option>
-                </select>
-            </div>
-
-            <div class="client-filter-control">
-                <select id="clientSortFilter" aria-label="Sort client inquiries">
-                    <option value="newest">Date Submitted: Newest</option>
-                    <option value="oldest">Date Submitted: Oldest</option>
-                    <option value="id-desc">Inquiry ID: Latest</option>
-                    <option value="client-asc">Client Name: A–Z</option>
-                    <option value="property-asc">Property: A–Z</option>
-                    <option value="status-asc">Status: A–Z</option>
-                </select>
-            </div>
-
-            <div class="client-filter-control client-filter-date">
-                <input type="date" id="clientDateFilter" aria-label="Filter by date submitted" title="Filter by date submitted">
-            </div>
-
-            <button type="button" class="client-filter-reset-btn" id="clientResetBtn" hidden>
-                Reset
-            </button>
         </section>
 
         <!-- CLIENTS INQUIRIES TABLE -->

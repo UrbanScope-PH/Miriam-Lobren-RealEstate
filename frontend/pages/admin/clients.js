@@ -43,11 +43,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     const tableBody = document.getElementById('clientsTableBody');
     const searchInput = document.getElementById('clientSearchInput');
     const statusTabs = document.getElementById('statusTabs');
-    const statusFilterSelect = document.getElementById('clientStatusFilter');
-    const propertyFilterSelect = document.getElementById('clientPropertyFilter');
-    const sortFilterSelect = document.getElementById('clientSortFilter');
-    const dateFilterInput = document.getElementById('clientDateFilter');
-    const resetFiltersBtn = document.getElementById('clientResetBtn');
     const statTotal = document.getElementById('statTotalInquiries');
     const statPending = document.getElementById('statPendingInquiries');
     const statApproved = document.getElementById('statApprovedInquiries');
@@ -58,10 +53,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const urlParams = new URLSearchParams(window.location.search);
     const initialStatus = urlParams.get('status');
     if (initialStatus) {
-        activeFilter = initialStatus === 'All' ? '' : initialStatus;
-        if (statusFilterSelect) {
-            statusFilterSelect.value = activeFilter;
-        }
+        activeFilter = initialStatus;
         document.querySelectorAll('.status-tab-btn').forEach(btn => {
             if (btn.getAttribute('data-status') === initialStatus) {
                 btn.classList.add('active');
@@ -116,7 +108,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
             inquiries = data;
 
-            syncClientPropertyFilterOptions();
             updateKPIs();
             renderTable();
         } catch (err) {
@@ -196,117 +187,27 @@ document.addEventListener('DOMContentLoaded', async () => {
         };
     }
 
-    function getInquiryIsoDate(inq) {
-        const raw = inq && inq.created_at ? inq.created_at : '';
-        if (!raw) return '';
-        const parsed = new Date(raw);
-        if (!Number.isNaN(parsed.getTime())) {
-            const yyyy = parsed.getFullYear();
-            const mm = String(parsed.getMonth() + 1).padStart(2, '0');
-            const dd = String(parsed.getDate()).padStart(2, '0');
-            return `${yyyy}-${mm}-${dd}`;
-        }
-        const m = String(raw).match(/^(\d{4}-\d{2}-\d{2})/);
-        return m ? m[1] : '';
-    }
-
-    function syncClientPropertyFilterOptions() {
-        if (!propertyFilterSelect || !Array.isArray(inquiries)) return;
-        const prevValue = propertyFilterSelect.value;
-        const distinctProps = new Set();
-        inquiries.forEach(inq => {
-            const rawProp = inq.property_title || propertiesMap[inq.property_id] || (inq.property_id ? `Property #${inq.property_id}` : '');
-            const label = formatInquiryLabel(rawProp);
-            const match = label.match(/^Specific Property Inquiry:\s*(.+)$/i);
-            if (match && match[1]) {
-                distinctProps.add(match[1].trim());
-            }
-        });
-
-        const baseOptions = [
-            `<option value="">All Properties &amp; Types</option>`,
-            `<option value="specific property inquiry">Specific Property Inquiry</option>`,
-            `<option value="general">General Consultation</option>`
-        ];
-        Array.from(distinctProps).sort((a, b) => a.localeCompare(b)).forEach(name => {
-            const safeVal = escapeHtml(name.toLowerCase());
-            const safeLabel = escapeHtml(name);
-            baseOptions.push(`<option value="${safeVal}">${safeLabel}</option>`);
-        });
-
-        propertyFilterSelect.innerHTML = baseOptions.join('');
-        if (prevValue && Array.from(propertyFilterSelect.options).some(o => o.value === prevValue)) {
-            propertyFilterSelect.value = prevValue;
-        }
-    }
-
     function renderTable() {
         const mobileList = document.getElementById('clientsMobileList');
         if (!tableBody) return;
 
-        const statusVal = statusFilterSelect ? statusFilterSelect.value.trim() : (activeFilter === 'All' ? '' : activeFilter);
-        const propVal = propertyFilterSelect ? propertyFilterSelect.value.trim().toLowerCase() : '';
-        const sortVal = sortFilterSelect ? sortFilterSelect.value.trim() : 'newest';
-        const dateVal = dateFilterInput ? dateFilterInput.value.trim() : '';
-
-        const hasActiveFilters = Boolean(searchQuery || statusVal || propVal || dateVal || (sortVal && sortVal !== 'newest'));
-        if (resetFiltersBtn) {
-            resetFiltersBtn.hidden = !hasActiveFilters;
-        }
-
         let filtered = inquiries.filter(inq => {
             const normStatus = getNormalizedStatus(inq.status);
-            if (statusVal && normStatus.toLowerCase() !== statusVal.toLowerCase()) {
+            if (activeFilter !== 'All' && normStatus !== activeFilter) {
                 return false;
-            }
-
-            const rawProp = inq.property_title || propertiesMap[inq.property_id] || (inq.property_id ? `Property #${inq.property_id}` : '');
-            const propLabel = formatInquiryLabel(rawProp).toLowerCase();
-
-            if (propVal === 'general') {
-                if (!propLabel.includes('general') && !propLabel.includes('consultation')) return false;
-            } else if (propVal === 'specific property inquiry') {
-                if (!propLabel.includes('specific property inquiry')) return false;
-            } else if (propVal) {
-                if (!propLabel.includes(propVal)) return false;
-            }
-
-            if (dateVal) {
-                const isoDate = getInquiryIsoDate(inq);
-                if (isoDate !== dateVal) return false;
             }
 
             if (searchQuery) {
                 const q = searchQuery.toLowerCase();
-                const inqId = String(inq.inquiry_id || `INQ-${inq.id ?? ''}`).toLowerCase();
                 const name = (inq.client_name || inq.name || '').toLowerCase();
                 const email = (inq.email || inq.client_email || '').toLowerCase();
                 const phone = (inq.phone || inq.client_phone || inq.contact_number || '').toLowerCase();
+                const rawProp = inq.property_title || propertiesMap[inq.property_id] || (inq.property_id ? `Property #${inq.property_id}` : '');
+                const prop = formatInquiryLabel(rawProp).toLowerCase();
                 const msg = (inq.message || '').toLowerCase();
-                return inqId.includes(q) || name.includes(q) || email.includes(q) || phone.includes(q) || propLabel.includes(q) || msg.includes(q);
+                return name.includes(q) || email.includes(q) || phone.includes(q) || prop.includes(q) || msg.includes(q);
             }
             return true;
-        });
-
-        filtered.sort((a, b) => {
-            if (sortVal === 'oldest') {
-                return (new Date(a.created_at || 0).getTime() || 0) - (new Date(b.created_at || 0).getTime() || 0);
-            }
-            if (sortVal === 'id-desc') {
-                return (Number(b.id) || 0) - (Number(a.id) || 0);
-            }
-            if (sortVal === 'client-asc') {
-                return String(a.client_name || a.name || '').localeCompare(String(b.client_name || b.name || ''));
-            }
-            if (sortVal === 'property-asc') {
-                const propA = formatInquiryLabel(a.property_title || propertiesMap[a.property_id] || '');
-                const propB = formatInquiryLabel(b.property_title || propertiesMap[b.property_id] || '');
-                return propA.localeCompare(propB);
-            }
-            if (sortVal === 'status-asc') {
-                return getNormalizedStatus(a.status).localeCompare(getNormalizedStatus(b.status));
-            }
-            return (new Date(b.created_at || 0).getTime() || 0) - (new Date(a.created_at || 0).getTime() || 0);
         });
 
         if (filtered.length === 0) {
@@ -787,7 +688,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     };
 
-    // Filter & sort listeners
+    // Filter tab listeners
     if (statusTabs) {
         statusTabs.addEventListener('click', (e) => {
             const btn = e.target.closest('.status-tab-btn');
@@ -795,33 +696,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             document.querySelectorAll('.status-tab-btn').forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
             activeFilter = btn.getAttribute('data-status');
-            renderTable();
-        });
-    }
-    if (statusFilterSelect) {
-        statusFilterSelect.addEventListener('change', () => {
-            activeFilter = statusFilterSelect.value || 'All';
-            renderTable();
-        });
-    }
-    if (propertyFilterSelect) {
-        propertyFilterSelect.addEventListener('change', () => renderTable());
-    }
-    if (sortFilterSelect) {
-        sortFilterSelect.addEventListener('change', () => renderTable());
-    }
-    if (dateFilterInput) {
-        dateFilterInput.addEventListener('change', () => renderTable());
-    }
-    if (resetFiltersBtn) {
-        resetFiltersBtn.addEventListener('click', () => {
-            searchQuery = '';
-            activeFilter = 'All';
-            if (searchInput) searchInput.value = '';
-            if (statusFilterSelect) statusFilterSelect.value = '';
-            if (propertyFilterSelect) propertyFilterSelect.value = '';
-            if (sortFilterSelect) sortFilterSelect.value = 'newest';
-            if (dateFilterInput) dateFilterInput.value = '';
             renderTable();
         });
     }
