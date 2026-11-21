@@ -542,18 +542,15 @@ function isUserLoggedIn() {
 
 function updateInquirySessionUi() {
     const loggedIn = isUserLoggedIn();
-    const guestBanner = document.getElementById('guestInquiryBanner');
     const historyLink = document.getElementById('inquiryHistoryLink');
     const userTag = document.getElementById('userDetectedTag');
     const infoTitle = document.getElementById('userInfoTitleText');
 
     if (loggedIn) {
-        if (guestBanner) guestBanner.style.display = 'none';
         if (historyLink) historyLink.style.display = 'inline-flex';
         if (userTag) userTag.style.display = 'inline';
         if (infoTitle) infoTitle.textContent = 'Your Information';
     } else {
-        if (guestBanner) guestBanner.style.display = 'flex';
         if (historyLink) historyLink.style.display = 'none';
         if (userTag) userTag.style.display = 'none';
         if (infoTitle) infoTitle.textContent = 'Your Contact Details';
