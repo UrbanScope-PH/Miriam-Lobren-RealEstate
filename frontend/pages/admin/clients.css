@@ -741,63 +741,137 @@ tr {
 @media (max-width: 768px) {
 
     /* Prevent iOS zoom on input focus */
-    input,
+    input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]):not([type="range"]):not([type="file"]),
     select,
     textarea {
         font-size: 16px !important;
     }
 
-    .admin-topbar {
-        min-height: 68px;
-        padding: 10px 14px;
-        gap: 12px;
-    }
-
-    .brand-text h1 {
-        font-size: 1rem;
-    }
-
-    .brand-text h2 {
-        font-size: 0.65rem;
-    }
-
     .main-content {
-        padding: 20px 14px 40px;
+        padding: 16px 14px max(24px, env(safe-area-inset-bottom, 0px));
     }
 
     .page-header-lead {
-        margin-bottom: 20px;
+        margin-bottom: 14px;
+        gap: 6px;
     }
 
     .page-header-lead h1 {
-        font-size: clamp(1.4rem, 5vw, 1.75rem);
+        font-size: 21px;
+        line-height: 1.25;
+        margin-bottom: 3px;
+    }
+
+    .page-header-lead p {
+        font-size: 13.5px;
+        line-height: 1.5;
+    }
+
+    .stats-strip {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+        margin-bottom: 14px;
+    }
+
+    .stat-pill {
+        padding: 10px 12px;
+        border-radius: 12px;
+        gap: 10px;
+    }
+
+    .stat-pill:last-child {
+        grid-column: 1 / -1;
+    }
+
+    .stat-pill-icon {
+        width: 34px;
+        height: 34px;
+        border-radius: 9px;
+    }
+
+    .stat-pill-icon svg {
+        width: 17px;
+        height: 17px;
+    }
+
+    .stat-pill strong {
+        font-size: 20px;
+        line-height: 1.15;
+    }
+
+    .stat-pill span {
+        font-size: 11.5px;
+        line-height: 1.2;
+        letter-spacing: 0.1px;
     }
 
     .filter-toolbar {
         flex-direction: column;
         align-items: stretch;
-        padding: 14px;
-        gap: 12px;
+        padding: 12px;
+        gap: 10px;
+        margin-bottom: 14px;
+        border-radius: 12px;
     }
 
     .search-field {
         min-width: 0;
         max-width: 100%;
         width: 100%;
+        height: 38px;
+        min-height: 38px;
+        padding: 0 11px;
+        border-radius: 9px;
+    }
+
+    .search-field input {
+        height: 100%;
+        min-height: 36px;
+        padding: 6px 0;
     }
 
     .status-tabs {
         width: 100%;
-        padding-bottom: 4px;
+        padding-bottom: 0;
         flex-wrap: wrap;
-        gap: 8px;
+        gap: 6px;
     }
 
     .status-tab-btn {
         flex-shrink: 0;
         white-space: nowrap;
-        padding: 9px 14px;
-        min-height: 44px;
+        padding: 6px 11px;
+        min-height: 34px;
+        font-size: 12.5px;
+        border-radius: 999px;
+    }
+
+    .clients-card {
+        border-radius: 12px;
+    }
+
+    #clientsMobileList {
+        padding: 10px 12px 12px;
+        gap: 10px;
+    }
+
+    .mobile-client-card {
+        padding: 12px 14px;
+        border-radius: 12px;
+        gap: 8px;
+    }
+
+    .status-dropdown-menu {
+        min-width: 170px;
+        max-width: min(220px, calc(100vw - 24px));
+        border-radius: 12px;
+        padding: 5px;
+    }
+
+    .status-dropdown-option {
+        min-height: 34px;
+        padding: 6px 9px;
+        font-size: 12.5px;
     }
 
     .table-container {
@@ -809,49 +883,121 @@ tr {
         min-width: 600px;
     }
 
-    .profile-dropdown {
-        top: 68px;
-        right: 12px;
-        width: min(290px, calc(100vw - 24px));
+    .modal-overlay {
+        padding: 12px;
     }
 
     .modal-box {
-        padding: 20px 16px;
-        max-width: calc(100vw - 28px);
+        padding: 14px 16px;
+        border-radius: 12px;
+        max-width: calc(100vw - 24px);
+        max-height: calc(100dvh - 24px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
+        overscroll-behavior: contain;
+    }
+
+    .modal-header {
+        margin-bottom: 12px;
+    }
+
+    .modal-header h3 {
+        font-size: 17px;
+    }
+
+    .modal-close {
+        width: 34px;
+        height: 34px;
+        min-width: 34px;
+        min-height: 34px;
+    }
+
+    .modal-body {
+        font-size: 13.5px;
+        line-height: 1.5;
+    }
+
+    #inquiryModal .modal-body > div {
+        gap: 12px !important;
+    }
+
+    #inquiryModal .modal-body > div > div:first-child {
+        padding: 12px 14px !important;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    #inquiryModal .modal-body > div > div:first-child strong {
+        font-size: 15px !important;
+    }
+
+    #inquiryModal .modal-body > div > div:first-child span:not(.status-badge) {
+        font-size: 12px !important;
+    }
+
+    #inquiryModal .status-badge {
+        min-width: 0;
+        width: auto;
+        height: 24px;
+        padding: 0 9px;
+        font-size: 11px;
+    }
+
+    #inquiryModal .modal-body > div > div[style*="grid-template-columns"] {
+        grid-template-columns: 1fr !important;
+        gap: 10px !important;
+        font-size: 13px !important;
+    }
+
+    #inquiryModal .modal-body .inquiry-message-box {
+        padding: 10px 12px !important;
+        font-size: 13.5px !important;
+        line-height: 1.5 !important;
+    }
+
+    #inquiryModal .modal-body > div > div:last-child {
+        flex-wrap: wrap !important;
+        gap: 8px !important;
+        padding-top: 12px !important;
+    }
+
+    #inquiryModal .modal-body .action-btn {
+        min-height: 38px !important;
+        padding: 8px 12px !important;
+        font-size: 13px !important;
+        flex: 1 1 auto;
     }
 }
 
 @media (max-width: 480px) {
+    .main-content {
+        padding: 14px 12px max(22px, env(safe-area-inset-bottom, 0px));
+    }
+
+    .page-header-lead h1 {
+        font-size: 20px;
+    }
+
     .stats-strip {
         grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 10px;
+        gap: 8px;
     }
 
     .stat-pill {
-        padding: 14px 16px;
+        padding: 10px 12px;
+        gap: 8px;
     }
 
     .stat-pill strong {
-        font-size: 1.35rem;
+        font-size: 20px;
     }
 
     .stat-pill-icon {
-        width: 38px;
-        height: 38px;
-    }
-
-    .admin-topbar {
-        padding: 8px 10px;
-    }
-
-    .logo-icon {
         width: 32px;
         height: 32px;
     }
 
-    .avatar-circle {
-        width: 36px;
-        height: 36px;
+    .stat-pill-icon svg {
+        width: 16px;
+        height: 16px;
     }
 }
 

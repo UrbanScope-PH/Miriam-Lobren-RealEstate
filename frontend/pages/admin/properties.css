@@ -682,42 +682,34 @@
         overflow-x: hidden;
     }
 
-    /* Topbar */
+    input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]):not([type="range"]):not([type="file"]),
+    select,
+    textarea {
+        font-size: 16px !important;
+    }
 
     .admin-topbar {
-        min-height: 64px;
-        height: auto;
-
-        padding: 10px 14px;
+        min-height: calc(56px + env(safe-area-inset-top, 0px));
+        height: calc(56px + env(safe-area-inset-top, 0px));
+        padding: env(safe-area-inset-top, 0px) max(12px, env(safe-area-inset-right, 0px)) 0 max(12px, env(safe-area-inset-left, 0px));
         gap: 8px;
     }
 
     .topbar-left {
-        flex: 1 1 auto;
-        min-width: 0;
         gap: 8px;
     }
 
-    .brand-badge {
-        gap: 7px;
-        min-width: 0;
-    }
-
     .logo-icon {
-        width: 34px;
-        height: 34px;
-    }
-
-    .brand-text {
-        white-space: nowrap;
+        width: 29px;
+        height: 29px;
     }
 
     .brand-text h1 {
-        font-size: 15px;
+        font-size: 14px;
     }
 
     .brand-text h2 {
-        font-size: 10px;
+        font-size: 8.5px;
     }
 
     .topbar-search {
@@ -725,32 +717,11 @@
     }
 
     .topbar-right {
-        flex: 0 0 auto;
-        gap: 5px;
-    }
-
-    .notif-btn {
-        padding: 7px;
-    }
-
-    .avatar-circle {
-        width: 38px;
-        height: 38px;
-        min-width: 38px;
-    }
-
-    .admin-profile-badge {
-        gap: 5px;
-        padding: 4px;
+        gap: 6px;
     }
 
     .admin-profile-badge .user-meta {
         display: none;
-    }
-
-    .profile-chevron {
-        width: 14px;
-        height: 14px;
     }
 
     /* Main content */
@@ -768,7 +739,7 @@
         min-width: 0;
 
         margin: 0;
-        padding: 22px 16px;
+        padding: 16px 14px max(24px, env(safe-area-inset-bottom, 0px));
     }
 
     /* Heading */
@@ -778,8 +749,8 @@
         flex-direction: column;
         align-items: flex-start;
 
-        gap: 12px;
-        margin-bottom: 20px;
+        gap: 10px;
+        margin-bottom: 14px;
     }
 
     .page-header > div {
@@ -787,18 +758,22 @@
     }
 
     .page-header h1 {
-        font-size: 24px;
-        line-height: 1.3;
+        font-size: 21px;
+        line-height: 1.25;
+        margin-bottom: 4px;
     }
 
     .page-header p {
-        font-size: 13px;
-        line-height: 1.6;
+        font-size: 13.5px;
+        line-height: 1.5;
     }
 
     .add-btn {
         width: 100%;
-        min-height: 42px;
+        min-height: 40px;
+        padding: 9px 14px;
+        font-size: 13.5px;
+        border-radius: 10px;
     }
 
     /* Search and filters */
@@ -809,28 +784,33 @@
         align-items: stretch;
 
         width: 100%;
-        gap: 10px;
+        gap: 8px;
 
-        padding: 14px;
-        margin-bottom: 16px;
+        padding: 12px;
+        margin-bottom: 14px;
+        border-radius: 12px;
     }
 
     .search-box {
         width: 100%;
-        min-height: 44px;
+        min-height: 38px;
+        height: 38px;
+        padding: 0 11px;
     }
 
     .search-box input {
         width: 100%;
         min-width: 0;
-        font-size: 13px;
+        height: 36px;
+        padding: 6px 4px;
     }
 
     .status-filter {
         flex: 0 0 auto;
-
         width: 100%;
-        height: 44px;
+        height: 38px;
+        min-height: 38px;
+        padding: 0 11px;
     }
 
     /* Property card */
@@ -838,14 +818,15 @@
     .property-card {
         width: 100%;
         min-width: 0;
+        border-radius: 12px;
     }
 
     .card-header {
-        padding: 16px;
+        padding: 12px 14px;
     }
 
     .card-header h2 {
-        font-size: 17px;
+        font-size: 16.5px;
     }
 
     .card-header p {
@@ -867,10 +848,10 @@
         min-width: 850px;
         table-layout: auto;
     }
-    
+
     .table-container th,
     .table-container td {
-        padding: 12px 10px;
+        padding: 11px 10px;
         font-size: 12px;
         white-space: nowrap;
     }
@@ -880,20 +861,62 @@
     }
 
     .property-image {
-        flex: 0 0 58px;
-        width: 58px;
-        height: 50px;
+        flex: 0 0 54px;
+        width: 54px;
+        height: 46px;
     }
 
-    /* Profile dropdown */
+    .delete-modal {
+        padding: 12px;
+    }
 
-    .profile-dropdown {
-        position: fixed;
-        top: 76px;
-        right: 10px;
+    .delete-modal-content {
+        padding: 16px;
+        border-radius: 12px;
+        max-height: calc(100dvh - 24px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
+        overflow-y: auto;
+        overscroll-behavior: contain;
+    }
 
-        width: calc(100vw - 20px);
-        max-width: 320px;
+    .delete-icon {
+        width: 44px;
+        height: 44px;
+        margin-bottom: 12px;
+        font-size: 20px;
+    }
+
+    .delete-modal-content h2 {
+        font-size: 17.5px;
+        margin-bottom: 8px;
+    }
+
+    .delete-modal-content p {
+        font-size: 13.5px;
+        line-height: 1.5;
+    }
+
+    .delete-warning {
+        font-size: 12px;
+        margin-bottom: 16px;
+    }
+
+    .delete-actions {
+        flex-direction: column-reverse;
+        gap: 8px;
+    }
+
+    .cancel-delete {
+        width: 100%;
+        min-height: 38px;
+        padding: 8px 12px;
+        font-size: 13px;
+    }
+
+    .confirm-delete {
+        width: 100%;
+        min-height: 40px;
+        padding: 9px 14px;
+        font-size: 13.5px;
     }
 }
 
@@ -903,104 +926,43 @@
 
 @media (max-width: 430px) {
     .admin-topbar {
-        padding-inline: 10px;
-        gap: 5px;
-    }
-
-    .topbar-left {
-        gap: 5px;
-    }
-
-    .hamburger-btn {
-        padding: 5px;
+        min-height: calc(54px + env(safe-area-inset-top, 0px));
+        height: calc(54px + env(safe-area-inset-top, 0px));
+        padding: env(safe-area-inset-top, 0px) max(10px, env(safe-area-inset-right, 0px)) 0 max(10px, env(safe-area-inset-left, 0px));
+        gap: 6px;
     }
 
     .logo-icon {
-        width: 29px;
-        height: 29px;
-    }
-
-    .brand-badge {
-        gap: 5px;
+        width: 28px;
+        height: 28px;
     }
 
     .brand-text h1 {
-        font-size: 13px;
+        font-size: 14px;
     }
 
     .brand-text h2 {
-        font-size: 9px;
-    }
-
-    .topbar-right {
-        gap: 3px;
-    }
-
-    .notif-btn {
-        padding: 6px;
-    }
-
-    .avatar-circle {
-        width: 34px;
-        height: 34px;
-        min-width: 34px;
-    }
-
-    .profile-chevron {
-        width: 12px;
-        height: 12px;
+        font-size: 8px;
     }
 
     .content {
-        padding: 18px 12px;
+        padding: 14px 12px max(22px, env(safe-area-inset-bottom, 0px));
     }
 
     .page-header h1 {
-        font-size: 22px;
+        font-size: 20px;
     }
 
     .page-header p {
-        font-size: 12px;
+        font-size: 13px;
     }
 
     .property-tools {
-        padding: 12px;
+        padding: 10px 12px;
     }
 
     .card-header {
-        padding: 14px;
-    }
-
-    .delete-modal {
-        padding: 14px;
-    }
-
-    .delete-modal-content {
-        padding: 25px 20px;
-    }
-
-    .delete-actions {
-        flex-direction: column-reverse;
-    }
-
-    .cancel-delete,
-    .confirm-delete {
-        width: 100%;
-    }
-
-    .profile-dropdown {
-        top: 70px;
-        right: 8px;
-
-        width: calc(100vw - 16px);
-        max-width: 320px;
-
         padding: 12px;
-    }
-
-    .profile-dropdown a {
-        min-height: 44px;
-        font-size: 14px;
     }
 }
 
@@ -1074,6 +1036,20 @@
 
 .action-btn {
     border-radius: 8px;
+}
+
+@media (max-width: 768px) {
+    .add-property-btn {
+        min-height: 40px;
+        padding: 9px 14px;
+        font-size: 13.5px;
+        border-radius: 10px !important;
+    }
+
+    .properties-table-container,
+    .table-panel {
+        border-radius: 12px;
+    }
 }
 
 /* ==========================================================================
