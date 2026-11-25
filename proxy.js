@@ -1,19 +1,24 @@
 import { next } from '@vercel/functions';
-import { clearAdminSessionCookie, readAdminSession } from './lib/admin-session.js';
+import { clearAdminSessionCookie, isMainAdminEmail, readAdminSession } from './lib/admin-session.js';
 
-const SUPERADMIN_EMAIL = 'urbanscope.cvsu@gmail.com';
 const SUPPORT_ASSET = /\.(?:css|js|map|png|jpe?g|svg|ico|webp|gif|woff2?|ttf|otf)$/i;
 
 function routeKind(pathname) {
     const path = pathname.replace(/\/+$/, '') || '/';
-    if (path === '/pages/superadmin' || path.startsWith('/pages/superadmin/') ||
-        path === '/frontend/pages/superadmin' || path.startsWith('/frontend/pages/superadmin/') ||
-        path === '/superadmin' || path.startsWith('/superadmin/')) {
+    const lower = path.toLowerCase();
+    if (lower === '/pages/superadmin' || lower.startsWith('/pages/superadmin/') ||
+        lower === '/frontend/pages/superadmin' || lower.startsWith('/frontend/pages/superadmin/') ||
+        lower === '/superadmin' || lower.startsWith('/superadmin/')) {
         return 'superadmin';
     }
-    if (path === '/pages/admin' || path.startsWith('/pages/admin/') ||
-        path === '/frontend/pages/admin' || path.startsWith('/frontend/pages/admin/') ||
-        path === '/admin' || path.startsWith('/admin/')) {
+    if (lower === '/pages/admin/users.html' ||
+        lower === '/frontend/pages/admin/users.html' ||
+        lower === '/admin/users.html') {
+        return 'rbac';
+    }
+    if (lower === '/pages/admin' || lower.startsWith('/pages/admin/') ||
+        lower === '/frontend/pages/admin' || lower.startsWith('/frontend/pages/admin/') ||
+        lower === '/admin' || lower.startsWith('/admin/')) {
         return 'admin';
     }
     return null;
@@ -82,9 +87,19 @@ export default async function proxy(request) {
     }
 
     if (kind === 'superadmin') {
+        const destination = isMainAdminEmail(session.email)
+            ? '/pages/admin/users.html'
+            : '/pages/admin/dashboard.html';
         return new Response(null, {
             status: 302,
-            headers: { Location: '/pages/admin/users.html', 'Cache-Control': 'private, no-store, max-age=0' }
+            headers: { Location: destination, 'Cache-Control': 'private, no-store, max-age=0' }
+        });
+    }
+
+    if (kind === 'rbac' && !isMainAdminEmail(session.email)) {
+        return new Response(null, {
+            status: 302,
+            headers: { Location: '/pages/admin/dashboard.html', 'Cache-Control': 'private, no-store, max-age=0' }
         });
     }
 

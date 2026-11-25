@@ -10,7 +10,7 @@ import {
     parseJsonBody,
     updateCloudUserById
 } from '../../lib/email-auth.js';
-import { SUPERADMIN_EMAIL } from '../../lib/admin-session.js';
+import { isMainAdminEmail, MAIN_ADMIN_EMAIL, SUPERADMIN_EMAIL } from '../../lib/admin-session.js';
 import {
     checkRateLimit,
     getClientIp,
@@ -34,6 +34,13 @@ export default async function handler(req, res) {
             adminCheck.status === 503 ? 503 : 403,
             res,
             adminCheck.clearCookies?.length ? { cookies: adminCheck.clearCookies } : undefined
+        );
+    }
+    if (!isMainAdminEmail(adminCheck.session?.email)) {
+        return jsonWithCookies(
+            { success: false, error: 'Accounts & Roles management is restricted to the main administrator.' },
+            403,
+            res
         );
     }
 
@@ -120,6 +127,9 @@ export default async function handler(req, res) {
             const nextRole = payload.role === undefined ? target.role : role;
             if (targetEmail === SUPERADMIN_EMAIL && (nextEmail !== SUPERADMIN_EMAIL || nextRole !== 'superadmin')) {
                 return jsonResponse({ success: false, error: 'The root Superadmin account cannot be renamed or demoted.' }, 400, res);
+            }
+            if (targetEmail === MAIN_ADMIN_EMAIL && (nextEmail !== MAIN_ADMIN_EMAIL || !['admin', 'superadmin'].includes(String(nextRole || '').toLowerCase()))) {
+                return jsonResponse({ success: false, error: 'The main administrator account cannot be renamed or demoted.' }, 400, res);
             }
             if (nextEmail !== targetEmail) {
                 const duplicate = await getCloudUser(nextEmail);

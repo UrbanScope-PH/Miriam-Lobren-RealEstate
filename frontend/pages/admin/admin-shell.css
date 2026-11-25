@@ -659,6 +659,15 @@ input:focus-visible {
     color: var(--sidebar-active-edge);
 }
 
+/* Accounts & Roles (RBAC) is strictly visible to the main admin (miriamalobren@gmail.com) */
+.admin-sidebar a.nav-item[href$="users.html"] {
+    display: none !important;
+}
+
+html[data-rbac-access="true"] .admin-sidebar a.nav-item[href$="users.html"] {
+    display: flex !important;
+}
+
 .sidebar-footer {
     margin-top: 24px;
     padding-top: 18px;

@@ -13,6 +13,7 @@ from backend.auth import (
     AUTHORIZED_ADMIN_ROLES,
     AUTHORIZED_SUPERADMIN_EMAILS,
     decode_access_token,
+    is_main_admin_email,
 )
 from backend.database import get_db_connection
 
@@ -266,22 +267,26 @@ async def rbac_admin_guard_middleware(request: Request, call_next):
                 if user_role in AUTHORIZED_ADMIN_ROLES or user_email in AUTHORIZED_ADMIN_EMAILS or user_email in AUTHORIZED_SUPERADMIN_EMAILS:
                     return RedirectResponse(url="/pages/admin/dashboard.html", status_code=status.HTTP_302_FOUND)
 
-    # Check if request targets legacy superadmin portal page -> redirect to Admin Accounts & Roles
+    # Check if request targets legacy superadmin routes or Admin Accounts & Roles RBAC page
+    lower_path = path.rstrip("/").lower() or "/"
     is_superadmin_path = (
-        path == "/superadmin" or
-        path.startswith("/superadmin/") or
-        path == "/pages/superadmin" or
-        path.startswith("/pages/superadmin/")
+        lower_path == "/superadmin" or
+        lower_path.startswith("/superadmin/") or
+        lower_path == "/pages/superadmin" or
+        lower_path.startswith("/pages/superadmin/")
     )
-    if is_superadmin_path:
-        return RedirectResponse(url="/pages/admin/users.html", status_code=status.HTTP_302_FOUND)
+    is_rbac_users_path = lower_path in (
+        "/pages/admin/users.html",
+        "/admin/users.html",
+        "/frontend/pages/admin/users.html",
+    )
 
     # Check if request targets an admin portal page
     is_admin_path = (
-        path == "/admin" or
-        path.startswith("/admin/") or
-        path == "/pages/admin" or
-        path.startswith("/pages/admin/")
+        lower_path == "/admin" or
+        lower_path.startswith("/admin/") or
+        lower_path == "/pages/admin" or
+        lower_path.startswith("/pages/admin/")
     )
 
     if is_superadmin_path or is_admin_path:
@@ -315,23 +320,21 @@ async def rbac_admin_guard_middleware(request: Request, call_next):
                 return RedirectResponse(url=login_redirect, status_code=status.HTTP_302_FOUND)
 
             user_email, user_role = user_info
+            is_authorized_admin = (
+                user_role in AUTHORIZED_ADMIN_ROLES or
+                user_email in AUTHORIZED_ADMIN_EMAILS
+            )
 
             # 2. Strict Role Checks:
-            if is_superadmin_path:
-                is_authorized_superadmin = (
-                    user_email in AUTHORIZED_SUPERADMIN_EMAILS and
-                    user_role == "superadmin"
-                )
-                if not is_authorized_superadmin:
-                    return HTMLResponse(content=FORBIDDEN_SUPERADMIN_HTML, status_code=status.HTTP_403_FORBIDDEN)
+            if not is_authorized_admin:
+                return HTMLResponse(content=FORBIDDEN_HTML, status_code=status.HTTP_403_FORBIDDEN)
 
-            elif is_admin_path:
-                is_authorized_admin = (
-                    user_role in AUTHORIZED_ADMIN_ROLES or
-                    user_email in AUTHORIZED_ADMIN_EMAILS
-                )
-                if not is_authorized_admin:
-                    return HTMLResponse(content=FORBIDDEN_HTML, status_code=status.HTTP_403_FORBIDDEN)
+            if is_superadmin_path:
+                target = "/pages/admin/users.html" if is_main_admin_email(user_email) else "/pages/admin/dashboard.html"
+                return RedirectResponse(url=target, status_code=status.HTTP_302_FOUND)
+
+            if is_rbac_users_path and not is_main_admin_email(user_email):
+                return RedirectResponse(url="/pages/admin/dashboard.html", status_code=status.HTTP_302_FOUND)
 
     response = await call_next(request)
     return response

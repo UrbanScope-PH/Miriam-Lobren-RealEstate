@@ -398,10 +398,30 @@ def require_admin(user: Optional[dict] = Depends(get_current_user_from_request))
 
 
 AUTHORIZED_SUPERADMIN_EMAILS = {"urbanscope.cvsu@gmail.com"}
+MAIN_ADMIN_EMAIL = "miriamalobren@gmail.com"
+
+
+def is_main_admin_email(email: Optional[str]) -> bool:
+    """Returns True only for the designated main administrator (miriamalobren@gmail.com)."""
+    return (email or "").strip().lower() == MAIN_ADMIN_EMAIL
+
+
+def require_main_admin(user: Optional[dict] = Depends(get_current_user_from_request)) -> dict:
+    """
+    Strict server-side RBAC guard: Accounts & Roles management is restricted
+    exclusively to the main administrator account (miriamalobren@gmail.com).
+    """
+    admin_user = require_admin(user)
+    if not is_main_admin_email(admin_user.get("email")):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Forbidden: Accounts & Roles management is restricted to the main administrator."
+        )
+    return admin_user
 
 
 def require_superadmin(user: Optional[dict] = Depends(get_current_user_from_request)) -> dict:
     """
-    Delegates to require_admin now that Accounts & Roles RBAC governance lives in the Admin portal.
+    Delegates RBAC governance endpoints exclusively to the main administrator.
     """
-    return require_admin(user)
+    return require_main_admin(user)
