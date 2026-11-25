@@ -285,6 +285,16 @@ img, video, canvas, svg {
     align-items: start;
 }
 
+.footer-top:has(> :nth-child(4)) {
+    max-width: 1360px;
+    grid-template-columns: minmax(220px, 322px) auto auto auto;
+    gap: 28px;
+}
+
+.footer:has(.footer-top > :nth-child(4)) .footer-bottom {
+    max-width: 1360px;
+}
+
 .footer h3 {
     font-size: 18px;
     font-weight: 700;
@@ -344,6 +354,29 @@ img, video, canvas, svg {
     min-width: 0;
     overflow-wrap: anywhere;
     word-break: break-word;
+}
+
+.footer-contact-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.footer-contact-info p {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: rgba(255, 255, 255, 0.85);
+    font-size: 14.5px;
+    line-height: 1.4;
+    margin-bottom: 9px;
+}
+
+.footer-contact-info p:last-child {
+    margin-bottom: 0;
+}
+
+.footer-contact-info svg {
+    flex-shrink: 0;
 }
 
 .footer-bottom {
@@ -479,7 +512,8 @@ img, video, canvas, svg {
         gap: 18px;
     }
 
-    .footer-top {
+    .footer-top,
+    .footer-top:has(> :nth-child(4)) {
         grid-template-columns: 1fr;
         justify-content: stretch;
         gap: 22px;
@@ -1083,7 +1117,9 @@ html.dark-mode .badge-status-review {
     }
 
     .footer-top,
-    .footer-bottom {
+    .footer-top:has(> :nth-child(4)),
+    .footer-bottom,
+    .footer:has(.footer-top > :nth-child(4)) .footer-bottom {
         max-width: 1920px;
         padding-left: 3.5%;
         padding-right: max(3.5%, 108px);

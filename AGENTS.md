@@ -1523,6 +1523,8 @@ path when rendering from a page.
 
 165. **Auth Form Footer Link Styling (`frontend/pages/auth/auth.css`):** Added explicit `.form-footer-links a` and `:visited` / `:hover` rules for both Light Mode (`var(--text-muted)` → `var(--green)` on hover) and Dark Mode (`var(--text-secondary)` → `var(--green)` on hover) with `text-decoration: none` at rest, eliminating default browser unvisited-blue and visited-violet link styling on `Home • Privacy Policy • Terms of Service` across `login.html`, `register.html`, and `forgot-password.html`.
 
+166. **4-Column Property Page Footer Layout & Contact Icon Spacing (`frontend/shared/css/common.css`):** Added `.footer-top:has(> :nth-child(4))` 4-column grid support (`minmax(220px, 322px) auto auto auto`, `max-width: 1360px` / `1920px` at `>= 1600px`) across `property-detail.html` and all 7 property showcase pages so all 4 columns (`Miriam Lobren`, vertical `QUICK LINKS`, vertical `FEATURED HOMES`, and `CONTACT`) stay on one single horizontal row instead of wrapping `CONTACT` onto a second row, and added `.footer-contact-info` flex icon/text gap (`10px`) styling to match the homepage footer.
+
 ## Safety Rules
 
 - Do **not** commit `backend/urbanscope.db`, `.env`, or virtualenvs (already in `.gitignore`).
