@@ -1495,6 +1495,8 @@ path when rendering from a page.
 
 159. **Removal of Global Desktop `zoom: 1.25` Scaling (`frontend/shared/css/common.css`, `mobile-shell.css`, `frontend/pages/admin/admin-shell.css`, `frontend/pages/auth/auth.css`, `frontend/pages/inquiry/inquiry.css`):** Removed `html { zoom: 1.25; }` and the corresponding tablet/mobile `zoom: 1` reset overrides across public, auth, inquiry, and admin stylesheets so desktop renders at native `1:1` (`100%`) scale without compounding OS display scaling or snapping abruptly at `<= 1024px` (superseding Note #89). Floating menu coordinate normalizers in `admin-shell.js` and `clients.js` read computed `zoom` dynamically and continue operating at `1`.
 
+160. **Homepage Search Bar Non-Clickable Custom-Select Field Labels (`frontend/index.html`, `frontend/index.css`, `frontend/index.js`, `frontend/shared/css/session.css`):** Replaced `<label>` wrappers around the three custom-select search fields (`Property Type`, `Location`, `Sort By`) in `#propertySearch` with non-interactive `<div class="search-field">` containers (retaining `<label class="keyword">` for the text input), set `cursor: default` and `pointer-events: none` on `.search-bar .search-field .search-field-label`, and updated `initSearchSelect()` to mark the hidden native `<select>` with `tabIndex = -1` and `aria-hidden="true"` while wiring `aria-labelledby` onto `.search-select-trigger`. Prevents clicking field headings like `Property Type` from activating the hidden native OS `<select>` popup while keeping the custom dropdown trigger interactive.
+
 ## Safety Rules
 
 - Do **not** commit `backend/urbanscope.db`, `.env`, or virtualenvs (already in `.gitignore`).

@@ -764,6 +764,8 @@ function initSearchSelect(selectEl) {
     selectEl.dataset.searchSelectInitialized = 'true';
 
     selectEl.classList.add('search-select-source');
+    selectEl.tabIndex = -1;
+    selectEl.setAttribute('aria-hidden', 'true');
 
     const wrap = document.createElement('div');
     wrap.className = 'search-select-wrap';
@@ -778,6 +780,18 @@ function initSearchSelect(selectEl) {
 
     const valueSpan = document.createElement('span');
     valueSpan.className = 'search-select-value';
+
+    if (selectEl.id) {
+        valueSpan.id = `${selectEl.id}Value`;
+        const labelEl = document.getElementById(`${selectEl.id}Label`);
+        if (labelEl) {
+            trigger.setAttribute('aria-labelledby', `${labelEl.id} ${valueSpan.id}`);
+        } else if (selectEl.getAttribute('aria-label')) {
+            trigger.setAttribute('aria-label', selectEl.getAttribute('aria-label'));
+        }
+    } else if (selectEl.getAttribute('aria-label')) {
+        trigger.setAttribute('aria-label', selectEl.getAttribute('aria-label'));
+    }
 
     const arrowSpan = document.createElement('span');
     arrowSpan.className = 'search-select-arrow';

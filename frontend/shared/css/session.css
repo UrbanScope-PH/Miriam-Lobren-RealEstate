@@ -898,6 +898,7 @@ html.dark-mode .search-bar {
     box-shadow: var(--shadow-lg);
 }
 
+html.dark-mode .search-bar .search-field,
 html.dark-mode .search-bar label {
     border-right-color: var(--border-color);
     color: var(--text-muted);
