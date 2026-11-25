@@ -751,6 +751,21 @@ body {
     font-size: 10.5px;
 }
 
+.form-footer-links a,
+.form-footer-links a:visited {
+    color: var(--text-muted);
+    text-decoration: none;
+    font-weight: 600;
+    transition: color 0.2s ease;
+}
+
+@media (hover: hover) and (pointer: fine) {
+    .form-footer-links a:hover {
+        color: var(--green);
+        text-decoration: underline;
+    }
+}
+
 .register-prompt a {
     text-decoration: none;
     color: var(--brand-primary-green);
@@ -2347,6 +2362,18 @@ html.dark-mode .btn-google {
 
 html.dark-mode .form-footer {
     border-top-color: var(--border-color);
+}
+
+html.dark-mode .form-footer-links a,
+html.dark-mode .form-footer-links a:visited {
+    color: var(--text-secondary);
+}
+
+@media (hover: hover) and (pointer: fine) {
+    html.dark-mode .form-footer-links a:hover {
+        color: var(--green);
+        text-decoration: underline;
+    }
 }
 
 @media (hover: hover) and (pointer: fine) {

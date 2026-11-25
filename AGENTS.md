@@ -1521,6 +1521,8 @@ path when rendering from a page.
 
 164. **Compact, Vertically Balanced Site Footer & Floating FAB Clearance (`frontend/shared/css/common.css`):** Flattened `.footer` height across all public pages by tightening `.footer-top` (`padding: 28px max(5%, 108px) 22px 5%`, `grid-template-columns: minmax(260px, 330px) auto auto; justify-content: space-between;`), `.footer-bottom` (`padding: 14px max(5%, 108px) 18px 5%`, and `padding-right: max(3.5%, 108px)` at `>= 1600px`), vertical `.footer-links-column ul` (`gap: 6px`), and social icon sizing (`32px`), with uniform footer typography across all three columns (`.footer h3` `18px`, justified 4-line `.footer-about p` `14.5px` / `max-width: 322px`, links/contact `14.5px`). Aligns all three columns cleanly with the bottom copyright/socials/legal row while reserving `108px` right clearance on desktop so `Terms of Service` and `CONTACT` never collide with the fixed `.contact-fab` (`right: 24px`, `56px` wide) or `.back-to-top-btn`.
 
+165. **Auth Form Footer Link Styling (`frontend/pages/auth/auth.css`):** Added explicit `.form-footer-links a` and `:visited` / `:hover` rules for both Light Mode (`var(--text-muted)` → `var(--green)` on hover) and Dark Mode (`var(--text-secondary)` → `var(--green)` on hover) with `text-decoration: none` at rest, eliminating default browser unvisited-blue and visited-violet link styling on `Home • Privacy Policy • Terms of Service` across `login.html`, `register.html`, and `forgot-password.html`.
+
 ## Safety Rules
 
 - Do **not** commit `backend/urbanscope.db`, `.env`, or virtualenvs (already in `.gitignore`).
