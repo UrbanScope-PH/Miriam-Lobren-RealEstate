@@ -109,13 +109,15 @@ if (loginForm) {
                     role === 'superadmin'
                 );
 
-                if (isAdminUser && typeof apiCreateHostedAdminSession === 'function') {
-                    const hostedSession = await apiCreateHostedAdminSession({ email: cleanEmail, password });
-                    if (!hostedSession.success) {
-                        throw new Error(hostedSession.error || 'Unable to secure this admin session.');
+                if (isAdminUser && !res.data?.admin_session_ready) {
+                    if (typeof apiCreateHostedAdminSession === 'function') {
+                        const hostedSession = await apiCreateHostedAdminSession({ email: cleanEmail, password });
+                        if (!hostedSession.success) {
+                            throw new Error(hostedSession.error || 'Unable to secure this admin session.');
+                        }
+                    } else if (!isLocalLoginHost()) {
+                        throw new Error('Admin session service is unavailable. Please try again later.');
                     }
-                } else if (isAdminUser && !isLocalLoginHost()) {
-                    throw new Error('Admin session service is unavailable. Please try again later.');
                 }
 
                 // Relative paths so this works from both the FastAPI server and Live Server

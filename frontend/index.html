@@ -109,8 +109,8 @@
             <!-- FLOATING SEARCH BAR -->
             <form class="search-bar" id="propertySearch" action="#properties" method="GET"
                 onsubmit="event.preventDefault();">
-                <label>
-                    <span class="search-field-label">Property Type</span>
+                <div class="search-field">
+                    <span class="search-field-label" id="typeFilterLabel">Property Type</span>
                     <select id="typeFilter" name="type" aria-label="Property Type">
                         <option value="all">All Property Types</option>
                         <option value="townhouse">Townhouses</option>
@@ -118,10 +118,10 @@
                         <option value="house-lot">House &amp; Lot</option>
                         <option value="condominium">Condominium</option>
                     </select>
-                </label>
+                </div>
 
-                <label>
-                    <span class="search-field-label">Location</span>
+                <div class="search-field">
+                    <span class="search-field-label" id="locationFilterLabel">Location</span>
                     <select id="locationFilter" name="location" aria-label="Location">
                         <option value="all">All Locations</option>
                         <option value="las-pinas">Las Piñas City</option>
@@ -130,17 +130,17 @@
                         <option value="trece-martires">Trece Martires City, Cavite</option>
                         <option value="dasmarinas">Dasmariñas, Cavite</option>
                     </select>
-                </label>
+                </div>
 
-                <label class="sort-field">
-                    <span class="search-field-label">Sort By</span>
+                <div class="search-field sort-field">
+                    <span class="search-field-label" id="homeSortSelectLabel">Sort By</span>
                     <select id="homeSortSelect" name="sort" aria-label="Sort by">
                         <option value="featured">Featured</option>
                         <option value="newest">Newest First</option>
                         <option value="price-low">Price: Low to High</option>
                         <option value="price-high">Price: High to Low</option>
                     </select>
-                </label>
+                </div>
 
                 <label class="keyword">
                     <span class="search-field-label">Search Keywords</span>

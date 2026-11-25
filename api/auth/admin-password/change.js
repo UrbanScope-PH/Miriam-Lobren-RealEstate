@@ -7,9 +7,7 @@ import {
     updateCloudUser
 } from '../../../lib/email-auth.js';
 import {
-    createAdminSessionToken,
-    isAuthorizedAdminRole,
-    readAdminSession
+    createAdminSessionToken
 } from '../../../lib/admin-session.js';
 import {
     buildSessionCookieHeaders,
@@ -20,6 +18,7 @@ import {
     getServiceRoleKey,
     jsonWithCookies,
     verifyCsrfIfAuthenticated,
+    verifyLiveAdminSession,
     verifyPBKDF2Password
 } from '../../../lib/server-security.js';
 
@@ -27,14 +26,20 @@ export default async function handler(req, res) {
     if (req.method !== 'POST') return jsonResponse({ success: false, error: 'Method not allowed.' }, 405, res);
     if (!verifyCsrfIfAuthenticated(req)) return jsonResponse({ success: false, error: 'This request is not allowed.' }, 403, res);
 
-    const session = readAdminSession(req);
-    if (!session || !isAuthorizedAdminRole(session.email, session.role)) {
-        return jsonResponse({ success: false, error: 'A valid admin session is required.' }, 401, res);
-    }
-
     if (!getServiceRoleKey()) {
         return jsonResponse({ success: false, error: 'Server database credentials are not configured.' }, 503, res);
     }
+
+    const adminCheck = await verifyLiveAdminSession(req);
+    if (!adminCheck.ok || !adminCheck.session) {
+        return jsonWithCookies(
+            { success: false, error: adminCheck.error || 'A valid admin session is required.' },
+            adminCheck.status === 503 ? 503 : 401,
+            res,
+            adminCheck.clearCookies?.length ? { cookies: adminCheck.clearCookies } : undefined
+        );
+    }
+    const session = adminCheck.session;
 
     const ip = getClientIp(req);
     const cleanEmail = normalizeEmail(session.email);

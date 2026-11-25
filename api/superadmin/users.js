@@ -10,24 +10,31 @@ import {
     parseJsonBody,
     updateCloudUserById
 } from '../../lib/email-auth.js';
-import { isAuthorizedAdminRole, readAdminSession, SUPERADMIN_EMAIL } from '../../lib/admin-session.js';
+import { SUPERADMIN_EMAIL } from '../../lib/admin-session.js';
 import {
     checkRateLimit,
     getClientIp,
     getServiceRoleKey,
+    jsonWithCookies,
     restUrl,
     sanitizeUser,
     serviceHeaders,
-    verifyCsrfIfAuthenticated
+    verifyCsrfIfAuthenticated,
+    verifyLiveAdminSession
 } from '../../lib/server-security.js';
 
 export default async function handler(req, res) {
-    const session = readAdminSession(req);
-    if (!session || !isAuthorizedAdminRole(session.email, session.role)) {
-        return jsonResponse({ success: false, error: 'Only authorized administrators can manage accounts.' }, 403, res);
-    }
     if (!getServiceRoleKey()) {
         return jsonResponse({ success: false, error: 'Cloud account management is not configured.' }, 503, res);
+    }
+    const adminCheck = await verifyLiveAdminSession(req);
+    if (!adminCheck.ok) {
+        return jsonWithCookies(
+            { success: false, error: adminCheck.error || 'Only authorized administrators can manage accounts.' },
+            adminCheck.status === 503 ? 503 : 403,
+            res,
+            adminCheck.clearCookies?.length ? { cookies: adminCheck.clearCookies } : undefined
+        );
     }
 
     if (req.method === 'GET') {
@@ -63,7 +70,8 @@ export default async function handler(req, res) {
     const email = normalizeEmail(payload.email);
     const fullName = payload.full_name === undefined ? '' : String(payload.full_name).trim();
     const phone = payload.phone === undefined ? '' : String(payload.phone).trim();
-    const role = String(payload.role || 'user').trim().toLowerCase();
+    const rawRole = String(payload.role || 'user').trim().toLowerCase();
+    const role = rawRole === 'client' ? 'user' : rawRole;
     const password = String(payload.password || '');
 
     try {

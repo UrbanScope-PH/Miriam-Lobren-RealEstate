@@ -14,7 +14,7 @@ from datetime import datetime, timezone
 
 from fastapi import APIRouter, Depends, HTTPException
 
-from backend.auth import AUTHORIZED_ADMIN_EMAILS, hash_password, require_admin, require_superadmin
+from backend.auth import hash_password, require_admin, require_superadmin
 from backend.database import DB_PATH, get_db_connection, row_to_dict
 from backend.models import SuperadminCreateUser, SuperadminUpdateUser, UserRoleUpdate
 from backend.routers.auth import (
@@ -111,8 +111,6 @@ def _pull_supabase_users_to_sqlite(force: bool = False) -> None:
             new_id = cursor.lastrowid
             # Re-apply role after trg_user_role_insert in case remote account was promoted to admin
             cursor.execute("UPDATE users SET role = ? WHERE id = ?", (norm_role, new_id))
-            if norm_role == "admin":
-                AUTHORIZED_ADMIN_EMAILS.add(clean_email)
             local_emails.add(clean_email)
             inserted_any = True
 
@@ -511,9 +509,6 @@ def update_user_role(user_id: int, payload: UserRoleUpdate, current_superadmin: 
     updated_user = row_to_dict(cursor.fetchone())
     conn.close()
 
-    if target_role == "admin":
-        AUTHORIZED_ADMIN_EMAILS.add(target_email)
-
     _sync_update_user_to_supabase(target_email, {"role": target_role})
 
     return {"success": True, "message": f"Role updated to '{target_role}'", "user": updated_user}
@@ -602,9 +597,6 @@ def superadmin_update_user(user_id: int, payload: SuperadminUpdateUser, current_
     updated_user = sanitize_user_dict(row_to_dict(cursor.fetchone()))
     conn.close()
 
-    if updated_user and updated_user.get("role") == "admin" and updated_user.get("email"):
-        AUTHORIZED_ADMIN_EMAILS.add(updated_user["email"].lower().strip())
-
     if cloud_patch:
         _sync_update_user_to_supabase(target_email, cloud_patch)
     elif new_pwd_hash and updated_user and updated_user.get("email"):
@@ -655,9 +647,6 @@ def superadmin_create_user(payload: SuperadminCreateUser, current_superadmin: di
     cursor.execute("SELECT id, email, full_name, phone, role, created_at FROM users WHERE id = ?", (new_id,))
     new_user = sanitize_user_dict(row_to_dict(cursor.fetchone()))
     conn.close()
-
-    if assigned_role == "admin":
-        AUTHORIZED_ADMIN_EMAILS.add(clean_email)
 
     _sync_create_user_to_supabase(clean_email, password_hash, clean_name, clean_phone, assigned_role)
 

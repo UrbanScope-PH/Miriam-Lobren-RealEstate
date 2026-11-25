@@ -3621,7 +3621,12 @@
             if (role === 'admin' || role === 'superadmin') {
                 localStorage.setItem('adminUser', JSON.stringify(sessionUser));
                 if (!isLocal) {
-                    await apiCreateHostedAdminSession({ email: cleanEmail, password: rawPassword }).catch(() => {});
+                    if (authRes.token) {
+                        try { localStorage.setItem('adminSessionToken', authRes.token); } catch (_) {}
+                    }
+                    if (!authRes.admin_session_ready) {
+                        await apiCreateHostedAdminSession({ email: cleanEmail, password: rawPassword }).catch(() => {});
+                    }
                 }
             } else {
                 localStorage.removeItem('adminUser');
@@ -3638,6 +3643,7 @@
                 data: {
                     user: sessionUser,
                     token: authRes.token || '',
+                    admin_session_ready: Boolean(isLocal || authRes.admin_session_ready),
                     redirect_url: redirectUrl
                 }
             };
@@ -3740,7 +3746,12 @@
             if (resolvedRole === 'admin' || resolvedRole === 'superadmin') {
                 localStorage.setItem('adminUser', JSON.stringify(sessionUser));
                 if (!isLocal) {
-                    await apiCreateHostedAdminSession({ credential: body.credential, access_token: body.access_token }).catch(() => {});
+                    if (authRes.token) {
+                        try { localStorage.setItem('adminSessionToken', authRes.token); } catch (_) {}
+                    }
+                    if (!authRes.admin_session_ready) {
+                        await apiCreateHostedAdminSession({ credential: body.credential, access_token: body.access_token }).catch(() => {});
+                    }
                 }
             } else {
                 localStorage.removeItem('adminUser');
@@ -3758,6 +3769,7 @@
                     session: true,
                     user: sessionUser,
                     token: authRes.token || '',
+                    admin_session_ready: Boolean(isLocal || authRes.admin_session_ready),
                     redirect_url: redirectUrl
                 }
             };
@@ -3832,7 +3844,12 @@
                 if (role === 'admin' || role === 'superadmin') {
                     localStorage.setItem('adminUser', JSON.stringify(sessionUser));
                     if (!isLocal) {
-                        await apiCreateHostedAdminSession({ credential: payload.credential, access_token: payload.access_token }).catch(() => {});
+                        if (authRes.token) {
+                            try { localStorage.setItem('adminSessionToken', authRes.token); } catch (_) {}
+                        }
+                        if (!authRes.admin_session_ready) {
+                            await apiCreateHostedAdminSession({ credential: payload.credential, access_token: payload.access_token }).catch(() => {});
+                        }
                     }
                 } else {
                     localStorage.removeItem('adminUser');
@@ -3843,6 +3860,7 @@
                         session: true,
                         user: sessionUser,
                         token: authRes.token || '',
+                        admin_session_ready: Boolean(isLocal || authRes.admin_session_ready),
                         redirect_url: authRes.redirect_url || ((role === 'admin' || role === 'superadmin') ? '/pages/admin/dashboard.html' : '/index.html')
                     }
                 };

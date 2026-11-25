@@ -14,6 +14,7 @@ import {
 } from '../lib/email-auth.js';
 import {
     ALLOWED_ADMIN_EMAILS,
+    buildClearAdminOnlyCookie,
     buildClearSessionCookies,
     buildCookieString,
     buildSessionCookieHeaders,
@@ -21,11 +22,13 @@ import {
     createUserSessionToken,
     CSRF_COOKIE,
     escapePostgrestFilterValue,
+    fetchCloudUserByEmailResult,
     generateCsrfToken,
     getClientIp,
     getGoogleClientId,
     getServiceRoleKey,
     getSessionSecret,
+    isDeletedUserRow,
     isStrictSameOrigin,
     isValidEmail,
     jsonWithCookies,
@@ -92,73 +95,8 @@ async function writeUserMutation(url, method, payload, extraHeaders = {}, option
     return { ok: false, noOp: false, data: null };
 }
 
-function isDeletedUserRow(row) {
-    return !row || row.bio === '__URBANSCOPE_DELETED__' || row.password_hash === '__DELETED_ACCOUNT__';
-}
-
 async function fetchUserByEmailResult(email, preferredId = null) {
-    const cleanEmail = normalizeEmail(email);
-    if (!cleanEmail || !getServiceRoleKey()) {
-        return { row: null, notFound: false, dbError: true };
-    }
-
-    const runQuery = async (query) => {
-        try {
-            const res = await fetch(restUrl('users', query), { headers: serviceHeaders({}, true) });
-            if (!res.ok) return { ok: false, rows: [] };
-            const rows = await res.json().catch(() => []);
-            return { ok: true, rows: Array.isArray(rows) ? rows : [] };
-        } catch (_) {
-            return { ok: false, rows: [] };
-        }
-    };
-
-    const exact = await runQuery({
-        email: `eq.${cleanEmail}`,
-        select: '*',
-        limit: '1'
-    });
-    if (!exact.ok) {
-        return { row: null, notFound: false, dbError: true };
-    }
-    if (exact.rows.length > 0) {
-        const row = exact.rows[0];
-        return isDeletedUserRow(row)
-            ? { row: null, notFound: true, dbError: false }
-            : { row, notFound: false, dbError: false };
-    }
-
-    // Fallback for legacy mixed-case emails in Supabase or ID-matched sessions
-    if (preferredId !== undefined && preferredId !== null && String(preferredId) !== cleanEmail && /^\d+$/.test(String(preferredId))) {
-        const byId = await runQuery({
-            id: `eq.${String(preferredId)}`,
-            select: '*',
-            limit: '1'
-        });
-        if (!byId.ok) {
-            return { row: null, notFound: false, dbError: true };
-        }
-        const idRow = byId.rows[0] || null;
-        if (idRow && normalizeEmail(idRow.email) === cleanEmail) {
-            return isDeletedUserRow(idRow)
-                ? { row: null, notFound: true, dbError: false }
-                : { row: idRow, notFound: false, dbError: false };
-        }
-    }
-
-    const ci = await runQuery({
-        email: `ilike.${escapePostgrestFilterValue(cleanEmail)}`,
-        select: '*',
-        limit: '10'
-    });
-    if (!ci.ok) {
-        return { row: null, notFound: false, dbError: true };
-    }
-    const matched = ci.rows.find((r) => normalizeEmail(r.email) === cleanEmail) || null;
-    if (!matched || isDeletedUserRow(matched)) {
-        return { row: null, notFound: true, dbError: false };
-    }
-    return { row: matched, notFound: false, dbError: false };
+    return fetchCloudUserByEmailResult(email, { preferredId });
 }
 
 async function fetchUserByEmail(email) {
@@ -274,7 +212,8 @@ function issueCookiesForUser(req, userRow) {
 
     return {
         cookies: buildSessionCookieHeaders({ req, userToken, adminToken, csrfToken }),
-        role: cleanRole
+        role: cleanRole,
+        adminToken
     };
 }
 
@@ -357,10 +296,20 @@ async function handleSessionRequest(req, res) {
                     cookies: buildClearSessionCookies(req)
                 });
             }
-            return jsonWithCookies({
-                authenticated: true,
-                user: sanitizeUser(lookup.row)
-            }, 200, res);
+            const liveUser = sanitizeUser(lookup.row);
+            const hasAdminCookie = Boolean(readAdminSession(req));
+            const clearStaleAdminCookies = (hasAdminCookie && !isAuthorizedAdminRole(liveUser.email, liveUser.role))
+                ? [buildClearAdminOnlyCookie(req)]
+                : [];
+            return jsonWithCookies(
+                {
+                    authenticated: true,
+                    user: liveUser
+                },
+                200,
+                res,
+                clearStaleAdminCookies.length ? { cookies: clearStaleAdminCookies } : undefined
+            );
         }
 
         return jsonWithCookies({ success: false, error: 'Unsupported session query action.' }, 400, res);
@@ -430,9 +379,11 @@ async function handleSessionRequest(req, res) {
             return jsonWithCookies({ success: false, error: 'Verify your email address before logging in.' }, 403, res);
         }
 
-        const { cookies, role } = issueCookiesForUser(req, userRow);
+        const { cookies, role, adminToken } = issueCookiesForUser(req, userRow);
         return jsonWithCookies({
             success: true,
+            ...(adminToken ? { token: adminToken } : {}),
+            admin_session_ready: Boolean(adminToken),
             user: sanitizeUser(userRow),
             redirect_url: redirectForRole(cleanEmail, role),
             message: 'Sign in successful'
@@ -515,9 +466,11 @@ async function handleSessionRequest(req, res) {
             );
 
             const merged = { ...existing, ...patch };
-            const { cookies, role } = issueCookiesForUser(req, merged);
+            const { cookies, role, adminToken } = issueCookiesForUser(req, merged);
             return jsonWithCookies({
                 success: true,
+                ...(adminToken ? { token: adminToken } : {}),
+                admin_session_ready: Boolean(adminToken),
                 user: sanitizeUser(merged),
                 redirect_url: redirectForRole(cleanEmail, role),
                 message: 'Google sign-in successful'
@@ -655,9 +608,11 @@ async function handleSessionRequest(req, res) {
             savedUser = Array.isArray(inserted) ? inserted[0] : inserted;
         }
 
-        const { cookies, role } = issueCookiesForUser(req, savedUser);
+        const { cookies, role, adminToken } = issueCookiesForUser(req, savedUser);
         return jsonWithCookies({
             success: true,
+            ...(adminToken ? { token: adminToken } : {}),
+            admin_session_ready: Boolean(adminToken),
             user: sanitizeUser(savedUser),
             redirect_url: redirectForRole(cleanEmail, role),
             message: 'Account verified and registered successfully! Welcome to UrbanScope.'
