@@ -1515,6 +1515,8 @@ path when rendering from a page.
   - **Legal & Auth (`legal.css`, `auth.css`):** Widened `.legal-top-nav` / `.legal-main-container` (`1600px`, `310px` sticky TOC) and rebalanced Auth split-panels to `46%` showcase / `54%` form with centered `540px` `.form-container`.
   - **Admin Portal (`dashboard.css`, `properties.css`, `clients.css`, `users.css`, `profile.css`, `add-property.css`, `edit-property.css`):** Aligned `.dashboard-content`, `.main-content`, and `.content` containers flush with `.admin-topbar`'s `3.5%` gutters (`max-width: 1920px` on dashboard/property list/clients/users; `1840px` with 2-column side-by-side `.settings-grid` on profile; `1640px`/`1760px` on add/edit property) and balanced dashboard KPI, analytics, donut, and calendar spacing.
 
+162. **Unified Green KPI Icons on Client Inquiries (`frontend/pages/admin/clients.html`, `clients.css`, `admin-shell.css`):** Removed per-status color classes (`blue`, `orange`, `green`, `purple`, `red`) from `.stat-pill-icon` on `/pages/admin/clients.html` (`Total Inquiries`, `Pending Review`, `Approved`, `Completed`, `Cancelled`) and aligned `.stat-pill-icon` with the Admin Dashboard `.kpi-icon` palette (`background: var(--light-green); color: var(--accent-green);` in Light Mode and unified `html.dark-mode .stat-pill-icon` in `admin-shell.css` for Dark Mode).
+
 ## Safety Rules
 
 - Do **not** commit `backend/urbanscope.db`, `.env`, or virtualenvs (already in `.gitignore`).
