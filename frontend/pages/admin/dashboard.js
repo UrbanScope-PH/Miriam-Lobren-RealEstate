@@ -1075,26 +1075,46 @@ function openInquiryModal(data) {
                 </button>
                 ${!isCompleted ? `
                     <div class="modal-status-dropdown" id="modalStatusDropdown">
-                        <button type="button"
-                                class="modal-status-trigger ${isApproved ? 'is-approved' : isCancelled ? 'is-cancelled' : 'is-pending'}"
-                                id="modalStatusTriggerBtn"
-                                aria-haspopup="listbox"
-                                aria-expanded="false">
-                            <span class="modal-status-dot" aria-hidden="true"></span>
-                            <span class="modal-status-trigger-label">${isApproved ? 'Approved' : isCancelled ? escapeHTML(cancelledDecisionLabel) : 'Set Decision'}</span>
-                            <svg class="modal-status-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                                <polyline points="6 9 12 15 18 9"></polyline>
-                            </svg>
-                        </button>
-                        <div class="modal-status-menu" id="modalStatusMenu" role="listbox" aria-label="Approve or cancel inquiry" hidden>
+                        <div class="modal-status-split ${isApproved ? 'is-approved' : isCancelled ? 'is-cancelled' : 'is-approve-ready'}" id="modalStatusSplit">
+                            <button type="button"
+                                    class="modal-status-main-btn"
+                                    id="modalQuickApproveBtn"
+                                    data-current-state="${isApproved ? 'approved' : isCancelled ? 'cancelled' : 'pending'}">
+                                <span class="modal-status-main-icon" aria-hidden="true">
+                                    ${isCancelled ? `
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                            <circle cx="12" cy="12" r="10"></circle>
+                                            <line x1="15" y1="9" x2="9" y2="15"></line>
+                                            <line x1="9" y1="9" x2="15" y2="15"></line>
+                                        </svg>
+                                    ` : `
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">
+                                            <polyline points="20 6 9 17 4 12"></polyline>
+                                        </svg>
+                                    `}
+                                </span>
+                                <span class="modal-status-trigger-label">${isApproved ? 'Approved' : isCancelled ? escapeHTML(cancelledDecisionLabel) : 'Approve'}</span>
+                            </button>
+                            <button type="button"
+                                    class="modal-status-chevron-btn"
+                                    id="modalStatusTriggerBtn"
+                                    aria-label="More decision options"
+                                    aria-haspopup="menu"
+                                    aria-expanded="false">
+                                <svg class="modal-status-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                    <polyline points="6 9 12 15 18 9"></polyline>
+                                </svg>
+                            </button>
+                        </div>
+                        <div class="modal-status-menu" id="modalStatusMenu" role="menu" aria-label="Inquiry decision actions" hidden>
                             <button type="button"
                                     class="modal-status-option approve${isApproved ? ' is-selected' : ''}"
-                                    role="option"
-                                    aria-selected="${isApproved ? 'true' : 'false'}"
+                                    role="menuitemradio"
+                                    aria-checked="${isApproved ? 'true' : 'false'}"
                                     data-next-status="Approved">
                                 <span class="modal-option-left">
                                     <span class="modal-option-dot green" aria-hidden="true"></span>
-                                    <span>Approve</span>
+                                    <span>${isApproved ? 'Approved' : 'Approve Inquiry'}</span>
                                 </span>
                                 <svg class="modal-option-check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
                                     <polyline points="20 6 9 17 4 12"></polyline>
@@ -1102,12 +1122,12 @@ function openInquiryModal(data) {
                             </button>
                             <button type="button"
                                     class="modal-status-option cancel${isCancelled ? ' is-selected' : ''}"
-                                    role="option"
-                                    aria-selected="${isCancelled ? 'true' : 'false'}"
+                                    role="menuitemradio"
+                                    aria-checked="${isCancelled ? 'true' : 'false'}"
                                     data-next-status="Cancelled">
                                 <span class="modal-option-left">
                                     <span class="modal-option-dot red" aria-hidden="true"></span>
-                                    <span>Cancel</span>
+                                    <span>${isCancelled ? 'Cancelled' : 'Cancel Inquiry'}</span>
                                 </span>
                                 <svg class="modal-option-check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
                                     <polyline points="20 6 9 17 4 12"></polyline>
@@ -1133,8 +1153,10 @@ function openInquiryModal(data) {
         </div>
     `;
 
-    // Hook up custom Approve / Cancel dropdown inside modal
+    // Hook up Split Approve / Cancel dropdown inside modal
     const statusDropdown = modalContent.querySelector("#modalStatusDropdown");
+    const statusSplit = modalContent.querySelector("#modalStatusSplit");
+    const quickApproveBtn = modalContent.querySelector("#modalQuickApproveBtn");
     const statusTriggerBtn = modalContent.querySelector("#modalStatusTriggerBtn");
     const statusMenu = modalContent.querySelector("#modalStatusMenu");
 
@@ -1145,55 +1167,96 @@ function openInquiryModal(data) {
         statusTriggerBtn.setAttribute("aria-expanded", "false");
     }
 
-    if (statusTriggerBtn && statusMenu && statusDropdown) {
-        statusTriggerBtn.addEventListener("click", (e) => {
+    function toggleModalStatusMenu() {
+        if (!statusDropdown || !statusTriggerBtn || !statusMenu) return;
+        const willOpen = statusMenu.hidden;
+        statusMenu.hidden = !willOpen;
+        statusDropdown.classList.toggle("is-open", willOpen);
+        statusTriggerBtn.setAttribute("aria-expanded", String(willOpen));
+    }
+
+    async function applyModalDecision(targetStatus) {
+        if (!targetStatus || !quickApproveBtn || !statusTriggerBtn || !statusSplit) return;
+        closeModalStatusMenu();
+
+        const labelEl = quickApproveBtn.querySelector(".modal-status-trigger-label");
+        const iconEl = quickApproveBtn.querySelector(".modal-status-main-icon");
+        const prevLabel = labelEl ? labelEl.textContent : "";
+
+        quickApproveBtn.disabled = true;
+        statusTriggerBtn.disabled = true;
+        if (labelEl) labelEl.textContent = targetStatus === "Approved" ? "Approving..." : "Cancelling...";
+
+        try {
+            await updateDashboardInquiryStatus(rawId, targetStatus);
+
+            const nowApproved = targetStatus === "Approved";
+            const nowCancelled = targetStatus === "Cancelled";
+            const updatedLabel = nowCancelled ? "Cancelled by Admin" : targetStatus;
+
+            const statusPill = modalContent.querySelector(".inquiry-banner-meta .status-pill");
+            if (statusPill) {
+                statusPill.textContent = updatedLabel;
+                statusPill.className = `status-pill ${getStatusClass(targetStatus)}`;
+            }
+
+            statusSplit.className = `modal-status-split ${nowApproved ? "is-approved" : nowCancelled ? "is-cancelled" : "is-approve-ready"}`;
+            quickApproveBtn.setAttribute("data-current-state", nowApproved ? "approved" : nowCancelled ? "cancelled" : "pending");
+            if (labelEl) labelEl.textContent = updatedLabel;
+            if (iconEl) {
+                iconEl.innerHTML = nowCancelled
+                    ? `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>`
+                    : `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>`;
+            }
+
+            statusMenu.querySelectorAll(".modal-status-option").forEach((btn) => {
+                const btnStatus = btn.getAttribute("data-next-status");
+                const isMatch = btnStatus === targetStatus;
+                btn.classList.toggle("is-selected", isMatch);
+                btn.setAttribute("aria-checked", String(isMatch));
+                const optText = btn.querySelector(".modal-option-left span:last-child");
+                if (optText) {
+                    if (btnStatus === "Approved") optText.textContent = nowApproved ? "Approved" : "Approve Inquiry";
+                    if (btnStatus === "Cancelled") optText.textContent = nowCancelled ? "Cancelled" : "Cancel Inquiry";
+                }
+            });
+        } catch (err) {
+            console.error(`Failed to set inquiry status (${targetStatus}) from dashboard modal:`, err);
+            if (labelEl) labelEl.textContent = prevLabel || "Retry";
+        } finally {
+            quickApproveBtn.disabled = false;
+            statusTriggerBtn.disabled = false;
+        }
+    }
+
+    if (quickApproveBtn && statusTriggerBtn && statusMenu && statusDropdown) {
+        quickApproveBtn.addEventListener("click", (e) => {
             e.stopPropagation();
-            const willOpen = statusMenu.hidden;
-            statusMenu.hidden = !willOpen;
-            statusDropdown.classList.toggle("is-open", willOpen);
-            statusTriggerBtn.setAttribute("aria-expanded", String(willOpen));
+            const currentState = quickApproveBtn.getAttribute("data-current-state");
+            if (currentState === "pending") {
+                applyModalDecision("Approved");
+            } else {
+                toggleModalStatusMenu();
+            }
         });
 
-        statusMenu.addEventListener("click", async (e) => {
+        statusTriggerBtn.addEventListener("click", (e) => {
+            e.stopPropagation();
+            toggleModalStatusMenu();
+        });
+
+        statusMenu.addEventListener("click", (e) => {
             e.stopPropagation();
             const optBtn = e.target.closest(".modal-status-option[data-next-status]");
             if (!optBtn) return;
             const targetStatus = optBtn.getAttribute("data-next-status");
-            closeModalStatusMenu();
-            if (!targetStatus) return;
-
-            const labelEl = statusTriggerBtn.querySelector(".modal-status-trigger-label");
-            const prevLabel = labelEl ? labelEl.textContent : "";
-            statusTriggerBtn.disabled = true;
-            if (labelEl) labelEl.textContent = targetStatus === "Approved" ? "Approving..." : "Cancelling...";
-
-            try {
-                await updateDashboardInquiryStatus(rawId, targetStatus);
-
-                const nowApproved = targetStatus === "Approved";
-                const nowCancelled = targetStatus === "Cancelled";
-                const updatedLabel = nowCancelled ? "Cancelled by Admin" : targetStatus;
-
-                const statusPill = modalContent.querySelector(".inquiry-banner-meta .status-pill");
-                if (statusPill) {
-                    statusPill.textContent = updatedLabel;
-                    statusPill.className = `status-pill ${getStatusClass(targetStatus)}`;
-                }
-
-                statusTriggerBtn.className = `modal-status-trigger ${nowApproved ? "is-approved" : nowCancelled ? "is-cancelled" : "is-pending"}`;
-                if (labelEl) labelEl.textContent = updatedLabel;
-
-                statusMenu.querySelectorAll(".modal-status-option").forEach((btn) => {
-                    const isMatch = btn.getAttribute("data-next-status") === targetStatus;
-                    btn.classList.toggle("is-selected", isMatch);
-                    btn.setAttribute("aria-selected", String(isMatch));
-                });
-            } catch (err) {
-                console.error(`Failed to set inquiry status (${targetStatus}) from dashboard modal:`, err);
-                if (labelEl) labelEl.textContent = prevLabel || "Retry";
-            } finally {
-                statusTriggerBtn.disabled = false;
+            const currentState = quickApproveBtn.getAttribute("data-current-state");
+            if ((targetStatus === "Approved" && currentState === "approved") ||
+                (targetStatus === "Cancelled" && currentState === "cancelled")) {
+                closeModalStatusMenu();
+                return;
             }
+            applyModalDecision(targetStatus);
         });
 
         modalContent.addEventListener("click", (e) => {

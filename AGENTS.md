@@ -1517,6 +1517,8 @@ path when rendering from a page.
 
 162. **Unified Green KPI Icons on Client Inquiries (`frontend/pages/admin/clients.html`, `clients.css`, `admin-shell.css`):** Removed per-status color classes (`blue`, `orange`, `green`, `purple`, `red`) from `.stat-pill-icon` on `/pages/admin/clients.html` (`Total Inquiries`, `Pending Review`, `Approved`, `Completed`, `Cancelled`) and aligned `.stat-pill-icon` with the Admin Dashboard `.kpi-icon` palette (`background: var(--light-green); color: var(--accent-green);` in Light Mode and unified `html.dark-mode .stat-pill-icon` in `admin-shell.css` for Dark Mode).
 
+163. **Dashboard Inquiry Modal Split Approve Button & Cancel Dropdown (`frontend/pages/admin/dashboard.js`, `dashboard.css`):** Replaced the amber `"Set Decision"` dropdown button inside `#inquiryModal` with a split action button (`.modal-status-split` inside `#modalStatusDropdown`): pending inquiries show a 1-click green **`✓ Approve`** primary button paired with an attached chevron toggle (`#modalStatusTriggerBtn`) opening the action menu (`Approve Inquiry` / `Cancel Inquiry`), while already `Approved` or `Cancelled` inquiries display their active status (`Approved` or `Cancelled by Admin` / `Cancelled by Client`) with the chevron dropdown to switch decisions. Updated mobile (`<= 600px`) footer button layout so the split button stays side-by-side cleanly.
+
 ## Safety Rules
 
 - Do **not** commit `backend/urbanscope.db`, `.env`, or virtualenvs (already in `.gitignore`).
