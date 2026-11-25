@@ -13,9 +13,7 @@
     padding: 0;
 }
 
-/* Master Zoom: 1.25x (matches Home dashboard exactly) */
 html {
-    zoom: 1.25;
     scroll-behavior: smooth;
     scroll-padding-top: 100px;
 }
@@ -693,12 +691,6 @@ input:focus-visible {
 /* ==========================================================================
    RESPONSIVE OVERRIDES
    ========================================================================== */
-
-@media (max-width: 1024px) {
-    html {
-        zoom: 1; /* Reset zoom on mobile/tablet to avoid overflow */
-    }
-}
 
 @media (min-width: 769px) and (max-width: 900px) {
     .admin-topbar {
