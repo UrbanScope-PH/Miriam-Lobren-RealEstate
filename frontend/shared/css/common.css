@@ -277,36 +277,42 @@ img, video, canvas, svg {
 .footer-top {
     max-width: 1200px;
     margin: 0 auto;
-    padding: 56px 5% 40px;
+    padding: 28px max(5%, 108px) 22px 5%;
     display: grid;
-    grid-template-columns: 1.4fr 1fr 1.2fr;
-    gap: 60px;
+    grid-template-columns: minmax(260px, 330px) auto auto;
+    justify-content: space-between;
+    gap: 40px;
+    align-items: start;
 }
 
 .footer h3 {
-    font-size: 20px;
+    font-size: 18px;
     font-weight: 700;
-    margin-bottom: 16px;
+    margin-bottom: 10px;
     color: #ffffff;
 }
 
 .footer-about p {
     font-size: 14.5px;
-    color: rgba(255, 255, 255, 0.82);
+    color: rgba(255, 255, 255, 0.85);
     line-height: 1.65;
+    max-width: 322px;
+    text-align: justify;
+    text-justify: inter-word;
 }
 
 .footer-links-column ul {
     list-style: none;
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 6px;
 }
 
 .footer-links-column a {
     color: rgba(255, 255, 255, 0.82);
     text-decoration: none;
     font-size: 14.5px;
+    line-height: 1.4;
     transition: color 0.2s;
 }
 
@@ -320,15 +326,16 @@ img, video, canvas, svg {
 .footer-contact {
     display: flex;
     flex-direction: column;
-    gap: 14px;
+    gap: 9px;
 }
 
 .footer-contact-item {
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 10px;
     color: rgba(255, 255, 255, 0.85);
     font-size: 14.5px;
+    line-height: 1.4;
     min-width: 0;
 }
 
@@ -342,26 +349,26 @@ img, video, canvas, svg {
 .footer-bottom {
     max-width: 1200px;
     margin: 0 auto;
-    padding: 24px 5% 34px;
+    padding: 14px max(5%, 108px) 18px 5%;
     border-top: 1px solid rgba(255, 255, 255, 0.12);
     display: flex;
     justify-content: space-between;
     align-items: center;
-    font-size: 13.5px;
-    color: rgba(255, 255, 255, 0.7);
+    font-size: 13px;
+    color: rgba(255, 255, 255, 0.72);
     flex-wrap: wrap;
-    gap: 16px;
+    gap: 14px;
 }
 
 .socials {
     display: flex;
     align-items: center;
-    gap: 14px;
+    gap: 12px;
 }
 
 .social-icon {
-    width: 36px;
-    height: 36px;
+    width: 32px;
+    height: 32px;
     border-radius: 50%;
     background: rgba(255, 255, 255, 0.1);
     color: #ffffff;
@@ -474,7 +481,8 @@ img, video, canvas, svg {
 
     .footer-top {
         grid-template-columns: 1fr;
-        gap: 36px;
+        justify-content: stretch;
+        gap: 22px;
     }
 }
 
@@ -703,8 +711,12 @@ img, video, canvas, svg {
     }
 
     .footer-top {
-        padding: 44px 5% 30px;
-        gap: 28px;
+        padding: 26px 5% 18px;
+        gap: 20px;
+    }
+
+    .footer-bottom {
+        padding: 14px 5% 18px;
     }
 }
 
@@ -1074,7 +1086,7 @@ html.dark-mode .badge-status-review {
     .footer-bottom {
         max-width: 1920px;
         padding-left: 3.5%;
-        padding-right: 3.5%;
+        padding-right: max(3.5%, 108px);
     }
 }
 
