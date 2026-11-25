@@ -1,4 +1,3 @@
-import { isAuthorizedAdminRole, readAdminSession } from '../lib/admin-session.js';
 import { parseJsonBody } from '../lib/email-auth.js';
 import {
     checkRateLimit,
@@ -9,7 +8,8 @@ import {
     restUrl,
     sanitizeImageUrl,
     serviceHeaders,
-    verifyCsrfIfAuthenticated
+    verifyCsrfIfAuthenticated,
+    verifyLiveAdminSession
 } from '../lib/server-security.js';
 
 const ALLOWED_PROPERTY_STATUSES = new Set(['Available', 'Sold', 'Reserved', 'Under Review', 'Pre-Selling', 'Draft']);
@@ -241,13 +241,18 @@ export default async function handler(req, res) {
         return jsonWithCookies({ success: false, error: 'This request is not allowed.' }, 403, res);
     }
 
-    const session = readAdminSession(req);
-    if (!session || !isAuthorizedAdminRole(session.email, session.role)) {
-        return jsonWithCookies({ success: false, error: 'Administrator privileges required.' }, 403, res);
-    }
-
     if (!getServiceRoleKey()) {
         return jsonWithCookies({ success: false, error: 'Server database credentials are not configured.' }, 503, res);
+    }
+
+    const adminCheck = await verifyLiveAdminSession(req);
+    if (!adminCheck.ok) {
+        return jsonWithCookies(
+            { success: false, error: adminCheck.error || 'Administrator privileges required.' },
+            adminCheck.status === 503 ? 503 : 403,
+            res,
+            adminCheck.clearCookies?.length ? { cookies: adminCheck.clearCookies } : undefined
+        );
     }
 
     const ip = getClientIp(req);

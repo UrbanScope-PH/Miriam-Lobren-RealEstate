@@ -927,7 +927,7 @@ document.addEventListener("DOMContentLoaded", () => {
                         'miriamalobren@gmail.com',
                         'urbanscope.cvsu@gmail.com'
                     ].includes(email);
-                    if (role === 'admin' || role === 'superadmin' || isAuthorizedStaffEmail) {
+                    if ((role === 'admin' || role === 'superadmin' || isAuthorizedStaffEmail) && !verifyRes.data?.admin_session_ready) {
                         const adminSessionFn = typeof apiCreateHostedAdminSession === 'function'
                             ? apiCreateHostedAdminSession
                             : (typeof window.apiCreateHostedAdminSession === 'function' ? window.apiCreateHostedAdminSession : null);
@@ -1031,7 +1031,7 @@ document.addEventListener("DOMContentLoaded", () => {
                             'miriamalobren@gmail.com',
                             'urbanscope.cvsu@gmail.com'
                         ].includes(email);
-                        if (role === 'admin' || role === 'superadmin' || isAuthorizedStaffEmail) {
+                        if ((role === 'admin' || role === 'superadmin' || isAuthorizedStaffEmail) && !res.data?.admin_session_ready) {
                             if (typeof apiCreateHostedAdminSession !== 'function') {
                                 setLoadingState(false);
                                 renderGoogleBanner(btn, 'Admin session service is unavailable. Please try again later.', 'error');

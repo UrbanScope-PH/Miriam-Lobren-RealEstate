@@ -419,8 +419,6 @@ def sync_password_from_supabase_if_valid(clean_email: str, plain_password: str) 
                         c.execute("UPDATE users SET role = ? WHERE id = ?", (norm_role, new_local_id))
                     conn.commit()
                     conn.close()
-                    if norm_role == "admin":
-                        AUTHORIZED_ADMIN_EMAILS.add(clean_email)
                     return remote_hash
     except Exception:
         pass

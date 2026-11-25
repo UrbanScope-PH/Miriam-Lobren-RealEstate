@@ -371,8 +371,8 @@ def require_user(user: Optional[dict] = Depends(get_current_user_from_request)) 
 
 def require_admin(user: Optional[dict] = Depends(get_current_user_from_request)) -> dict:
     """
-    Strict server-side dependency guard: requires an active session with
-    an authorized admin email AND matching admin/superadmin role.
+    Strict server-side dependency guard: requires an active session whose live DB
+    record has an admin/superadmin role or a built-in staff email.
     """
     if not user:
         raise HTTPException(

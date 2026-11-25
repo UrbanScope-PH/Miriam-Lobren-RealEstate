@@ -1,10 +1,13 @@
 import { isAuthorizedAdminRole, readAdminSession } from '../lib/admin-session.js';
 import { parseJsonBody, sendEmailWithFallback, wrapEmailHtmlDocument } from '../lib/email-auth.js';
 import {
+    buildClearAdminOnlyCookie,
     checkRateLimit,
     escapePostgrestFilterValue,
+    fetchCloudUserByEmailResult,
     getClientIp,
     getServiceRoleKey,
+    isConfiguredAdminEmail,
     isStrictSameOrigin,
     isValidEmail,
     isValidInquiryStatus,
@@ -64,15 +67,44 @@ async function fetchRowsByNormalizedEmail(table, col, targetEmail, extraQuery = 
     };
 }
 
-function resolveSession(req) {
+async function resolveSession(req) {
     const admin = readAdminSession(req);
     const user = readUserSession(req);
     const primary = admin || user;
     if (!primary) return null;
     const email = normalizeEmail(primary.email);
-    const role = normalizeAccountRole(primary.role, email);
-    const isStaff = (role === 'admin' || role === 'superadmin') && isAuthorizedAdminRole(email, role);
-    return { id: primary.id, email, role, isStaff };
+    const claimedRole = normalizeAccountRole(primary.role, email);
+    const claimsStaff = Boolean(admin) || claimedRole === 'admin' || claimedRole === 'superadmin';
+
+    if (!claimsStaff) {
+        return { id: primary.id, email, role: claimedRole, isStaff: false, clearCookies: [] };
+    }
+
+    const lookup = await fetchCloudUserByEmailResult(email, { preferredId: primary.id });
+    if (lookup.dbError) {
+        return { dbError: true };
+    }
+    if (!lookup.row) {
+        if (!lookup.deleted && isConfiguredAdminEmail(email)) {
+            const isStaff = isAuthorizedAdminRole(email, claimedRole);
+            return { id: primary.id, email, role: claimedRole, isStaff, clearCookies: [] };
+        }
+        return {
+            revoked: true,
+            clearCookies: admin ? [buildClearAdminOnlyCookie(req)] : []
+        };
+    }
+
+    const liveEmail = normalizeEmail(lookup.row.email || email);
+    const liveRole = normalizeAccountRole(lookup.row.role, liveEmail);
+    const isStaff = isAuthorizedAdminRole(liveEmail, liveRole);
+    return {
+        id: lookup.row.id ?? primary.id,
+        email: liveEmail,
+        role: liveRole,
+        isStaff,
+        clearCookies: (admin && !isStaff) ? [buildClearAdminOnlyCookie(req)] : []
+    };
 }
 
 async function fetchInquiryById(id) {
@@ -223,14 +255,27 @@ export default async function handler(req, res) {
     const queryAction = String(reqUrl.searchParams.get('action') || '').trim().toLowerCase();
 
     if (req.method === 'GET') {
-        const session = resolveSession(req);
-        if (!session) {
-            return jsonWithCookies({ success: false, error: 'Authentication required.' }, 401, res);
+        const session = await resolveSession(req);
+        if (!session || session.revoked) {
+            return jsonWithCookies(
+                { success: false, error: 'Authentication required.' },
+                401,
+                res,
+                session?.clearCookies?.length ? { cookies: session.clearCookies } : undefined
+            );
+        }
+        if (session.dbError) {
+            return jsonWithCookies({ success: false, error: 'Temporarily unable to verify session.' }, 503, res);
         }
 
         if (queryAction === 'all') {
             if (!session.isStaff) {
-                return jsonWithCookies({ success: false, error: 'Administrator privileges required.' }, 403, res);
+                return jsonWithCookies(
+                    { success: false, error: 'Administrator privileges required.' },
+                    403,
+                    res,
+                    session.clearCookies?.length ? { cookies: session.clearCookies } : undefined
+                );
             }
             const r = await fetch(restUrl('inquiries', { select: '*', order: 'created_at.desc' }), {
                 headers: serviceHeaders({}, true)
@@ -259,7 +304,12 @@ export default async function handler(req, res) {
             const requestedEmail = normalizeEmail(reqUrl.searchParams.get('email') || '');
 
             if (requestedRole === 'admin' && !session.isStaff) {
-                return jsonWithCookies({ success: false, error: 'Admin role required.' }, 403, res);
+                return jsonWithCookies(
+                    { success: false, error: 'Admin role required.' },
+                    403,
+                    res,
+                    session.clearCookies?.length ? { cookies: session.clearCookies } : undefined
+                );
             }
             if (requestedEmail && requestedEmail !== session.email && !session.isStaff) {
                 return jsonWithCookies({ success: false, error: 'Cannot view another client notifications.' }, 403, res);
@@ -335,7 +385,12 @@ export default async function handler(req, res) {
 
         if (queryAction === 'stats') {
             if (!session.isStaff) {
-                return jsonWithCookies({ success: false, error: 'Administrator privileges required.' }, 403, res);
+                return jsonWithCookies(
+                    { success: false, error: 'Administrator privileges required.' },
+                    403,
+                    res,
+                    session.clearCookies?.length ? { cookies: session.clearCookies } : undefined
+                );
             }
             const r = await fetch(restUrl('users', {
                 select: 'id,email,role,bio,password_hash'
@@ -477,9 +532,17 @@ export default async function handler(req, res) {
         return jsonWithCookies({ success: false, error: 'CSRF validation failed.' }, 403, res);
     }
 
-    const session = resolveSession(req);
-    if (!session) {
-        return jsonWithCookies({ success: false, error: 'Authentication required.' }, 401, res);
+    const session = await resolveSession(req);
+    if (!session || session.revoked) {
+        return jsonWithCookies(
+            { success: false, error: 'Authentication required.' },
+            401,
+            res,
+            session?.clearCookies?.length ? { cookies: session.clearCookies } : undefined
+        );
+    }
+    if (session.dbError) {
+        return jsonWithCookies({ success: false, error: 'Temporarily unable to verify session.' }, 503, res);
     }
 
     if (action === 'mark-notifications') {
@@ -494,7 +557,12 @@ export default async function handler(req, res) {
         const setSeenOnly = body.seenOnly === true || body.mode === 'seen';
 
         if (requestedRole === 'admin' && !session.isStaff) {
-            return jsonWithCookies({ success: false, error: 'Admin access required.' }, 403, res);
+            return jsonWithCookies(
+                { success: false, error: 'Admin access required.' },
+                403,
+                res,
+                session.clearCookies?.length ? { cookies: session.clearCookies } : undefined
+            );
         }
         if (requestedEmail && requestedEmail !== session.email && !session.isStaff) {
             return jsonWithCookies({ success: false, error: 'Cannot update another user notifications.' }, 403, res);
@@ -570,7 +638,12 @@ export default async function handler(req, res) {
 
     if (action === 'update-status') {
         if (!session.isStaff) {
-            return jsonWithCookies({ success: false, error: 'Only administrators can update inquiry status.' }, 403, res);
+            return jsonWithCookies(
+                { success: false, error: 'Only administrators can update inquiry status.' },
+                403,
+                res,
+                session.clearCookies?.length ? { cookies: session.clearCookies } : undefined
+            );
         }
         const newStatus = String(body.status || '').trim();
         if (!isValidInquiryStatus(newStatus)) {
