@@ -623,3 +623,28 @@ html.dark-mode .legal-callout.warning {
     border-radius: 12px;
 }
 
+/* ==========================================================================
+   WIDE DESKTOP LAYOUT (100% RESOLUTION >= 1600px)
+   ========================================================================== */
+@media (min-width: 1600px) {
+    .legal-hero {
+        padding-left: 3.5%;
+        padding-right: 3.5%;
+    }
+
+    .legal-top-nav {
+        max-width: 1600px;
+    }
+
+    .legal-main-container {
+        max-width: 1600px;
+        padding: 0 3.5%;
+        grid-template-columns: 310px minmax(0, 1fr);
+        gap: 48px;
+    }
+
+    .legal-content-card {
+        padding: 46px 56px;
+    }
+}
+

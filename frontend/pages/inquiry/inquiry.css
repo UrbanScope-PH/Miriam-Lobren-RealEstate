@@ -2066,3 +2066,17 @@ html.dark-mode .custom-select-price-pill {
         min-width: 100%;
     }
 }
+
+/* ==========================================================================
+   WIDE DESKTOP LAYOUT (100% RESOLUTION >= 1600px)
+   ========================================================================== */
+@media (min-width: 1600px) {
+    .inquiry-page-container {
+        max-width: 1440px;
+        padding: 0 3.5%;
+    }
+
+    .inquiry-form-card {
+        padding: 38px 46px;
+    }
+}

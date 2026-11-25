@@ -2853,6 +2853,35 @@
     transform: translateY(0) !important;
 }
 
+/* ==========================================================================
+   WIDE DESKTOP LAYOUT (100% RESOLUTION >= 1600px)
+   Aligns dashboard & property list containers flush with the topbar's 3.5%
+   gutters without scaling text/elements or changing 125% zoom (<= 1536px).
+   ========================================================================== */
+@media (min-width: 1600px) {
+    .dashboard-content {
+        max-width: 1920px;
+        padding: 24px 3.5% 44px;
+    }
+
+    .kpi-grid {
+        gap: 18px;
+    }
+
+    .analytics-row {
+        gap: 22px;
+    }
+
+    .donut-chart-container {
+        gap: 44px;
+    }
+
+    .calendar-layout {
+        grid-template-columns: minmax(0, 1.55fr) minmax(320px, 0.85fr);
+        gap: 26px;
+    }
+}
+
 
 
 

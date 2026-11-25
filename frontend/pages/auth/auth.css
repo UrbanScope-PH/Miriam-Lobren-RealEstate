@@ -2635,3 +2635,25 @@ html.dark-mode .match-hint.ok {
         animation: none !important;
     }
 }
+
+/* ==========================================================================
+   WIDE DESKTOP LAYOUT (100% RESOLUTION >= 1600px)
+   Balances the split showcase & form panels on wide screens without scaling
+   typography or changing 125% zoom (<= 1536px).
+   ========================================================================== */
+@media (min-width: 1600px) and (min-height: 540px) {
+    .showcase-panel {
+        width: 46% !important;
+    }
+
+    .form-panel {
+        width: 54% !important;
+        padding: clamp(28px, 4vh, 48px) clamp(36px, 4.5vw, 64px);
+    }
+
+    .form-container,
+    .form-container.register-container {
+        max-width: 540px;
+        margin: auto;
+    }
+}

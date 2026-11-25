@@ -935,3 +935,13 @@ body.sidebar-is-open {
     border-radius: 8px !important;
 }
 
+/* ==========================================================================
+   WIDE DESKTOP LAYOUT (100% RESOLUTION >= 1600px)
+   ========================================================================== */
+@media (min-width: 1600px) {
+    .content {
+        max-width: 1760px;
+        padding: 32px 3.5% 44px;
+    }
+}
+

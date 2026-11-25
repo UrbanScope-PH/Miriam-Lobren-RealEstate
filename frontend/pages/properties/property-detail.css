@@ -1480,3 +1480,35 @@ html.dark-mode .tcp-document-modal-image-wrap {
     transform: translateY(0);
     box-shadow: 0 2px 8px rgba(31, 73, 40, 0.25);
 }
+
+/* ==========================================================================
+   WIDE DESKTOP LAYOUT (100% RESOLUTION >= 1600px)
+   ========================================================================== */
+@media (min-width: 1600px) {
+    .detail-container {
+        max-width: 1680px;
+        padding: 36px 3.5% 80px;
+    }
+
+    .main-carousel {
+        height: 540px;
+    }
+
+    .thumbnails-row {
+        grid-template-columns: repeat(6, 1fr);
+        gap: 14px;
+    }
+
+    .specs-bar {
+        grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+        padding: 24px 32px;
+    }
+
+    .amenities-grid {
+        gap: 56px;
+    }
+
+    .inquiry-card {
+        max-width: 780px;
+    }
+}
