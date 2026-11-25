@@ -14,7 +14,7 @@ from datetime import datetime, timezone
 
 from fastapi import APIRouter, Depends, HTTPException
 
-from backend.auth import hash_password, require_admin, require_superadmin
+from backend.auth import MAIN_ADMIN_EMAIL, hash_password, require_main_admin, require_superadmin
 from backend.database import DB_PATH, get_db_connection, row_to_dict
 from backend.models import SuperadminCreateUser, SuperadminUpdateUser, UserRoleUpdate
 from backend.routers.auth import (
@@ -442,8 +442,8 @@ def get_superadmin_overview(current_superadmin: dict = Depends(require_superadmi
 
 
 @router.get("/api/users", tags=["Users"])
-def get_user_directory(current_user: dict = Depends(require_admin)):
-    """Retrieves all registered user accounts for the admin user directory."""
+def get_user_directory(current_user: dict = Depends(require_main_admin)):
+    """Retrieves all registered user accounts (restricted to main administrator)."""
     _pull_supabase_users_to_sqlite()
     conn = get_db_connection()
     cursor = conn.cursor()
@@ -497,10 +497,13 @@ def update_user_role(user_id: int, payload: UserRoleUpdate, current_superadmin: 
 
     target_email = target_user["email"].lower().strip()
 
-    # Protection: Root superadmin cannot be demoted
+    # Protection: Root superadmin and main admin cannot be demoted
     if target_email == "urbanscope.cvsu@gmail.com" and target_role != "superadmin":
         conn.close()
         raise HTTPException(status_code=400, detail="The root Superadmin account (urbanscope.cvsu@gmail.com) cannot be demoted.")
+    if target_email == MAIN_ADMIN_EMAIL and target_role not in ("admin", "superadmin"):
+        conn.close()
+        raise HTTPException(status_code=400, detail="The main administrator account cannot be demoted.")
 
     cursor.execute("UPDATE users SET role = ? WHERE id = ?", (target_role, user_id))
     conn.commit()
@@ -553,6 +556,9 @@ def superadmin_update_user(user_id: int, payload: SuperadminUpdateUser, current_
             if target_email == "urbanscope.cvsu@gmail.com":
                 conn.close()
                 raise HTTPException(status_code=400, detail="The root Superadmin email address cannot be changed.")
+            if target_email == MAIN_ADMIN_EMAIL:
+                conn.close()
+                raise HTTPException(status_code=400, detail="The main administrator email address cannot be changed.")
 
             updates.append("email = ?")
             params.append(clean_email)
@@ -569,6 +575,9 @@ def superadmin_update_user(user_id: int, payload: SuperadminUpdateUser, current_
         if target_email == "urbanscope.cvsu@gmail.com" and target_role != "superadmin":
             conn.close()
             raise HTTPException(status_code=400, detail="The root Superadmin account cannot be demoted.")
+        if target_email == MAIN_ADMIN_EMAIL and target_role not in ("admin", "superadmin"):
+            conn.close()
+            raise HTTPException(status_code=400, detail="The main administrator account cannot be demoted.")
 
         updates.append("role = ?")
         params.append(target_role)

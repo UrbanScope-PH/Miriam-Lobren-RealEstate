@@ -7,8 +7,36 @@
     "use strict";
 
     const THEME_STORAGE_KEY = "urbanscope_theme";
+    const MAIN_ADMIN_EMAIL = "miriamalobren@gmail.com";
     const root = document.documentElement;
     let themeTransitionTimer = null;
+
+    function isMainAdminEmail(email) {
+        return String(email || "").trim().toLowerCase() === MAIN_ADMIN_EMAIL;
+    }
+
+    function applyRbacNavAccess(allowed, removeDisallowedLinks = false) {
+        if (allowed) {
+            root.setAttribute("data-rbac-access", "true");
+            return;
+        }
+        root.removeAttribute("data-rbac-access");
+        if (removeDisallowedLinks) {
+            document.querySelectorAll('.admin-sidebar a.nav-item[href$="users.html"]').forEach(link => {
+                link.remove();
+            });
+        }
+    }
+
+    // Early synchronous check so Accounts & Roles renders without flicker for miriamalobren@gmail.com
+    // and never flashes for promoted admins.
+    try {
+        const earlyRaw = localStorage.getItem("adminUser") || localStorage.getItem("urbanscope_user");
+        const earlyUser = earlyRaw ? JSON.parse(earlyRaw) : null;
+        applyRbacNavAccess(isMainAdminEmail(earlyUser && earlyUser.email), false);
+    } catch (_) {
+        applyRbacNavAccess(false, false);
+    }
 
     try {
         const savedTheme = (window.UrbanTheme && typeof window.UrbanTheme.get === "function")
@@ -1286,6 +1314,37 @@
         return filtered;
     };
 
+    async function syncRbacNavVisibility() {
+        let verifiedEmail = "";
+        try {
+            if (typeof window.apiGetCurrentUser === "function") {
+                const liveUser = await window.apiGetCurrentUser();
+                if (liveUser && liveUser.email) {
+                    verifiedEmail = String(liveUser.email).trim().toLowerCase();
+                }
+            }
+        } catch (_) {}
+
+        if (!verifiedEmail) {
+            try {
+                const raw = localStorage.getItem("adminUser") || localStorage.getItem("urbanscope_user");
+                const parsed = raw ? JSON.parse(raw) : null;
+                if (parsed && parsed.email) {
+                    verifiedEmail = String(parsed.email).trim().toLowerCase();
+                }
+            } catch (_) {}
+        }
+
+        const canAccessRbac = isMainAdminEmail(verifiedEmail);
+        applyRbacNavAccess(canAccessRbac, true);
+
+        const currentPath = (window.location.pathname || "").toLowerCase();
+        if (!canAccessRbac && verifiedEmail && currentPath.includes("users.html")) {
+            window.location.replace("dashboard.html");
+        }
+    }
+    window.isMainAdminEmail = isMainAdminEmail;
+
     // Initialize on DOM Ready
     if (document.readyState === "loading") {
         document.addEventListener("DOMContentLoaded", function () {
@@ -1295,6 +1354,7 @@
             initNotificationDropdown();
             updateActiveSidebarItem();
             syncAdminProfileDisplay();
+            syncRbacNavVisibility();
             initMobileFormAccordions();
         });
     } else {
@@ -1304,6 +1364,7 @@
         initNotificationDropdown();
         updateActiveSidebarItem();
         syncAdminProfileDisplay();
+        syncRbacNavVisibility();
         initMobileFormAccordions();
     }
 })();

@@ -119,6 +119,8 @@
         }
     }
 
+    const MAIN_ADMIN_EMAIL = 'miriamalobren@gmail.com';
+
     async function verifyAdminAccess() {
         try {
             let user = null;
@@ -139,6 +141,10 @@
             const role = normalizeRole(user.role, cleanEmail);
             if (role !== 'admin') {
                 window.location.href = '../auth/login.html?redirect=pages/admin/users.html';
+                return false;
+            }
+            if (cleanEmail !== MAIN_ADMIN_EMAIL) {
+                window.location.replace('dashboard.html');
                 return false;
             }
             return true;
