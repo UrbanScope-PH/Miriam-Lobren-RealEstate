@@ -1137,6 +1137,7 @@ html.dark-mode .password-toggle-btn {
 }
 
 html.dark-mode .kpi-icon,
+html.dark-mode .stat-pill-icon,
 html.dark-mode .property-illustration-icon,
 html.dark-mode .inquiry-icon,
 html.dark-mode .reminder-icon,
@@ -1148,26 +1149,6 @@ html.dark-mode .upload-icon {
     background: var(--light-green) !important;
     border-color: var(--green-border-soft) !important;
     color: var(--dark-green) !important;
-}
-
-html.dark-mode .stat-pill-icon.blue {
-    background: var(--status-info-bg) !important;
-    color: var(--status-info-text) !important;
-}
-
-html.dark-mode .stat-pill-icon.orange {
-    background: var(--status-warning-bg) !important;
-    color: var(--status-warning-text) !important;
-}
-
-html.dark-mode .stat-pill-icon.green {
-    background: var(--status-success-bg) !important;
-    color: var(--status-success-text) !important;
-}
-
-html.dark-mode .stat-pill-icon.purple {
-    background: var(--status-purple-bg) !important;
-    color: var(--status-purple-text) !important;
 }
 
 html.dark-mode .modal-close {

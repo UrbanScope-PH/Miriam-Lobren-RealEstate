@@ -54,31 +54,9 @@
     display: flex;
     align-items: center;
     justify-content: center;
-}
-
-.stat-pill-icon.blue {
-    background: var(--status-info-bg);
-    color: var(--status-info-text);
-}
-
-.stat-pill-icon.orange {
-    background: var(--status-warning-bg);
-    color: var(--status-warning-text);
-}
-
-.stat-pill-icon.green {
-    background: var(--status-success-bg);
-    color: var(--status-success-text);
-}
-
-.stat-pill-icon.purple {
-    background: var(--status-purple-bg);
-    color: var(--status-purple-text);
-}
-
-.stat-pill-icon.red {
-    background: var(--danger-light);
-    color: var(--danger-text);
+    flex-shrink: 0;
+    background: var(--light-green);
+    color: var(--accent-green);
 }
 
 .stat-pill strong {
