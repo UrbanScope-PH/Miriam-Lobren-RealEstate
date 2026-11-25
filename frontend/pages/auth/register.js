@@ -82,6 +82,7 @@
     const termsScrollBar = document.getElementById('termsScrollBar');
     const termsScrollHint = document.getElementById('termsScrollHint');
     const termsScrollHintText = document.getElementById('termsScrollHintText');
+    const termsModalTabs = Array.from(document.querySelectorAll('.terms-modal-tab[data-terms-jump]'));
     const acceptTermsBtn = document.getElementById('acceptTermsBtn');
     const declineTermsBtn = document.getElementById('declineTermsBtn');
     const closeTermsModalBtn = document.getElementById('closeTermsModalBtn');
@@ -140,6 +141,14 @@
         }
     }
 
+    function setActiveTermsModalTab(part) {
+        termsModalTabs.forEach(function (tab) {
+            const isMatch = tab.getAttribute('data-terms-jump') === part;
+            tab.classList.toggle('is-active', isMatch);
+            tab.setAttribute('aria-selected', String(isMatch));
+        });
+    }
+
     function evaluateTermsScroll() {
         if (!isTermsModalOpen || !termsModalBody) return;
         const clientH = termsModalBody.clientHeight;
@@ -149,7 +158,13 @@
         const maxScroll = Math.max(scrollH - clientH, 0);
         const currentScroll = Math.max(termsModalBody.scrollTop, 0);
         const remaining = maxScroll - currentScroll;
-        const threshold = 16;
+        const threshold = 20;
+
+        const privacyBanner = document.getElementById('modalPrivacyPart');
+        if (privacyBanner) {
+            const privacyOffset = Math.max(privacyBanner.offsetTop - 48, 0);
+            setActiveTermsModalTab(currentScroll >= privacyOffset ? 'privacy' : 'terms');
+        }
 
         const progressPct = maxScroll <= 8
             ? 100
@@ -164,6 +179,22 @@
             setAcceptButtonUnlocked(true);
         }
     }
+
+    termsModalTabs.forEach(function (tab) {
+        tab.addEventListener('click', function () {
+            if (!termsModalBody) return;
+            const part = tab.getAttribute('data-terms-jump');
+            if (part === 'privacy') {
+                const privacyBanner = document.getElementById('modalPrivacyPart');
+                const top = privacyBanner ? Math.max(privacyBanner.offsetTop - 12, 0) : 0;
+                termsModalBody.scrollTo({ top: top, behavior: 'smooth' });
+                setActiveTermsModalTab('privacy');
+            } else {
+                termsModalBody.scrollTo({ top: 0, behavior: 'smooth' });
+                setActiveTermsModalTab('terms');
+            }
+        });
+    });
 
     function openTermsModal(sectionTarget, fromSubmitAttempt, triggerSource) {
         if (!termsModalOverlay || !termsModalBody) return;
