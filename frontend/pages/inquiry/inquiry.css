@@ -9,7 +9,6 @@
 /* Inquiry tokens inherit canonical palette from ../../shared/css/tokens.css via common.css */
 
 html {
-    zoom: 1.25;
     scroll-behavior: smooth;
     width: 100%;
     max-width: 100%;
@@ -435,16 +434,7 @@ body {
 }
 
 /* RESPONSIVE */
-@media (max-width: 1024px) {
-    html {
-        zoom: 1;
-    }
-}
-
 @media (max-width: 768px) {
-    html {
-        zoom: 1;
-    }
     .inquiry-mode-selector {
         width: 100%;
         display: flex;

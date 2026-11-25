@@ -1493,6 +1493,8 @@ path when rendering from a page.
 
 158. **Auth Showcase Panel Daylight Clarity (`frontend/pages/auth/auth.css`):** Lightened `.showcase-panel .overlay` from `rgba(12, 28, 17, 0.6)` to `rgba(12, 28, 17, 0.2)` (keeping a solid color tint with zero CSS `gradient(...)`) and strengthened text shadows (`.showcase-agent-title`, `.showcase-agent-sub`, `.brand-text h1`/`h2`, `.cursive-tagline`, `.showcase-caption-title`, `.showcase-caption-desc`) and slide indicator dot contrast (`.dot`) so all three daylight showcase photos (`auth-slide1.jpg`, `auth-slide2.jpg`, `auth-slide3.jpg`) appear bright and legible across `login.html`, `register.html`, and `forgot-password.html`.
 
+159. **Removal of Global Desktop `zoom: 1.25` Scaling (`frontend/shared/css/common.css`, `mobile-shell.css`, `frontend/pages/admin/admin-shell.css`, `frontend/pages/auth/auth.css`, `frontend/pages/inquiry/inquiry.css`):** Removed `html { zoom: 1.25; }` and the corresponding tablet/mobile `zoom: 1` reset overrides across public, auth, inquiry, and admin stylesheets so desktop renders at native `1:1` (`100%`) scale without compounding OS display scaling or snapping abruptly at `<= 1024px` (superseding Note #89). Floating menu coordinate normalizers in `admin-shell.js` and `clients.js` read computed `zoom` dynamically and continue operating at `1`.
+
 ## Safety Rules
 
 - Do **not** commit `backend/urbanscope.db`, `.env`, or virtualenvs (already in `.gitignore`).

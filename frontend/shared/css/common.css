@@ -90,7 +90,6 @@ p.lead,
 }
  
 html {
-    zoom: 1.25;
     scroll-behavior: smooth;
     width: 100%;
     max-width: 100%;
@@ -464,10 +463,6 @@ img, video, canvas, svg {
 
 /* RESPONSIVE SHARED RULES */
 @media (max-width: 1024px) {
-    html {
-        zoom: 1; /* Reset desktop 1.25x zoom on tablets and landscape phones */
-    }
-
     .navbar {
         gap: 20px;
         padding: 0 4%;
@@ -484,10 +479,6 @@ img, video, canvas, svg {
 }
 
 @media (max-width: 768px) {
-    html {
-        zoom: 1;
-    }
-
     /* Prevent iOS browser auto-zoom on input focus */
     input, select, textarea {
         font-size: 16px !important;

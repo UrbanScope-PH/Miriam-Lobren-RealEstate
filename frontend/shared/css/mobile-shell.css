@@ -120,12 +120,6 @@ html[data-theme="dark"] {
     display: none;
 }
 
-@media (max-width: 1024px) {
-    html {
-        zoom: 1 !important;
-    }
-}
-
 .app-topbar #mainNav {
     display: flex;
     align-items: center;
