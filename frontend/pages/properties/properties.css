@@ -383,14 +383,78 @@
     }
 }
 
+@media (pointer: coarse) {
+    .filter-group select,
+    .filter-group input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]):not([type="range"]):not([type="file"]),
+    .sort-select-wrapper select {
+        font-size: 16px !important;
+    }
+}
+
 @media (max-width: 768px) {
     .properties-container {
-        padding: 20px 4% 60px;
+        padding: 16px 14px 36px;
+    }
+
+    .listing-category-bar {
+        padding: 4px 6px;
+        margin-bottom: 14px;
+        border-radius: 10px;
+    }
+
+    .category-arrow {
+        width: 34px;
+        height: 34px;
+        touch-action: manipulation;
+    }
+
+    .category-scroll {
+        padding: 0 4px;
+        gap: 4px;
+        -webkit-overflow-scrolling: touch;
+        overscroll-behavior-x: contain;
+    }
+
+    .listing-category {
+        padding: 6px 11px;
+        min-height: 34px;
+        font-size: 12.5px;
+        border-radius: 8px;
+        touch-action: manipulation;
+    }
+
+    .listing-controls {
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-bottom: 14px;
+    }
+
+    .filter-button {
+        min-height: 34px;
+        padding: 6px 11px;
+        font-size: 13px;
+        touch-action: manipulation;
+    }
+
+    .sort-control {
+        font-size: 12.5px;
+        gap: 6px;
+    }
+
+    .sort-select-wrapper select {
+        font-size: 16px !important;
+        min-height: 36px;
+        padding: 6px 22px 6px 8px;
+        touch-action: manipulation;
     }
 
     .listing-grid {
         grid-template-columns: 1fr;
-        gap: 20px;
+        gap: 12px;
+    }
+
+    .listing-card {
+        border-radius: 12px;
     }
 
     .filter-drawer {
@@ -398,62 +462,173 @@
         top: 0;
         left: 0;
         bottom: 0;
-        width: min(320px, 88vw);
-        border-radius: 0 16px 16px 0;
+        width: min(300px, 86vw);
+        height: 100vh;
+        height: 100dvh;
+        border-radius: 0 14px 14px 0;
+        padding: max(14px, env(safe-area-inset-top, 0px)) 14px max(16px, env(safe-area-inset-bottom, 0px));
         overflow-y: auto;
+        overscroll-behavior: contain;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .filter-drawer-header {
+        margin-bottom: 14px;
+        padding-bottom: 10px;
+    }
+
+    .filter-drawer-header h3 {
+        font-size: 17px;
+        line-height: 1.25;
+    }
+
+    .close-filter-btn {
+        width: 36px;
+        height: 36px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 22px;
+        border-radius: 50%;
+        touch-action: manipulation;
+    }
+
+    .filter-group {
+        margin-bottom: 12px;
+    }
+
+    .filter-group label {
+        font-size: 12.5px;
+        margin-bottom: 5px;
     }
 
     .listing-image {
-        height: 200px;
+        height: 170px;
     }
 
     .listing-info {
-        padding: 18px;
+        padding: 12px 14px;
     }
 
     .listing-info h3 {
-        font-size: 18px;
+        font-size: 15px;
+        line-height: 1.3;
+    }
+
+    .listing-location {
+        font-size: 12px;
+        margin-bottom: 6px;
+        line-height: 1.35;
+    }
+
+    .listing-specs {
+        font-size: 12px;
+        margin-bottom: 8px;
+        padding-bottom: 8px;
+    }
+
+    .listing-price {
+        font-size: 16px;
+    }
+
+    .property-status-badge {
+        top: 8px;
+        left: 8px;
+        padding: 4px 9px;
+        font-size: 10.5px;
     }
 
     .filter-group select,
-    .filter-group input {
+    .filter-group input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]):not([type="range"]):not([type="file"]) {
         font-size: 16px !important;
+        height: 38px;
+        min-height: 38px;
+        padding: 8px 11px;
+    }
+
+    .apply-filters-btn {
+        min-height: 40px;
+        height: 40px;
+        padding: 9px 14px;
+        font-size: 14px;
+        border-radius: 12px;
+        touch-action: manipulation;
+    }
+
+    .clear-all-btn {
+        min-height: 34px;
+        padding: 6px 11px;
+        font-size: 12.5px;
+        margin-top: 8px;
+        touch-action: manipulation;
+    }
+
+    html.dark-mode .listing-category-bar,
+    html[data-theme="dark"] .listing-category-bar,
+    html.dark-mode .filter-drawer,
+    html[data-theme="dark"] .filter-drawer,
+    html.dark-mode .listing-card,
+    html[data-theme="dark"] .listing-card {
+        background-color: var(--surface);
+        border-color: var(--border-color);
+    }
+
+    html.dark-mode .listing-category,
+    html[data-theme="dark"] .listing-category,
+    html.dark-mode .listing-specs,
+    html[data-theme="dark"] .listing-specs {
+        color: var(--text-secondary);
+        border-bottom-color: var(--border-color);
+    }
+
+    html.dark-mode .filter-drawer-header,
+    html[data-theme="dark"] .filter-drawer-header {
+        border-bottom-color: var(--border-color);
+    }
+
+    html.dark-mode .filter-group select,
+    html[data-theme="dark"] .filter-group select,
+    html.dark-mode .filter-group input,
+    html[data-theme="dark"] .filter-group input {
+        background-color: var(--surface-input);
+        border-color: var(--border-input);
+        color: var(--text-dark);
     }
 }
 
 @media (max-width: 480px) {
     .properties-container {
-        padding: 16px 3.5% 50px;
+        padding: 14px 12px 32px;
     }
 
     .listing-category-bar {
-        padding: 3px 6px;
-        margin-bottom: 18px;
+        padding: 4px;
+        margin-bottom: 12px;
     }
 
     .category-arrow {
-        width: 28px;
-        height: 28px;
+        width: 34px;
+        height: 34px;
     }
 
     .listing-category {
         padding: 6px 10px;
-        font-size: 13px;
+        font-size: 12.5px;
     }
 
     .listing-controls {
         flex-wrap: wrap;
-        gap: 10px;
-        margin-bottom: 18px;
+        gap: 8px;
+        margin-bottom: 12px;
     }
 
     .filter-button {
-        font-size: 14.5px;
+        font-size: 13px;
         padding: 6px 10px;
     }
 
     .sort-control {
-        font-size: 13px;
+        font-size: 12.5px;
     }
 }
 

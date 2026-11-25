@@ -35,6 +35,7 @@ input {
 button,
 a {
     -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
 }
 
 button:focus-visible,
@@ -732,12 +733,26 @@ html[data-rbac-access="true"] .admin-sidebar a.nav-item[href$="users.html"] {
         width: 100%;
         max-width: 100%;
         overflow-x: hidden;
+        overscroll-behavior-y: none;
+    }
+
+    html {
+        scroll-padding-top: 66px;
+        -webkit-text-size-adjust: 100%;
+        text-size-adjust: 100%;
+    }
+
+    input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]):not([type="range"]):not([type="file"]),
+    select,
+    textarea {
+        font-size: 16px !important;
     }
 
     .admin-topbar {
-        min-height: 64px;
-        padding: 10px 14px;
-        gap: 10px;
+        min-height: calc(56px + env(safe-area-inset-top, 0px));
+        height: calc(56px + env(safe-area-inset-top, 0px));
+        padding: env(safe-area-inset-top, 0px) max(12px, env(safe-area-inset-right, 0px)) 0 max(12px, env(safe-area-inset-left, 0px));
+        gap: 8px;
         flex-wrap: nowrap;
     }
 
@@ -747,14 +762,48 @@ html[data-rbac-access="true"] .admin-sidebar a.nav-item[href$="users.html"] {
         flex: 1 1 auto;
     }
 
+    .hamburger-btn,
+    .notif-btn,
+    .theme-toggle-btn {
+        width: 36px;
+        min-width: 36px;
+        height: 36px;
+        min-height: 36px;
+        padding: 0;
+        flex: 0 0 36px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .hamburger-btn svg {
+        width: 20px;
+        height: 20px;
+    }
+
+    .notif-btn svg,
+    .theme-toggle-btn svg {
+        width: 18px;
+        height: 18px;
+    }
+
+    .notif-badge {
+        top: 1px;
+        right: 1px;
+        width: 15px;
+        height: 15px;
+        border-width: 1.5px;
+        font-size: 8.5px;
+    }
+
     .brand-badge {
         min-width: 0;
-        gap: 8px;
+        gap: 7px;
     }
 
     .logo-icon {
-        width: 34px;
-        height: 34px;
+        width: 29px;
+        height: 29px;
     }
 
     .brand-text {
@@ -762,14 +811,18 @@ html[data-rbac-access="true"] .admin-sidebar a.nav-item[href$="users.html"] {
     }
 
     .brand-text h1 {
-        font-size: 16px;
+        font-size: 14px;
+        line-height: 1.15;
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
     }
 
     .brand-text h2 {
-        font-size: 10px;
+        font-size: 8.5px;
+        line-height: 1.15;
+        letter-spacing: 0.4px;
+        margin-top: 1px;
     }
 
     .topbar-search {
@@ -777,65 +830,236 @@ html[data-rbac-access="true"] .admin-sidebar a.nav-item[href$="users.html"] {
     }
 
     .topbar-right {
-        gap: 8px;
+        gap: 6px;
         flex-shrink: 0;
     }
 
+    .admin-profile-badge {
+        min-height: 36px;
+        height: 36px;
+        gap: 4px;
+        padding: 0 !important;
+    }
+
     .admin-profile-badge .avatar-circle {
-        width: 38px;
-        height: 38px;
-        min-width: 38px;
+        width: 34px;
+        height: 34px;
+        min-width: 34px;
+        flex-basis: 34px;
+    }
+
+    .admin-profile-badge svg,
+    .profile-chevron {
+        width: 14px;
+        height: 14px;
     }
 
     .notif-dropdown,
     .profile-dropdown {
         position: fixed !important;
-        top: 72px !important;
+        top: calc(62px + env(safe-area-inset-top, 0px)) !important;
         left: 12px !important;
         right: 12px !important;
         width: auto !important;
-        max-width: 380px !important;
+        max-width: min(340px, calc(100vw - 24px)) !important;
         margin-left: auto !important;
-        max-height: calc(100dvh - 88px);
+        padding: 12px 14px;
+        border-radius: 14px;
+        max-height: calc(100dvh - 76px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
         overflow-y: auto;
+        overscroll-behavior: contain;
         -webkit-overflow-scrolling: touch;
         z-index: 1100 !important;
     }
 
+    .notif-dropdown-header {
+        margin-bottom: 8px;
+        padding-bottom: 8px;
+    }
+
+    .notif-header-title h3 {
+        font-size: 14.5px;
+    }
+
+    .view-all-link {
+        font-size: 12px;
+        min-height: 0;
+        padding: 2px 0;
+    }
+
+    .notif-list {
+        gap: 4px;
+        max-height: 280px;
+        overscroll-behavior: contain;
+    }
+
+    .notif-item {
+        padding: 8px 9px;
+        gap: 10px;
+        border-radius: 10px;
+    }
+
+    .notif-avatar {
+        width: 30px;
+        height: 30px;
+        font-size: 12px;
+    }
+
+    .notif-text strong {
+        font-size: 12.5px;
+    }
+
+    .notif-text small {
+        font-size: 11.5px;
+    }
+
+    .notif-empty {
+        padding: 18px 10px;
+        font-size: 12.5px;
+    }
+
+    .profile-dropdown-info {
+        padding: 2px 2px 10px;
+        gap: 10px;
+    }
+
+    .profile-dropdown-info .avatar-circle {
+        width: 40px;
+        height: 40px;
+        min-width: 40px;
+        flex-basis: 40px;
+    }
+
+    .profile-dropdown-name strong {
+        font-size: 14px;
+    }
+
+    .profile-dropdown-name small {
+        font-size: 11.5px;
+    }
+
+    .profile-dropdown-divider {
+        margin: 0 0 6px;
+    }
+
+    .profile-dropdown a {
+        min-height: 38px;
+        padding: 8px 10px;
+        gap: 10px;
+        font-size: 13px;
+        border-radius: 8px;
+    }
+
     .admin-sidebar {
-        width: min(290px, 86vw);
-        padding: 20px 18px;
+        width: min(280px, 84vw);
+        padding: max(14px, env(safe-area-inset-top, 0px)) 14px max(14px, env(safe-area-inset-bottom, 0px));
+        overscroll-behavior: contain;
+    }
+
+    .sidebar-header {
+        margin-bottom: 14px;
+        padding-bottom: 12px;
+    }
+
+    .sidebar-header .brand-badge .logo-icon {
+        width: 30px;
+        height: 30px;
+    }
+
+    .sidebar-header .brand-text h1 {
+        font-size: 15px !important;
+    }
+
+    .close-sidebar-btn {
+        width: 34px;
+        min-width: 34px;
+        height: 34px;
+        min-height: 34px;
+        padding: 0;
+        font-size: 22px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .sidebar-nav {
+        gap: 4px;
+    }
+
+    .nav-item {
+        padding: 10px 12px !important;
+        gap: 10px !important;
+        border-radius: 8px !important;
+        font-size: 13px !important;
+        min-height: 38px;
+    }
+
+    .nav-item svg {
+        width: 18px !important;
+        height: 18px !important;
+    }
+
+    .sidebar-footer {
+        margin-top: 14px;
+        padding-top: 12px;
+    }
+
+    .logout-link {
+        font-size: 13px !important;
+        min-height: 36px;
+        padding: 6px 4px;
     }
 }
 
 @media (max-width: 480px) {
     .admin-topbar {
-        min-height: 60px;
-        padding: 8px 12px;
+        min-height: calc(54px + env(safe-area-inset-top, 0px));
+        height: calc(54px + env(safe-area-inset-top, 0px));
+        padding: env(safe-area-inset-top, 0px) max(10px, env(safe-area-inset-right, 0px)) 0 max(10px, env(safe-area-inset-left, 0px));
         gap: 6px;
     }
 
+    .hamburger-btn,
+    .notif-btn,
+    .theme-toggle-btn {
+        width: 34px;
+        min-width: 34px;
+        height: 34px;
+        min-height: 34px;
+        flex: 0 0 34px;
+    }
+
     .logo-icon {
-        width: 31px;
-        height: 31px;
+        width: 28px;
+        height: 28px;
     }
 
     .brand-text h1 {
-        font-size: 15px;
+        font-size: 14px;
+    }
+
+    .brand-text h2 {
+        font-size: 8px;
+    }
+
+    .admin-profile-badge {
+        min-height: 34px;
+        height: 34px;
     }
 
     .admin-profile-badge .avatar-circle {
-        width: 35px;
-        height: 35px;
-        min-width: 35px;
+        width: 34px;
+        height: 34px;
+        min-width: 34px;
+        flex-basis: 34px;
     }
 
     .notif-dropdown,
     .profile-dropdown {
-        top: 66px !important;
+        top: calc(58px + env(safe-area-inset-top, 0px)) !important;
         left: 10px !important;
         right: 10px !important;
-        padding: 14px;
+        padding: 12px;
     }
 }
 
@@ -932,13 +1156,17 @@ html[data-rbac-access="true"] .admin-sidebar a.nav-item[href$="users.html"] {
     pointer-events: auto;
 }
 
-@media (max-width: 600px) {
+@media (max-width: 768px) {
     .admin-shell-toast {
-        bottom: 16px;
-        right: 16px;
-        left: 16px;
+        top: calc(62px + env(safe-area-inset-top, 0px));
+        bottom: auto;
+        right: 12px;
+        left: 12px;
         width: auto;
         max-width: none;
+        padding: 11px 14px;
+        border-radius: 10px;
+        font-size: 12.5px;
     }
 }
 
@@ -2310,4 +2538,153 @@ html.dark-mode .prop-actions-item.prop-menu-delete:focus-visible {
     color: var(--danger-text);
 }
 
+/* ==========================================================================
+   MOBILE-NATIVE & COMPACT SHELL CONTRACT (<= 768px / pointer: coarse)
+   Leaves desktop (> 768px) completely unchanged.
+   ========================================================================== */
+@media (pointer: coarse) {
+    input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]):not([type="range"]):not([type="file"]),
+    select,
+    textarea {
+        font-size: 16px !important;
+    }
+}
+
+@media (max-width: 768px) {
+    .action-view-btn,
+    .table-panel .action-button {
+        min-height: 34px;
+        padding: 6px 11px;
+        font-size: 12.5px;
+        border-radius: 8px;
+    }
+
+    .btn-primary,
+    .action-btn-primary,
+    .btn-modal-approve:not(.approved):not(:disabled),
+    .btn-save-profile,
+    .btn-add-property {
+        min-height: 40px;
+        padding: 9px 14px;
+        font-size: 13.5px;
+    }
+
+    .stat-card {
+        border-radius: 12px !important;
+        padding: 10px 12px !important;
+    }
+
+    .stat-card-value,
+    .stat-number {
+        font-size: 21px !important;
+    }
+
+    .table-panel {
+        border-radius: 12px !important;
+    }
+
+    .modal-box,
+    .modal-card {
+        max-width: calc(100vw - 24px);
+        max-height: calc(100dvh - 24px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
+        padding: 14px 16px;
+        border-radius: 12px;
+        overscroll-behavior: contain;
+    }
+
+    .modal-close {
+        width: 34px;
+        height: 34px;
+        min-width: 34px;
+        min-height: 34px;
+    }
+
+    .mobile-cards-list {
+        gap: 10px;
+        padding: 10px 12px 12px;
+    }
+
+    .mobile-empty-state {
+        padding: 20px 14px;
+        font-size: 13.5px;
+        line-height: 1.5;
+    }
+
+    .mobile-data-card {
+        padding: 12px 14px;
+        border-radius: 12px;
+        gap: 8px;
+    }
+
+    .mobile-card-title-block strong {
+        font-size: 15px;
+        line-height: 1.3;
+    }
+
+    .mobile-card-title-block small,
+    .mobile-card-sub {
+        font-size: 12px;
+        line-height: 1.4;
+    }
+
+    .mobile-card-date {
+        font-size: 11.5px;
+    }
+
+    .mobile-card-detail strong {
+        font-size: 14.5px;
+        line-height: 1.3;
+    }
+
+    .mobile-card-detail small {
+        font-size: 12px;
+    }
+
+    .mobile-card-phone-link {
+        min-height: 32px;
+        font-size: 13px;
+        gap: 6px;
+        padding: 2px 0;
+    }
+
+    .mobile-card-phone-muted {
+        font-size: 12px;
+    }
+
+    .mobile-card-actions-bar {
+        padding-top: 8px;
+        gap: 8px;
+    }
+
+    .mobile-card-actions-bar .status-select-pill {
+        min-height: 34px;
+        height: 34px;
+        padding: 5px 10px;
+        font-size: 12.5px;
+    }
+
+    .mobile-card-actions-bar .action-btn.view,
+    .mobile-card-actions-bar .action-view-btn {
+        min-height: 34px;
+        padding: 6px 12px;
+        font-size: 12.5px;
+        border-radius: 8px;
+    }
+
+    button,
+    [role="button"],
+    .nav-item,
+    .action-view-btn,
+    .status-tab-btn,
+    .status-select-pill,
+    .prop-actions-trigger,
+    .admin-profile-badge,
+    .theme-toggle-btn,
+    .notif-btn,
+    .hamburger-btn {
+        -webkit-user-select: none;
+        user-select: none;
+        -webkit-touch-callout: none;
+    }
+}
 

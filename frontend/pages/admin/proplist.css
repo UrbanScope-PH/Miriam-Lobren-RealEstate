@@ -837,9 +837,7 @@
    RESPONSIVE DESIGN (TABLET & MOBILE BREAKPOINTS)
    ========================================================== */
 @media (max-width: 768px) {
-
-    /* Prevent iOS zoom on input focus */
-    input,
+    input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]):not([type="range"]):not([type="file"]),
     select,
     textarea {
         font-size: 16px !important;
@@ -848,33 +846,221 @@
     .manage-header-row {
         flex-direction: column;
         align-items: stretch;
-        gap: 14px;
+        gap: 10px;
+        margin-bottom: 0;
     }
 
     .page-title {
-        font-size: clamp(1.4rem, 5vw, 1.75rem);
+        font-size: 21px;
+        line-height: 1.25;
+        margin-bottom: 2px;
+    }
+
+    .page-subtitle {
+        font-size: 13px;
+        line-height: 1.45;
     }
 
     .add-property-btn {
         width: 100%;
         justify-content: center;
-        padding: 12px 20px;
-        min-height: 44px;
+        padding: 9px 14px;
+        min-height: 40px;
+        font-size: 13.5px;
+        border-radius: 10px !important;
     }
 
     .manage-controls-row {
         flex-direction: column;
+        gap: 8px;
+        margin-bottom: 0;
+    }
+
+    .search-input-card,
+    .status-select-card,
+    .date-input-card {
+        min-width: 0;
+        width: 100%;
+        height: 38px;
+        min-height: 38px;
+        padding: 0 11px;
+        border-radius: 10px;
+    }
+
+    .search-input-card input {
+        height: 100%;
+        min-height: 36px;
+        padding: 6px 0;
+    }
+
+    .status-select-card.has-custom-select {
+        height: auto;
+        min-height: 0;
+        padding: 0;
+    }
+
+    .proplist-custom-trigger {
+        height: 38px;
+        min-height: 38px;
+        padding: 0 11px;
+        font-size: 13px;
+        border-radius: 10px;
+    }
+
+    .proplist-custom-menu {
+        width: 100%;
+        max-width: none;
+        border-radius: 12px;
+        padding: 6px;
+    }
+
+    .proplist-custom-option {
+        min-height: 36px;
+        padding: 7px 10px;
+        font-size: 13px;
+    }
+
+    .reset-filter-btn {
+        width: 100%;
+        height: 36px;
+        min-height: 36px;
+        padding: 6px 11px;
+        font-size: 12.5px;
+        border-radius: 10px;
+    }
+
+    .table-card {
+        padding: 0;
+        border-radius: 12px;
+        margin-bottom: 0;
+    }
+
+    .table-card .card-header {
+        padding: 12px 14px;
+    }
+
+    .table-card .card-header h3 {
+        font-size: 15px;
+    }
+
+    .table-card .card-header p {
+        font-size: 12px;
+    }
+
+    .proplist-count-badge {
+        font-size: 11px;
+        padding: 3px 8px;
+    }
+
+    .proplist-view-all-btn {
+        min-height: 34px;
+        padding: 6px 11px;
+        font-size: 12.5px;
+    }
+
+    .proplist-table-footer {
+        padding: 10px 14px;
+    }
+
+    .proplist-footer-summary {
+        font-size: 12px;
+    }
+
+    .proplist-footer-view-btn {
+        font-size: 12.5px;
+    }
+
+    #propertiesMobileList {
+        padding: 10px 12px 12px;
         gap: 10px;
     }
 
-    .search-input-card {
-        min-width: 0;
-        width: 100%;
+    .mobile-property-card {
+        padding: 12px;
+        border-radius: 12px;
+        gap: 8px;
     }
 
-    .status-select-card {
-        min-width: 0;
-        width: 100%;
+    .mobile-prop-top {
+        gap: 10px;
+    }
+
+    .mobile-prop-thumb {
+        width: 68px;
+        height: 68px;
+        border-radius: 9px;
+    }
+
+    .mobile-card-title-row strong {
+        font-size: 14.5px;
+        line-height: 1.25;
+    }
+
+    .mobile-status-chip {
+        padding: 3px 8px;
+        font-size: 11px;
+    }
+
+    .mobile-prop-price {
+        font-size: 14.5px;
+    }
+
+    .mobile-type-tag {
+        font-size: 11px;
+        padding: 2px 7px;
+    }
+
+    .mobile-prop-actions {
+        gap: 7px;
+        padding-top: 8px;
+    }
+
+    .mobile-prop-actions button {
+        min-height: 36px;
+        padding: 6px 10px;
+        font-size: 12.5px;
+        border-radius: 8px;
+        font-weight: 700;
+        border: 1px solid var(--border-color);
+        cursor: pointer;
+        font-family: inherit;
+    }
+
+    .mobile-prop-actions .view-btn {
+        background: var(--status-success-bg);
+        color: var(--status-success-text);
+        border-color: var(--status-success-border);
+    }
+
+    .mobile-prop-actions .edit-btn {
+        background: var(--surface-muted);
+        color: var(--text-secondary);
+        border-color: var(--border-strong);
+    }
+
+    .mobile-prop-actions .status-toggle-btn.btn-make-sold {
+        background: var(--status-warning-bg);
+        color: var(--status-warning-text);
+        border-color: var(--status-warning-border);
+    }
+
+    .mobile-prop-actions .status-toggle-btn.btn-make-available {
+        background: var(--status-success-bg);
+        color: var(--status-success-text);
+        border-color: var(--status-success-border);
+    }
+
+    .mobile-prop-actions .delete-btn {
+        background: var(--danger-light);
+        color: var(--danger-text);
+        border-color: var(--danger-border);
+    }
+
+    html.dark-mode .mobile-prop-actions .edit-btn,
+    html[data-theme="dark"] .mobile-prop-actions .edit-btn {
+        background: var(--surface-muted);
+        color: var(--text-dark);
+        border-color: var(--border-strong);
     }
 
     .table-container {
@@ -888,8 +1074,33 @@
     }
 
     .modal-card {
-        padding: 20px 16px;
+        padding: 14px 16px;
+        border-radius: 12px;
         max-width: calc(100vw - 24px);
+    }
+
+    .modal-header {
+        margin-bottom: 12px;
+        padding-bottom: 10px;
+    }
+
+    .modal-header h3 {
+        font-size: 17px;
+    }
+
+    .modal-field {
+        margin-bottom: 12px;
+    }
+
+    .modal-field label {
+        font-size: 12.5px;
+    }
+
+    .modal-field input,
+    .modal-field select {
+        height: 38px;
+        min-height: 38px;
+        padding: 8px 11px;
     }
 
     .modal-row {
@@ -898,25 +1109,42 @@
 
     .modal-actions {
         flex-direction: column-reverse;
-        gap: 10px;
+        gap: 8px;
+        margin-top: 14px;
     }
 
-    .cancel-modal-btn,
+    .cancel-modal-btn {
+        width: 100%;
+        text-align: center;
+        padding: 8px 12px;
+        min-height: 38px;
+        font-size: 13px;
+    }
+
     .submit-modal-btn {
         width: 100%;
         text-align: center;
-        padding: 12px;
-        min-height: 44px;
+        padding: 9px 14px;
+        min-height: 40px;
+        font-size: 13.5px;
     }
 }
 
 @media (max-width: 480px) {
     .page-title {
-        font-size: 1.35rem;
+        font-size: 20px;
     }
 
     .search-input-card,
-    .status-select-card {
-        height: 46px;
+    .status-select-card,
+    .date-input-card,
+    .proplist-custom-trigger {
+        height: 38px;
+        min-height: 38px;
+    }
+
+    .mobile-prop-thumb {
+        width: 62px;
+        height: 62px;
     }
 }

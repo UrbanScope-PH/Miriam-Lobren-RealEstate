@@ -435,20 +435,75 @@ body {
 
 /* RESPONSIVE */
 @media (max-width: 768px) {
+    .inquiry-page-container {
+        margin: 18px auto 32px;
+        padding: 0 14px max(28px, env(safe-area-inset-bottom, 0px));
+    }
+    .guest-inquiry-banner {
+        padding: 9px 12px;
+        font-size: 12.5px;
+        line-height: 1.4;
+        border-radius: 10px;
+        margin-bottom: 12px;
+        gap: 8px;
+    }
+    .inquiry-header-top {
+        gap: 10px;
+        margin-bottom: 14px;
+    }
+    .page-heading {
+        font-size: 21px;
+        line-height: 1.25;
+    }
+    .history-pill-link {
+        min-height: 36px;
+        padding: 6px 12px;
+        font-size: 12.5px;
+        gap: 6px;
+        touch-action: manipulation;
+        -webkit-user-select: none;
+        user-select: none;
+    }
     .inquiry-mode-selector {
         width: 100%;
         display: flex;
+        padding: 4px;
+        gap: 4px;
+        border-radius: 12px;
+        margin-bottom: 14px;
     }
     .mode-tab {
         flex: 1;
         min-width: 0;
+        min-height: 36px;
         justify-content: center;
-        padding: 10px 12px;
-        font-size: 13px;
+        padding: 7px 11px;
+        font-size: 12.5px;
+        gap: 7px;
+        border-radius: 9px;
         text-align: center;
+        touch-action: manipulation;
+        -webkit-user-select: none;
+        user-select: none;
+    }
+    .mode-tab svg {
+        width: 16px;
+        height: 16px;
+    }
+    .inquiry-form-card {
+        padding: 14px;
+        border-radius: 12px;
+    }
+    .form-section {
+        margin-bottom: 18px;
+    }
+    .section-title {
+        font-size: 15px;
+        margin-bottom: 10px;
     }
     .consultation-fields-grid {
         grid-template-columns: minmax(0, 1fr);
+        gap: 10px;
     }
     .section-title-row {
         flex-direction: column;
@@ -466,69 +521,138 @@ body {
     }
     .user-info-row {
         grid-template-columns: minmax(0, 1fr);
+        gap: 10px;
+    }
+    .input-field label,
+    .textarea-field label {
+        font-size: 12.5px;
+        margin-bottom: 4px;
+    }
+    .optional-tag,
+    .detected-tag {
+        font-size: 11.5px;
+    }
+    .field-hint {
+        font-size: 11.5px !important;
+        line-height: 1.4;
     }
     .property-summary-box {
         flex-direction: column;
         align-items: flex-start;
+        padding: 12px;
+        gap: 10px;
+        border-radius: 12px;
+    }
+    .sold-property-notice {
+        margin: 10px 0;
+        padding: 10px 12px;
+        font-size: 12.5px;
+        line-height: 1.45;
     }
     .summary-thumb {
         width: 100%;
-        height: 160px;
+        height: 144px;
+        border-radius: 9px;
+    }
+    .summary-details h2 {
+        font-size: 16.5px;
+        line-height: 1.25;
+        margin-bottom: 3px;
+    }
+    .summary-loc {
+        font-size: 12px;
+        margin-bottom: 6px;
+    }
+    .summary-specs {
+        font-size: 12px;
+        gap: 8px 12px;
     }
     .topbar-search {
         display: none;
     }
-    .inquiry-form-card {
-        padding: 24px;
-    }
 
     .input-field input,
     .form-select,
+    .form-input,
     .textarea-field textarea {
         font-size: 16px !important;
+    }
+    .input-field input,
+    .form-select,
+    .form-input {
+        min-height: 40px;
+        height: 40px;
+        padding: 8px 11px;
+    }
+    .textarea-field textarea {
+        padding: 8px 11px;
+        min-height: 96px;
+    }
+    .form-actions-row {
+        margin-top: 20px;
+        padding-top: 14px;
+        gap: 10px;
+    }
+    .cancel-btn {
+        min-height: 38px;
+        padding: 8px 16px;
+        font-size: 13px;
+        touch-action: manipulation;
+        -webkit-user-select: none;
+        user-select: none;
+    }
+    .submit-btn {
+        min-height: 40px;
+        padding: 9px 18px;
+        font-size: 14px;
+        touch-action: manipulation;
+        -webkit-user-select: none;
+        user-select: none;
+    }
+    .inquiry-cooldown-notice {
+        font-size: 12px;
+        margin-top: 10px;
     }
 }
 
 @media (max-width: 640px) {
     .inquiry-page-container {
-        margin: 20px auto 40px;
-        padding: 0 14px;
-    }
-
-    .page-heading {
-        font-size: 22px;
+        margin: 16px auto 28px;
+        padding: 0 12px max(24px, env(safe-area-inset-bottom, 0px));
     }
 
     .inquiry-mode-selector {
         flex-direction: column;
-        padding: 6px;
-        gap: 5px;
-        border-radius: 14px;
+        padding: 4px;
+        gap: 4px;
+        border-radius: 12px;
     }
 
     .mode-tab {
         width: 100%;
         white-space: normal;
         line-height: 1.3;
-        padding: 11px 14px;
-        border-radius: 10px;
+        min-height: 36px;
+        padding: 8px 12px;
+        font-size: 12.5px;
+        border-radius: 9px;
     }
 
     .inquiry-form-card {
-        padding: 18px 16px;
-        border-radius: 16px;
+        padding: 13px 12px;
+        border-radius: 12px;
     }
 
     .summary-specs {
-        gap: 12px;
+        gap: 8px 12px;
         flex-wrap: wrap;
     }
 
     .form-actions-row {
         flex-direction: column-reverse;
-        gap: 10px;
-        margin-top: 24px;
-        padding-top: 18px;
+        gap: 8px;
+        margin-top: 18px;
+        padding-top: 14px;
     }
 
     .cancel-btn,
@@ -536,7 +660,6 @@ body {
         width: 100%;
         justify-content: center;
         text-align: center;
-        padding: 12px 20px;
     }
 
     .inquiry-cooldown-notice {
@@ -549,9 +672,17 @@ body {
         align-items: flex-start;
     }
 
+    .page-heading {
+        font-size: 20px;
+    }
+
     .history-pill-link {
         width: 100%;
         justify-content: center;
+    }
+
+    body.has-contact-fab .inquiry-page-container {
+        padding-bottom: calc(74px + env(safe-area-inset-bottom, 0px));
     }
 }
 
@@ -1005,44 +1136,178 @@ body {
     background: var(--danger-btn-bg);
 }
 
-@media (max-width: 600px) {
+@media (max-width: 768px) {
     .modal-overlay {
-        padding: 14px;
+        padding: max(12px, env(safe-area-inset-top, 0px)) 12px max(12px, env(safe-area-inset-bottom, 0px));
+    }
+
+    .modal-box {
+        border-radius: 14px;
+        max-height: calc(100dvh - 24px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
+        overscroll-behavior: contain;
+    }
+
+    .modal-back-btn,
+    .modal-close-btn {
+        top: 12px;
+        width: 34px;
+        height: 34px;
+        touch-action: manipulation;
+        -webkit-user-select: none;
+        user-select: none;
+    }
+
+    .modal-back-btn {
+        left: 12px;
+    }
+
+    .modal-close-btn {
+        right: 12px;
     }
 
     .success-modal-hero {
-        padding: 28px 18px 14px;
+        padding: 22px 14px 12px;
+    }
+
+    .success-icon-badge {
+        width: 48px;
+        height: 48px;
+        margin-bottom: 10px;
+    }
+
+    .success-icon-badge svg {
+        width: 24px;
+        height: 24px;
+    }
+
+    .success-modal-hero h3 {
+        font-size: 17px;
+        margin-bottom: 4px;
+    }
+
+    .success-modal-lead {
+        font-size: 12.5px;
+        line-height: 1.45;
     }
 
     .modal-body.success-modal-body {
-        padding: 16px 16px 8px;
+        padding: 12px 14px 8px;
     }
 
     .success-card {
-        padding: 14px;
+        padding: 12px;
+        border-radius: 12px;
     }
 
     .success-card-header {
         flex-wrap: wrap;
-        gap: 8px;
+        gap: 6px;
+        margin-bottom: 10px;
+        padding-bottom: 9px;
+    }
+
+    .success-status-pill {
+        font-size: 11px;
+        padding: 3px 10px;
+    }
+
+    .success-date {
+        font-size: 11.5px;
+    }
+
+    .success-topic-info {
+        margin-bottom: 10px;
+    }
+
+    .success-label {
+        font-size: 10.5px;
+    }
+
+    .success-property-title {
+        font-size: 15px;
     }
 
     .success-schedule-box {
         max-width: 100%;
         flex-wrap: wrap;
+        font-size: 12px;
+        padding: 5px 10px;
+        margin-bottom: 10px;
+    }
+
+    .success-client-row {
+        grid-template-columns: minmax(0, 1fr);
+        gap: 8px;
+        padding: 10px 12px;
+        margin-bottom: 10px;
+    }
+
+    .client-meta-item small {
+        font-size: 10.5px;
+    }
+
+    .client-meta-item span {
+        font-size: 12.5px;
+    }
+
+    .success-note {
+        font-size: 12px;
+        padding: 9px 10px;
+    }
+
+    .success-sla-notice {
+        font-size: 12px;
     }
 
     .modal-footer.success-modal-footer {
+        padding: 12px 14px 14px;
+        gap: 8px;
+    }
+
+    .btn-success-primary {
+        min-height: 40px;
+        padding: 9px 14px;
+        font-size: 13.5px;
+        touch-action: manipulation;
+        -webkit-user-select: none;
+        user-select: none;
+    }
+
+    .btn-secondary {
+        min-height: 38px;
+        padding: 7px 12px;
+        font-size: 13px;
+        touch-action: manipulation;
+        -webkit-user-select: none;
+        user-select: none;
+    }
+
+    .btn-return-home {
+        font-size: 12.5px;
+        padding: 4px 8px;
+    }
+
+    .toast-notice {
+        left: 12px;
+        right: 12px;
+        bottom: calc(14px + env(safe-area-inset-bottom, 0px));
+        padding: 10px 14px;
+        font-size: 12.5px;
+    }
+}
+
+@media (max-width: 600px) {
+    .modal-footer.success-modal-footer {
         flex-direction: column;
         align-items: stretch;
-        padding: 14px 16px 20px;
-        gap: 10px;
+        padding: 12px 14px 16px;
+        gap: 8px;
     }
 
     .success-modal-footer .modal-action-group {
         flex-direction: column;
         align-items: stretch;
-        gap: 10px;
+        gap: 8px;
         width: 100%;
     }
 
@@ -1051,13 +1316,6 @@ body {
         width: 100%;
         justify-content: center;
         text-align: center;
-    }
-
-    .toast-notice {
-        left: 14px;
-        right: 14px;
-        bottom: 16px;
-        font-size: 0.85rem;
     }
 }
 
@@ -2062,8 +2320,149 @@ html.dark-mode .custom-select-price-pill {
         white-space: normal;
     }
 
+    body.has-contact-fab .inquiry-page-container {
+        padding-bottom: calc(74px + env(safe-area-inset-bottom, 0px));
+    }
+
+    /* Compact custom datepicker & custom select on mobile */
+    .custom-datepicker-input {
+        padding-right: 38px !important;
+    }
+
+    .datepicker-trigger-btn {
+        width: 34px;
+        height: 34px;
+        right: 4px;
+        touch-action: manipulation;
+        -webkit-user-select: none;
+        user-select: none;
+    }
+
+    .urban-datepicker-popup {
+        width: min(300px, 100%);
+        max-width: calc(100vw - 28px);
+        padding: 11px;
+        border-radius: 12px;
+    }
+
+    .datepicker-header {
+        margin-bottom: 8px;
+    }
+
+    .datepicker-nav-btn {
+        width: 34px;
+        height: 34px;
+        touch-action: manipulation;
+        -webkit-user-select: none;
+        user-select: none;
+    }
+
+    .datepicker-title {
+        font-size: 13.5px;
+    }
+
+    .datepicker-weekday {
+        font-size: 11px;
+    }
+
+    .datepicker-day-cell {
+        font-size: 12.5px;
+        border-radius: 7px;
+        touch-action: manipulation;
+        -webkit-user-select: none;
+        user-select: none;
+    }
+
+    .datepicker-footer {
+        padding-top: 8px;
+    }
+
+    .datepicker-action-btn {
+        font-size: 12.5px;
+        min-height: 34px;
+        padding: 5px 10px;
+        touch-action: manipulation;
+        -webkit-user-select: none;
+        user-select: none;
+    }
+
+    .custom-select-trigger {
+        min-height: 38px;
+        padding: 7px 11px;
+        font-size: 13px;
+        touch-action: manipulation;
+        -webkit-user-select: none;
+        user-select: none;
+    }
+
+    .custom-select-trigger-loc {
+        font-size: 11.5px;
+    }
+
+    .custom-select-trigger-price {
+        font-size: 11px;
+        padding: 2px 7px;
+    }
+
+    .custom-select-dropdown {
+        min-width: 100%;
+        max-width: 100%;
+        max-height: 260px;
+        padding: 4px;
+        border-radius: 10px;
+        overscroll-behavior: contain;
+        -webkit-overflow-scrolling: touch;
+    }
+
     .custom-select-dropdown-property {
         min-width: 100%;
+        max-width: 100%;
+        padding: 6px;
+    }
+
+    .custom-select-option {
+        padding: 7px 10px;
+        font-size: 13px;
+        min-height: 36px;
+        touch-action: manipulation;
+        -webkit-user-select: none;
+        user-select: none;
+    }
+
+    .custom-select-option.is-property-option {
+        padding: 7px 8px;
+    }
+
+    .custom-select-property-thumb {
+        width: 40px;
+        height: 32px;
+        border-radius: 6px;
+    }
+
+    .custom-select-property-title {
+        font-size: 13px;
+    }
+
+    .custom-select-property-sub {
+        font-size: 11.5px;
+    }
+
+    .custom-select-price-pill {
+        font-size: 11px;
+        padding: 2px 7px;
+    }
+
+    html[data-theme="dark"] body {
+        background-color: var(--bg-main);
+        color: var(--text-dark);
+    }
+}
+
+@media (pointer: coarse) {
+    input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]):not([type="range"]):not([type="file"]),
+    select,
+    textarea {
+        font-size: 16px !important;
     }
 }
 
