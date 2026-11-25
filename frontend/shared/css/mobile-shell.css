@@ -174,7 +174,7 @@ html[data-theme="dark"] {
         width: 100%;
         max-width: 100%;
         overflow-x: hidden;
-        scroll-padding-top: 72px;
+        scroll-padding-top: 64px;
     }
 
     body {
@@ -182,7 +182,7 @@ html[data-theme="dark"] {
         overflow-x: hidden;
     }
 
-    input,
+    input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]):not([type="range"]):not([type="file"]),
     select,
     textarea {
         min-width: 0;
@@ -197,11 +197,12 @@ html[data-theme="dark"] {
         position: sticky;
         top: 0;
         z-index: 1100;
-        height: 64px;
-        min-height: 64px;
+        height: 56px;
+        min-height: 56px;
         padding: 0 12px;
         gap: 8px;
         flex-wrap: nowrap;
+        box-sizing: border-box;
     }
 
     .navbar .Cname,
@@ -220,8 +221,8 @@ html[data-theme="dark"] {
 
     .brand-logo,
     .logo-icon {
-        width: 34px;
-        height: 34px;
+        width: 30px;
+        height: 30px;
         flex: 0 0 auto;
     }
 
@@ -229,7 +230,8 @@ html[data-theme="dark"] {
     .brand-text h1,
     .app-brand strong {
         overflow: hidden;
-        font-size: 15px;
+        font-size: 14px;
+        line-height: 1.15;
         text-overflow: ellipsis;
         white-space: nowrap;
     }
@@ -239,10 +241,10 @@ html[data-theme="dark"] {
     .app-brand small {
         display: block;
         overflow: hidden;
-        font-size: clamp(7.8px, 2.2vw, 9px);
-        letter-spacing: clamp(0.4px, 0.18vw, 1px);
+        font-size: 8.5px;
+        letter-spacing: 0.7px;
         line-height: 1.15;
-        margin-top: 2px;
+        margin-top: 1px;
         text-overflow: ellipsis;
         white-space: nowrap;
     }
@@ -258,7 +260,7 @@ html[data-theme="dark"] {
     .sa-topbar-right {
         min-width: 0;
         flex: 0 0 auto;
-        gap: 8px;
+        gap: 6px;
         align-items: center;
     }
 
@@ -296,13 +298,14 @@ html[data-theme="dark"] {
     .sa-hamburger-btn,
     .close-sidebar-btn,
     .sa-close-sidebar {
-        width: 44px;
-        min-width: 44px;
-        height: 44px;
-        min-height: 44px;
+        width: 36px;
+        min-width: 36px;
+        height: 36px;
+        min-height: 36px;
+        padding: 0;
         align-items: center;
         justify-content: center;
-        flex: 0 0 44px;
+        flex: 0 0 36px;
     }
 
     /* Clean 36x36px borderless utility icons + 36x36px circular profile avatar on mobile */
@@ -334,18 +337,21 @@ html[data-theme="dark"] {
     .nav-acts .theme-icon-wrap,
     .nav-acts .theme-icon,
     .nav-acts .client-notif-btn svg,
-    .nav-acts .s-icon-btn svg {
-        width: 20px;
-        height: 20px;
+    .nav-acts .s-icon-btn svg,
+    .topbar-right .theme-toggle-btn svg,
+    .topbar-right .notif-btn svg,
+    .sa-topbar-right .theme-toggle-btn svg {
+        width: 18px;
+        height: 18px;
     }
 
     .nav-acts .client-notif-badge {
-        top: 1px;
-        right: 1px;
-        min-width: 17px;
-        height: 17px;
+        top: 0;
+        right: 0;
+        min-width: 15px;
+        height: 15px;
         padding: 0 4px;
-        font-size: 0.64rem;
+        font-size: 9.5px;
     }
 
     .nav-acts .profile-chip {
@@ -377,7 +383,14 @@ html[data-theme="dark"] {
 
     .admin-profile-badge,
     .sa-profile-btn {
-        min-height: 44px;
+        min-height: 36px;
+        padding: 2px;
+    }
+
+    .admin-profile-badge .avatar-circle {
+        width: 34px;
+        height: 34px;
+        min-width: 34px;
     }
 
     .mobile-nav-toggle {
@@ -391,7 +404,7 @@ html[data-theme="dark"] {
         flex: 0 0 36px;
         align-items: center;
         justify-content: center;
-        gap: 4.5px;
+        gap: 4px;
         border-radius: 50%;
         border: 1.5px solid transparent;
         background: transparent;
@@ -400,7 +413,7 @@ html[data-theme="dark"] {
     }
 
     .mobile-nav-toggle .hamburger-line {
-        width: 18px;
+        width: 17px;
         height: 2px;
     }
 
@@ -412,11 +425,11 @@ html[data-theme="dark"] {
     }
 
     .mobile-nav-toggle.active .hamburger-line:nth-child(1) {
-        transform: translateY(6.5px) rotate(45deg);
+        transform: translateY(6px) rotate(45deg);
     }
 
     .mobile-nav-toggle.active .hamburger-line:nth-child(3) {
-        transform: translateY(-6.5px) rotate(-45deg);
+        transform: translateY(-6px) rotate(-45deg);
     }
 
     html.dark-mode .mobile-nav-toggle {
@@ -451,8 +464,8 @@ html[data-theme="dark"] {
     }
 
     .nav-acts .profile-dropdown {
-        max-height: calc(100vh - 76px);
-        max-height: calc(100dvh - 76px);
+        max-height: calc(100vh - 70px);
+        max-height: calc(100dvh - 70px);
         overflow-y: auto;
         overscroll-behavior: contain;
         -webkit-overflow-scrolling: touch;
@@ -462,7 +475,7 @@ html[data-theme="dark"] {
     .navbar nav,
     .app-topbar #mainNav {
         position: fixed;
-        top: 68px;
+        top: calc(56px + env(safe-area-inset-top, 0px) + 6px);
         right: 12px;
         left: auto;
         z-index: 1200;
@@ -470,14 +483,14 @@ html[data-theme="dark"] {
         flex-direction: column;
         align-items: stretch;
         gap: 2px;
-        width: min(290px, calc(100vw - 24px));
-        max-height: calc(100vh - 76px);
-        max-height: calc(100dvh - 76px);
-        padding: 8px;
+        width: min(272px, calc(100vw - 24px));
+        max-height: calc(100vh - 72px);
+        max-height: calc(100dvh - 72px);
+        padding: 6px;
         overflow-y: auto;
         background: var(--surface, #ffffff);
         border: 1px solid var(--border-color, #d7e3da);
-        border-radius: 16px;
+        border-radius: 12px;
         box-shadow: 0 18px 40px rgba(0, 0, 0, 0.16);
         opacity: 0;
         visibility: hidden;
@@ -501,15 +514,15 @@ html[data-theme="dark"] {
     .app-topbar #mainNav > a {
         display: flex;
         align-items: center;
-        gap: 10px;
+        gap: 8px;
         width: 100%;
-        min-height: 40px;
-        padding: 10px 12px;
+        min-height: 36px;
+        padding: 7px 10px;
         border: 0 !important;
-        border-radius: 10px;
+        border-radius: 8px;
         color: var(--text-dark, #0f1f14);
         font-family: inherit;
-        font-size: 0.88rem;
+        font-size: 13px;
         font-weight: 500;
         text-decoration: none;
         box-sizing: border-box;
@@ -521,7 +534,7 @@ html[data-theme="dark"] {
         background-color: var(--light-green, #eef5ef);
         color: var(--green, #2d5c39);
         font-weight: 600;
-        padding: 10px 12px;
+        padding: 7px 10px;
         border: 0 !important;
     }
 
@@ -530,7 +543,7 @@ html[data-theme="dark"] {
         .app-topbar #mainNav > a:hover {
             background-color: var(--light-green, #eef5ef);
             color: var(--green, #2d5c39);
-            padding: 10px 12px;
+            padding: 7px 10px;
             border: 0 !important;
         }
     }
@@ -581,8 +594,8 @@ html[data-theme="dark"] {
         display: grid;
         grid-template-columns: 1fr 1fr;
         gap: 8px;
-        margin-top: 6px;
-        padding: 8px 4px 2px;
+        margin-top: 4px;
+        padding: 8px 2px 2px;
         border-top: 1px solid var(--border-subtle, #edf3ee);
     }
 
@@ -600,10 +613,10 @@ html[data-theme="dark"] {
         display: flex;
         align-items: center;
         justify-content: center;
-        min-height: 40px;
-        padding: 8px 12px;
-        border-radius: 10px;
-        font-size: 0.86rem;
+        min-height: 36px;
+        padding: 7px 10px;
+        border-radius: 8px;
+        font-size: 13px;
         font-weight: 600;
         text-decoration: none;
         box-sizing: border-box;
@@ -628,7 +641,7 @@ html[data-theme="dark"] {
 
     .mobile-nav-backdrop {
         position: fixed;
-        inset: 64px 0 0;
+        inset: calc(56px + env(safe-area-inset-top, 0px)) 0 0;
         z-index: 1080;
         display: block;
         background: transparent !important;
@@ -654,11 +667,11 @@ html[data-theme="dark"] {
         bottom: 0;
         left: 0;
         z-index: 1250;
-        width: min(320px, 88vw);
-        max-width: 88vw;
+        width: min(300px, 84vw);
+        max-width: 84vw;
         height: 100vh;
         height: 100dvh;
-        padding: max(16px, env(safe-area-inset-top, 0px)) 16px max(16px, env(safe-area-inset-bottom, 0px));
+        padding: max(14px, env(safe-area-inset-top, 0px)) 14px max(16px, env(safe-area-inset-bottom, 0px));
         overflow-x: hidden;
         overflow-y: auto;
         overscroll-behavior: contain;
@@ -692,13 +705,13 @@ html[data-theme="dark"] {
     .sa-dropdown-menu,
     .client-notif-dropdown {
         position: fixed !important;
-        top: 72px !important;
+        top: calc(56px + env(safe-area-inset-top, 0px) + 6px) !important;
         right: 12px !important;
         left: auto !important;
-        width: min(320px, calc(100vw - 24px)) !important;
+        width: min(304px, calc(100vw - 24px)) !important;
         min-width: 0 !important;
         max-width: calc(100vw - 24px) !important;
-        max-height: calc(100dvh - 84px);
+        max-height: calc(100dvh - 72px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
         margin: 0 !important;
         overflow-y: auto;
         overscroll-behavior: contain;
@@ -711,7 +724,7 @@ html[data-theme="dark"] {
         width: 100%;
         min-width: 0;
         margin-left: 0;
-        padding: 20px 14px max(32px, env(safe-area-inset-bottom, 0px));
+        padding: 14px 12px max(24px, env(safe-area-inset-bottom, 0px));
     }
 
     .content,
@@ -732,13 +745,27 @@ html[data-theme="dark"] {
     .modal-box,
     .sa-modal,
     .inquiry-modal-content,
-    .success-modal-content {
+    .success-modal-content,
+    .modal-card,
+    .modal-content,
+    .terms-modal-card,
+    .otp-modal-card,
+    .inquiry-modal-card {
         max-width: calc(100vw - 24px);
-        max-height: calc(100dvh - 24px);
+        max-height: calc(100dvh - 24px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
+        border-radius: 12px;
         overflow-x: hidden;
         overflow-y: auto;
         overscroll-behavior: contain;
         -webkit-overflow-scrolling: touch;
+    }
+
+    .modal-overlay,
+    .sa-modal-backdrop,
+    .modal-backdrop,
+    .terms-modal-overlay,
+    .otp-modal-overlay {
+        padding: max(12px, env(safe-area-inset-top, 0px)) 12px max(12px, env(safe-area-inset-bottom, 0px));
     }
 }
 
@@ -748,9 +775,10 @@ html[data-theme="dark"] {
     }
 
     .app-topbar .go-back-btn {
-        width: 44px;
-        min-width: 44px;
-        height: 44px;
+        width: 36px;
+        min-width: 36px;
+        height: 36px;
+        min-height: 36px;
         justify-content: center;
         padding: 0;
     }
@@ -763,16 +791,79 @@ html[data-theme="dark"] {
     .sa-topbar,
     .app-topbar,
     .navbar {
-        padding-right: 10px;
-        padding-left: 10px;
+        height: 54px;
+        min-height: 54px;
+        padding-right: 12px;
+        padding-left: 12px;
+    }
+
+    .brand-logo,
+    .logo-icon {
+        width: 28px;
+        height: 28px;
+    }
+
+    .Cname strong,
+    .brand-text h1,
+    .app-brand strong {
+        font-size: 14px;
+    }
+
+    .Cname small,
+    .brand-text h2,
+    .app-brand small {
+        font-size: 8px;
+        letter-spacing: 0.55px;
     }
 
     .hamburger-btn,
-    .sa-hamburger-btn {
-        width: 44px;
-        min-width: 44px;
-        height: 44px;
-        flex-basis: 44px;
+    .sa-hamburger-btn,
+    .close-sidebar-btn,
+    .sa-close-sidebar {
+        width: 34px;
+        min-width: 34px;
+        height: 34px;
+        min-height: 34px;
+        flex-basis: 34px;
+    }
+
+    .nav-acts .theme-toggle-btn,
+    .nav-acts .s-icon-btn,
+    .nav-acts .client-notif-btn,
+    .nav-acts .mobile-nav-toggle,
+    html.dark-mode .nav-acts .theme-toggle-btn,
+    html.dark-mode .nav-acts .s-icon-btn,
+    html.dark-mode .nav-acts .client-notif-btn,
+    html.dark-mode .nav-acts .mobile-nav-toggle,
+    html[data-theme="dark"] .nav-acts .s-icon-btn,
+    .nav-acts .profile-chip {
+        width: 34px;
+        min-width: 34px;
+        height: 34px;
+        min-height: 34px;
+        flex: 0 0 34px;
+    }
+
+    .admin-profile-badge .avatar-circle {
+        width: 32px;
+        height: 32px;
+        min-width: 32px;
+    }
+
+    .navbar nav,
+    .app-topbar #mainNav {
+        top: calc(54px + env(safe-area-inset-top, 0px) + 6px);
+    }
+
+    .mobile-nav-backdrop {
+        inset: calc(54px + env(safe-area-inset-top, 0px)) 0 0;
+    }
+
+    .profile-dropdown,
+    .notif-dropdown,
+    .sa-dropdown-menu,
+    .client-notif-dropdown {
+        top: calc(54px + env(safe-area-inset-top, 0px) + 6px) !important;
     }
 }
 
@@ -984,96 +1075,94 @@ button,
     }
 
     .cat-arrow {
-        width: 40px;
-        height: 40px;
-        min-width: 40px;
-        min-height: 40px;
+        width: 36px;
+        height: 36px;
+        min-width: 36px;
+        min-height: 36px;
     }
 
     .cat-tab,
     .filter-tab {
-        min-height: 40px;
+        min-height: 34px;
         display: inline-flex;
         align-items: center;
     }
 
     .carousel-arrow {
-        width: 42px;
-        height: 42px;
+        width: 36px;
+        height: 36px;
     }
 
     .carousel-zoom-btn {
-        min-height: 40px;
-        padding: 8px 14px;
+        min-height: 36px;
+        padding: 6px 12px;
     }
 
     .toggle-pw,
     .password-toggle-btn,
     .calendar-nav-btn,
     .datepicker-trigger-btn {
-        min-width: 40px;
-        min-height: 40px;
+        min-width: 34px;
+        min-height: 34px;
     }
 
     .topbar-right .theme-toggle-btn,
     .sa-topbar-right .theme-toggle-btn,
     .notif-btn {
-        min-width: 42px;
-        min-height: 42px;
+        min-width: 34px;
+        min-height: 34px;
     }
 
     .search-select-trigger,
     .sort-select-trigger,
     .search-bar input {
-        min-height: 40px;
+        min-height: 38px;
     }
 
     .legal-back-btn,
-    .go-back-btn,
-    .back-home-link {
-        min-height: 40px;
+    .go-back-btn {
+        min-height: 36px;
         display: inline-flex;
         align-items: center;
     }
 
     .card-icon-btn {
-        min-width: 40px;
-        min-height: 40px;
+        min-width: 34px;
+        min-height: 34px;
     }
 
     .prop-action-btn,
     .prop-actions-trigger,
     .tcp-doc-btn,
-    .text-button,
     .action-view-btn,
     .btn-change-avatar,
     .btn-reset-avatar {
-        min-height: 40px;
+        min-height: 36px;
         display: inline-flex;
         align-items: center;
     }
 
     .status-select-pill {
-        min-height: 38px;
+        min-height: 34px;
         height: auto;
-        padding: 6px 12px;
+        padding: 5px 10px;
     }
 
     .action-btn {
-        min-height: 38px;
-        padding: 8px 14px;
+        min-height: 34px;
+        padding: 6px 11px;
     }
 
     #propertiesTable .actions button {
-        min-height: 36px;
-        min-width: 44px;
-        padding: 7px 11px;
+        min-height: 34px;
+        min-width: 34px;
+        padding: 6px 10px;
     }
 
     .admin-toast-close {
-        min-width: 36px;
-        min-height: 36px;
-        padding: 6px !important;
+        min-width: 34px;
+        min-height: 34px;
+        padding: 5px !important;
         display: inline-flex;
         align-items: center;
         justify-content: center;
@@ -1091,28 +1180,37 @@ button,
     }
 
     .contact-fab {
-        bottom: max(14px, env(safe-area-inset-bottom, 0px));
-        right: max(14px, env(safe-area-inset-right, 0px));
+        bottom: max(10px, env(safe-area-inset-bottom, 0px));
+        right: max(10px, env(safe-area-inset-right, 0px));
     }
 
     .fab-main-btn {
-        width: 48px;
-        height: 48px;
+        width: 38px;
+        height: 38px;
     }
 
     .back-to-top-btn {
-        bottom: calc(74px + env(safe-area-inset-bottom, 0px));
-        right: max(14px, env(safe-area-inset-right, 0px));
-        width: 44px;
-        height: 44px;
+        bottom: calc(56px + env(safe-area-inset-bottom, 0px));
+        right: max(10px, env(safe-area-inset-right, 0px));
+        width: 36px;
+        height: 36px;
     }
 
-    .inquiry-page-container {
-        padding-bottom: 84px;
+    .btt-progress-ring {
+        width: 34px;
+        height: 34px;
+        top: 0;
+        left: 0;
+    }
+
+    .inquiry-page-container,
+    .legal-main-container,
+    .history-container {
+        padding-bottom: 64px;
     }
 
     .form-panel {
-        padding-bottom: max(28px, env(safe-area-inset-bottom, 0px));
+        padding-bottom: max(20px, env(safe-area-inset-bottom, 0px));
     }
 }
 
@@ -1138,9 +1236,42 @@ button,
 }
 
 /* ==========================================================================
-   MOBILE UX PHASES 1–3: 30+ READABILITY, COMPACT SCROLL & CARD VIEWS (<= 768px)
+   MOBILE UX PHASES 1–3: COMPACT SCALE CONTRACT & CARD VIEWS (<= 768px)
    ========================================================================== */
 @media (max-width: 768px) {
+    /* Re-apply mobile safe-area topbar dimensions after desktop safe-area block */
+    .navbar,
+    .admin-topbar,
+    .sa-topbar,
+    .app-topbar {
+        height: calc(56px + env(safe-area-inset-top, 0px));
+        min-height: calc(56px + env(safe-area-inset-top, 0px));
+        padding-top: env(safe-area-inset-top, 0px);
+        padding-left: max(12px, env(safe-area-inset-left, 0px));
+        padding-right: max(12px, env(safe-area-inset-right, 0px));
+        box-sizing: border-box;
+    }
+
+    .topbar-right .theme-toggle-btn,
+    .sa-topbar-right .theme-toggle-btn,
+    .notif-btn,
+    #notifButton {
+        width: 36px;
+        min-width: 36px;
+        height: 36px;
+        min-height: 36px;
+        padding: 0;
+        flex: 0 0 36px;
+    }
+
+    .footer {
+        padding-bottom: 0;
+    }
+
+    .footer-bottom {
+        padding-bottom: max(14px, env(safe-area-inset-bottom, 0px));
+    }
+
     /* Phase 1: Ensure no sections wait invisible during quick touch scrolling */
     .reveal-on-scroll {
         opacity: 1 !important;
@@ -1153,16 +1284,18 @@ button,
         text-align: left !important;
     }
 
-    /* Phase 1: 30+ Readable Phone Typography Scale */
-    main p,
+    /* Phase 1: Shared Mobile Scale Contract Typography */
     .about-text p,
     .faq-answer-inner p,
+    .faq-answer-inner li,
     .legal-section p,
     .legal-section li,
     .description-box p,
-    .property-description {
-        font-size: 16px;
-        line-height: 1.6;
+    .property-description,
+    .overview-box p,
+    .detail-block p {
+        font-size: 13.5px;
+        line-height: 1.55;
     }
 
     .tcp-disclaimer,
@@ -1174,27 +1307,35 @@ button,
     .upload-area small,
     .field-hint,
     .input-hint {
-        font-size: 14px !important;
-        line-height: 1.45 !important;
+        font-size: 12px;
+        line-height: 1.45;
     }
 
     .amenities-grid li {
-        font-size: 14.5px !important;
-        line-height: 1.4;
+        font-size: 13.5px;
+        line-height: 1.45;
     }
 
-    /* Phase 1: Guaranteed >= 44px Touch Targets */
+    /* Inline links, brand badges & checkbox labels stay natural inline height */
+    .Cname,
+    .brand-badge,
+    .sa-brand-badge,
+    .form-brand-badge,
+    .back-home-link,
+    .forgot-link,
+    .register-prompt a,
+    .remember-label,
     .view-all-link,
     .feature-view-link,
     .text-button,
-    #statusFilter,
     .form-footer-links a,
     .legal a,
-    .footer-legal a,
-    .Cname {
-        min-height: 44px;
-        display: inline-flex;
-        align-items: center;
+    .footer-legal a {
+        min-height: 0;
+    }
+
+    #statusFilter {
+        min-height: 38px;
     }
 
     .dots-container .dot {
@@ -1204,10 +1345,10 @@ button,
     .dots-container .dot::after {
         content: "";
         position: absolute;
-        inset: -18px;
+        inset: -12px;
     }
 
-    /* Single-row Proportional Category Segmented Tabs & Wrapped Filter Chips (Zero Clipped Edges) */
+    /* Single-row Proportional Category Segmented Tabs & Wrapped Filter Chips */
     .category-tabs-container {
         padding: 4px !important;
         gap: 0 !important;
@@ -1231,33 +1372,33 @@ button,
 
     .cat-tab {
         flex: 1 1 auto !important;
-        min-width: 44px;
-        min-height: 44px !important;
-        padding: 8px 6px !important;
-        font-size: clamp(12.5px, 3.4vw, 14px) !important;
-        justify-content: center !important;
-        text-align: center !important;
-        white-space: nowrap !important;
+        min-width: 0;
+        min-height: 36px;
+        padding: 6px 8px;
+        font-size: 12.5px;
+        justify-content: center;
+        text-align: center;
+        white-space: nowrap;
     }
 
     .filter-tabs {
         flex-wrap: wrap !important;
         overflow-x: visible !important;
-        gap: 8px !important;
+        gap: 6px !important;
     }
 
     .filter-tab {
-        min-height: 42px;
-        font-size: 13.5px !important;
-        padding: 8px 14px !important;
+        min-height: 34px;
+        font-size: 12.5px;
+        padding: 6px 11px;
     }
 
     /* Phase 1: Move Admin Notification Toast to top so bottom cards stay clear */
     .admin-shell-toast {
-        top: calc(74px + env(safe-area-inset-top, 0px)) !important;
+        top: calc(64px + env(safe-area-inset-top, 0px)) !important;
         bottom: auto !important;
-        left: 14px !important;
-        right: 14px !important;
+        left: 12px !important;
+        right: 12px !important;
         width: auto !important;
         max-width: none !important;
     }
@@ -1266,20 +1407,20 @@ button,
     .mobile-expand-wrap:not([hidden]) {
         display: flex;
         justify-content: center;
-        margin-top: 16px;
+        margin-top: 12px;
         width: 100%;
     }
 
     .mobile-expand-btn {
-        min-height: 46px;
-        padding: 11px 22px;
+        min-height: 38px;
+        padding: 7px 16px;
         border-radius: 999px;
         border: 1.5px solid var(--green, #2d5c39);
         background: var(--light-green, #eef5ef);
         color: var(--dark-green, #1a3b23);
         font-family: inherit;
         font-weight: 700;
-        font-size: 15px;
+        font-size: 13px;
         cursor: pointer;
     }
 
@@ -1289,59 +1430,61 @@ button,
     }
 
     #propertyGrid.property-grid {
-        gap: 14px !important;
+        gap: 10px !important;
     }
 
     #propertyGrid .property-card {
         display: grid !important;
-        grid-template-columns: 116px minmax(0, 1fr) !important;
+        grid-template-columns: 104px minmax(0, 1fr) !important;
         align-items: stretch;
-        border-radius: 14px;
+        border-radius: 12px;
     }
 
     #propertyGrid .property-image {
-        width: 116px !important;
+        width: 104px !important;
         height: auto !important;
-        min-height: 148px !important;
-        border-radius: 14px 0 0 14px !important;
+        min-height: 128px !important;
+        border-radius: 12px 0 0 12px !important;
     }
 
     #propertyGrid .property-status-badge {
-        top: 8px;
-        left: 8px;
-        padding: 4px 8px;
-        font-size: 11px;
+        top: 6px;
+        left: 6px;
+        padding: 3px 7px;
+        font-size: 10.5px;
     }
 
     #propertyGrid .card-actions {
         top: auto !important;
-        bottom: 8px;
-        right: 8px;
+        bottom: 6px;
+        right: 6px;
     }
 
     #propertyGrid .card-icon-btn {
-        width: 44px;
-        height: 44px;
+        width: 34px;
+        height: 34px;
+        min-width: 34px;
+        min-height: 34px;
     }
 
     #propertyGrid .property-info {
-        padding: 12px 13px !important;
+        padding: 10px 12px !important;
         min-width: 0;
         display: flex;
         flex-direction: column;
         justify-content: space-between;
-        gap: 4px;
+        gap: 3px;
     }
 
     #propertyGrid .property-info h3 {
-        font-size: 16.5px !important;
+        font-size: 14.5px;
         line-height: 1.25;
-        margin-bottom: 2px;
+        margin-bottom: 1px;
     }
 
     #propertyGrid .property-location {
-        font-size: 14px !important;
-        margin-bottom: 4px;
+        font-size: 12px;
+        margin-bottom: 2px;
         display: -webkit-box;
         -webkit-line-clamp: 1;
         -webkit-box-orient: vertical;
@@ -1349,34 +1492,34 @@ button,
     }
 
     #propertyGrid .property-details {
-        gap: 6px 10px !important;
-        font-size: 14px !important;
-        margin-bottom: 4px;
+        gap: 4px 8px;
+        font-size: 12px;
+        margin-bottom: 2px;
     }
 
     #propertyGrid .property-tcp-container {
-        padding-top: 6px !important;
+        padding-top: 5px;
         margin-top: 2px;
     }
 
     #propertyGrid .tcp-pill-tag {
-        font-size: 12px !important;
-        padding: 2px 8px;
-        margin-bottom: 3px;
+        font-size: 10.5px;
+        padding: 2px 7px;
+        margin-bottom: 2px;
     }
 
     #propertyGrid .property-price {
-        font-size: 17px !important;
+        font-size: 15px;
     }
 
     #propertyGrid .tcp-subtext {
-        font-size: 14px !important;
+        font-size: 11.5px;
         line-height: 1.3;
     }
 
     /* Phase 2: Home - Compact About + Inline Avatar + Read More */
     .about {
-        padding: 36px 5% !important;
+        padding: 28px 14px;
     }
 
     .about-image-card {
@@ -1386,19 +1529,19 @@ button,
     .about-mobile-header {
         display: flex !important;
         align-items: center;
-        gap: 14px;
-        margin-bottom: 12px;
+        gap: 12px;
+        margin-bottom: 10px;
     }
 
     .about-mobile-header h2 {
         margin-bottom: 0 !important;
-        font-size: 24px !important;
+        font-size: 18px;
     }
 
     .about-mobile-avatar {
         display: block !important;
-        width: 64px;
-        height: 64px;
+        width: 52px;
+        height: 52px;
         border-radius: 50%;
         object-fit: cover;
         object-position: top center;
@@ -1417,18 +1560,18 @@ button,
     .mobile-inline-toggle {
         display: inline-flex !important;
         align-items: center;
-        min-height: 44px;
-        padding: 6px 2px;
+        min-height: 0;
+        padding: 4px 0;
         background: none;
         border: none;
         color: var(--green, #2d5c39);
         font-family: inherit;
         font-weight: 700;
-        font-size: 15px;
+        font-size: 13px;
         text-decoration: underline;
         text-underline-offset: 3px;
         cursor: pointer;
-        margin: 2px 0 8px;
+        margin: 2px 0 6px;
     }
 
     /* Phase 2: Home - Compact FAQs (4 initial) & Compact Footer */
@@ -1437,7 +1580,7 @@ button,
     }
 
     .faq-q-text {
-        font-size: 15.5px !important;
+        font-size: 13.5px;
         line-height: 1.4;
     }
 
@@ -1445,7 +1588,7 @@ button,
         display: none !important;
     }
 
-    /* Phase 2: Property Detail & Showcases (2-up specs/amenities, collapsed calc, bottom CTA bar) */
+    /* Phase 2: Property Detail & Showcases (2-up specs/amenities, bottom CTA bar) */
     .specs-bar {
         grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
         gap: 10px !important;
@@ -1454,8 +1597,8 @@ button,
     .amenities-grid ul {
         display: grid !important;
         grid-template-columns: repeat(2, minmax(0, 1fr));
-        column-gap: 12px;
-        row-gap: 8px;
+        column-gap: 10px;
+        row-gap: 6px;
     }
 
     body.has-property-cta-bar .contact-fab {
@@ -1463,24 +1606,24 @@ button,
     }
 
     body.has-property-cta-bar .back-to-top-btn {
-        bottom: calc(78px + env(safe-area-inset-bottom, 0px)) !important;
+        bottom: calc(68px + env(safe-area-inset-bottom, 0px)) !important;
     }
 
     body.has-property-cta-bar .footer,
     body.has-property-cta-bar footer {
-        padding-bottom: calc(88px + env(safe-area-inset-bottom, 0px)) !important;
+        padding-bottom: calc(74px + env(safe-area-inset-bottom, 0px)) !important;
     }
 
     .mobile-property-cta-bar {
         display: grid !important;
         grid-template-columns: minmax(0, 1fr) minmax(0, 1.3fr);
-        gap: 10px;
+        gap: 8px;
         position: fixed;
         left: 0;
         right: 0;
         bottom: 0;
         z-index: 980;
-        padding: 10px 14px calc(10px + env(safe-area-inset-bottom, 0px));
+        padding: 8px 12px calc(8px + env(safe-area-inset-bottom, 0px));
         background: rgba(255, 255, 255, 0.96);
         backdrop-filter: blur(12px);
         -webkit-backdrop-filter: blur(12px);
@@ -1493,10 +1636,11 @@ button,
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        gap: 8px;
-        min-height: 46px;
-        border-radius: 12px;
-        font-size: 15px;
+        gap: 6px;
+        min-height: 40px;
+        padding: 8px 12px;
+        border-radius: 10px;
+        font-size: 13.5px;
         font-weight: 700;
         text-decoration: none;
     }
@@ -1522,8 +1666,8 @@ button,
     /* Phase 2: Legal Pages (Dropdown Jump + Collapsible Sections) */
     .legal-main-container {
         grid-template-columns: 1fr !important;
-        gap: 16px !important;
-        margin: 24px auto 48px !important;
+        gap: 12px !important;
+        margin: 16px auto 32px !important;
     }
 
     .legal-sidebar {
@@ -1537,35 +1681,37 @@ button,
         background: var(--surface, #ffffff);
         border: 1px solid var(--border-color, #d7e3da);
         border-radius: 12px;
-        padding: 12px 14px;
+        padding: 10px 12px;
     }
 
     .legal-mobile-jump label {
-        font-size: 13.5px;
+        font-size: 12.5px;
         font-weight: 700;
         color: var(--dark-green, #1a3b23);
     }
 
     .legal-jump-select {
         width: 100%;
-        min-height: 46px;
-        padding: 10px 12px;
-        border-radius: 10px;
+        min-height: 38px;
+        height: 38px;
+        padding: 6px 11px;
+        border-radius: 8px;
         border: 1px solid var(--border-input, #c9d8cd);
         font-family: inherit;
-        font-size: 15.5px;
+        font-size: 16px;
         font-weight: 600;
         color: var(--text-dark, #0f1f14);
         background: var(--surface-input, #f8fbf9);
     }
 
     .legal-content-card {
-        padding: 16px !important;
+        padding: 14px;
+        border-radius: 12px;
     }
 
     .legal-section {
-        margin-bottom: 14px !important;
-        padding-bottom: 14px !important;
+        margin-bottom: 10px;
+        padding-bottom: 10px;
         border-bottom: 1px solid var(--border-subtle, #edf3ee);
     }
 
@@ -1574,18 +1720,18 @@ button,
         display: flex;
         align-items: center;
         justify-content: space-between;
-        gap: 10px;
-        min-height: 48px;
+        gap: 8px;
+        min-height: 38px;
         margin-bottom: 0 !important;
     }
 
     .legal-section.is-expanded .section-head {
-        margin-bottom: 12px !important;
+        margin-bottom: 8px !important;
     }
 
     .legal-section .section-head h2 {
         flex: 1;
-        font-size: 17px !important;
+        font-size: 16.5px;
         line-height: 1.35;
     }
 
@@ -1593,8 +1739,8 @@ button,
         display: inline-flex !important;
         align-items: center;
         justify-content: center;
-        width: 28px;
-        height: 28px;
+        width: 24px;
+        height: 24px;
         color: var(--green, #2d5c39);
         flex-shrink: 0;
         transition: transform 0.2s ease;
@@ -1616,23 +1762,23 @@ button,
 
     /* Phase 2: Auth Compact Top Showcase */
     .showcase-panel {
-        height: auto !important;
-        min-height: 152px !important;
-        max-height: none !important;
-        padding: 14px 16px 14px !important;
+        height: auto;
+        min-height: 132px;
+        max-height: none;
+        padding: 12px 14px;
     }
 
     .cursive-tagline {
-        font-size: 24px !important;
+        font-size: 22px;
     }
 
     .showcase-caption-title {
-        font-size: 14.5px !important;
+        font-size: 14.5px;
     }
 
     .showcase-caption-desc {
-        font-size: 13.5px !important;
-        line-height: 1.35 !important;
+        font-size: 12px;
+        line-height: 1.35;
         display: -webkit-box;
         -webkit-line-clamp: 1;
         -webkit-box-orient: vertical;
@@ -1643,8 +1789,8 @@ button,
     .mobile-cards-list {
         display: flex;
         flex-direction: column;
-        gap: 12px;
-        padding: 12px 14px 16px;
+        gap: 10px;
+        padding: 10px 12px 12px;
     }
 
     .clients-card .table-container,
@@ -1656,27 +1802,27 @@ button,
 
     .mobile-empty-state {
         text-align: center;
-        padding: 28px 16px;
+        padding: 20px 14px;
         color: var(--text-muted, #526658);
-        font-size: 15px;
+        font-size: 13.5px;
     }
 
     .mobile-data-card {
         background: var(--surface, #ffffff);
         border: 1px solid var(--border-color, #d7e3da);
-        border-radius: 14px;
-        padding: 14px;
+        border-radius: 12px;
+        padding: 12px;
         box-shadow: 0 2px 10px rgba(26, 59, 35, 0.04);
         display: flex;
         flex-direction: column;
-        gap: 10px;
+        gap: 8px;
     }
 
     .mobile-card-top {
         display: flex;
         align-items: flex-start;
         justify-content: space-between;
-        gap: 10px;
+        gap: 8px;
     }
 
     .mobile-card-title-block {
@@ -1685,7 +1831,7 @@ button,
 
     .mobile-card-title-block strong {
         display: block;
-        font-size: 16px;
+        font-size: 14.5px;
         color: var(--text-dark, #0f1f14);
         line-height: 1.3;
     }
@@ -1693,14 +1839,14 @@ button,
     .mobile-card-title-block small,
     .mobile-card-sub {
         display: block;
-        font-size: 13.5px;
+        font-size: 12px;
         color: var(--text-muted, #526658);
         line-height: 1.35;
         overflow-wrap: anywhere;
     }
 
     .mobile-card-date {
-        font-size: 13.5px;
+        font-size: 11.5px;
         font-weight: 600;
         color: var(--text-muted, #526658);
         white-space: nowrap;
@@ -1709,14 +1855,14 @@ button,
 
     .mobile-card-detail strong {
         display: block;
-        font-size: 15px;
+        font-size: 13.5px;
         color: var(--dark-green, #1a3b23);
         line-height: 1.35;
     }
 
     .mobile-card-detail small {
         display: block;
-        font-size: 13.5px;
+        font-size: 12px;
         color: var(--text-muted, #526658);
     }
 
@@ -1724,15 +1870,16 @@ button,
         display: inline-flex;
         align-items: center;
         gap: 6px;
-        min-height: 44px;
-        font-size: 15px;
+        min-height: 0;
+        padding: 2px 0;
+        font-size: 13px;
         font-weight: 700;
         color: var(--green, #2d5c39);
         text-decoration: none;
     }
 
     .mobile-card-phone-muted {
-        font-size: 14px;
+        font-size: 12px;
         color: var(--text-muted, #526658);
     }
 
@@ -1740,35 +1887,35 @@ button,
         display: flex;
         align-items: center;
         justify-content: space-between;
-        gap: 10px;
+        gap: 8px;
         padding-top: 8px;
         border-top: 1px solid var(--border-subtle, #edf3ee);
     }
 
     .mobile-card-actions-bar .status-select-pill {
-        min-height: 44px;
-        font-size: 14px;
-        padding: 8px 14px;
+        min-height: 34px;
+        font-size: 12px;
+        padding: 5px 10px;
     }
 
     .mobile-card-actions-bar .action-btn.view,
     .mobile-card-actions-bar .action-view-btn {
-        min-height: 44px;
-        padding: 8px 16px;
-        font-size: 14.5px;
+        min-height: 34px;
+        padding: 6px 11px;
+        font-size: 12.5px;
         margin-left: auto;
     }
 
     /* Phase 3: Admin Property List Mobile Cards */
     .mobile-prop-top {
         display: flex;
-        gap: 12px;
+        gap: 10px;
         align-items: flex-start;
     }
 
     .mobile-prop-thumb {
-        width: 78px;
-        height: 78px;
+        width: 68px;
+        height: 68px;
         border-radius: 10px;
         object-fit: cover;
         flex-shrink: 0;
@@ -1785,7 +1932,7 @@ button,
         min-width: 0;
         display: flex;
         flex-direction: column;
-        gap: 4px;
+        gap: 3px;
     }
 
     .mobile-card-title-row {
@@ -1796,15 +1943,15 @@ button,
     }
 
     .mobile-card-title-row strong {
-        font-size: 16px;
+        font-size: 14.5px;
         color: var(--text-dark, #0f1f14);
         line-height: 1.25;
     }
 
     .mobile-status-chip {
-        padding: 4px 10px;
+        padding: 3px 8px;
         border-radius: 999px;
-        font-size: 12.5px;
+        font-size: 11px;
         font-weight: 700;
         white-space: nowrap;
         flex-shrink: 0;
@@ -1824,22 +1971,22 @@ button,
         display: flex;
         align-items: center;
         flex-wrap: wrap;
-        gap: 8px;
+        gap: 6px;
         margin-top: 2px;
     }
 
     .mobile-prop-price {
-        font-size: 16px;
+        font-size: 14.5px;
         font-weight: 800;
         color: var(--dark-green, #1a3b23);
     }
 
     .mobile-type-tag {
-        padding: 3px 9px;
+        padding: 2px 7px;
         border-radius: 6px;
         background: var(--light-green, #eef5ef);
         color: var(--dark-green, #1a3b23);
-        font-size: 12.5px;
+        font-size: 11px;
         font-weight: 600;
     }
 
@@ -1852,17 +1999,18 @@ button,
     }
 
     .mobile-prop-actions button {
-        min-height: 44px;
-        border-radius: 10px;
-        font-size: 14px;
+        min-height: 36px;
+        padding: 6px 10px;
+        border-radius: 8px;
+        font-size: 12.5px;
         font-weight: 700;
     }
 
-    /* Phase 3: Admin Dashboard Streamlined Order & Collapsible Calendar */
+    /* Phase 3: Admin Dashboard Streamlined Order, Compact KPIs & Collapsible Calendar */
     .dashboard-content {
         display: flex !important;
         flex-direction: column !important;
-        gap: 16px !important;
+        gap: 12px !important;
     }
 
     .welcome-banner {
@@ -1875,6 +2023,41 @@ button,
         grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
         gap: 10px !important;
         margin-bottom: 0 !important;
+    }
+
+    .kpi-card {
+        padding: 10px 12px;
+        gap: 10px;
+        border-radius: 12px;
+    }
+
+    .kpi-icon {
+        width: 34px;
+        height: 34px;
+        border-radius: 9px;
+    }
+
+    .kpi-icon svg {
+        width: 18px;
+        height: 18px;
+    }
+
+    .kpi-value {
+        font-size: 20px;
+        line-height: 1.15;
+    }
+
+    .kpi-label {
+        font-size: 11.5px;
+        white-space: normal;
+        overflow: visible;
+        text-overflow: clip;
+        line-height: 1.25;
+    }
+
+    .kpi-sub {
+        font-size: 11.5px;
+        line-height: 1.3;
     }
 
     .dashboard-feature-grid {
@@ -1912,7 +2095,7 @@ button,
     .calendar-heading {
         flex-direction: column;
         align-items: stretch;
-        gap: 10px;
+        gap: 8px;
     }
 
     .calendar-heading-actions {
@@ -1925,16 +2108,16 @@ button,
         display: flex !important;
         align-items: center;
         justify-content: space-between;
-        gap: 10px;
+        gap: 8px;
         width: 100%;
-        min-height: 46px;
-        padding: 10px 14px;
+        min-height: 38px;
+        padding: 7px 12px;
         border-radius: 10px;
         border: 1.5px solid var(--green, #2d5c39);
         background: var(--light-green, #eef5ef);
         color: var(--dark-green, #1a3b23);
         font-family: inherit;
-        font-size: 14.5px;
+        font-size: 13px;
         font-weight: 700;
         cursor: pointer;
     }
@@ -1944,7 +2127,7 @@ button,
     }
 
     .calendar-mobile-summary {
-        font-size: 13.5px;
+        font-size: 12px;
         font-weight: 600;
         color: var(--text-muted, #526658);
     }
@@ -1959,7 +2142,7 @@ button,
     }
 
     .mobile-dash-prop {
-        font-size: 15px;
+        font-size: 13.5px;
         font-weight: 700;
         color: var(--dark-green, #1a3b23);
         line-height: 1.35;
@@ -1977,8 +2160,8 @@ button,
         align-items: center;
         justify-content: center;
         margin-left: auto;
-        width: 32px;
-        height: 32px;
+        width: 26px;
+        height: 26px;
         color: var(--green, #2d5c39);
         flex-shrink: 0;
         transition: transform 0.2s ease;
@@ -1995,21 +2178,21 @@ button,
     /* Phase 3: Superadmin Collapsible Role Responsibilities + User Cards */
     .sa-card .feature-card-header {
         flex-wrap: wrap;
-        gap: 10px;
+        gap: 8px;
     }
 
     .sa-mobile-collapse-btn {
         display: inline-flex !important;
         align-items: center;
         gap: 6px;
-        min-height: 44px;
-        padding: 8px 14px;
-        border-radius: 10px;
+        min-height: 36px;
+        padding: 6px 11px;
+        border-radius: 8px;
         border: 1.5px solid var(--green, #2d5c39);
         background: var(--light-green, #eef5ef);
         color: var(--dark-green, #1a3b23);
         font-family: inherit;
-        font-size: 14px;
+        font-size: 12.5px;
         font-weight: 700;
         cursor: pointer;
         margin-left: auto;
@@ -2042,13 +2225,13 @@ button,
 
     .mobile-sa-user-id strong {
         display: block;
-        font-size: 15.5px;
+        font-size: 14.5px;
         color: var(--text-dark, #0f1f14);
     }
 
     .mobile-sa-user-id small {
         display: block;
-        font-size: 13.5px;
+        font-size: 12px;
         color: var(--text-muted, #526658);
         overflow-wrap: anywhere;
     }
@@ -2056,8 +2239,8 @@ button,
     .mobile-card-meta-row {
         display: flex;
         flex-wrap: wrap;
-        gap: 6px 14px;
-        font-size: 13.5px;
+        gap: 4px 12px;
+        font-size: 12px;
         color: var(--text-muted, #526658);
     }
 
@@ -2069,9 +2252,9 @@ button,
     }
 
     .mobile-sa-user-actions .btn-table-action {
-        min-height: 44px;
-        padding: 8px 14px;
-        font-size: 14px;
+        min-height: 34px;
+        padding: 6px 11px;
+        font-size: 12.5px;
     }
 
     /* Dark Mode Coverage for New Mobile UX Components */
@@ -2210,172 +2393,31 @@ button,
         border-color: var(--border-color, #273c2e);
     }
 
-    html.dark-mode .form-footer-links a,
-    html[data-theme="dark"] .form-footer-links a {
-        color: var(--dark-green, #86efac) !important;
-    }
-
     html.dark-mode .property-status-badge.badge-rfo,
     html[data-theme="dark"] .property-status-badge.badge-rfo {
         background: var(--accent-warm-solid, #b45309) !important;
         color: #ffffff !important;
     }
 
-    /* Phase 1–3 Final Polish: 30+ Mobile Typography & >= 44px Tap Targets */
-    .topbar-right .theme-toggle-btn,
-    .sa-topbar-right .theme-toggle-btn,
-    #notifButton,
-    .notif-btn,
+    /* Compact Control Sizes & Eyebrow/Tag Scale */
     .carousel-arrow,
-    .btn-change-avatar,
     .toggle-pw,
     .password-toggle-btn,
-    .datepicker-trigger-btn,
-    #propertyGrid .card-icon-btn {
-        min-width: 44px !important;
-        min-height: 44px !important;
-    }
-
-    .brand-badge,
-    .sa-brand-badge,
-    .form-brand-badge,
-    .back-home-link,
-    .forgot-link,
-    .register-prompt a,
-    .remember-label {
-        min-height: 44px !important;
-        display: inline-flex !important;
-        align-items: center;
-    }
-
-    .search-select-trigger,
-    .search-submit,
-    .sort-select-trigger,
-    .cat-tab,
-    .filter-tab,
-    .carousel-zoom-btn,
-    .tcp-doc-btn,
-    .btn-google,
-    .back-btn,
-    .save-btn,
-    .cancel-btn,
-    .history-pill-link,
-    .mode-tab,
-    .custom-select-trigger,
-    .calendar-today-btn {
-        min-height: 44px !important;
-    }
-
-    .spec-pill,
-    .search-field-label,
-    .cta-question,
-    .status-badge,
-    .inquiry-note {
-        font-size: 14px !important;
-        letter-spacing: 0.15px;
-    }
-
-    .showcase-caption-title {
-        font-size: 15.5px !important;
-    }
-
-    .showcase-caption-desc,
-    .form-group label,
-    .remember-label span,
-    .forgot-link,
-    .btn-google span,
-    .divider span,
-    .register-prompt span,
-    .register-prompt a,
-    .back-home-link,
-    .form-footer p,
-    .form-footer-links,
-    .form-footer-links a,
-    .input-field label,
-    .textarea-field label,
-    .detected-tag,
-    .mode-tab,
-    .mode-tab span,
-    .optional-tag,
-    .history-pill-link,
-    .history-pill-link span,
-    .toast-notice span {
-        font-size: 14px !important;
-    }
-
-    .form-footer-links {
-        gap: 12px;
-        flex-wrap: wrap;
-    }
-
-    .form-footer-links a {
-        color: var(--green, #2d5c39) !important;
-        text-decoration: underline !important;
-        text-underline-offset: 3px;
-        font-weight: 600;
+    .datepicker-trigger-btn {
+        min-width: 34px;
+        min-height: 34px;
     }
 
     .welcome-eyebrow,
     .section-eyebrow,
     .page-heading .eyebrow,
     .sa-executive-tag {
-        font-size: 13px !important;
-        letter-spacing: 0.45px !important;
-    }
-
-    .welcome-banner p,
-    .sa-hero-text p,
-    .daily-reminder strong,
-    .quick-action-item strong,
-    .form-card-header h2,
-    .form-group label,
-    .back-btn,
-    .save-btn,
-    .cancel-btn {
-        font-size: 15px !important;
-        line-height: 1.45 !important;
-    }
-
-    .feature-card-header p,
-    .panel-heading p,
-    .card-header p,
-    .table-card .card-header p,
-    .daily-reminder p,
-    .legend-label,
-    .kpi-label,
-    .kpi-sub,
-    .quick-action-item span,
-    .sa-btn-outline,
-    .sa-btn-outline span,
-    .primary-action-btn,
-    .primary-action-btn span,
-    .sa-badge-green,
-    .mobile-card-title-block small,
-    .mobile-card-sub,
-    .mobile-card-detail small,
-    .mobile-card-date,
-    .mobile-sa-user-id small,
-    .mobile-card-meta-row,
-    .calendar-mobile-summary,
-    .table-panel .text-button,
-    .input-prefix,
-    .notif-text strong,
-    .notif-text small,
-    .sa-card p,
-    .feature-card p {
-        font-size: 14px !important;
-        line-height: 1.45 !important;
-    }
-
-    .kpi-label {
-        white-space: normal !important;
-        overflow: visible !important;
-        text-overflow: clip !important;
-        line-height: 1.25 !important;
+        font-size: 11px;
+        letter-spacing: 0.5px;
     }
 
     .fab-action-btn {
-        min-height: 44px;
+        min-height: 34px;
         position: relative;
         z-index: 10002;
     }
@@ -2385,6 +2427,30 @@ button,
         opacity: 0 !important;
         visibility: hidden !important;
         pointer-events: none !important;
+    }
+}
+
+@media (max-width: 480px) {
+    .navbar,
+    .admin-topbar,
+    .sa-topbar,
+    .app-topbar {
+        height: calc(54px + env(safe-area-inset-top, 0px));
+        min-height: calc(54px + env(safe-area-inset-top, 0px));
+        padding-top: env(safe-area-inset-top, 0px);
+        padding-left: max(12px, env(safe-area-inset-left, 0px));
+        padding-right: max(12px, env(safe-area-inset-right, 0px));
+    }
+
+    .topbar-right .theme-toggle-btn,
+    .sa-topbar-right .theme-toggle-btn,
+    .notif-btn,
+    #notifButton {
+        width: 34px;
+        min-width: 34px;
+        height: 34px;
+        min-height: 34px;
+        flex: 0 0 34px;
     }
 }
 

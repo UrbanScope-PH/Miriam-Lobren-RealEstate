@@ -522,38 +522,40 @@ img, video, canvas, svg {
 
 @media (max-width: 768px) {
     /* Prevent iOS browser auto-zoom on input focus */
-    input, select, textarea {
+    input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]):not([type="range"]):not([type="file"]),
+    select,
+    textarea {
         font-size: 16px !important;
     }
 
     .login-btn,
     .signup-btn {
-        min-height: 40px;
+        min-height: 38px;
     }
 
     .s-icon-btn {
-        width: 38px;
-        height: 38px;
-        min-width: 38px;
-        min-height: 38px;
+        width: 34px;
+        height: 34px;
+        min-width: 34px;
+        min-height: 34px;
         padding: 0;
     }
 
     .navbar {
-        height: 70px;
-        padding: 0 16px;
+        height: 56px;
+        padding: 0 12px;
         justify-content: space-between;
-        gap: 10px;
+        gap: 8px;
     }
 
     .brand-logo {
-        width: 42px;
-        height: 36px;
+        width: 30px;
+        height: 30px;
         flex-shrink: 0;
     }
 
     .Cname {
-        gap: 10px;
+        gap: 8px;
         min-width: 0;
         flex: 1;
     }
@@ -563,16 +565,17 @@ img, video, canvas, svg {
     }
 
     .Cname strong {
-        font-size: 16.5px;
-        letter-spacing: 0.8px;
+        font-size: 14px;
+        letter-spacing: 0.6px;
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
     }
 
     .Cname small {
-        font-size: 9px;
-        letter-spacing: 1.2px;
+        font-size: 8.5px;
+        letter-spacing: 0.8px;
+        margin-top: 1px;
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
@@ -580,19 +583,31 @@ img, video, canvas, svg {
 
     .mobile-nav-toggle {
         display: flex;
-        width: 44px;
-        min-width: 44px;
-        height: 44px;
-        min-height: 44px;
-        flex: 0 0 44px;
+        width: 36px;
+        min-width: 36px;
+        height: 36px;
+        min-height: 36px;
+        flex: 0 0 36px;
         align-items: center;
         justify-content: center;
-        gap: 5px;
+        gap: 4.5px;
         padding: 0;
     }
 
+    .hamburger-line {
+        width: 17px;
+    }
+
+    .mobile-nav-toggle.active .hamburger-line:nth-child(1) {
+        transform: translateY(6.5px) rotate(45deg);
+    }
+
+    .mobile-nav-toggle.active .hamburger-line:nth-child(3) {
+        transform: translateY(-6.5px) rotate(-45deg);
+    }
+
     .nav-acts {
-        gap: 8px;
+        gap: 6px;
         flex-shrink: 0;
     }
 
@@ -605,7 +620,7 @@ img, video, canvas, svg {
     /* MOBILE NAVIGATION DRAWER */
     .navbar nav {
         position: fixed;
-        top: 70px;
+        top: 56px;
         left: 0;
         right: 0;
         background: var(--surface);
@@ -613,8 +628,8 @@ img, video, canvas, svg {
         border-bottom: 2px solid var(--light-green);
         flex-direction: column;
         align-items: stretch;
-        gap: 4px;
-        padding: 16px 20px calc(24px + env(safe-area-inset-bottom, 0px));
+        gap: 2px;
+        padding: 10px 12px calc(16px + env(safe-area-inset-bottom, 0px));
         z-index: 99;
         display: flex;
         opacity: 0;
@@ -623,8 +638,8 @@ img, video, canvas, svg {
         transition: opacity 0.25s var(--motion-ease-out),
                     transform 0.25s var(--motion-ease-out),
                     visibility 0.25s ease;
-        max-height: calc(100vh - 70px);
-        max-height: calc(100dvh - 70px);
+        max-height: calc(100vh - 56px);
+        max-height: calc(100dvh - 56px);
         overflow-y: auto;
         -webkit-overflow-scrolling: touch;
     }
@@ -638,10 +653,11 @@ img, video, canvas, svg {
     .navbar nav a {
         display: flex;
         align-items: center;
-        padding: 13px 16px;
-        font-size: 16px;
+        min-height: 36px;
+        padding: 8px 12px;
+        font-size: 13.5px;
         font-weight: 600;
-        border-radius: 10px;
+        border-radius: 8px;
         color: var(--text-dark);
         border-left: 3px solid transparent;
         transition: var(--motion-transition-ui);
@@ -651,7 +667,7 @@ img, video, canvas, svg {
         background-color: var(--light-green);
         color: var(--green);
         border-left-color: var(--green);
-        padding-left: 20px;
+        padding-left: 14px;
     }
 
     @media (hover: hover) and (pointer: fine) {
@@ -659,30 +675,31 @@ img, video, canvas, svg {
                 background-color: var(--light-green);
                 color: var(--green);
                 border-left-color: var(--green);
-                padding-left: 20px;
+                padding-left: 14px;
             }
     }
 
     /* Mobile drawer auth section */
     .mobile-drawer-auth {
-        margin-top: 14px;
-        padding-top: 14px;
+        margin-top: 8px;
+        padding-top: 10px;
         border-top: 1px solid var(--border-subtle);
         display: flex;
         flex-direction: column;
-        gap: 10px;
+        gap: 8px;
     }
 
     .mobile-drawer-auth .m-login-btn {
         display: flex;
         align-items: center;
         justify-content: center;
-        padding: 11px;
+        min-height: 38px;
+        padding: 7px 12px;
         border: 1.5px solid var(--border-strong);
-        border-radius: 10px;
+        border-radius: 8px;
         color: var(--dark-green);
         font-weight: 600;
-        font-size: 15px;
+        font-size: 13px;
         text-decoration: none;
         transition: var(--motion-transition-ui);
     }
@@ -699,13 +716,14 @@ img, video, canvas, svg {
         display: flex;
         align-items: center;
         justify-content: center;
-        padding: 11px;
+        min-height: 38px;
+        padding: 7px 12px;
         background-color: var(--btn-primary-bg);
         border: 1.5px solid var(--btn-primary-bg);
-        border-radius: 10px;
+        border-radius: 8px;
         color: #ffffff;
         font-weight: 600;
-        font-size: 15px;
+        font-size: 13px;
         text-decoration: none;
         transition: background-color 0.2s;
     }
@@ -726,7 +744,7 @@ img, video, canvas, svg {
         display: block;
         position: fixed;
         inset: 0;
-        top: 70px;
+        top: 56px;
         background: rgba(0, 0, 0, 0.45);
         backdrop-filter: blur(2px);
         z-index: 98;
@@ -745,54 +763,119 @@ img, video, canvas, svg {
     }
 
     .footer-top {
-        padding: 26px 5% 18px;
-        gap: 20px;
+        padding: 20px 14px 14px;
+        gap: 14px;
+    }
+
+    .footer h3 {
+        font-size: 14.5px;
+        margin-bottom: 6px;
+    }
+
+    .footer-about p {
+        font-size: 13px;
+        line-height: 1.5;
+        max-width: 100%;
+        text-align: left;
+    }
+
+    .footer-links-column ul {
+        gap: 4px;
+    }
+
+    .footer-links-column a {
+        font-size: 13px;
+        line-height: 1.4;
+    }
+
+    .footer-contact {
+        gap: 6px;
+    }
+
+    .footer-contact-item,
+    .footer-contact-info p {
+        font-size: 13px;
+        line-height: 1.4;
+        gap: 8px;
+        margin-bottom: 6px;
+    }
+
+    .footer-contact-item svg,
+    .footer-contact-info svg {
+        width: 15px;
+        height: 15px;
     }
 
     .footer-bottom {
-        padding: 14px 5% 18px;
+        padding: 12px 14px calc(14px + env(safe-area-inset-bottom, 0px));
+        gap: 10px;
+        font-size: 12px;
+        line-height: 1.45;
+    }
+
+    .socials {
+        gap: 10px;
+    }
+
+    .social-icon {
+        width: 34px;
+        height: 34px;
+    }
+
+    .legal,
+    .footer-legal {
+        gap: 14px;
+    }
+
+    .legal a,
+    .footer-legal a {
+        font-size: 12px;
+        padding: 2px 0;
+        line-height: 1.3;
     }
 }
 
 @media (max-width: 480px) {
     .navbar {
-        height: 64px;
-        padding: 0 14px;
-        gap: 8px;
+        height: 54px;
+        padding: 0 12px;
+        gap: 6px;
     }
 
     .navbar nav {
-        top: 64px;
-        max-height: calc(100vh - 64px);
-        max-height: calc(100dvh - 64px);
+        top: 54px;
+        max-height: calc(100vh - 54px);
+        max-height: calc(100dvh - 54px);
     }
 
     .mobile-nav-backdrop {
-        top: 64px;
+        top: 54px;
     }
 
     .brand-logo {
-        width: 38px;
-        height: 34px;
+        width: 28px;
+        height: 28px;
     }
 
     .Cname strong {
-        font-size: 15px;
-        letter-spacing: 0.8px;
+        font-size: 14px;
+        letter-spacing: 0.5px;
     }
 
     .Cname small {
-        font-size: 8.5px;
-        letter-spacing: 1.2px;
+        font-size: 8px;
+        letter-spacing: 0.6px;
     }
 
     .s-icon-btn {
         width: 34px;
         height: 34px;
+        min-width: 34px;
+        min-height: 34px;
     }
 
     .nav-acts {
-        gap: 6px;
+        gap: 4px;
     }
 
     .nav-acts .login-btn {
@@ -805,18 +888,24 @@ img, video, canvas, svg {
         font-size: 12px;
     }
 
+    .footer-top {
+        padding: 18px 12px 12px;
+        gap: 12px;
+    }
+
     .footer-bottom {
         flex-direction: column;
         align-items: center;
         text-align: center;
-        gap: 16px;
+        padding: 10px 12px calc(14px + env(safe-area-inset-bottom, 0px));
+        gap: 10px;
     }
 
     .legal,
     .footer-legal {
         flex-wrap: wrap;
         justify-content: center;
-        gap: 14px;
+        gap: 12px;
     }
 }
 
@@ -960,14 +1049,14 @@ html[data-theme="dark"] .btt-icon {
 
 @media (max-width: 480px) {
     .back-to-top-btn {
-        bottom: calc(88px + env(safe-area-inset-bottom, 0px));
-        right: 20px;
-        width: 44px;
-        height: 44px;
+        bottom: calc(68px + env(safe-area-inset-bottom, 0px));
+        right: 14px;
+        width: 38px;
+        height: 38px;
     }
     .btt-progress-ring {
-        width: 42px;
-        height: 42px;
+        width: 36px;
+        height: 36px;
         top: 0;
         left: 0;
     }
