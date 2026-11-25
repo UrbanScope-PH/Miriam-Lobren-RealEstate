@@ -516,3 +516,20 @@ textarea {
     border-radius: 8px !important;
 }
 
+/* ==========================================================================
+   WIDE DESKTOP LAYOUT (100% RESOLUTION >= 1600px)
+   Places Profile Information and Change Password cards side-by-side cleanly.
+   ========================================================================== */
+@media (min-width: 1600px) {
+    .main-content {
+        max-width: 1840px;
+        padding: 28px 3.5% 44px;
+    }
+
+    .settings-grid {
+        grid-template-columns: minmax(0, 1.35fr) minmax(0, 0.9fr);
+        align-items: start;
+        gap: 28px;
+    }
+}
+

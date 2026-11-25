@@ -904,3 +904,13 @@ tr {
 .clients-filter-bar input {
     border-radius: 8px;
 }
+
+/* ==========================================================================
+   WIDE DESKTOP LAYOUT (100% RESOLUTION >= 1600px)
+   ========================================================================== */
+@media (min-width: 1600px) {
+    .main-content {
+        max-width: 1920px;
+        padding: 28px 3.5% 44px;
+    }
+}

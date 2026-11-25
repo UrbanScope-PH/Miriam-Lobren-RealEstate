@@ -2668,4 +2668,74 @@ html.dark-mode .sort-select-option.is-selected {
     color: var(--dark-green);
 }
 
+/* ==========================================================================
+   WIDE DESKTOP LAYOUT (100% RESOLUTION >= 1600px)
+   Balances horizontal spacing across Hero, Search Bar, Featured Grid,
+   About, Testimonials, FAQs, and CTA without changing native 100% sizes
+   or altering 125% zoom layouts (<= 1536px).
+   ========================================================================== */
+@media (min-width: 1600px) {
+    .hero {
+        padding: 64px 3.5% 120px;
+    }
+
+    .hero-content {
+        max-width: 920px;
+    }
+
+    .search-bar {
+        width: min(1786px, calc(100% - 7%));
+    }
+
+    .featured {
+        padding: 96px 3.5% 70px;
+    }
+
+    .featured-header-row,
+    .property-grid {
+        max-width: 1786px;
+        margin-inline: auto;
+    }
+
+    .property-grid {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 28px;
+    }
+
+    .about {
+        padding: 80px 3.5%;
+    }
+
+    .about-content {
+        max-width: 1640px;
+        grid-template-columns: 1.2fr 1fr;
+        gap: 64px;
+    }
+
+    .testimonials-section {
+        padding: 80px 3.5%;
+    }
+
+    .testimonials-grid {
+        max-width: 1640px;
+    }
+
+    .faqs-section {
+        padding: 80px 3.5%;
+    }
+
+    .faqs-container {
+        max-width: 1320px;
+    }
+
+    .cta-banner {
+        padding-left: 3.5%;
+        padding-right: 3.5%;
+    }
+
+    .cta-content {
+        max-width: 960px;
+    }
+}
+
 
