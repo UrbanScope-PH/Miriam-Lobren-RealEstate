@@ -2589,53 +2589,91 @@
     transition: var(--motion-transition-ui);
 }
 
-/* MODAL APPROVE / CANCEL DROPDOWN */
+/* MODAL APPROVE / CANCEL SPLIT BUTTON & DROPDOWN */
 .modal-status-dropdown {
     position: relative;
     display: inline-flex;
 }
 
-.modal-status-trigger {
+.modal-status-split {
     display: inline-flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 9px;
-    min-width: 148px;
-    padding: 9px 14px;
+    align-items: stretch;
     border-radius: 10px;
-    border: 1px solid var(--border-color);
-    font-family: inherit;
-    font-size: 0.88rem;
-    font-weight: 700;
-    white-space: nowrap;
-    cursor: pointer;
+    border: 1px solid var(--status-success-border);
+    background: var(--status-success-bg);
+    color: var(--status-success-text);
+    overflow: hidden;
     transition: var(--motion-transition-fast);
 }
 
-.modal-status-trigger.is-approved {
+.modal-status-split.is-approve-ready,
+.modal-status-split.is-approved {
     background: var(--status-success-bg);
     color: var(--status-success-text);
     border-color: var(--status-success-border);
 }
 
-.modal-status-trigger.is-cancelled {
+.modal-status-split.is-cancelled {
     background: var(--danger-light);
     color: var(--danger-text);
     border-color: var(--danger-border);
 }
 
-.modal-status-trigger.is-pending {
-    background: var(--status-warning-bg);
-    color: var(--status-warning-text);
-    border-color: var(--status-warning-border);
+.modal-status-main-btn,
+.modal-status-chevron-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    background: transparent;
+    color: inherit;
+    font-family: inherit;
+    font-size: 0.88rem;
+    font-weight: 700;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: background-color 0.15s ease, opacity 0.15s ease;
 }
 
-.modal-status-dot {
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    background: currentColor;
+.modal-status-main-btn {
+    gap: 8px;
+    padding: 9px 13px 9px 14px;
+}
+
+.modal-status-main-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     flex-shrink: 0;
+}
+
+.modal-status-chevron-btn {
+    padding: 9px 11px;
+    border-left: 1px solid rgba(21, 128, 61, 0.22);
+}
+
+.modal-status-split.is-cancelled .modal-status-chevron-btn {
+    border-left-color: rgba(220, 38, 38, 0.22);
+}
+
+@media (hover: hover) and (pointer: fine) {
+    .modal-status-split.is-approve-ready .modal-status-main-btn:hover,
+    .modal-status-split.is-approve-ready .modal-status-chevron-btn:hover,
+    .modal-status-split.is-approved .modal-status-main-btn:hover,
+    .modal-status-split.is-approved .modal-status-chevron-btn:hover {
+        background: rgba(21, 128, 61, 0.1);
+    }
+
+    .modal-status-split.is-cancelled .modal-status-main-btn:hover,
+    .modal-status-split.is-cancelled .modal-status-chevron-btn:hover {
+        background: rgba(220, 38, 38, 0.1);
+    }
+}
+
+.modal-status-main-btn:disabled,
+.modal-status-chevron-btn:disabled {
+    opacity: 0.65;
+    cursor: not-allowed;
 }
 
 .modal-status-chevron {
@@ -2651,7 +2689,7 @@
     position: absolute;
     bottom: calc(100% + 8px);
     right: 0;
-    min-width: 170px;
+    min-width: 184px;
     padding: 6px;
     border-radius: 12px;
     background: var(--surface);
@@ -2766,6 +2804,26 @@
         width: 100%;
         justify-content: center;
         text-align: center;
+    }
+
+    .modal-status-dropdown,
+    .modal-status-split {
+        width: 100%;
+    }
+
+    .modal-actions-footer .modal-status-main-btn {
+        flex: 1;
+        width: auto;
+    }
+
+    .modal-actions-footer .modal-status-chevron-btn {
+        width: 44px;
+        flex-shrink: 0;
+    }
+
+    .modal-actions-footer .modal-status-option {
+        justify-content: space-between;
+        text-align: left;
     }
 }
 
