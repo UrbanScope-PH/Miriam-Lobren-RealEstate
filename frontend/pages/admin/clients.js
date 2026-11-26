@@ -302,7 +302,6 @@ document.addEventListener('DOMContentLoaded', async () => {
                                 aria-haspopup="listbox"
                                 aria-expanded="false"
                                 aria-label="Change inquiry status for ${escapeHtml(name)} (currently ${safeStatus})">
-                            <span class="status-pill-dot" aria-hidden="true"></span>
                             <span class="status-pill-label">${safeStatus}</span>
                             <svg class="status-select-chevron" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                                 <polyline points="6 9 12 15 18 9"></polyline>
@@ -346,7 +345,6 @@ document.addEventListener('DOMContentLoaded', async () => {
                                     aria-haspopup="listbox"
                                     aria-expanded="false"
                                     aria-label="Change inquiry status for ${escapeHtml(name)} (currently ${safeStatus})">
-                                <span class="status-pill-dot" aria-hidden="true"></span>
                                 <span class="status-pill-label">${safeStatus}</span>
                                 <svg class="status-select-chevron" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                                     <polyline points="6 9 12 15 18 9"></polyline>
@@ -477,7 +475,6 @@ document.addEventListener('DOMContentLoaded', async () => {
                             aria-selected="${selected ? 'true' : 'false'}"
                             data-value="${opt.value}">
                         <span class="status-option-left">
-                            <span class="status-menu-dot" aria-hidden="true"></span>
                             <span class="status-option-text">${opt.value}</span>
                         </span>
                         <svg class="status-option-check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -704,11 +701,11 @@ document.addEventListener('DOMContentLoaded', async () => {
                             </div>
                             <div class="modal-status-menu" id="modalStatusMenu" role="menu" aria-label="Inquiry decision actions" hidden>
                                 <button type="button" class="modal-status-option approve${isApproved ? ' is-selected' : ''}" role="menuitemradio" aria-checked="${isApproved}" data-next-status="Approved">
-                                    <span class="modal-option-left"><span class="modal-option-dot green" aria-hidden="true"></span><span>${isApproved ? 'Approved' : 'Approve Inquiry'}</span></span>
+                                    <span class="modal-option-left"><span>${isApproved ? 'Approved' : 'Approve Inquiry'}</span></span>
                                     <svg class="modal-option-check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><polyline points="20 6 9 17 4 12"></polyline></svg>
                                 </button>
                                 <button type="button" class="modal-status-option cancel${isCancelled ? ' is-selected' : ''}" role="menuitemradio" aria-checked="${isCancelled}" data-next-status="Cancelled">
-                                    <span class="modal-option-left"><span class="modal-option-dot red" aria-hidden="true"></span><span>${isCancelled ? 'Cancelled' : 'Cancel Inquiry'}</span></span>
+                                    <span class="modal-option-left"><span>${isCancelled ? 'Cancelled' : 'Cancel Inquiry'}</span></span>
                                     <svg class="modal-option-check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><polyline points="20 6 9 17 4 12"></polyline></svg>
                                 </button>
                             </div>

@@ -140,15 +140,6 @@ async function loadSavedProperties() {
 
 const propCustomSelectControllers = [];
 
-function getStatusDotClass(val) {
-    const v = String(val || "").toLowerCase();
-    if (v === "available") return "dot-available";
-    if (v === "under review") return "dot-review";
-    if (v === "reserved") return "dot-reserved";
-    if (v === "sold") return "dot-sold";
-    return "dot-all";
-}
-
 function getPropertyOptionCount(kind, optionVal) {
     if (!Array.isArray(currentLoadedProperties) || currentLoadedProperties.length === 0) return 0;
     if (!optionVal) return currentLoadedProperties.length;
@@ -201,7 +192,7 @@ function initPropListCustomSelect(selectId, kind, headerText) {
         const selectedLabel = selectedOption ? selectedOption.textContent.trim() : "";
 
         const leadIconHtml = kind === "status"
-            ? `<span class="proplist-status-dot ${getStatusDotClass(selectedVal)}" aria-hidden="true"></span>`
+            ? ""
             : `<span class="proplist-type-icon" aria-hidden="true">
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
@@ -226,10 +217,6 @@ function initPropListCustomSelect(selectId, kind, headerText) {
             const isSelected = val === selectedVal;
             const count = getPropertyOptionCount(kind, val);
 
-            const optLeadHtml = kind === "status"
-                ? `<span class="proplist-status-dot ${getStatusDotClass(val)}" aria-hidden="true"></span>`
-                : `<span class="proplist-option-type-bullet" aria-hidden="true"></span>`;
-
             return `
                 <button type="button"
                         class="proplist-custom-option${isSelected ? " is-selected" : ""}"
@@ -237,7 +224,6 @@ function initPropListCustomSelect(selectId, kind, headerText) {
                         aria-selected="${isSelected ? "true" : "false"}"
                         data-value="${escapePropHtml(val)}">
                     <span class="proplist-option-left">
-                        ${optLeadHtml}
                         <span class="proplist-option-label">${escapePropHtml(label)}</span>
                     </span>
                     <span class="proplist-option-right">
@@ -503,7 +489,6 @@ function addPropertyRow(property) {
         <td style="font-weight:700; color:var(--text-dark); font-size:0.9rem;">${safePrice}</td>
         <td>
             <span class="status-badge-table ${isSold ? 'status-badge-sold' : 'status-badge-available'}">
-                <span class="status-badge-dot"></span>
                 ${safeStatus}
             </span>
         </td>

@@ -527,12 +527,6 @@
     let roleFilterTriggerBtn = null;
     const roleFilterWrap = document.getElementById('userRoleFilterWrap');
 
-    function getRoleDotClass(val) {
-        if (val === 'admin') return 'dot-admin';
-        if (val === 'user') return 'dot-user';
-        return 'dot-all';
-    }
-
     function getRoleCount(val) {
         if (!Array.isArray(allUsers)) return 0;
         if (val === 'all') return allUsers.length;
@@ -603,7 +597,6 @@
 
         roleFilterTriggerBtn.innerHTML = `
             <span class="role-trigger-left">
-                <span class="role-filter-dot ${getRoleDotClass(selectedVal)}" aria-hidden="true"></span>
                 <span class="role-trigger-label">${escapeHtml(selectedLabel)}</span>
             </span>
             <svg class="role-trigger-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -624,7 +617,6 @@
                         aria-selected="${isSelected ? 'true' : 'false'}"
                         data-value="${escapeHtml(val)}">
                     <span class="role-option-left">
-                        <span class="role-filter-dot ${getRoleDotClass(val)}" aria-hidden="true"></span>
                         <span class="role-option-label">${escapeHtml(label)}</span>
                     </span>
                     <span class="role-option-right">

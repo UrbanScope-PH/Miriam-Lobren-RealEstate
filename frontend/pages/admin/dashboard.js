@@ -1456,7 +1456,6 @@ function openInquiryModal(data) {
                                     aria-checked="${isApproved ? 'true' : 'false'}"
                                     data-next-status="Approved">
                                 <span class="modal-option-left">
-                                    <span class="modal-option-dot green" aria-hidden="true"></span>
                                     <span>${isApproved ? 'Approved' : 'Approve Inquiry'}</span>
                                 </span>
                                 <svg class="modal-option-check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
@@ -1469,7 +1468,6 @@ function openInquiryModal(data) {
                                     aria-checked="${isCancelled ? 'true' : 'false'}"
                                     data-next-status="Cancelled">
                                 <span class="modal-option-left">
-                                    <span class="modal-option-dot red" aria-hidden="true"></span>
                                     <span>${isCancelled ? 'Cancelled' : 'Cancel Inquiry'}</span>
                                 </span>
                                 <svg class="modal-option-check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
@@ -2070,7 +2068,6 @@ function applyDashboardPropertyFilters() {
             <td style="font-weight:700; color:var(--text-dark); font-size:0.88rem;">${safePrice}</td>
             <td>
                 <span class="status-badge-table ${isSold ? 'status-badge-sold' : 'status-badge-available'}">
-                    <span class="status-badge-dot"></span>
                     ${safeStatus}
                 </span>
             </td>
