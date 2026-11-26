@@ -292,6 +292,16 @@ img.us-img-loaded {
     margin-top: 14px;
 }
 
+.sk-inquiry-preview[hidden],
+.us-detail-skeleton[hidden],
+.sk-mobile-card[hidden],
+.sk-notif-item[hidden],
+.sk-agenda-card[hidden],
+.history-skeleton-card[hidden],
+#usPageSkeleton[hidden] {
+    display: none !important;
+}
+
 .sk-inquiry-thumb {
     width: 92px;
     height: 74px;

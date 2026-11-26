@@ -351,6 +351,7 @@ async function loadPropertiesCatalog() {
     const summaryBox = document.getElementById('propertySummaryBox');
     if (previewSkeleton && summaryBox) {
         previewSkeleton.hidden = false;
+        previewSkeleton.style.display = 'flex';
         summaryBox.style.display = 'none';
     }
 
@@ -364,7 +365,10 @@ async function loadPropertiesCatalog() {
     } catch (err) {
         console.warn('Error fetching live properties catalog:', err);
     } finally {
-        if (previewSkeleton) previewSkeleton.hidden = true;
+        if (previewSkeleton) {
+            previewSkeleton.hidden = true;
+            previewSkeleton.style.display = 'none';
+        }
         if (summaryBox && summaryBox.style.display === 'none') {
             summaryBox.style.display = '';
         }
