@@ -678,7 +678,7 @@ CREATE POLICY "Allow manage notifications" ON notifications FOR ALL USING (true)
 INSERT INTO users (id, email, password_hash, full_name, phone, role, license_number, avatar_url) VALUES
 (
     1,
-    'urbanscope.cvsu@gmail.com',
+    'miriamalobren@gmail.com',
     'b91dfbecc4174a5caaa09dcb3a229bd8$e63fd67ec76ca851e88bcad117fa7ca803bb6015c0852e94d2da659ec48fc6cd',
     'Miriam Lobren',
     '+63 900 000 0000',

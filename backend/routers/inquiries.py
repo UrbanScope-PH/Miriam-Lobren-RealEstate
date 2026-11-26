@@ -12,9 +12,7 @@ from typing import List, Optional
 from fastapi import APIRouter, Body, Depends, HTTPException, Query, Request, status
 
 from backend.auth import (
-    AUTHORIZED_ADMIN_EMAILS,
-    AUTHORIZED_ADMIN_ROLES,
-    AUTHORIZED_SUPERADMIN_EMAILS,
+    is_main_admin_email,
     require_admin,
     require_user,
 )
@@ -67,13 +65,7 @@ def _dispatch_approval_email_async(to_email: str, code: str, prop_title: str, cl
 
 
 def _is_staff_user(user: dict) -> bool:
-    role = (user.get("role") or "").strip().lower()
-    email = (user.get("email") or "").strip().lower()
-    return (
-        role in AUTHORIZED_ADMIN_ROLES
-        or email in AUTHORIZED_ADMIN_EMAILS
-        or email in AUTHORIZED_SUPERADMIN_EMAILS
-    )
+    return is_main_admin_email(user.get("email"))
 
 
 # ==========================================================

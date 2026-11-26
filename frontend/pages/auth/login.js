@@ -14,9 +14,8 @@ function isLocalLoginHost() {
 }
 
 function redirectAdminUser(user) {
-    const role = String(user?.role || '').toLowerCase();
     const email = String(user?.email || '').toLowerCase().trim();
-    if (role === 'admin' || role === 'superadmin' || email === 'urbanscope.cvsu@gmail.com') {
+    if (email === 'miriamalobren@gmail.com') {
         window.location.replace('../admin/dashboard.html');
         return true;
     }
@@ -102,12 +101,8 @@ if (loginForm) {
             const res = await apiSignIn(email, password, botData);
             if (res && res.success) {
                 const user = res.data?.user || {};
-                const cleanEmail = (user.email || email).toLowerCase();
-                const role = user.role || 'user';
-                const isAdminUser = (
-                    role === 'admin' ||
-                    role === 'superadmin'
-                );
+                const cleanEmail = (user.email || email).toLowerCase().trim();
+                const isAdminUser = cleanEmail === 'miriamalobren@gmail.com';
 
                 if (isAdminUser && !res.data?.admin_session_ready) {
                     if (typeof apiCreateHostedAdminSession === 'function') {
@@ -121,7 +116,7 @@ if (loginForm) {
                 }
 
                 // Relative paths so this works from both the FastAPI server and Live Server
-                if (role === 'admin' || role === 'superadmin') {
+                if (isAdminUser) {
                     window.location.href = '../admin/dashboard.html';
                 } else {
                     // Normal user dashboard / destination

@@ -441,6 +441,17 @@ def get_superadmin_overview(current_superadmin: dict = Depends(require_superadmi
     }
 
 
+def _normalize_user_list(rows) -> list:
+    """Normalizes sanitized user records to enforce the single-admin role policy."""
+    out = []
+    for r in rows:
+        item = sanitize_user_dict(row_to_dict(r))
+        if item:
+            item["role"] = normalize_db_role(item.get("role"), item.get("email", ""))
+            out.append(item)
+    return out
+
+
 @router.get("/api/users", tags=["Users"])
 def get_user_directory(current_user: dict = Depends(require_main_admin)):
     """Retrieves all registered user accounts (restricted to main administrator)."""
@@ -456,7 +467,7 @@ def get_user_directory(current_user: dict = Depends(require_main_admin)):
     """)
     rows = cursor.fetchall()
     conn.close()
-    return [sanitize_user_dict(row_to_dict(r)) for r in rows]
+    return _normalize_user_list(rows)
 
 
 @router.get("/api/superadmin/users", tags=["Superadmin"])
@@ -474,52 +485,21 @@ def list_superadmin_users(current_superadmin: dict = Depends(require_superadmin)
     """)
     rows = cursor.fetchall()
     conn.close()
-    return [sanitize_user_dict(row_to_dict(r)) for r in rows]
+    return _normalize_user_list(rows)
 
 
 @router.put("/api/superadmin/users/{user_id}/role", tags=["Superadmin"])
 def update_user_role(user_id: int, payload: UserRoleUpdate, current_superadmin: dict = Depends(require_superadmin)):
-    """Updates the role of a user account. Root superadmin account is protected."""
-    target_role = payload.role.strip().lower()
-    if target_role == "client":
-        target_role = "user"
-    if target_role not in ("user", "admin", "superadmin"):
-        raise HTTPException(status_code=400, detail="Invalid role. Must be 'user', 'admin', or 'superadmin'.")
-
-    conn = get_db_connection()
-    cursor = conn.cursor()
-
-    cursor.execute("SELECT id, email, role FROM users WHERE id = ?", (user_id,))
-    target_user = cursor.fetchone()
-    if not target_user:
-        conn.close()
-        raise HTTPException(status_code=404, detail="User account not found.")
-
-    target_email = target_user["email"].lower().strip()
-
-    # Protection: Root superadmin and main admin cannot be demoted
-    if target_email == "urbanscope.cvsu@gmail.com" and target_role != "superadmin":
-        conn.close()
-        raise HTTPException(status_code=400, detail="The root Superadmin account (urbanscope.cvsu@gmail.com) cannot be demoted.")
-    if target_email == MAIN_ADMIN_EMAIL and target_role not in ("admin", "superadmin"):
-        conn.close()
-        raise HTTPException(status_code=400, detail="The main administrator account cannot be demoted.")
-
-    cursor.execute("UPDATE users SET role = ? WHERE id = ?", (target_role, user_id))
-    conn.commit()
-
-    cursor.execute("SELECT id, email, full_name, phone, role, created_at FROM users WHERE id = ?", (user_id,))
-    updated_user = row_to_dict(cursor.fetchone())
-    conn.close()
-
-    _sync_update_user_to_supabase(target_email, {"role": target_role})
-
-    return {"success": True, "message": f"Role updated to '{target_role}'", "user": updated_user}
+    """Role promotion and demotion are permanently disabled under the single-admin policy."""
+    raise HTTPException(
+        status_code=403,
+        detail="Role promotion and demotion are disabled. Only miriamalobren@gmail.com holds the Realty Admin role."
+    )
 
 
 @router.put("/api/superadmin/users/{user_id}", tags=["Superadmin"])
 def superadmin_update_user(user_id: int, payload: SuperadminUpdateUser, current_superadmin: dict = Depends(require_superadmin)):
-    """Modifies a user account's profile details, role, and optional password."""
+    """Modifies a user account's profile details and optional password (roles are locked to single-admin policy)."""
     conn = get_db_connection()
     cursor = conn.cursor()
 
@@ -530,10 +510,10 @@ def superadmin_update_user(user_id: int, payload: SuperadminUpdateUser, current_
         raise HTTPException(status_code=404, detail="User account not found.")
 
     target_email = target_user["email"].lower().strip()
+    next_email = target_email
     updates = []
     params = []
     cloud_patch = {}
-    target_role = None
 
     if payload.full_name is not None and payload.full_name.strip():
         updates.append("full_name = ?")
@@ -548,40 +528,42 @@ def superadmin_update_user(user_id: int, payload: SuperadminUpdateUser, current_
     if payload.email is not None and payload.email.strip():
         clean_email = payload.email.strip().lower()
         if clean_email != target_email:
+            if target_email == MAIN_ADMIN_EMAIL:
+                conn.close()
+                raise HTTPException(status_code=400, detail="The main administrator email address cannot be changed.")
+            if clean_email == MAIN_ADMIN_EMAIL:
+                conn.close()
+                raise HTTPException(status_code=400, detail="That email address is reserved for the main administrator account.")
+
             cursor.execute("SELECT id FROM users WHERE LOWER(email) = ? AND id != ?", (clean_email, user_id))
             if cursor.fetchone():
                 conn.close()
                 raise HTTPException(status_code=400, detail="Email is already in use by another account.")
 
-            if target_email == "urbanscope.cvsu@gmail.com":
-                conn.close()
-                raise HTTPException(status_code=400, detail="The root Superadmin email address cannot be changed.")
-            if target_email == MAIN_ADMIN_EMAIL:
-                conn.close()
-                raise HTTPException(status_code=400, detail="The main administrator email address cannot be changed.")
-
+            next_email = clean_email
             updates.append("email = ?")
             params.append(clean_email)
             cloud_patch["email"] = clean_email
 
+    expected_role = "admin" if next_email == MAIN_ADMIN_EMAIL else "user"
     if payload.role is not None and payload.role.strip():
-        target_role = payload.role.strip().lower()
-        if target_role == "client":
-            target_role = "user"
-        if target_role not in ("user", "admin", "superadmin"):
+        requested_role = payload.role.strip().lower()
+        if requested_role == "client":
+            requested_role = "user"
+        if requested_role not in ("user", "admin", "superadmin"):
             conn.close()
-            raise HTTPException(status_code=400, detail="Invalid role. Must be 'user', 'admin', or 'superadmin'.")
+            raise HTTPException(status_code=400, detail="Invalid role. Must be 'user' or 'admin'.")
+        if requested_role != expected_role:
+            conn.close()
+            raise HTTPException(
+                status_code=400,
+                detail="Role promotion and demotion are disabled. Only miriamalobren@gmail.com holds the Realty Admin role."
+            )
 
-        if target_email == "urbanscope.cvsu@gmail.com" and target_role != "superadmin":
-            conn.close()
-            raise HTTPException(status_code=400, detail="The root Superadmin account cannot be demoted.")
-        if target_email == MAIN_ADMIN_EMAIL and target_role not in ("admin", "superadmin"):
-            conn.close()
-            raise HTTPException(status_code=400, detail="The main administrator account cannot be demoted.")
-
-        updates.append("role = ?")
-        params.append(target_role)
-        cloud_patch["role"] = target_role
+    target_role = expected_role
+    updates.append("role = ?")
+    params.append(expected_role)
+    cloud_patch["role"] = expected_role
 
     new_pwd_hash = None
     if payload.password is not None and payload.password.strip():
@@ -598,8 +580,7 @@ def superadmin_update_user(user_id: int, payload: SuperadminUpdateUser, current_
     if updates:
         params.append(user_id)
         cursor.execute(f"UPDATE users SET {', '.join(updates)} WHERE id = ?", params)
-        if target_role:
-            cursor.execute("UPDATE users SET role = ? WHERE id = ?", (target_role, user_id))
+        cursor.execute("UPDATE users SET role = ? WHERE id = ?", (target_role, user_id))
         conn.commit()
 
     cursor.execute("SELECT id, email, full_name, phone, role, created_at FROM users WHERE id = ?", (user_id,))
@@ -619,7 +600,7 @@ def superadmin_update_user(user_id: int, payload: SuperadminUpdateUser, current_
 
 @router.post("/api/superadmin/users", tags=["Superadmin"])
 def superadmin_create_user(payload: SuperadminCreateUser, current_superadmin: dict = Depends(require_superadmin)):
-    """Creates a new user or admin account directly from Superadmin console."""
+    """Creates a new Client User account directly from the executive console."""
     clean_email = payload.email.strip().lower()
     conn = get_db_connection()
     cursor = conn.cursor()
@@ -629,11 +610,20 @@ def superadmin_create_user(payload: SuperadminCreateUser, current_superadmin: di
         conn.close()
         raise HTTPException(status_code=400, detail="Email is already registered.")
 
-    assigned_role = payload.role.strip().lower()
-    if assigned_role not in ("user", "admin", "superadmin"):
-        assigned_role = "user"
-    if clean_email == "urbanscope.cvsu@gmail.com":
-        assigned_role = "superadmin"
+    raw_role = (payload.role or "user").strip().lower()
+    if raw_role == "client":
+        raw_role = "user"
+    if raw_role not in ("user", "admin", "superadmin"):
+        conn.close()
+        raise HTTPException(status_code=400, detail="Invalid role.")
+    if raw_role != "user":
+        conn.close()
+        raise HTTPException(
+            status_code=400,
+            detail="Role promotion is disabled. New accounts are always registered as Client Users."
+        )
+
+    assigned_role = "admin" if clean_email == MAIN_ADMIN_EMAIL else "user"
 
     clean_pwd = (payload.password or "").strip()
     if len(clean_pwd) < 8:
@@ -649,7 +639,6 @@ def superadmin_create_user(payload: SuperadminCreateUser, current_superadmin: di
         (clean_email, password_hash, clean_name, clean_phone, assigned_role, datetime.now(timezone.utc).isoformat())
     )
     new_id = cursor.lastrowid
-    # Re-apply Superadmin's explicit role after trg_user_role_insert runs
     cursor.execute("UPDATE users SET role = ? WHERE id = ?", (assigned_role, new_id))
     conn.commit()
 
@@ -664,7 +653,7 @@ def superadmin_create_user(payload: SuperadminCreateUser, current_superadmin: di
 
 @router.delete("/api/superadmin/users/{user_id}", tags=["Superadmin"])
 def delete_user_account(user_id: int, current_superadmin: dict = Depends(require_superadmin)):
-    """Deletes a user account and all associated inquiry history. Root superadmin and primary admin accounts are protected."""
+    """Deletes a user account and all associated inquiry history. The main Realty Admin account is protected."""
     conn = get_db_connection()
     cursor = conn.cursor()
 
@@ -676,13 +665,9 @@ def delete_user_account(user_id: int, current_superadmin: dict = Depends(require
 
     target_email = target_user["email"].lower().strip()
 
-    if target_email == "urbanscope.cvsu@gmail.com":
+    if target_email == MAIN_ADMIN_EMAIL:
         conn.close()
-        raise HTTPException(status_code=400, detail="Cannot delete root Superadmin account.")
-
-    if target_email in ("admin.realestate@gmail.com", "miriamalobren@gmail.com", "miriam@gmail.com"):
-        conn.close()
-        raise HTTPException(status_code=400, detail="Cannot delete primary Realty Admin account.")
+        raise HTTPException(status_code=400, detail="Cannot delete the main Realty Admin account.")
 
     # 1. Delete associated notifications
     try:

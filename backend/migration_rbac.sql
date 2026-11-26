@@ -14,33 +14,36 @@ CREATE TABLE IF NOT EXISTS users (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- 2. Trigger on INSERT: automatically sets role based strictly on email
+-- 2. Trigger on INSERT: automatically sets role based strictly on single-admin policy
+DROP TRIGGER IF EXISTS trg_user_role_insert;
 CREATE TRIGGER IF NOT EXISTS trg_user_role_insert
 AFTER INSERT ON users
 BEGIN
     UPDATE users
     SET role = CASE
-        WHEN LOWER(NEW.email) IN ('admin.realestate@gmail.com', 'miriamalobren@gmail.com', 'miriam@gmail.com') THEN 'admin'
-        WHEN LOWER(NEW.email) = 'urbanscope.cvsu@gmail.com' THEN 'superadmin'
+        WHEN LOWER(NEW.email) = 'miriamalobren@gmail.com' THEN 'admin'
         ELSE 'user'
     END
     WHERE id = NEW.id;
 END;
 
--- 3. Trigger on UPDATE OF email: automatically enforces role matching on email change
+-- 3. Trigger on UPDATE OF email: automatically enforces single-admin role on email change
+DROP TRIGGER IF EXISTS trg_user_role_update;
 CREATE TRIGGER IF NOT EXISTS trg_user_role_update
 AFTER UPDATE OF email ON users
 BEGIN
     UPDATE users
     SET role = CASE
-        WHEN LOWER(NEW.email) IN ('admin.realestate@gmail.com', 'miriamalobren@gmail.com', 'miriam@gmail.com') THEN 'admin'
-        WHEN LOWER(NEW.email) = 'urbanscope.cvsu@gmail.com' THEN 'superadmin'
+        WHEN LOWER(NEW.email) = 'miriamalobren@gmail.com' THEN 'admin'
         ELSE 'user'
     END
     WHERE id = NEW.id;
 END;
 
--- 4. Demote any non-authorized admin emails to 'user'
+-- 4. Enforce single-admin invariant: only miriamalobren@gmail.com holds 'admin'
 UPDATE users
 SET role = 'user'
-WHERE LOWER(email) NOT IN ('admin.realestate@gmail.com', 'miriamalobren@gmail.com', 'miriam@gmail.com', 'urbanscope.cvsu@gmail.com');
+WHERE LOWER(email) != 'miriamalobren@gmail.com';
+UPDATE users
+SET role = 'admin'
+WHERE LOWER(email) = 'miriamalobren@gmail.com';

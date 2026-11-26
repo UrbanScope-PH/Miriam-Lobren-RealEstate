@@ -27,15 +27,12 @@ def normalize_text(val) -> str:
 def determine_user_role(email: str) -> str:
     """
     Automatic database role detection:
-    - admin.realestate@gmail.com / miriamalobren@gmail.com / miriam@gmail.com -> 'admin'
-    - urbanscope.cvsu@gmail.com -> 'superadmin'
+    - miriamalobren@gmail.com -> 'admin'
     - all other emails -> 'user'
     """
     clean = (email or "").strip().lower()
-    if clean in ("admin.realestate@gmail.com", "miriamalobren@gmail.com", "miriam@gmail.com"):
+    if clean == "miriamalobren@gmail.com":
         return "admin"
-    elif clean == "urbanscope.cvsu@gmail.com":
-        return "superadmin"
     return "user"
 
 
@@ -80,8 +77,7 @@ def init_db():
         BEGIN
             UPDATE users
             SET role = CASE
-                WHEN LOWER(NEW.email) IN ('admin.realestate@gmail.com', 'miriamalobren@gmail.com', 'miriam@gmail.com') THEN 'admin'
-                WHEN LOWER(NEW.email) = 'urbanscope.cvsu@gmail.com' THEN 'superadmin'
+                WHEN LOWER(NEW.email) = 'miriamalobren@gmail.com' THEN 'admin'
                 ELSE 'user'
             END
             WHERE id = NEW.id;
@@ -95,9 +91,8 @@ def init_db():
         BEGIN
             UPDATE users
             SET role = CASE
-                WHEN LOWER(NEW.email) IN ('admin.realestate@gmail.com', 'miriamalobren@gmail.com', 'miriam@gmail.com') THEN 'admin'
-                WHEN LOWER(NEW.email) = 'urbanscope.cvsu@gmail.com' THEN 'superadmin'
-                ELSE OLD.role
+                WHEN LOWER(NEW.email) = 'miriamalobren@gmail.com' THEN 'admin'
+                ELSE 'user'
             END
             WHERE id = NEW.id;
         END;
@@ -268,10 +263,7 @@ def init_db():
         return hash_password(generated)
 
     accounts_spec = [
-        ("admin.realestate@gmail.com", "SEED_ADMIN_PASSWORD", "Miriam Lobren (Admin)", "+63 900 000 0000", "admin"),
         ("miriamalobren@gmail.com", "SEED_MIRIAM_PASSWORD", "Miriam Lobren", "+63 918 964 5434", "admin"),
-        ("miriam@gmail.com", "SEED_ADMIN_PASSWORD", "Miriam Lobren", "+63 918 964 5434", "admin"),
-        ("urbanscope.cvsu@gmail.com", "SEED_SUPERADMIN_PASSWORD", "UrbanScope Superadmin (CvSU)", "+63 900 000 0000", "superadmin"),
     ]
 
     for email, env_var, full_name, phone, role in accounts_spec:
@@ -301,12 +293,18 @@ def init_db():
         except OSError:
             pass
 
-    # Demote any unauthorized user emails that may have been previously given non-client privileged roles
+    # Enforce single-admin invariant: only miriamalobren@gmail.com holds the admin role
     cursor.execute("""
         UPDATE users
         SET role = 'user'
-        WHERE LOWER(email) NOT IN ('admin.realestate@gmail.com', 'miriam@gmail.com', 'miriamalobren@gmail.com', 'urbanscope.cvsu@gmail.com')
-          AND role NOT IN ('user', 'client', 'admin')
+        WHERE LOWER(email) != 'miriamalobren@gmail.com'
+          AND role != 'user'
+    """)
+    cursor.execute("""
+        UPDATE users
+        SET role = 'admin'
+        WHERE LOWER(email) = 'miriamalobren@gmail.com'
+          AND role != 'admin'
     """)
     conn.commit()
     print("✓ RBAC database schema and triggers verified.")

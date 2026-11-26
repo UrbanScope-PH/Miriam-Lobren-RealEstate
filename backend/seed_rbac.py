@@ -43,12 +43,8 @@ def run_rbac_migration():
     for u in users:
         u_id, email, full_name, role, pwd_hash = u
         env_pass = None
-        if email == "urbanscope.cvsu@gmail.com":
-            env_pass = os.environ.get("SEED_SUPERADMIN_PASSWORD", "").strip() or None
-        elif email == "miriamalobren@gmail.com":
+        if email == "miriamalobren@gmail.com":
             env_pass = os.environ.get("SEED_MIRIAM_PASSWORD", "").strip() or None
-        elif email in ("admin.realestate@gmail.com", "miriam@gmail.com"):
-            env_pass = os.environ.get("SEED_ADMIN_PASSWORD", "").strip() or None
 
         has_hash = bool(pwd_hash and "$" in str(pwd_hash))
         pass_status = verify_password(env_pass, pwd_hash) if env_pass else ("hash present" if has_hash else "missing hash")

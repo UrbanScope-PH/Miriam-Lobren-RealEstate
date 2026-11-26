@@ -1659,6 +1659,11 @@ path when rendering from a page.
 203. **Unified Admin Inquiry Details Modal (`frontend/pages/admin/{dashboard,clients}.{html,js,css}`):**
   - Matched the Client Inquiries modal to the dashboard's detailed client banner, contact and schedule cards, message panel, and responsive footer. Both pages provide the split decision control with Approve and Cancel actions, update the visible status immediately, and retain email reply and close controls.
 
+204. **Single-Admin Architecture & Removal of Role Promote/Demote Controls (`lib/admin-session.js`, `lib/server-security.js`, `proxy.js`, `api/*`, `backend/*`, `frontend/pages/admin/users.{html,js}`, `frontend/shared/js/{supabase,api,session}.js`, `frontend/pages/auth/*`):**
+  - Designated **`miriamalobren@gmail.com`** as the sole Realty Administrator across the entire stack (`require_admin`, `require_superadmin`, `rbac_admin_guard_middleware`, `proxy.js`, `edge-session.js`, `session.js`, `admin-shell.js`, and SQLite triggers/seeding). Legacy accounts (`urbanscope.cvsu@gmail.com`, `admin.realestate@gmail.com`, `miriam@gmail.com`) are demoted to Client Users (`user`), excluded from admin bootstrap seeding, and lose special deletion/rename protections.
+  - Removed all **Promote** / **Demote** actions, `#roleChangeModal`, `#newRole` dropdown, and `#editRole` dropdown from `frontend/pages/admin/users.html` and `users.js`. Role mutation endpoints (`PUT /api/superadmin/users/{id}/role`, `POST`/`PUT` role changes in `api/superadmin/users.js` and `backend/routers/superadmin.py`) reject promotions and demotions server-side (`403`/`400`), while preserving `Edit` and `Delete` for all non-`miriamalobren@gmail.com` accounts.
+  - Added atomic Supabase migration `supabase/migrations/20261126164500_single_admin_miriamalobren.sql` to ensure `miriamalobren@gmail.com` holds `'admin'`, demote other accounts, re-point `properties.agent_id`, and enforce the single-admin rule at the Postgres trigger level.
+
 ## Safety Rules
 
 - Do **not** commit `backend/urbanscope.db`, `.env`, or virtualenvs (already in `.gitignore`).

@@ -17,13 +17,11 @@ from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
 from fastapi.responses import JSONResponse, RedirectResponse
 
 from backend.auth import (
-    AUTHORIZED_ADMIN_EMAILS,
-    AUTHORIZED_ADMIN_ROLES,
-    AUTHORIZED_SUPERADMIN_EMAILS,
     create_access_token,
     get_current_user_from_request,
     get_google_client_id,
     hash_password,
+    is_main_admin_email,
     require_admin,
     require_user,
     verify_google_token,
@@ -222,14 +220,9 @@ def _is_cloud_sync_disabled() -> bool:
 
 
 def normalize_db_role(role: Optional[str], email: str = "") -> str:
-    """Normalizes role values (e.g. Supabase 'client' -> SQLite 'user') to match SQLite CHECK constraints."""
+    """Normalizes role values under the single-admin policy (only miriamalobren@gmail.com holds 'admin')."""
     clean_email = (email or "").strip().lower()
-    if clean_email == "urbanscope.cvsu@gmail.com":
-        return "superadmin"
-    clean_role = (role or "").strip().lower()
-    if clean_role == "superadmin":
-        return "superadmin"
-    if clean_role in ("admin", "agent") or clean_email == "admin.realestate@gmail.com":
+    if clean_email == "miriamalobren@gmail.com":
         return "admin"
     return "user"
 
@@ -269,7 +262,7 @@ def sync_password_to_supabase(email: str, password_hash: str) -> bool:
             "email": clean_email,
             "password_hash": password_hash,
             "full_name": "Miriam Lobren",
-            "role": "admin" if clean_email != "urbanscope.cvsu@gmail.com" else "superadmin",
+            "role": "admin" if is_main_admin_email(clean_email) else "user",
             "avatar_url": "assets/images/agent.jpg",
             "email_verified_at": datetime.now(timezone.utc).isoformat()
         }).encode("utf-8")
@@ -484,7 +477,7 @@ def start_email_registration(payload: EmailOtpStartRequest, request: Request):
     _require_otp_configuration()
     if not _email_is_valid(clean_email):
         raise HTTPException(status_code=400, detail="Enter a valid email address.")
-    if clean_email in AUTHORIZED_ADMIN_EMAILS or clean_email in AUTHORIZED_SUPERADMIN_EMAILS:
+    if is_main_admin_email(clean_email):
         return {"success": True, "message": OTP_GENERIC_REGISTER_MESSAGE}
 
     conn = get_db_connection()
@@ -554,7 +547,7 @@ def complete_email_registration(payload: EmailOtpRegistrationComplete, request: 
     code = payload.code.strip()
     if not _email_is_valid(clean_email) or not re.fullmatch(r"[0-9]{6}", code):
         raise HTTPException(status_code=400, detail="Check the verification code and email address.")
-    if clean_email in AUTHORIZED_ADMIN_EMAILS or clean_email in AUTHORIZED_SUPERADMIN_EMAILS:
+    if is_main_admin_email(clean_email):
         raise HTTPException(status_code=400, detail="This email cannot be registered through the client sign-up form.")
 
     if _cloud_user_by_email(clean_email):
@@ -750,8 +743,8 @@ def login_user(payload: UserLogin, request: Request, response: Response):
         check_bot=True,
     )
 
-    # Synchronize latest password from Supabase Cloud for administrative accounts if updated remotely
-    if clean_email in AUTHORIZED_ADMIN_EMAILS or clean_email in AUTHORIZED_SUPERADMIN_EMAILS:
+    # Synchronize latest password from Supabase Cloud for the main administrator account if updated remotely
+    if is_main_admin_email(clean_email):
         sync_latest_password_from_supabase(clean_email)
 
     conn = get_db_connection()
@@ -802,7 +795,7 @@ def login_user(payload: UserLogin, request: Request, response: Response):
     # Set cookie for server-side page navigation guards
     _set_auth_cookies(response, request, token)
 
-    if user_role in AUTHORIZED_ADMIN_ROLES or user_email in AUTHORIZED_ADMIN_EMAILS or user_email in AUTHORIZED_SUPERADMIN_EMAILS:
+    if is_main_admin_email(user_email):
         redirect_url = "/pages/admin/dashboard.html"
     else:
         redirect_url = "/index.html"
@@ -912,7 +905,7 @@ def google_authenticate(payload: GoogleAuthRequest, request: Request, response: 
 
         _set_auth_cookies(response, request, token)
 
-        if user_role in AUTHORIZED_ADMIN_ROLES or user_email in AUTHORIZED_ADMIN_EMAILS or user_email in AUTHORIZED_SUPERADMIN_EMAILS:
+        if is_main_admin_email(user_email):
             redirect_url = "/pages/admin/dashboard.html"
         else:
             redirect_url = "/index.html"
@@ -968,7 +961,7 @@ def complete_google_registration(payload: GoogleRegistrationComplete, request: R
     if not _email_is_valid(clean_email) or not re.fullmatch(r"[0-9]{6}", code):
         raise HTTPException(status_code=400, detail="Check the verification code and email address.")
 
-    if clean_email in AUTHORIZED_ADMIN_EMAILS or clean_email in AUTHORIZED_SUPERADMIN_EMAILS:
+    if is_main_admin_email(clean_email):
         raise HTTPException(status_code=400, detail="This email cannot be registered through the client sign-up flow.")
 
     if not (payload.credential or payload.access_token):
@@ -1062,7 +1055,7 @@ def complete_google_registration(payload: GoogleRegistrationComplete, request: R
 
     _set_auth_cookies(response, request, token)
 
-    if user_role in AUTHORIZED_ADMIN_ROLES or user_email in AUTHORIZED_ADMIN_EMAILS or user_email in AUTHORIZED_SUPERADMIN_EMAILS:
+    if is_main_admin_email(user_email):
         redirect_url = "/pages/admin/dashboard.html"
     else:
         redirect_url = "/index.html"
@@ -1270,15 +1263,8 @@ def get_public_agent_profile():
         FROM users
         WHERE COALESCE(bio, '') != '__URBANSCOPE_DELETED__'
           AND COALESCE(password_hash, '') != '__DELETED_ACCOUNT__'
-          AND (role IN ('admin', 'superadmin') OR LOWER(email) IN ('miriamalobren@gmail.com', 'admin.realestate@gmail.com', 'miriam@gmail.com'))
-        ORDER BY 
-            CASE 
-                WHEN LOWER(email) = 'miriamalobren@gmail.com' THEN 0
-                WHEN LOWER(email) NOT IN ('admin.realestate@gmail.com', 'urbanscope.cvsu@gmail.com') AND email NOT LIKE '%@example.com' THEN 1 
-                ELSE 2 
-            END,
-            CASE WHEN role = 'admin' THEN 0 ELSE 1 END,
-            id DESC
+          AND LOWER(email) = 'miriamalobren@gmail.com'
+        ORDER BY id DESC
         LIMIT 1
     """)
     row = cursor.fetchone()

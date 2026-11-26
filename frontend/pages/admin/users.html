@@ -164,7 +164,7 @@
             <div>
                 <span class="section-eyebrow">SECURITY MANAGEMENT</span>
                 <h1>Accounts &amp; Role Access</h1>
-                <p>Create and update accounts, assign roles, and protect privileged access.</p>
+                <p>Create and manage accounts. Only Miriam Lobren (miriamalobren@gmail.com) holds Realty Admin access.</p>
             </div>
             <div class="sa-pane-actions">
                 <button type="button" class="primary-action-btn sa-btn-gold" id="btnCreateUserFromTable">
@@ -265,13 +265,6 @@
                         <label for="newPassword">Password * (min. 8 chars)</label>
                         <input type="password" id="newPassword" required minlength="8" placeholder="Enter secure password">
                     </div>
-                    <div class="sa-form-group">
-                        <label for="newRole">Assign Role *</label>
-                        <select id="newRole" class="sa-select">
-                            <option value="user">User (Normal Client)</option>
-                            <option value="admin">Admin (Realty Administrator)</option>
-                        </select>
-                    </div>
                 </div>
                 <div class="sa-modal-footer">
                     <button type="button" class="sa-btn-outline" id="btnCancelCreateUser">Cancel</button>
@@ -304,13 +297,6 @@
                         <input type="tel" id="editPhone" placeholder="+63 912 345 6789" inputmode="tel" autocomplete="tel">
                     </div>
                     <div class="sa-form-group">
-                        <label for="editRole">Account Role *</label>
-                        <select id="editRole" class="sa-select">
-                            <option value="user">User (Client Account)</option>
-                            <option value="admin">Admin (Realty Administrator)</option>
-                        </select>
-                    </div>
-                    <div class="sa-form-group">
                         <label for="editPassword">Reset Password <small style="color:var(--text-muted);font-weight:normal;">(Leave blank to keep current)</small></label>
                         <input type="password" id="editPassword" minlength="8" placeholder="Enter new password (optional)">
                     </div>
@@ -320,23 +306,6 @@
                     <button type="submit" class="primary-action-btn sa-btn-gold" id="btnSubmitEditUser">Save Changes</button>
                 </div>
             </form>
-        </div>
-    </div>
-
-    <!-- MODAL: CONFIRM ROLE CHANGE -->
-    <div class="sa-modal-backdrop" id="roleChangeModal" hidden>
-        <div class="sa-modal sm" role="dialog">
-            <div class="sa-modal-header">
-                <h3>Confirm Role Modification</h3>
-                <button type="button" class="sa-modal-close" id="btnCloseRoleModal">&times;</button>
-            </div>
-            <div class="sa-modal-body">
-                <p id="roleChangeMessage">Are you sure you want to update this user's role?</p>
-            </div>
-            <div class="sa-modal-footer">
-                <button type="button" class="sa-btn-outline" id="btnCancelRoleChange">Cancel</button>
-                <button type="button" class="primary-action-btn sa-btn-gold" id="btnConfirmRoleChange">Confirm Change</button>
-            </div>
         </div>
     </div>
 

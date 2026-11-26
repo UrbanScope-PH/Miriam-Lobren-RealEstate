@@ -472,14 +472,9 @@
         return res;
     }
 
-    function normalizeAccountRole(role, email) {
+    function normalizeAccountRole(_role, email) {
         const cleanEmail = String(email || '').trim().toLowerCase();
-        if (cleanEmail === 'urbanscope.cvsu@gmail.com') return 'superadmin';
-        const r = String(role || '').trim().toLowerCase();
-        if (r === 'superadmin') return 'superadmin';
-        if (r === 'admin' || r === 'agent') return 'admin';
-        if (cleanEmail === 'admin.realestate@gmail.com' || cleanEmail === 'miriamalobren@gmail.com' || cleanEmail === 'miriam@gmail.com') return 'admin';
-        return 'user';
+        return cleanEmail === 'miriamalobren@gmail.com' ? 'admin' : 'user';
     }
 
     // ----------------------------------------------------------
@@ -2626,10 +2621,10 @@
         return {
             status: 'operational',
             engine: 'supabase',
-            superadmin_email: 'urbanscope.cvsu@gmail.com',
+            superadmin_email: 'miriamalobren@gmail.com',
             metrics: {
                 total_users: users.length,
-                superadmins: superadminCount || 1,
+                superadmins: superadminCount,
                 admins: adminCount,
                 regular_users: regularCount,
                 total_properties: props.length,
@@ -2649,13 +2644,11 @@
         const cleanEmail = String(payload.email || '').trim().toLowerCase();
         const cleanPhone = String(payload.phone || '').trim();
         const plainPassword = String(payload.password || '');
-        let assignedRole = String(payload.role || 'user').trim().toLowerCase();
-        if (!['user', 'admin', 'superadmin'].includes(assignedRole)) {
-            assignedRole = 'user';
+        const rawRole = String(payload.role || 'user').trim().toLowerCase();
+        if (rawRole !== 'user' && rawRole !== 'client') {
+            return { success: false, error: 'Role promotion is disabled. New accounts are always created as Client Users.' };
         }
-        if (cleanEmail === 'urbanscope.cvsu@gmail.com') {
-            assignedRole = 'superadmin';
-        }
+        const assignedRole = cleanEmail === 'miriamalobren@gmail.com' ? 'admin' : 'user';
 
         if (!cleanName || !cleanEmail) {
             return { success: false, error: 'Full name and email address are required.' };
@@ -2716,17 +2709,27 @@
         const rawRole = payload.role !== undefined ? String(payload.role).trim().toLowerCase() : undefined;
         const rawPassword = payload.password ? String(payload.password).trim() : '';
 
-        if (originalEmail === 'urbanscope.cvsu@gmail.com') {
-            if (cleanEmail && cleanEmail !== 'urbanscope.cvsu@gmail.com') {
-                return { success: false, error: 'The root Superadmin email address cannot be changed.' };
+        if (originalEmail === 'miriamalobren@gmail.com') {
+            if (cleanEmail && cleanEmail !== 'miriamalobren@gmail.com') {
+                return { success: false, error: 'The main administrator email address cannot be changed.' };
             }
-            if (rawRole && rawRole !== 'superadmin') {
-                return { success: false, error: 'The root Superadmin account cannot be demoted.' };
+            if (rawRole && rawRole !== 'admin') {
+                return { success: false, error: 'The main administrator account cannot be demoted.' };
             }
+        } else if (cleanEmail === 'miriamalobren@gmail.com') {
+            return { success: false, error: 'That email address is reserved for the main administrator account.' };
         }
 
-        if (rawRole && !['user', 'admin', 'superadmin'].includes(rawRole)) {
-            return { success: false, error: "Invalid role. Must be 'user', 'admin', or 'superadmin'." };
+        const targetEmailForRole = cleanEmail || originalEmail;
+        const expectedRole = targetEmailForRole === 'miriamalobren@gmail.com' ? 'admin' : 'user';
+        if (rawRole !== undefined) {
+            if (!['user', 'client', 'admin', 'superadmin'].includes(rawRole)) {
+                return { success: false, error: "Invalid role. Must be 'user' or 'admin'." };
+            }
+            const normalizedReq = rawRole === 'client' ? 'user' : rawRole;
+            if (normalizedReq !== expectedRole) {
+                return { success: false, error: 'Role promotion and demotion are disabled. Only miriamalobren@gmail.com holds the Realty Admin role.' };
+            }
         }
         if (rawPassword && rawPassword.length < 8) {
             return { success: false, error: 'Password must be at least 8 characters long.' };
@@ -2734,9 +2737,10 @@
 
         if (!isLocalBackendReachableHost()) {
             try {
+                const { role: _ignoredRole, ...safePayload } = payload || {};
                 const response = await hostedApiFetch('/api/superadmin/users', {
                     method: 'POST',
-                    body: JSON.stringify({ action: 'update', user_id: userId, payload })
+                    body: JSON.stringify({ action: 'update', user_id: userId, payload: safePayload })
                 }, 10000);
                 const result = await response.json().catch(() => ({}));
                 if (!response.ok || !result.success) return { success: false, error: result.error || 'Failed to update user account.' };
@@ -2753,7 +2757,6 @@
             if (cleanName) localBody.full_name = cleanName;
             if (cleanEmail) localBody.email = cleanEmail;
             if (cleanPhone !== undefined) localBody.phone = cleanPhone;
-            if (rawRole) localBody.role = rawRole;
             if (rawPassword) localBody.password = rawPassword;
 
             const localRes = await localApiFetch(`/superadmin/users/${encodeURIComponent(userId)}`, {
@@ -2775,51 +2778,11 @@
         }
     }
 
-    async function apiSuperadminUpdateUserRole(userId, newRole, email = '') {
-        const targetRole = String(newRole || '').trim().toLowerCase();
-        const cleanEmail = String(email || '').trim().toLowerCase();
-
-        if (!['user', 'admin', 'superadmin'].includes(targetRole)) {
-            return { success: false, error: "Invalid role. Must be 'user', 'admin', or 'superadmin'." };
-        }
-        if (cleanEmail === 'urbanscope.cvsu@gmail.com' && targetRole !== 'superadmin') {
-            return { success: false, error: 'The root Superadmin account (urbanscope.cvsu@gmail.com) cannot be demoted.' };
-        }
-
-        if (!isLocalBackendReachableHost()) {
-            try {
-                const response = await hostedApiFetch('/api/superadmin/users', {
-                    method: 'POST',
-                    body: JSON.stringify({ action: 'update', user_id: userId, payload: { role: targetRole } })
-                }, 10000);
-                const result = await response.json().catch(() => ({}));
-                if (!response.ok || !result.success) return { success: false, error: result.error || 'Failed to update role.' };
-                clearUserDeletedLocal(result.user && result.user.id, result.user && result.user.email);
-                invalidateReadCache('users');
-                return { ...result, user: formatUserRecord(result.user) };
-            } catch (error) {
-                return { success: false, error: error.message || 'Unable to reach account management.' };
-            }
-        }
-
-        try {
-            const localRes = await localApiFetch(`/superadmin/users/${encodeURIComponent(userId)}/role`, {
-                method: 'PUT',
-                body: JSON.stringify({ role: targetRole })
-            });
-            const localData = await localRes.json().catch(() => ({}));
-            if (!localRes.ok || !localData.success) {
-                return { success: false, error: localData.detail || localData.error || 'Failed to update role.' };
-            }
-            invalidateReadCache('users');
-            return {
-                success: true,
-                message: `Role updated to '${targetRole}'`,
-                user: formatUserRecord(localData.user || { id: userId, email: cleanEmail, role: targetRole })
-            };
-        } catch (localErr) {
-            return { success: false, error: localErr.message || 'Network error while updating role.' };
-        }
+    async function apiSuperadminUpdateUserRole(_userId, _newRole, _email = '') {
+        return {
+            success: false,
+            error: 'Role promotion and demotion are disabled. Only miriamalobren@gmail.com holds the Realty Admin role.'
+        };
     }
 
     async function apiSuperadminDeleteUser(userId, email = '') {
@@ -2829,11 +2792,8 @@
         if (!rawUserId && !cleanEmail) {
             return { success: false, error: 'User ID or email is required.' };
         }
-        if (cleanEmail === 'urbanscope.cvsu@gmail.com') {
-            return { success: false, error: 'Cannot delete root Superadmin account.' };
-        }
-        if (cleanEmail === 'admin.realestate@gmail.com' || cleanEmail === 'miriamalobren@gmail.com' || cleanEmail === 'miriam@gmail.com') {
-            return { success: false, error: 'Cannot delete primary Realty Admin account.' };
+        if (cleanEmail === 'miriamalobren@gmail.com') {
+            return { success: false, error: 'Cannot delete the main Realty Admin account.' };
         }
 
         let deleted = false;
@@ -2952,17 +2912,17 @@
                 }
             });
 
-            const hasRoot = users.some(u =>
-                String(u.email || '').trim().toLowerCase() === 'urbanscope.cvsu@gmail.com' &&
-                String(u.role || '').trim().toLowerCase() === 'superadmin'
+            const hasMainAdmin = users.some(u =>
+                String(u.email || '').trim().toLowerCase() === 'miriamalobren@gmail.com' &&
+                String(u.role || '').trim().toLowerCase() === 'admin'
             );
 
             return {
-                success: fkViolations === 0 && hasRoot,
+                success: fkViolations === 0 && hasMainAdmin,
                 engine: 'supabase',
-                integrity: (fkViolations === 0 && hasRoot) ? 'ok' : (hasRoot ? 'FK mismatch' : 'Root role check warning'),
+                integrity: (fkViolations === 0 && hasMainAdmin) ? 'ok' : (hasMainAdmin ? 'FK mismatch' : 'Main admin role check warning'),
                 foreign_key_violations: fkViolations,
-                trigger_active: hasRoot,
+                trigger_active: hasMainAdmin,
                 table_count: 12
             };
         } catch (err) {

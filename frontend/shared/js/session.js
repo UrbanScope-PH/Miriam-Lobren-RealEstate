@@ -57,9 +57,8 @@
         var quickUser = localStorage.getItem('urbanscope_user') || (isFileDemo ? localStorage.getItem(DEMO_USER_KEY) : null) || localStorage.getItem('adminUser');
         if (quickUser) {
             var qParsed = JSON.parse(quickUser);
-            var qRole = String((qParsed && qParsed.role) || '').toLowerCase();
             var qEmail = String((qParsed && qParsed.email) || '').toLowerCase().trim();
-            var qIsStaff = (qRole === 'admin' || qRole === 'superadmin' || qEmail === 'urbanscope.cvsu@gmail.com' || qEmail === 'miriamalobren@gmail.com' || qEmail === 'admin.realestate@gmail.com' || qEmail === 'miriam@gmail.com');
+            var qIsStaff = (qEmail === 'miriamalobren@gmail.com');
             if (!qIsStaff && qParsed && qEmail) {
                 var qMeta = qParsed.user_metadata || {};
                 optimisticClientUser = {
@@ -152,9 +151,8 @@
                 if (usingSupabase() && typeof apiGetCurrentUser === 'function') {
                     var u = await apiGetCurrentUser();
                     if (!u) return null;
-                    var role = String(u.role || '').toLowerCase();
                     var email = String(u.email || '').toLowerCase().trim();
-                    var isStaff = (role === 'admin' || role === 'superadmin' || email === 'urbanscope.cvsu@gmail.com' || email === 'miriamalobren@gmail.com' || email === 'admin.realestate@gmail.com');
+                    var isStaff = (email === 'miriamalobren@gmail.com');
 
                     // Administrators and superadmin must NEVER be signed in as clients on the public website!
                     if (isStaff) {
@@ -588,9 +586,8 @@
         var opts = options || {};
         var path = location.pathname.toLowerCase().replace(/\\/g, '/');
         var inAdmin = path.includes('/pages/admin/') || path.includes('/pages/superadmin/');
-        var role = (user && user.role ? String(user.role) : '').toLowerCase();
         var email = (user && user.email ? String(user.email) : '').toLowerCase().trim();
-        var isStaff = (role === 'admin' || role === 'superadmin' || email === 'urbanscope.cvsu@gmail.com' || email === 'miriamalobren@gmail.com' || email === 'admin.realestate@gmail.com' || email === 'miriam@gmail.com');
+        var isStaff = (email === 'miriamalobren@gmail.com');
         if (inAdmin || isStaff) return;
 
         var acts = document.querySelector('.navbar .nav-acts, .inquiry-topbar .nav-acts, .history-topbar .nav-acts, .nav-acts');
@@ -1055,7 +1052,7 @@
             p = JSON.parse(localStorage.getItem('urbanscope_admin_profile') || 'null');
             if (!p) {
                 var adminUser = JSON.parse(localStorage.getItem('adminUser') || 'null');
-                if (adminUser && (adminUser.role === 'admin' || adminUser.email === 'admin.realestate@gmail.com' || adminUser.email === 'miriamalobren@gmail.com' || adminUser.email === 'miriam@gmail.com' || adminUser.email === 'miriamlobren@gmail.com')) {
+                if (adminUser && String(adminUser.email || '').toLowerCase().trim() === 'miriamalobren@gmail.com') {
                     p = adminUser;
                 }
             }

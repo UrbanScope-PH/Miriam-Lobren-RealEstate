@@ -36,7 +36,8 @@ if (adminLoginForm) {
                 const res = await apiSignIn(adminId, password);
                 if (res && res.success) {
                     const user = res.data?.user;
-                    if (user && (user.role === 'admin' || user.role === 'superadmin')) {
+                    const email = String(user?.email || '').toLowerCase().trim();
+                    if (user && email === 'miriamalobren@gmail.com') {
                         window.location.href = 'dashboard.html';
                         return;
                     } else {
