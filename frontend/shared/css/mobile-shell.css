@@ -756,6 +756,10 @@ html[data-theme="dark"] {
         padding: 16px 16px max(32px, env(safe-area-inset-bottom, 0px));
     }
 
+    .dashboard-content {
+        padding-top: 24px;
+    }
+
     .content,
     .form-content {
         min-width: 0;
@@ -899,6 +903,10 @@ html[data-theme="dark"] {
     .dashboard-content,
     .sa-content {
         padding: 14px 14px max(32px, env(safe-area-inset-bottom, 0px));
+    }
+
+    .dashboard-content {
+        padding-top: 24px;
     }
 }
 
@@ -1232,7 +1240,6 @@ button,
 .legal-mobile-jump,
 .legal-section-chevron,
 .mobile-only-quick-action,
-.calendar-mobile-toggle,
 .form-card-chevron,
 .sa-mobile-collapse-btn {
     display: none;
@@ -2108,6 +2115,13 @@ button,
         margin-bottom: 0 !important;
     }
 
+    .kpi-card:last-child {
+        grid-column: 1 / -1;
+        width: auto;
+        justify-self: stretch;
+        min-height: 85px;
+    }
+
     .kpi-card {
         padding: 12px 14px;
         gap: 10px;
@@ -2157,18 +2171,26 @@ button,
     }
 
     #recentInquiries {
-        order: 4;
+        order: 5;
         margin-top: 0 !important;
     }
 
     #dashboardCalendarCard {
-        order: 5;
+        order: 4;
         margin-bottom: 0 !important;
     }
 
     #dashboardAnalyticsRow {
-        order: 6;
+        display: contents !important;
+    }
+
+    #dashboardAnalyticsRow .donut-card {
+        order: 3;
         margin-bottom: 0 !important;
+    }
+
+    #dashboardAnalyticsRow .notif-card {
+        display: none !important;
     }
 
     #managedPropertiesPanel {
@@ -2185,43 +2207,6 @@ button,
         display: flex;
         flex-direction: column;
         gap: 8px;
-    }
-
-    .calendar-mobile-toggle {
-        display: flex !important;
-        align-items: center;
-        justify-content: space-between;
-        gap: 8px;
-        width: 100%;
-        min-height: 40px;
-        padding: 8px 13px;
-        border-radius: 10px;
-        border: 1.5px solid var(--green, #2d5c39);
-        background: var(--light-green, #eef5ef);
-        color: var(--dark-green, #1a3b23);
-        font-family: inherit;
-        font-size: 13.5px;
-        font-weight: 700;
-        cursor: pointer;
-    }
-
-    .calendar-mobile-toggle svg {
-        transition: transform 0.2s ease;
-    }
-
-    .calendar-mobile-summary {
-        font-size: 12.5px;
-        font-weight: 600;
-        color: var(--text-muted, #526658);
-    }
-
-    .calendar-card.mobile-calendar-collapsed .calendar-layout,
-    .calendar-card.mobile-calendar-collapsed .calendar-legend {
-        display: none !important;
-    }
-
-    .calendar-card:not(.mobile-calendar-collapsed) .calendar-mobile-toggle svg {
-        transform: rotate(180deg);
     }
 
     .mobile-dash-prop {
@@ -2343,8 +2328,6 @@ button,
     /* Dark Mode Coverage for New Mobile UX Components */
     html.dark-mode .mobile-expand-btn,
     html[data-theme="dark"] .mobile-expand-btn,
-    html.dark-mode .calendar-mobile-toggle,
-    html[data-theme="dark"] .calendar-mobile-toggle,
     html.dark-mode .sa-mobile-collapse-btn,
     html[data-theme="dark"] .sa-mobile-collapse-btn {
         background: var(--light-green, #1c3123);
