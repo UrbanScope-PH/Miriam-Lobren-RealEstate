@@ -706,11 +706,11 @@ td {
     }
 
     .main-content {
-        padding: 16px 14px max(24px, env(safe-area-inset-bottom, 0px));
+        padding: 18px 16px max(36px, env(safe-area-inset-bottom, 0px));
     }
 
     .section-eyebrow {
-        font-size: 10.5px;
+        font-size: 11.5px;
         margin-bottom: 4px;
     }
 
@@ -718,21 +718,21 @@ td {
     .sa-pane-header {
         flex-direction: column;
         align-items: stretch;
-        gap: 10px;
-        margin-bottom: 14px;
+        gap: 12px;
+        margin-bottom: 16px;
     }
 
     .page-header-lead h1,
     .sa-pane-header h1 {
-        font-size: 21px;
+        font-size: 22px;
         line-height: 1.25;
-        margin-bottom: 3px;
+        margin-bottom: 4px;
     }
 
     .page-header-lead p,
     .sa-pane-header p {
-        font-size: 13.5px;
-        line-height: 1.5;
+        font-size: 14.5px;
+        line-height: 1.58;
     }
 
     .sa-pane-actions,
@@ -742,16 +742,16 @@ td {
 
     .primary-action-btn,
     .sa-btn-gold {
-        min-height: 40px;
-        padding: 9px 14px;
-        font-size: 13.5px;
+        min-height: 44px;
+        padding: 10px 16px;
+        font-size: 14.5px;
         border-radius: 10px;
     }
 
     .sa-btn-outline {
-        min-height: 38px;
-        padding: 8px 12px;
-        font-size: 13px;
+        min-height: 40px;
+        padding: 8px 13px;
+        font-size: 13.5px;
         border-radius: 10px;
     }
 
@@ -759,46 +759,46 @@ td {
     .sa-table-toolbar {
         flex-direction: column;
         align-items: stretch;
-        padding: 12px;
-        gap: 8px;
-        margin-bottom: 14px;
-        border-radius: 12px;
+        padding: 14px;
+        gap: 10px;
+        margin-bottom: 16px;
+        border-radius: 14px !important;
     }
 
     .search-field {
         min-width: 0;
         max-width: 100%;
         width: 100%;
-        height: 38px;
-        min-height: 38px;
-        padding: 0 11px;
-        border-radius: 9px;
+        height: 42px;
+        min-height: 42px;
+        padding: 0 12px;
+        border-radius: 10px;
     }
 
     .search-field input {
         height: 100%;
-        min-height: 36px;
-        padding: 6px 0;
+        min-height: 40px;
+        padding: 8px 0;
     }
 
     .toolbar-filters {
         width: 100%;
         justify-content: space-between;
-        gap: 8px;
-        font-size: 12.5px;
+        gap: 10px;
+        font-size: 13.5px;
     }
 
     .toolbar-filters label {
-        font-size: 12.5px;
+        font-size: 13.5px;
         white-space: nowrap;
     }
 
     .toolbar-filters .sa-select {
         flex: 1;
         min-width: 0;
-        height: 38px;
-        min-height: 38px;
-        padding: 6px 11px;
+        height: 42px;
+        min-height: 42px;
+        padding: 8px 12px;
     }
 
     .role-filter-select-wrap {
@@ -807,84 +807,84 @@ td {
     }
 
     .role-filter-trigger {
-        height: 38px;
-        min-height: 38px;
-        padding: 0 11px;
-        font-size: 13px;
-        border-radius: 9px;
+        height: 42px;
+        min-height: 42px;
+        padding: 0 12px;
+        font-size: 13.5px;
+        border-radius: 10px;
     }
 
     .role-filter-menu {
         width: 100%;
         min-width: 0;
-        border-radius: 12px;
+        border-radius: 14px;
         padding: 6px;
     }
 
     .role-filter-option {
-        min-height: 36px;
-        padding: 7px 10px;
-        font-size: 13px;
+        min-height: 38px;
+        padding: 8px 12px;
+        font-size: 13.5px;
     }
 
     .users-card,
     .sa-table-container {
-        border-radius: 12px;
+        border-radius: 14px;
     }
 
     #usersMobileList {
-        padding: 10px 12px 12px;
-        gap: 10px;
+        padding: 12px 14px 14px;
+        gap: 12px;
     }
 
     .mobile-sa-user-card {
-        padding: 12px 14px;
-        border-radius: 12px;
-        gap: 8px;
+        padding: 14px 16px;
+        border-radius: 14px;
+        gap: 10px;
     }
 
     .table-avatar {
-        width: 34px;
-        height: 34px;
-        font-size: 12px;
+        width: 38px;
+        height: 38px;
+        font-size: 13px;
     }
 
     .mobile-sa-user-id strong {
-        font-size: 14.5px;
+        font-size: 15.5px;
         line-height: 1.3;
     }
 
     .mobile-sa-user-id small {
-        font-size: 12px;
-        line-height: 1.35;
+        font-size: 12.5px;
+        line-height: 1.4;
     }
 
     .sa-badge-green,
     .sa-badge-emerald,
     .sa-badge-gold,
     .sa-badge-gray {
-        padding: 3px 8px;
-        font-size: 11px;
+        padding: 3px 9px;
+        font-size: 11.5px;
         border-radius: 6px;
     }
 
     .mobile-card-meta-row {
-        font-size: 12px;
-        gap: 4px 10px;
+        font-size: 12.5px;
+        gap: 4px 12px;
     }
 
     .mobile-sa-user-actions .action-btns-group {
         display: flex;
         flex-wrap: wrap;
         justify-content: flex-start;
-        gap: 6px;
+        gap: 8px;
     }
 
     .mobile-sa-user-actions .btn-table-action {
-        min-height: 34px;
-        padding: 6px 11px;
-        font-size: 12.5px;
-        border-radius: 8px;
+        min-height: 38px;
+        padding: 8px 13px;
+        font-size: 13px;
+        border-radius: 10px;
     }
 
     .sa-modal-backdrop {
@@ -892,24 +892,24 @@ td {
     }
 
     .sa-modal {
-        border-radius: 12px;
+        border-radius: 14px;
         max-height: calc(100dvh - 24px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
         overscroll-behavior: contain;
     }
 
     .sa-modal-header {
-        padding: 12px 14px;
+        padding: 14px 16px;
     }
 
     .sa-modal-header h3 {
-        font-size: 17px;
+        font-size: 18px;
     }
 
     .sa-modal-close {
-        width: 34px;
-        height: 34px;
-        min-width: 34px;
-        min-height: 34px;
+        width: 38px;
+        height: 38px;
+        min-width: 38px;
+        min-height: 38px;
         display: inline-flex;
         align-items: center;
         justify-content: center;
@@ -917,33 +917,33 @@ td {
     }
 
     .sa-modal-body {
-        padding: 14px;
-        gap: 10px;
-        font-size: 13.5px;
-        line-height: 1.5;
+        padding: 14px 16px;
+        gap: 12px;
+        font-size: 14.5px;
+        line-height: 1.58;
     }
 
     .sa-form-group {
-        gap: 5px;
+        gap: 6px;
     }
 
     .sa-form-group label {
-        font-size: 12.5px;
+        font-size: 13.5px;
     }
 
     .sa-form-group input,
     .sa-form-group select {
-        min-height: 38px;
-        height: 38px;
-        padding: 8px 11px;
+        min-height: 42px;
+        height: 42px;
+        padding: 10px 12px;
         border-radius: 8px;
     }
 
     .sa-modal-footer {
         flex-direction: column-reverse;
         align-items: stretch;
-        padding: 12px 14px;
-        gap: 8px;
+        padding: 14px 16px;
+        gap: 10px;
     }
 
     .sa-modal-footer button {
@@ -952,28 +952,28 @@ td {
     }
 
     .sa-toast-container {
-        top: calc(62px + env(safe-area-inset-top, 0px));
+        top: calc(64px + env(safe-area-inset-top, 0px));
         bottom: auto;
-        left: 12px;
-        right: 12px;
+        left: 14px;
+        right: 14px;
     }
 
     .sa-toast {
         width: 100%;
-        padding: 10px 14px;
-        font-size: 12.5px;
-        border-radius: 10px;
+        padding: 12px 14px;
+        font-size: 13.5px;
+        border-radius: 12px;
     }
 }
 
 @media (max-width: 480px) {
     .main-content {
-        padding: 14px 12px max(22px, env(safe-area-inset-bottom, 0px));
+        padding: 16px 14px max(36px, env(safe-area-inset-bottom, 0px));
     }
 
     .page-header-lead h1,
     .sa-pane-header h1 {
-        font-size: 20px;
+        font-size: 21px;
     }
 }
 

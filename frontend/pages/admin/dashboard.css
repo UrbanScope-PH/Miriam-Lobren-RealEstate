@@ -209,60 +209,60 @@
 
 @media (max-width: 768px) {
     .analytics-card {
-        padding: 12px 14px;
+        padding: 14px 16px;
         min-height: 0;
-        border-radius: 12px;
+        border-radius: 14px;
     }
     .analytics-card .card-header {
         flex-direction: row;
         align-items: center;
         justify-content: space-between;
-        gap: 8px;
-        margin-bottom: 10px;
+        gap: 10px;
+        margin-bottom: 12px;
     }
     .analytics-card .card-header h3 {
-        font-size: 15px;
+        font-size: 16px;
     }
     .analytics-card .card-header p {
-        font-size: 12px;
+        font-size: 12.5px;
     }
     .donut-chart-container {
         flex-direction: column;
-        gap: 12px;
+        gap: 14px;
         padding: 4px 0;
     }
     .donut-legend {
         display: grid;
         grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 8px 12px;
+        gap: 10px 14px;
         width: 100%;
         max-width: none;
         min-width: 0;
     }
     .legend-item {
-        gap: 7px;
+        gap: 8px;
     }
     .dot {
-        width: 9px;
-        height: 9px;
+        width: 10px;
+        height: 10px;
     }
     .legend-label {
-        font-size: 12px;
+        font-size: 13px;
     }
     .legend-count {
-        font-size: 12.5px;
+        font-size: 13.5px;
         margin-left: auto;
     }
     #inquiryDonutSvg {
-        width: 150px;
-        height: 150px;
+        width: 158px;
+        height: 158px;
     }
     .analytics-card.notif-card .notif-list {
-        max-height: 220px;
-        gap: 4px;
+        max-height: 230px;
+        gap: 6px;
     }
     .analytics-card .view-all-link {
-        font-size: 12px;
+        font-size: 13px;
         min-height: 0;
         padding: 2px 0;
     }
@@ -912,36 +912,36 @@
     }
 
     .dashboard-content {
-        padding: 16px 14px max(24px, env(safe-area-inset-bottom, 0px));
-        gap: 12px;
+        padding: 18px 16px max(36px, env(safe-area-inset-bottom, 0px));
+        gap: 14px;
     }
 
     .welcome-banner {
-        gap: 10px;
+        gap: 12px;
         margin-bottom: 0;
     }
 
     .welcome-eyebrow {
-        font-size: 10.5px;
-        letter-spacing: 1px;
-        margin-bottom: 2px;
+        font-size: 11.5px;
+        letter-spacing: 0.9px;
+        margin-bottom: 3px;
     }
 
     .welcome-banner h2 {
-        font-size: 21px;
+        font-size: 22px;
         line-height: 1.25;
     }
 
     .welcome-banner p {
-        font-size: 12px;
-        line-height: 1.45;
+        font-size: 13px;
+        line-height: 1.5;
     }
 
     .welcome-quick-actions {
         width: 100%;
         display: grid;
         grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 8px;
+        gap: 10px;
     }
 
     .welcome-action-btn {
@@ -951,20 +951,20 @@
     }
 
     .welcome-action-btn.primary {
-        min-height: 40px;
-        padding: 9px 10px;
-        font-size: 13.5px;
+        min-height: 44px;
+        padding: 10px 14px;
+        font-size: 14.5px;
     }
 
     .welcome-action-btn.secondary {
-        min-height: 38px;
-        padding: 7px 10px;
-        font-size: 12.5px;
+        min-height: 40px;
+        padding: 8px 13px;
+        font-size: 13.5px;
     }
 
     .kpi-grid {
         grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 10px;
+        gap: 12px;
     }
 
     .kpi-card:last-child {
@@ -973,24 +973,24 @@
 
     .kpi-card {
         gap: 10px;
-        padding: 10px 12px;
-        border-radius: 12px;
+        padding: 12px 14px;
+        border-radius: 14px;
     }
 
     .kpi-icon {
-        width: 34px;
-        height: 34px;
-        border-radius: 9px;
+        width: 38px;
+        height: 38px;
+        border-radius: 10px;
     }
 
     .kpi-icon svg {
-        width: 17px;
-        height: 17px;
+        width: 19px;
+        height: 19px;
     }
 
     .kpi-label {
-        font-size: 11.5px;
-        line-height: 1.25;
+        font-size: 12.5px;
+        line-height: 1.28;
         white-space: normal;
         overflow: visible;
         text-overflow: clip;
@@ -998,94 +998,94 @@
     }
 
     .kpi-value {
-        font-size: 21px;
+        font-size: 23px;
         line-height: 1.1;
     }
 
     .feature-card,
     .calendar-card,
     .table-card {
-        padding: 12px 14px;
-        border-radius: 12px;
+        padding: 14px 16px;
+        border-radius: 14px;
     }
 
     .feature-card-header h3,
     .calendar-heading h3 {
-        font-size: 15px;
+        font-size: 16px;
     }
 
     .feature-card-header p,
     .calendar-heading p {
-        font-size: 12px;
-        line-height: 1.45;
+        font-size: 12.5px;
+        line-height: 1.48;
     }
 
     .property-illustration {
-        gap: 10px;
-        padding: 12px;
-        border-radius: 10px;
+        gap: 12px;
+        padding: 14px;
+        border-radius: 12px;
     }
 
     .property-illustration-icon {
-        width: 42px;
-        height: 42px;
+        width: 44px;
+        height: 44px;
         border-radius: 10px;
     }
 
     .property-illustration strong {
-        font-size: 21px;
+        font-size: 22px;
     }
 
     .quick-actions-grid {
-        gap: 8px;
+        gap: 10px;
         margin-top: 12px;
     }
 
     .quick-action-item {
-        min-height: 112px;
-        padding: 12px;
-        border-radius: 12px;
+        min-height: 118px;
+        padding: 14px;
+        border-radius: 14px;
     }
 
     .quick-action-icon {
-        width: 36px;
-        height: 36px;
+        width: 38px;
+        height: 38px;
         margin-bottom: 10px;
-        border-radius: 9px;
+        border-radius: 10px;
     }
 
     .quick-action-item strong {
-        font-size: 13px;
+        font-size: 14px;
         line-height: 1.35;
     }
 
     .quick-action-item > span:not(.quick-action-icon):not(.quick-action-arrow) {
-        font-size: 11.5px;
-        line-height: 1.4;
-        margin-top: 3px;
+        font-size: 12.5px;
+        line-height: 1.45;
+        margin-top: 4px;
     }
 
     .daily-reminder {
         margin-top: 12px;
-        padding: 11px 12px;
+        padding: 12px 14px;
         gap: 10px;
-        border-radius: 10px;
+        border-radius: 12px;
     }
 
     .daily-reminder strong {
-        font-size: 12.5px;
+        font-size: 13.5px;
     }
 
     .daily-reminder p {
-        font-size: 12px;
-        line-height: 1.45;
+        font-size: 13px;
+        line-height: 1.5;
         margin-top: 3px;
     }
 
     .calendar-heading {
         flex-direction: column;
         align-items: stretch;
-        gap: 8px;
+        gap: 10px;
         margin-bottom: 0;
     }
 
@@ -1094,48 +1094,48 @@
     }
 
     .calendar-legend {
-        font-size: 11.5px;
+        font-size: 12px;
         gap: 6px;
     }
 
     .calendar-mobile-toggle {
-        min-height: 38px;
-        padding: 8px 12px;
-        font-size: 12.5px;
+        min-height: 40px;
+        padding: 8px 13px;
+        font-size: 13.5px;
         border-radius: 10px;
     }
 
     .calendar-mobile-summary {
-        font-size: 12px;
+        font-size: 12.5px;
     }
 
     .calendar-layout {
-        gap: 10px;
-        margin-top: 10px;
+        gap: 12px;
+        margin-top: 12px;
     }
 
     .calendar-main,
     .calendar-agenda {
-        padding: 10px 12px;
-        border-radius: 10px;
+        padding: 12px 14px;
+        border-radius: 12px;
         min-height: 0;
     }
 
     .calendar-month-header {
-        grid-template-columns: 34px minmax(0, 1fr) 34px;
-        gap: 6px;
+        grid-template-columns: 38px minmax(0, 1fr) 38px;
+        gap: 8px;
         margin-bottom: 10px;
     }
 
     .calendar-month-header h4 {
-        font-size: 14.5px;
+        font-size: 15.5px;
     }
 
     .calendar-nav-btn {
-        width: 34px;
-        height: 34px;
+        width: 38px;
+        height: 38px;
         font-size: 18px;
-        border-radius: 9px;
+        border-radius: 10px;
     }
 
     .calendar-weekdays {
@@ -1144,19 +1144,19 @@
 
     .calendar-weekdays,
     .calendar-days {
-        gap: 3px;
+        gap: 4px;
     }
 
     .calendar-weekdays span {
-        font-size: 10.5px;
+        font-size: 11.5px;
         padding: 4px 0;
     }
 
     .calendar-day,
     .calendar-empty-day {
-        min-height: 34px;
-        border-radius: 8px;
-        font-size: 12px;
+        min-height: 38px;
+        border-radius: 9px;
+        font-size: 13px;
     }
 
     .agenda-date-heading {
@@ -1164,81 +1164,81 @@
     }
 
     .agenda-date-heading h4 {
-        font-size: 14.5px;
+        font-size: 15.5px;
     }
 
     .calendar-agenda-list {
-        gap: 8px;
+        gap: 10px;
         padding-top: 10px;
     }
 
     .agenda-event {
-        padding: 10px 12px;
-        border-radius: 9px;
+        padding: 12px 14px;
+        border-radius: 10px;
     }
 
     .agenda-event-time {
-        font-size: 11px;
-        margin-bottom: 3px;
+        font-size: 11.5px;
+        margin-bottom: 4px;
     }
 
     .agenda-event strong,
     .agenda-empty strong {
-        font-size: 13px;
+        font-size: 14px;
         line-height: 1.4;
     }
 
     .agenda-event p,
     .agenda-empty p {
-        font-size: 12px;
-        line-height: 1.45;
-        margin-top: 3px;
+        font-size: 13px;
+        line-height: 1.5;
+        margin-top: 4px;
     }
 
     .agenda-empty-icon {
-        width: 32px;
-        height: 32px;
-        font-size: 16px;
+        width: 36px;
+        height: 36px;
+        font-size: 18px;
         margin-bottom: 8px;
     }
 
     .card-header {
-        gap: 8px;
+        gap: 10px;
     }
 
     .table-title-group h3 {
-        font-size: 15px;
+        font-size: 16px;
     }
 
     .table-subtitle {
-        font-size: 12px;
+        font-size: 12.5px;
     }
 }
 
 @media (max-width: 480px) {
     .dashboard-content {
-        padding: 14px 12px max(22px, env(safe-area-inset-bottom, 0px));
-        gap: 10px;
+        padding: 16px 14px max(36px, env(safe-area-inset-bottom, 0px));
+        gap: 12px;
     }
 
     .welcome-banner h2 {
-        font-size: 20px;
+        font-size: 21px;
     }
 
     .kpi-grid {
-        gap: 8px;
+        gap: 10px;
     }
 }
 
 @media (max-width: 380px) {
     .dashboard-content {
-        padding-right: 12px;
-        padding-left: 12px;
+        padding-right: 14px;
+        padding-left: 14px;
     }
 
     .kpi-grid {
         grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 8px;
+        gap: 10px;
     }
 
     .kpi-card:last-child {
@@ -1250,18 +1250,18 @@
     }
 
     .quick-action-item {
-        min-height: 104px;
+        min-height: 108px;
     }
 
     .feature-card,
     .calendar-card,
     .table-card {
-        padding: 12px;
+        padding: 14px;
     }
 
     .calendar-main,
     .calendar-agenda {
-        padding: 10px;
+        padding: 12px;
     }
 }
 
@@ -1951,45 +1951,45 @@
 /* RESPONSIVE DESIGN */
 @media (max-width: 768px) {
     .table-panel {
-        padding: 12px 14px;
+        padding: 14px 16px;
         margin-top: 0;
-        border-radius: 12px;
+        border-radius: 14px;
     }
 
     .table-panel .panel-heading {
         align-items: center;
-        gap: 8px;
-        margin-bottom: 10px;
+        gap: 10px;
+        margin-bottom: 12px;
     }
 
     .table-panel .panel-heading h2 {
-        font-size: 16.5px;
+        font-size: 18px;
     }
 
     .table-panel .panel-heading p {
-        font-size: 12px;
+        font-size: 12.5px;
     }
 
     .dash-count-badge {
-        font-size: 11px;
-        padding: 3px 8px;
+        font-size: 11.5px;
+        padding: 3px 9px;
     }
 
     .view-all-pill-btn {
-        min-height: 34px;
-        padding: 6px 10px;
-        font-size: 12.5px;
-        border-radius: 8px;
+        min-height: 38px;
+        padding: 8px 13px;
+        font-size: 13px;
+        border-radius: 10px;
     }
 
     .dash-add-prop-btn {
-        min-height: 38px;
-        padding: 7px 12px;
-        font-size: 13px;
+        min-height: 40px;
+        padding: 8px 14px;
+        font-size: 13.5px;
     }
 
     .table-panel .text-button {
-        font-size: 12.5px;
+        font-size: 13px;
         white-space: nowrap;
         min-height: 0;
     }
@@ -2000,28 +2000,28 @@
     }
 
     .dash-prop-filters {
-        padding: 10px;
-        gap: 8px;
+        padding: 12px;
+        gap: 10px;
     }
 
     .dash-filter-search,
     .dash-filter-control select,
     .dash-filter-control input[type="date"],
     .dash-filter-reset-btn {
-        height: 38px;
-        min-height: 38px;
+        height: 42px;
+        min-height: 42px;
     }
 
     .dash-filter-search input {
         height: 100%;
-        min-height: 36px;
-        padding: 6px 0;
+        min-height: 40px;
+        padding: 8px 0;
     }
 }
 
 @media (max-width: 480px) {
     .table-panel {
-        padding: 12px;
+        padding: 14px;
     }
 
     .table-panel .panel-heading {
@@ -2249,17 +2249,17 @@
 
 @media (max-width: 768px) {
   .admin-profile-badge {
-    min-height: 36px;
-    height: 36px;
+    min-height: 38px;
+    height: 38px;
     padding: 0;
     gap: 4px;
     background: transparent;
   }
 
   .admin-profile-badge .avatar-circle {
-    width: 34px;
-    height: 34px;
-    flex-basis: 34px;
+    width: 38px;
+    height: 38px;
+    flex-basis: 38px;
   }
 
   .profile-chevron {
@@ -2269,13 +2269,13 @@
 
   .profile-dropdown {
     position: fixed;
-    top: calc(62px + env(safe-area-inset-top, 0px));
-    right: 12px;
-    left: 12px;
+    top: calc(64px + env(safe-area-inset-top, 0px));
+    right: 14px;
+    left: 14px;
     width: auto;
-    max-width: min(340px, calc(100vw - 24px));
+    max-width: min(340px, calc(100vw - 28px));
     margin-left: auto;
-    padding: 12px 14px;
+    padding: 14px 16px;
     border-radius: 14px;
   }
 
@@ -2285,20 +2285,20 @@
   }
 
   .profile-dropdown-info .avatar-circle {
-    width: 40px;
-    height: 40px;
-    flex: 0 0 40px;
-    font-size: 15px;
+    width: 42px;
+    height: 42px;
+    flex: 0 0 42px;
+    font-size: 16px;
   }
 
   .profile-dropdown-name strong,
   .profile-dropdown-info strong {
-    font-size: 14px;
+    font-size: 15px;
   }
 
   .profile-dropdown-name small,
   .profile-dropdown-info span:not(.avatar-circle) {
-    font-size: 11.5px;
+    font-size: 12.5px;
   }
 
   .profile-dropdown-divider {
@@ -2306,20 +2306,20 @@
   }
 
   .profile-dropdown a {
-    min-height: 38px;
-    padding: 8px 10px;
+    min-height: 40px;
+    padding: 8px 12px;
     gap: 10px;
-    font-size: 13px;
-    border-radius: 8px;
+    font-size: 14px;
+    border-radius: 10px;
   }
 }
 
 @media (max-width: 480px) {
   .profile-dropdown {
-    top: calc(58px + env(safe-area-inset-top, 0px));
-    right: 10px;
-    left: 10px;
-    padding: 12px;
+    top: calc(62px + env(safe-area-inset-top, 0px));
+    right: 12px;
+    left: 12px;
+    padding: 14px;
   }
 }
 
@@ -2358,7 +2358,7 @@
   html, body {
     width: 100%;
     max-width: 100%;
-    overflow-x: hidden;
+    overflow-x: clip;
   }
 
   .dashboard-content {
@@ -2404,28 +2404,36 @@
   }
 
   .admin-profile-badge {
-    min-height: 36px;
-    height: 36px;
+    min-height: 38px;
+    height: 38px;
     padding: 0;
     gap: 4px;
   }
 
   .admin-profile-badge .avatar-circle {
-    width: 34px;
-    height: 34px;
-    flex-basis: 34px;
+    width: 38px;
+    height: 38px;
+    flex-basis: 38px;
   }
 }
 
 @media (max-width: 480px) {
   .admin-profile-badge {
-    min-height: 34px;
-    height: 34px;
+    min-height: 36px;
+    height: 36px;
     max-width: 126px;
     padding: 0;
+    gap: 3px;
   }
+
+  .admin-profile-badge .avatar-circle {
+    width: 36px;
+    height: 36px;
+    flex-basis: 36px;
+  }
+
   .admin-profile-badge .user-meta { display: none; }
-  .dashboard-content { padding-inline: 12px; }
+  .dashboard-content { padding-inline: 14px; }
 }
 
 /* ==========================================================
@@ -3062,7 +3070,7 @@
 
     .modal-box {
         padding: 14px 16px;
-        border-radius: 12px;
+        border-radius: 14px;
         max-width: calc(100vw - 24px);
         max-height: calc(100dvh - 24px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
         overscroll-behavior: contain;
@@ -3074,29 +3082,29 @@
     }
 
     .modal-header-icon {
-        width: 34px;
-        height: 34px;
-        border-radius: 9px;
+        width: 38px;
+        height: 38px;
+        border-radius: 10px;
     }
 
     .modal-header h3 {
-        font-size: 17px;
+        font-size: 18px;
     }
 
     .modal-subtitle {
-        font-size: 12px;
+        font-size: 12.5px;
     }
 
     .modal-close {
-        width: 34px;
-        height: 34px;
-        min-width: 34px;
-        min-height: 34px;
+        width: 38px;
+        height: 38px;
+        min-width: 38px;
+        min-height: 38px;
     }
 
     .modal-body {
-        font-size: 13.5px;
-        line-height: 1.5;
+        font-size: 14.5px;
+        line-height: 1.58;
     }
 
     .inquiry-modal-detail {
@@ -3104,56 +3112,56 @@
     }
 
     .inquiry-client-banner {
-        padding: 12px 14px;
-        border-radius: 12px;
-        gap: 10px;
+        padding: 14px 16px;
+        border-radius: 14px;
+        gap: 12px;
     }
 
     .inquiry-avatar-pill {
-        width: 38px;
-        height: 38px;
-        font-size: 15px;
+        width: 40px;
+        height: 40px;
+        font-size: 15.5px;
     }
 
     .inquiry-client-name {
-        font-size: 15px;
+        font-size: 16px;
     }
 
     .inquiry-submitted-date {
-        font-size: 11.5px;
+        font-size: 12.5px;
     }
 
     .inquiry-id-tag {
-        font-size: 11px;
+        font-size: 11.5px;
     }
 
     .inquiry-info-grid {
-        gap: 8px;
+        gap: 10px;
     }
 
     .info-grid-card {
-        padding: 10px 12px;
-        border-radius: 10px;
-        gap: 3px;
+        padding: 12px 14px;
+        border-radius: 12px;
+        gap: 4px;
     }
 
     .info-label {
-        font-size: 11px;
+        font-size: 11.5px;
     }
 
     .info-value {
-        font-size: 13px;
+        font-size: 13.5px;
     }
 
     .inquiry-message-box {
-        padding: 10px 12px;
-        font-size: 13.5px;
-        line-height: 1.5;
-        max-height: 150px;
+        padding: 12px 14px;
+        font-size: 14.5px;
+        line-height: 1.58;
+        max-height: 165px;
     }
 
     .modal-actions-footer {
-        gap: 8px;
+        gap: 10px;
         padding-top: 12px;
         margin-top: 4px;
     }
@@ -3161,34 +3169,34 @@
     .btn-modal-secondary,
     .btn-modal-cancelled,
     .btn-modal-cancel {
-        min-height: 38px;
-        padding: 8px 12px;
-        font-size: 13px;
+        min-height: 40px;
+        padding: 8px 13px;
+        font-size: 13.5px;
     }
 
     .btn-modal-primary,
     .btn-modal-approve {
-        min-height: 40px;
-        padding: 9px 14px;
-        font-size: 13.5px;
+        min-height: 44px;
+        padding: 10px 16px;
+        font-size: 14.5px;
     }
 
     .modal-status-main-btn {
-        min-height: 38px;
-        padding: 8px 12px;
-        font-size: 13px;
+        min-height: 40px;
+        padding: 8px 13px;
+        font-size: 13.5px;
     }
 
     .modal-status-chevron-btn {
-        min-height: 38px;
-        width: 38px;
+        min-height: 40px;
+        width: 40px;
         padding: 8px;
     }
 
     .modal-status-option {
-        min-height: 36px;
-        padding: 7px 10px;
-        font-size: 13px;
+        min-height: 38px;
+        padding: 8px 12px;
+        font-size: 13.5px;
     }
 }
 
@@ -3332,61 +3340,61 @@
    ========================================================================== */
 @media (max-width: 768px) {
     .kpi-value {
-        font-size: 21px !important;
+        font-size: 23px !important;
         line-height: 1.1 !important;
     }
 
     .kpi-card {
-        border-radius: 12px !important;
-        padding: 10px 12px !important;
+        border-radius: 14px !important;
+        padding: 12px 14px !important;
         gap: 10px !important;
     }
 
     .kpi-icon {
-        width: 34px;
-        height: 34px;
-        border-radius: 9px !important;
+        width: 38px;
+        height: 38px;
+        border-radius: 10px !important;
     }
 
     .kpi-label {
-        font-size: 11.5px !important;
-        line-height: 1.25 !important;
+        font-size: 12.5px !important;
+        line-height: 1.28 !important;
     }
 
     .analytics-card {
-        border-radius: 12px !important;
-        padding: 12px 14px !important;
+        border-radius: 14px !important;
+        padding: 14px 16px !important;
     }
 
     .inquiry-client-banner {
-        border-radius: 12px !important;
+        border-radius: 14px !important;
     }
 
     .action-view-btn {
-        min-height: 34px;
-        padding: 6px 11px;
-        font-size: 12.5px;
+        min-height: 38px;
+        padding: 8px 13px;
+        font-size: 13px;
     }
 
     .btn-modal-approve:not(.approved):not(:disabled) {
-        min-height: 40px;
-        padding: 9px 14px;
-        font-size: 13.5px;
+        min-height: 44px;
+        padding: 10px 16px;
+        font-size: 14.5px;
     }
 
     #recentInquiries .mobile-cards-list {
-        padding: 2px 0 0 !important;
-        gap: 10px;
+        padding: 4px 0 0 !important;
+        gap: 12px;
     }
 
     .mobile-dash-prop {
-        font-size: 13.5px;
-        line-height: 1.4;
+        font-size: 14.5px;
+        line-height: 1.45;
     }
 
     .status-pill {
-        padding: 3px 9px;
-        font-size: 11px;
+        padding: 3px 10px;
+        font-size: 11.5px;
     }
 
     html.dark-mode .modal-box,
@@ -3399,17 +3407,26 @@
 
 @media (max-width: 380px) {
     .kpi-card {
-        padding: 10px 12px !important;
+        padding: 12px 14px !important;
         gap: 8px !important;
     }
 
     .kpi-icon {
-        width: 32px;
-        height: 32px;
+        width: 36px;
+        height: 36px;
+    }
+
+    .kpi-icon svg {
+        width: 18px;
+        height: 18px;
+    }
+
+    .kpi-label {
+        font-size: 12px !important;
     }
 
     .kpi-value {
-        font-size: 20px !important;
+        font-size: 22px !important;
     }
 }
 
