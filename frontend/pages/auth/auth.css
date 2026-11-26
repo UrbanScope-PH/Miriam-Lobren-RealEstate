@@ -1802,7 +1802,6 @@ body.terms-modal-open {
     padding: 13px 16px;
     background: #eef7f0;
     border: 1px solid #c3dec9;
-    border-left: 4px solid var(--brand-primary-green);
     border-radius: 10px;
 }
 
@@ -2882,7 +2881,6 @@ html.dark-mode .terms-part-meta {
 html.dark-mode .terms-end-callout {
     background: var(--surface-muted);
     border-color: var(--border-strong);
-    border-left: 4px solid var(--green);
 }
 
 html.dark-mode .terms-end-callout svg {

@@ -36,7 +36,10 @@
 }
 
 /* Global Typographic Polishes: Headline Balancing (Rule 16) & Tabular Numbers (Rule 18) */
-h1, h2, h3, h4,
+h1,
+h2,
+h3,
+h4,
 .hero-content h1,
 .section-heading h2,
 .faqs-heading h2,
@@ -88,7 +91,7 @@ p.lead,
     font-variant-numeric: tabular-nums;
     font-feature-settings: 'tnum' 1;
 }
- 
+
 html {
     scroll-behavior: smooth;
     width: 100%;
@@ -107,7 +110,10 @@ body {
     -webkit-font-smoothing: antialiased;
 }
 
-img, video, canvas, svg {
+img,
+video,
+canvas,
+svg {
     max-width: 100%;
     height: auto;
 }
@@ -438,22 +444,24 @@ img, video, canvas, svg {
 }
 
 @media (min-width: 769px) {
-    .footer-bottom > span,
-    .footer-bottom > p {
+
+    .footer-bottom>span,
+    .footer-bottom>p {
         order: 1;
     }
 
-    .footer-bottom > .socials {
+    .footer-bottom>.socials {
         order: 2;
     }
 
-    .footer-bottom > .legal,
-    .footer-bottom > .footer-legal {
+    .footer-bottom>.legal,
+    .footer-bottom>.footer-legal {
         order: 3;
     }
 }
 
 @media (hover: hover) and (pointer: fine) {
+
     .legal a:hover,
     .footer-legal a:hover {
         color: #ffffff;
@@ -500,8 +508,8 @@ img, video, canvas, svg {
     border-radius: 2px;
     transform-origin: center;
     transition: transform 0.28s var(--motion-ease-out),
-                opacity 0.2s ease,
-                background-color 0.2s ease;
+        opacity 0.2s ease,
+        background-color 0.2s ease;
 }
 
 .mobile-nav-toggle.active .hamburger-line:nth-child(1) {
@@ -543,6 +551,7 @@ img, video, canvas, svg {
 }
 
 @media (max-width: 768px) {
+
     /* Prevent iOS browser auto-zoom on input focus */
     input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]):not([type="range"]):not([type="file"]),
     select,
@@ -663,8 +672,8 @@ img, video, canvas, svg {
         visibility: hidden;
         transform: translateY(-12px);
         transition: opacity 0.25s var(--motion-ease-out),
-                    transform 0.25s var(--motion-ease-out),
-                    visibility 0.25s ease;
+            transform 0.25s var(--motion-ease-out),
+            visibility 0.25s ease;
         max-height: calc(100vh - 58px);
         max-height: calc(100dvh - 58px);
         overflow-y: auto;
@@ -686,24 +695,19 @@ img, video, canvas, svg {
         font-weight: 600;
         border-radius: 8px;
         color: var(--text-dark);
-        border-left: 3px solid transparent;
         transition: var(--motion-transition-ui);
     }
 
     .navbar nav a.active {
         background-color: var(--light-green);
         color: var(--green);
-        border-left-color: var(--green);
-        padding-left: 16px;
     }
 
     @media (hover: hover) and (pointer: fine) {
         .navbar nav a:hover {
-                background-color: var(--light-green);
-                color: var(--green);
-                border-left-color: var(--green);
-                padding-left: 16px;
-            }
+            background-color: var(--light-green);
+            color: var(--green);
+        }
     }
 
     /* Mobile drawer auth section */
@@ -733,10 +737,10 @@ img, video, canvas, svg {
 
     @media (hover: hover) and (pointer: fine) {
         .mobile-drawer-auth .m-login-btn:hover {
-                border-color: var(--green);
-                color: var(--green);
-                background-color: var(--light-green);
-            }
+            border-color: var(--green);
+            color: var(--green);
+            background-color: var(--light-green);
+        }
     }
 
     .mobile-drawer-auth .m-signup-btn {
@@ -757,8 +761,8 @@ img, video, canvas, svg {
 
     @media (hover: hover) and (pointer: fine) {
         .mobile-drawer-auth .m-signup-btn:hover {
-                background-color: var(--btn-primary-hover);
-            }
+            background-color: var(--btn-primary-hover);
+        }
     }
 
     /* Mobile drawer user section - removed so mobile menu displays exclusively primary nav links */
@@ -820,7 +824,7 @@ img, video, canvas, svg {
         gap: 7px;
     }
 
-    .footer-contact > h3 {
+    .footer-contact>h3 {
         margin-bottom: 6px;
     }
 
@@ -852,8 +856,8 @@ img, video, canvas, svg {
         line-height: 1.55;
     }
 
-    .footer-bottom > span,
-    .footer-bottom > p {
+    .footer-bottom>span,
+    .footer-bottom>p {
         box-sizing: border-box;
         width: 100%;
         padding-right: 0;
@@ -986,10 +990,21 @@ img, video, canvas, svg {
     transform: translateY(0);
 }
 
-.reveal-delay-1 { transition-delay: 60ms; }
-.reveal-delay-2 { transition-delay: 120ms; }
-.reveal-delay-3 { transition-delay: 180ms; }
-.reveal-delay-4 { transition-delay: 240ms; }
+.reveal-delay-1 {
+    transition-delay: 60ms;
+}
+
+.reveal-delay-2 {
+    transition-delay: 120ms;
+}
+
+.reveal-delay-3 {
+    transition-delay: 180ms;
+}
+
+.reveal-delay-4 {
+    transition-delay: 240ms;
+}
 
 @media (prefers-reduced-motion: reduce) {
     .reveal-on-scroll {
@@ -1098,6 +1113,7 @@ html[data-theme="dark"] .btt-icon {
 }
 
 @media (hover: hover) and (pointer: fine) {
+
     html.dark-mode .back-to-top-btn:hover .btt-icon,
     html[data-theme="dark"] .back-to-top-btn:hover .btt-icon {
         color: var(--dark-green);
@@ -1239,6 +1255,7 @@ html[data-theme="dark"] .skeleton-shimmer {
 }
 
 @media (hover: hover) and (pointer: fine) {
+
     .btn-cta-emerald:hover,
     .btn-submit-primary:hover,
     .action-btn-primary:hover {
@@ -1296,6 +1313,3 @@ html.dark-mode .badge-status-review {
         padding-right: max(3.5%, 108px);
     }
 }
-
-
-

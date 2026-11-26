@@ -1128,8 +1128,8 @@ html.dark-mode .property-status-badge.badge-rfo {
     margin-top: 14px;
     padding: 10px 14px;
     background: #f7faf8;
-    border-left: 3px solid #82b992;
-    border-radius: 4px;
+    border: 1px solid #d9e6dc;
+    border-radius: 10px;
     font-size: 13.5px;
     color: #44594a;
     line-height: 1.5;
@@ -2864,7 +2864,7 @@ html.dark-mode .faq-note {
 
 html.dark-mode .faq-disclaimer-note {
     background: var(--bg-subtle);
-    border-left-color: var(--green);
+    border-color: var(--border-color);
     color: var(--text-secondary);
 }
 
