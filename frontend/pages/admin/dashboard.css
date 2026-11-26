@@ -1052,10 +1052,6 @@
         gap: 12px;
     }
 
-    .kpi-card:last-child {
-        grid-column: 1 / -1;
-    }
-
     .kpi-card {
         gap: 10px;
         padding: 12px 14px;
@@ -1181,17 +1177,6 @@
     .calendar-legend {
         font-size: 12px;
         gap: 6px;
-    }
-
-    .calendar-mobile-toggle {
-        min-height: 40px;
-        padding: 8px 13px;
-        font-size: 13.5px;
-        border-radius: 10px;
-    }
-
-    .calendar-mobile-summary {
-        font-size: 12.5px;
     }
 
     .calendar-layout {
@@ -1332,10 +1317,6 @@
     .kpi-grid {
         grid-template-columns: repeat(2, minmax(0, 1fr));
         gap: 10px;
-    }
-
-    .kpi-card:last-child {
-        grid-column: 1 / -1;
     }
 
     .quick-actions-grid {

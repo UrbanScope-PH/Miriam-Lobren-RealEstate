@@ -128,13 +128,6 @@ function rebuildCalendarSchedule() {
     });
 
     calendarAppointments = nextAppointments;
-    const calSummaryEl = document.getElementById("mobileCalendarSummary");
-    if (calSummaryEl) {
-        const totalEvents = Object.values(nextAppointments).reduce((sum, arr) => sum + arr.length, 0);
-        calSummaryEl.textContent = totalEvents > 0
-            ? `${totalEvents} scheduled viewing${totalEvents === 1 ? "" : "s"}`
-            : "No scheduled viewings";
-    }
     renderCalendar();
     renderAgenda();
 }
@@ -2200,20 +2193,6 @@ window.deletePropertyListing = async function(id, title) {
 /* INITIALIZE */
 
 document.addEventListener("DOMContentLoaded", () => {
-    const calCard = document.getElementById("dashboardCalendarCard") || document.querySelector(".calendar-card");
-    const calToggleBtn = document.getElementById("mobileCalendarToggleBtn");
-    if (calCard && calToggleBtn) {
-        calToggleBtn.addEventListener("click", () => {
-            const isCollapsed = calCard.classList.toggle("mobile-calendar-collapsed");
-            const expanded = !isCollapsed;
-            calToggleBtn.setAttribute("aria-expanded", String(expanded));
-            const labelEl = calToggleBtn.querySelector(".calendar-mobile-toggle-label");
-            if (labelEl) {
-                labelEl.textContent = expanded ? "Hide Calendar" : "Show Calendar";
-            }
-        });
-    }
-
     renderCalendar();
     renderAgenda();
     syncCalendarToToday();

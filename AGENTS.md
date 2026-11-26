@@ -1635,6 +1635,27 @@ path when rendering from a page.
 195. **Indented Justified Mobile About Me Copy (`frontend/shared/css/mobile-shell.css`):**
   - Added a `1em` first-line indent to the justified homepage About Me paragraphs on mobile.
 
+196. **Inquiry Status Before Recent Inquiries on Mobile (`frontend/shared/css/mobile-shell.css`):**
+  - Positioned the Inquiry Status card before Recent Inquiries in the mobile dashboard order while keeping Recent Notifications after the viewing calendar.
+
+197. **Hide Recent Notifications Card on Mobile Admin Dashboard (`frontend/shared/css/mobile-shell.css`):**
+  - Hid the Recent Notifications dashboard card on mobile while retaining the top-bar notifications control and desktop card.
+
+198. **Keep Mobile Property Viewing Calendar Expanded (`frontend/pages/admin/dashboard.html`, `dashboard.js`, `dashboard.css`, `frontend/shared/css/mobile-shell.css`):**
+  - Removed the mobile calendar collapse state and Show/Hide Calendar control so the calendar, viewing legend, and selected-date agenda remain visible.
+
+199. **Place Calendar Beside Inquiry Status on Mobile (`frontend/shared/css/mobile-shell.css`):**
+  - Positioned the always-expanded Property Viewing Calendar immediately after Inquiry Status and before Recent Inquiries in the mobile dashboard stack.
+
+200. **Keep Completed Inquiries KPI Compact on Mobile (`frontend/pages/admin/dashboard.css`):**
+  - Made the final KPI card span the full mobile grid row so Completed Inquiries uses the available width while the other metrics remain in two columns.
+
+201. **Admin Dashboard Mobile Greeting Clearance (`frontend/shared/css/mobile-shell.css`):**
+  - Added `24px` of content top padding at mobile breakpoints so the dashboard greeting clears the sticky top bar; the top bar continues to reserve the device safe area.
+
+202. **Consistent Completed Inquiries KPI Height (`frontend/shared/css/mobile-shell.css`):**
+  - Set the full-width mobile Completed Inquiries card to an `85px` minimum height so it matches the other KPI cards while retaining room to grow for wrapped content.
+
 ## Safety Rules
 
 - Do **not** commit `backend/urbanscope.db`, `.env`, or virtualenvs (already in `.gitignore`).
