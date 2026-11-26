@@ -476,89 +476,93 @@ html[data-auth-state="logged-in"] .inquiry-note,
 
 @media (max-width: 768px) {
     .detail-container {
-        padding: 16px 14px 36px;
+        padding: 20px 16px 44px;
     }
 
     .detail-header {
         flex-direction: column;
         align-items: flex-start;
-        gap: 6px;
-        margin-bottom: 14px;
+        gap: 8px;
+        margin-bottom: 16px;
     }
 
     .header-left,
     .header-right {
         width: 100%;
+        min-width: 0;
     }
 
     .status-badge.available,
     .status-badge.sold,
     .status-badge.reserved {
-        padding: 4px 10px;
-        font-size: 11px;
-        margin-bottom: 6px;
+        padding: 5px 12px;
+        font-size: 11.5px;
+        margin-bottom: 8px;
     }
 
     .property-title {
-        font-size: clamp(19px, 5.2vw, 22px);
-        line-height: 1.2;
-        margin-bottom: 4px;
+        font-size: clamp(21px, 5.6vw, 23px);
+        line-height: 1.22;
+        margin-bottom: 6px;
     }
 
     .property-loc {
-        font-size: 12.5px;
-        line-height: 1.35;
-        gap: 5px;
+        font-size: 13px;
+        line-height: 1.4;
+        gap: 6px;
     }
 
     .property-loc svg {
-        width: 15px;
-        height: 15px;
+        width: 16px;
+        height: 16px;
         flex-shrink: 0;
     }
 
     .detail-price {
         display: block;
-        font-size: clamp(18px, 4.8vw, 21px);
+        font-size: clamp(19px, 5vw, 22px);
         line-height: 1.25;
-        word-break: break-word;
+        overflow-wrap: break-word;
+        word-break: normal;
     }
 
     .gallery-section {
-        margin-bottom: 18px;
+        margin-bottom: 22px;
     }
 
     .main-carousel {
-        height: clamp(200px, 52vw, 260px);
-        border-radius: 12px;
+        height: clamp(220px, 56vw, 280px);
+        border-radius: 14px;
         touch-action: pan-y;
     }
 
-    .carousel-arrow {
-        width: 34px;
-        height: 34px;
+    .gallery-section .carousel-arrow {
+        width: 38px;
+        height: 38px;
+        min-width: 38px;
+        min-height: 38px;
         touch-action: manipulation;
     }
 
-    .carousel-arrow svg {
-        width: 18px;
-        height: 18px;
+    .gallery-section .carousel-arrow svg {
+        width: 20px;
+        height: 20px;
     }
 
-    .carousel-arrow.prev {
-        left: 8px;
+    .gallery-section .carousel-arrow.prev {
+        left: 10px;
     }
 
-    .carousel-arrow.next {
-        right: 8px;
+    .gallery-section .carousel-arrow.next {
+        right: 10px;
     }
 
     .thumbnails-row {
         display: flex;
         flex-wrap: nowrap;
         overflow-x: auto;
-        gap: 6px;
-        margin-top: 8px;
+        gap: 8px;
+        margin-top: 10px;
         scrollbar-width: none;
         scroll-snap-type: x proximity;
         overscroll-behavior-x: contain;
@@ -570,10 +574,10 @@ html[data-auth-state="logged-in"] .inquiry-note,
     }
 
     .thumb {
-        flex: 0 0 68px;
-        width: 68px;
-        height: 50px;
-        border-radius: 8px;
+        flex: 0 0 74px;
+        width: 74px;
+        height: 54px;
+        border-radius: 10px;
         border-width: 2px;
         scroll-snap-align: start;
         touch-action: manipulation;
@@ -581,22 +585,22 @@ html[data-auth-state="logged-in"] .inquiry-note,
 
     .specs-bar {
         grid-template-columns: repeat(2, minmax(0, 1fr));
-        padding: 12px;
-        gap: 8px;
-        border-radius: 12px;
-        margin-bottom: 20px;
+        padding: 14px;
+        gap: 12px;
+        border-radius: 14px;
+        margin-bottom: 24px;
     }
 
     .spec-item {
-        gap: 8px;
-        padding: 4px 6px;
-        border-radius: 8px;
+        gap: 10px;
+        padding: 6px 8px;
+        border-radius: 10px;
         min-width: 0;
     }
 
     .spec-item svg {
-        width: 20px;
-        height: 20px;
+        width: 22px;
+        height: 22px;
     }
 
     .spec-info {
@@ -604,159 +608,179 @@ html[data-auth-state="logged-in"] .inquiry-note,
     }
 
     .spec-info strong {
-        font-size: 14.5px;
-        line-height: 1.25;
-        overflow-wrap: anywhere;
+        font-size: 15px;
+        line-height: 1.28;
+        overflow-wrap: break-word;
+        word-break: normal;
     }
 
     .spec-info span {
         display: block;
-        font-size: 11.5px;
-        line-height: 1.25;
+        font-size: 12.5px;
+        line-height: 1.3;
     }
 
     .details-section {
-        margin-bottom: 20px;
-    }
-
-    .detail-block {
-        margin-bottom: 18px;
-    }
-
-    .detail-block h2 {
-        font-size: 17.5px;
-        line-height: 1.25;
-        margin-bottom: 8px;
-    }
-
-    .detail-block p {
-        font-size: 13.5px;
-        line-height: 1.52;
-    }
-
-    .amenities-grid {
-        grid-template-columns: 1fr;
-        gap: 6px;
-        margin-top: 8px;
-    }
-
-    .amenities-grid ul {
-        display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        column-gap: 10px;
-        row-gap: 6px;
-    }
-
-    .amenities-grid li {
-        font-size: 13px;
-        line-height: 1.4;
-        align-items: flex-start;
-        gap: 6px;
-        min-width: 0;
-    }
-
-    .bullet {
-        font-size: 15px;
-        line-height: 1.2;
-    }
-
-    .location-inquiry-grid {
         margin-bottom: 24px;
     }
 
+    .details-section .detail-block {
+        margin-bottom: 22px;
+    }
+
+    .details-section .detail-block h2 {
+        font-size: 19px;
+        line-height: 1.25;
+        margin-bottom: 10px;
+    }
+
+    .details-section .detail-block p {
+        font-size: 14.5px;
+        line-height: 1.58;
+    }
+
+    .details-section .amenities-grid {
+        grid-template-columns: 1fr;
+        gap: 8px;
+        margin-top: 10px;
+    }
+
+    .details-section .amenities-grid ul {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        column-gap: 12px;
+        row-gap: 8px;
+    }
+
+    .details-section .amenities-grid li {
+        font-size: 14px;
+        line-height: 1.48;
+        align-items: flex-start;
+        gap: 7px;
+        min-width: 0;
+        overflow-wrap: break-word;
+        word-break: normal;
+    }
+
+    .bullet {
+        font-size: 16px;
+        line-height: 1.25;
+        flex-shrink: 0;
+    }
+
+    .location-inquiry-grid {
+        margin-bottom: 28px;
+    }
+
     .location-box {
-        padding: 14px;
-        border-radius: 12px;
+        padding: 16px;
+        border-radius: 14px;
     }
 
     .location-header h3 {
-        font-size: 15px;
+        font-size: 16px;
     }
 
     .location-header p {
-        font-size: 12px;
+        font-size: 13px;
+    }
+
+    .view-map-link {
+        font-size: 13.5px;
     }
 
     .inquiry-card {
-        padding: 14px;
-        border-radius: 12px;
+        padding: 16px;
+        border-radius: 14px;
     }
 
     .inquiry-card-header {
-        gap: 10px;
-        margin-bottom: 12px;
+        gap: 12px;
+        margin-bottom: 14px;
         align-items: flex-start;
     }
 
     .inquiry-icon-circle {
-        width: 36px;
-        height: 36px;
+        width: 40px;
+        height: 40px;
     }
 
     .inquiry-icon-circle svg {
-        width: 18px;
-        height: 18px;
+        width: 20px;
+        height: 20px;
     }
 
     .inquiry-card-header h3 {
-        font-size: 15px;
+        font-size: 16px;
         line-height: 1.3;
-        margin-bottom: 2px;
+        margin-bottom: 4px;
     }
 
     .inquiry-card-header p {
-        font-size: 12px;
-        line-height: 1.4;
+        font-size: 13px;
+        line-height: 1.45;
     }
 
     .submit-inquiry-btn {
-        min-height: 40px;
-        padding: 9px 14px;
-        font-size: 14px;
+        min-height: 44px;
+        padding: 10px 16px;
+        font-size: 15px;
         line-height: 1.25;
-        border-radius: 10px;
+        border-radius: 12px;
         gap: 8px;
-        margin-bottom: 8px;
+        margin-bottom: 10px;
         touch-action: manipulation;
     }
 
     .inquiry-note {
-        font-size: 11.5px;
-        line-height: 1.4;
+        font-size: 12.5px;
+        line-height: 1.45;
     }
 }
 
 @media (max-width: 480px) {
     .detail-container {
-        padding: 14px 12px 32px;
+        padding: 18px 14px 40px;
+    }
+
+    .property-title {
+        font-size: clamp(21px, 5.4vw, 22px);
+    }
+
+    .detail-price {
+        font-size: clamp(19px, 4.8vw, 21px);
     }
 
     .specs-bar {
-        padding: 10px;
-        gap: 6px;
+        padding: 12px;
+        gap: 10px;
     }
 
     .spec-item {
-        padding: 4px;
-        gap: 6px;
+        padding: 6px;
+        gap: 8px;
     }
 
     .spec-item svg {
-        width: 18px;
-        height: 18px;
+        width: 20px;
+        height: 20px;
     }
 
     .spec-info strong {
-        font-size: clamp(13px, 3.6vw, 14.5px);
+        font-size: clamp(14px, 3.8vw, 15px);
     }
 }
 
 @media (max-width: 359px) {
+    .detail-container {
+        padding: 16px 12px 36px;
+    }
+
     .specs-bar {
         grid-template-columns: 1fr;
     }
 
-    .amenities-grid ul {
+    .details-section .amenities-grid ul {
         grid-template-columns: 1fr;
     }
 }
@@ -986,71 +1010,71 @@ html[data-auth-state="logged-in"] .inquiry-note,
         overscroll-behavior: none;
     }
     .lightbox-header {
-        padding: max(10px, env(safe-area-inset-top, 0px)) 12px 10px;
-        gap: 8px;
+        padding: max(12px, env(safe-area-inset-top, 0px)) 16px 12px;
+        gap: 10px;
     }
     .lightbox-counter {
-        font-size: 12px;
-        padding: 4px 10px;
+        font-size: 13px;
+        padding: 5px 12px;
     }
     .lightbox-controls {
-        gap: 6px;
+        gap: 8px;
     }
     .lightbox-btn {
-        width: 34px;
-        height: 34px;
-        min-height: 34px;
-        font-size: 12px;
+        width: 38px;
+        height: 38px;
+        min-height: 38px;
+        font-size: 13px;
         touch-action: manipulation;
     }
     .lightbox-img-stage img {
         max-width: 94vw;
         max-height: 68dvh;
-        border-radius: 8px;
+        border-radius: 10px;
     }
     .lightbox-nav {
-        width: 36px;
-        height: 36px;
-        min-height: 36px;
+        width: 40px;
+        height: 40px;
+        min-height: 40px;
         touch-action: manipulation;
     }
     .lightbox-nav.prev {
-        left: 8px;
+        left: 10px;
     }
     .lightbox-nav.next {
-        right: 8px;
+        right: 10px;
     }
     .lightbox-footer {
-        padding: 10px 12px calc(12px + env(safe-area-inset-bottom, 0px));
-        gap: 6px;
+        padding: 12px 16px calc(14px + env(safe-area-inset-bottom, 0px));
+        gap: 8px;
     }
     .lightbox-thumbs {
-        gap: 6px;
+        gap: 8px;
         max-width: 94vw;
         overscroll-behavior-x: contain;
         -webkit-overflow-scrolling: touch;
     }
     .lightbox-thumb {
-        width: 52px;
-        height: 40px;
-        border-radius: 6px;
+        width: 58px;
+        height: 44px;
+        border-radius: 8px;
         touch-action: manipulation;
     }
     .lightbox-hint {
         display: none;
     }
     .carousel-zoom-btn {
-        top: 10px;
-        right: 10px;
-        padding: 5px 10px;
-        min-height: 32px;
-        font-size: 11.5px;
-        gap: 5px;
+        top: 12px;
+        right: 12px;
+        padding: 7px 13px;
+        min-height: 38px;
+        font-size: 13px;
+        gap: 6px;
         touch-action: manipulation;
     }
     .carousel-zoom-btn svg {
-        width: 14px;
-        height: 14px;
+        width: 16px;
+        height: 16px;
     }
 }
 
@@ -1371,95 +1395,95 @@ html[data-auth-state="logged-in"] .inquiry-note,
 
 @media (max-width: 768px) {
     .tcp-section {
-        padding: 14px;
-        border-radius: 12px;
-        margin-bottom: 20px;
+        padding: 16px;
+        border-radius: 14px;
+        margin-bottom: 24px;
     }
     .tcp-section-header {
-        gap: 10px;
-        margin-bottom: 14px;
-        padding-bottom: 12px;
+        gap: 12px;
+        margin-bottom: 16px;
+        padding-bottom: 14px;
     }
     .tcp-title-group h2 {
-        font-size: 17.5px;
-        margin-bottom: 4px;
+        font-size: 19px;
+        margin-bottom: 6px;
     }
     .tcp-title-group p {
-        font-size: 12.5px;
+        font-size: 13px;
         line-height: 1.45;
     }
     .tcp-badge-pill {
-        font-size: 11px;
-        padding: 4px 10px;
+        font-size: 11.5px;
+        padding: 5px 11px;
     }
     .tcp-grid {
         grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 10px;
-        margin-bottom: 14px;
+        gap: 12px;
+        margin-bottom: 16px;
     }
     .tcp-kpi-card {
-        padding: 10px 12px;
-        border-radius: 10px;
+        padding: 12px 14px;
+        border-radius: 12px;
     }
     .tcp-kpi-card .kpi-label {
-        font-size: 11.5px;
-        margin-bottom: 4px;
+        font-size: 12px;
+        margin-bottom: 5px;
     }
     .tcp-kpi-card .kpi-val {
-        font-size: 20px;
+        font-size: 22px;
     }
     .tcp-kpi-card .kpi-sub {
-        font-size: 11.5px;
-        margin-top: 4px;
+        font-size: 12.5px;
+        margin-top: 5px;
     }
     .tcp-table-wrapper {
-        border-radius: 10px;
-        margin-bottom: 14px;
+        border-radius: 12px;
+        margin-bottom: 16px;
         overscroll-behavior-x: contain;
         -webkit-overflow-scrolling: touch;
     }
     .tcp-table {
-        font-size: 12.5px;
+        font-size: 13.5px;
     }
     .tcp-table th,
     .tcp-table td {
-        padding: 9px 10px;
+        padding: 11px 12px;
     }
     .tcp-doc-card {
         flex-direction: column;
         align-items: flex-start;
-        gap: 10px;
-        padding: 12px 14px;
-        border-radius: 12px;
+        gap: 12px;
+        padding: 14px;
+        border-radius: 14px;
     }
     .tcp-doc-info {
-        gap: 10px;
+        gap: 12px;
     }
     .tcp-doc-icon {
-        width: 36px;
-        height: 36px;
-        border-radius: 8px;
+        width: 40px;
+        height: 40px;
+        border-radius: 10px;
     }
     .tcp-doc-text h4 {
-        font-size: 14.5px;
+        font-size: 15.5px;
     }
     .tcp-doc-text p {
-        font-size: 12px;
-        line-height: 1.4;
+        font-size: 13px;
+        line-height: 1.45;
     }
     .tcp-doc-btn {
         width: 100%;
         justify-content: center;
-        min-height: 36px;
-        padding: 7px 12px;
-        font-size: 13px;
-        border-radius: 8px;
+        min-height: 40px;
+        padding: 9px 14px;
+        font-size: 13.5px;
+        border-radius: 10px;
         touch-action: manipulation;
     }
     .tcp-disclaimer {
-        font-size: 11.5px;
-        margin-top: 10px;
-        line-height: 1.45;
+        font-size: 12.5px;
+        margin-top: 12px;
+        line-height: 1.48;
     }
     .tcp-document-modal {
         width: calc(100vw - 24px);
@@ -1472,22 +1496,22 @@ html[data-auth-state="logged-in"] .inquiry-note,
         max-height: calc(100dvh - 24px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
     }
     .tcp-document-modal-header {
-        min-height: 48px;
-        padding: 8px 12px 8px 14px;
-        gap: 10px;
+        min-height: 52px;
+        padding: 10px 14px 10px 16px;
+        gap: 12px;
     }
     .tcp-document-modal-header h2 {
-        font-size: 16px;
+        font-size: 18px;
     }
     .tcp-document-modal-close {
-        width: 36px;
-        min-width: 36px;
-        height: 36px;
-        font-size: 22px;
+        width: 40px;
+        min-width: 40px;
+        height: 40px;
+        font-size: 24px;
         touch-action: manipulation;
     }
     .tcp-document-modal-image-wrap {
-        padding: 10px;
+        padding: 12px;
         overscroll-behavior: contain;
         -webkit-overflow-scrolling: touch;
     }
