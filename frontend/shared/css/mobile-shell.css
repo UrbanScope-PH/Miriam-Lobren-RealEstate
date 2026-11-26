@@ -173,13 +173,13 @@ html[data-theme="dark"] {
     html {
         width: 100%;
         max-width: 100%;
-        overflow-x: hidden;
-        scroll-padding-top: 64px;
+        overflow-x: clip;
+        scroll-padding-top: 66px;
     }
 
     body {
         max-width: 100%;
-        overflow-x: hidden;
+        overflow-x: clip;
     }
 
     input:not([type="checkbox"]):not([type="radio"]):not([type="hidden"]):not([type="range"]):not([type="file"]),
@@ -197,9 +197,9 @@ html[data-theme="dark"] {
         position: sticky;
         top: 0;
         z-index: 1100;
-        height: 56px;
-        min-height: 56px;
-        padding: 0 12px;
+        height: 58px;
+        min-height: 58px;
+        padding: 0 14px;
         gap: 8px;
         flex-wrap: nowrap;
         box-sizing: border-box;
@@ -213,6 +213,19 @@ html[data-theme="dark"] {
         gap: 8px;
     }
 
+    .admin-topbar .topbar-left,
+    .sa-topbar .sa-topbar-left {
+        overflow: visible;
+        max-width: none;
+    }
+
+    .admin-topbar .brand-badge,
+    .sa-topbar .sa-brand-badge {
+        min-width: 0;
+        flex: 0 1 auto;
+        gap: 8px;
+    }
+
     .Cname span,
     .brand-text,
     .app-brand > span {
@@ -221,8 +234,8 @@ html[data-theme="dark"] {
 
     .brand-logo,
     .logo-icon {
-        width: 30px;
-        height: 30px;
+        width: 32px;
+        height: 32px;
         flex: 0 0 auto;
     }
 
@@ -230,10 +243,18 @@ html[data-theme="dark"] {
     .brand-text h1,
     .app-brand strong {
         overflow: hidden;
-        font-size: 14px;
+        font-size: 15px;
         line-height: 1.15;
         text-overflow: ellipsis;
         white-space: nowrap;
+    }
+
+    .admin-topbar .brand-text h1,
+    .sa-topbar .brand-text h1 {
+        overflow: visible;
+        text-overflow: clip;
+        max-width: none;
+        letter-spacing: 0.25px;
     }
 
     .Cname small,
@@ -241,8 +262,8 @@ html[data-theme="dark"] {
     .app-brand small {
         display: block;
         overflow: hidden;
-        font-size: 8.5px;
-        letter-spacing: 0.7px;
+        font-size: 9px;
+        letter-spacing: 0.65px;
         line-height: 1.15;
         margin-top: 1px;
         text-overflow: ellipsis;
@@ -252,7 +273,7 @@ html[data-theme="dark"] {
     .nav-acts {
         min-width: 0;
         flex: 0 0 auto;
-        gap: 4px;
+        gap: 6px;
         align-items: center;
     }
 
@@ -298,17 +319,23 @@ html[data-theme="dark"] {
     .sa-hamburger-btn,
     .close-sidebar-btn,
     .sa-close-sidebar {
-        width: 36px;
-        min-width: 36px;
-        height: 36px;
-        min-height: 36px;
+        width: 38px;
+        min-width: 38px;
+        height: 38px;
+        min-height: 38px;
         padding: 0;
         align-items: center;
         justify-content: center;
-        flex: 0 0 36px;
+        flex: 0 0 38px;
     }
 
-    /* Clean 36x36px borderless utility icons + 36x36px circular profile avatar on mobile */
+    .hamburger-btn svg,
+    .sa-hamburger-btn svg {
+        width: 21px;
+        height: 21px;
+    }
+
+    /* Clean 38x38px borderless utility icons + 38x38px circular profile avatar on mobile */
     .nav-acts .theme-toggle-btn,
     .nav-acts .s-icon-btn,
     .nav-acts .client-notif-btn,
@@ -318,11 +345,11 @@ html[data-theme="dark"] {
     html.dark-mode .nav-acts .client-notif-btn,
     html.dark-mode .nav-acts .mobile-nav-toggle,
     html[data-theme="dark"] .nav-acts .s-icon-btn {
-        width: 36px;
-        min-width: 36px;
-        height: 36px;
-        min-height: 36px;
-        flex: 0 0 36px;
+        width: 38px;
+        min-width: 38px;
+        height: 38px;
+        min-height: 38px;
+        flex: 0 0 38px;
         padding: 0;
         border-radius: 50%;
         border: 1.5px solid transparent !important;
@@ -341,25 +368,25 @@ html[data-theme="dark"] {
     .topbar-right .theme-toggle-btn svg,
     .topbar-right .notif-btn svg,
     .sa-topbar-right .theme-toggle-btn svg {
-        width: 18px;
-        height: 18px;
+        width: 20px;
+        height: 20px;
     }
 
     .nav-acts .client-notif-badge {
         top: 0;
         right: 0;
-        min-width: 15px;
-        height: 15px;
+        min-width: 16px;
+        height: 16px;
         padding: 0 4px;
-        font-size: 9.5px;
+        font-size: 10px;
     }
 
     .nav-acts .profile-chip {
-        width: 36px;
-        min-width: 36px;
-        height: 36px;
-        min-height: 36px;
-        flex: 0 0 36px;
+        width: 38px;
+        min-width: 38px;
+        height: 38px;
+        min-height: 38px;
+        flex: 0 0 38px;
         padding: 0;
         margin-left: 2px;
         border-radius: 50%;
@@ -383,28 +410,28 @@ html[data-theme="dark"] {
 
     .admin-profile-badge,
     .sa-profile-btn {
-        min-height: 36px;
+        min-height: 38px;
         padding: 2px;
     }
 
     .admin-profile-badge .avatar-circle {
-        width: 34px;
-        height: 34px;
-        min-width: 34px;
+        width: 36px;
+        height: 36px;
+        min-width: 36px;
     }
 
     .mobile-nav-toggle {
         display: inline-flex;
         flex-direction: column;
-        width: 36px;
-        min-width: 36px;
-        height: 36px;
-        min-height: 36px;
+        width: 38px;
+        min-width: 38px;
+        height: 38px;
+        min-height: 38px;
         padding: 0;
-        flex: 0 0 36px;
+        flex: 0 0 38px;
         align-items: center;
         justify-content: center;
-        gap: 4px;
+        gap: 4.5px;
         border-radius: 50%;
         border: 1.5px solid transparent;
         background: transparent;
@@ -413,7 +440,7 @@ html[data-theme="dark"] {
     }
 
     .mobile-nav-toggle .hamburger-line {
-        width: 17px;
+        width: 19px;
         height: 2px;
     }
 
@@ -425,11 +452,11 @@ html[data-theme="dark"] {
     }
 
     .mobile-nav-toggle.active .hamburger-line:nth-child(1) {
-        transform: translateY(6px) rotate(45deg);
+        transform: translateY(6.5px) rotate(45deg);
     }
 
     .mobile-nav-toggle.active .hamburger-line:nth-child(3) {
-        transform: translateY(-6px) rotate(-45deg);
+        transform: translateY(-6.5px) rotate(-45deg);
     }
 
     html.dark-mode .mobile-nav-toggle {
@@ -475,7 +502,7 @@ html[data-theme="dark"] {
     .navbar nav,
     .app-topbar #mainNav {
         position: fixed;
-        top: calc(56px + env(safe-area-inset-top, 0px) + 6px);
+        top: calc(58px + env(safe-area-inset-top, 0px) + 6px);
         right: 12px;
         left: auto;
         z-index: 1200;
@@ -483,14 +510,14 @@ html[data-theme="dark"] {
         flex-direction: column;
         align-items: stretch;
         gap: 2px;
-        width: min(272px, calc(100vw - 24px));
-        max-height: calc(100vh - 72px);
-        max-height: calc(100dvh - 72px);
-        padding: 6px;
+        width: min(280px, calc(100vw - 24px));
+        max-height: calc(100vh - 76px);
+        max-height: calc(100dvh - 76px);
+        padding: 8px;
         overflow-y: auto;
         background: var(--surface, #ffffff);
         border: 1px solid var(--border-color, #d7e3da);
-        border-radius: 12px;
+        border-radius: 14px;
         box-shadow: 0 18px 40px rgba(0, 0, 0, 0.16);
         opacity: 0;
         visibility: hidden;
@@ -514,15 +541,15 @@ html[data-theme="dark"] {
     .app-topbar #mainNav > a {
         display: flex;
         align-items: center;
-        gap: 8px;
+        gap: 10px;
         width: 100%;
-        min-height: 36px;
-        padding: 7px 10px;
+        min-height: 40px;
+        padding: 8px 12px;
         border: 0 !important;
-        border-radius: 8px;
+        border-radius: 10px;
         color: var(--text-dark, #0f1f14);
         font-family: inherit;
-        font-size: 13px;
+        font-size: 13.5px;
         font-weight: 500;
         text-decoration: none;
         box-sizing: border-box;
@@ -534,7 +561,7 @@ html[data-theme="dark"] {
         background-color: var(--light-green, #eef5ef);
         color: var(--green, #2d5c39);
         font-weight: 600;
-        padding: 7px 10px;
+        padding: 8px 12px;
         border: 0 !important;
     }
 
@@ -543,7 +570,7 @@ html[data-theme="dark"] {
         .app-topbar #mainNav > a:hover {
             background-color: var(--light-green, #eef5ef);
             color: var(--green, #2d5c39);
-            padding: 7px 10px;
+            padding: 8px 12px;
             border: 0 !important;
         }
     }
@@ -613,10 +640,10 @@ html[data-theme="dark"] {
         display: flex;
         align-items: center;
         justify-content: center;
-        min-height: 36px;
-        padding: 7px 10px;
-        border-radius: 8px;
-        font-size: 13px;
+        min-height: 40px;
+        padding: 8px 12px;
+        border-radius: 10px;
+        font-size: 13.5px;
         font-weight: 600;
         text-decoration: none;
         box-sizing: border-box;
@@ -641,7 +668,7 @@ html[data-theme="dark"] {
 
     .mobile-nav-backdrop {
         position: fixed;
-        inset: calc(56px + env(safe-area-inset-top, 0px)) 0 0;
+        inset: calc(58px + env(safe-area-inset-top, 0px)) 0 0;
         z-index: 1080;
         display: block;
         background: transparent !important;
@@ -705,13 +732,13 @@ html[data-theme="dark"] {
     .sa-dropdown-menu,
     .client-notif-dropdown {
         position: fixed !important;
-        top: calc(56px + env(safe-area-inset-top, 0px) + 6px) !important;
+        top: calc(58px + env(safe-area-inset-top, 0px) + 6px) !important;
         right: 12px !important;
         left: auto !important;
-        width: min(304px, calc(100vw - 24px)) !important;
+        width: min(312px, calc(100vw - 24px)) !important;
         min-width: 0 !important;
         max-width: calc(100vw - 24px) !important;
-        max-height: calc(100dvh - 72px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
+        max-height: calc(100dvh - 76px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
         margin: 0 !important;
         overflow-y: auto;
         overscroll-behavior: contain;
@@ -724,7 +751,7 @@ html[data-theme="dark"] {
         width: 100%;
         min-width: 0;
         margin-left: 0;
-        padding: 14px 12px max(24px, env(safe-area-inset-bottom, 0px));
+        padding: 16px 16px max(32px, env(safe-area-inset-bottom, 0px));
     }
 
     .content,
@@ -775,10 +802,10 @@ html[data-theme="dark"] {
     }
 
     .app-topbar .go-back-btn {
-        width: 36px;
-        min-width: 36px;
-        height: 36px;
-        min-height: 36px;
+        width: 38px;
+        min-width: 38px;
+        height: 38px;
+        min-height: 38px;
         justify-content: center;
         padding: 0;
     }
@@ -791,40 +818,40 @@ html[data-theme="dark"] {
     .sa-topbar,
     .app-topbar,
     .navbar {
-        height: 54px;
-        min-height: 54px;
+        height: 56px;
+        min-height: 56px;
         padding-right: 12px;
         padding-left: 12px;
     }
 
     .brand-logo,
     .logo-icon {
-        width: 28px;
-        height: 28px;
+        width: 30px;
+        height: 30px;
     }
 
     .Cname strong,
     .brand-text h1,
     .app-brand strong {
-        font-size: 14px;
+        font-size: 15px;
     }
 
     .Cname small,
     .brand-text h2,
     .app-brand small {
-        font-size: 8px;
-        letter-spacing: 0.55px;
+        font-size: 8.5px;
+        letter-spacing: 0.5px;
     }
 
     .hamburger-btn,
     .sa-hamburger-btn,
     .close-sidebar-btn,
     .sa-close-sidebar {
-        width: 34px;
-        min-width: 34px;
-        height: 34px;
-        min-height: 34px;
-        flex-basis: 34px;
+        width: 36px;
+        min-width: 36px;
+        height: 36px;
+        min-height: 36px;
+        flex-basis: 36px;
     }
 
     .nav-acts .theme-toggle-btn,
@@ -837,33 +864,39 @@ html[data-theme="dark"] {
     html.dark-mode .nav-acts .mobile-nav-toggle,
     html[data-theme="dark"] .nav-acts .s-icon-btn,
     .nav-acts .profile-chip {
-        width: 34px;
-        min-width: 34px;
-        height: 34px;
-        min-height: 34px;
-        flex: 0 0 34px;
+        width: 36px;
+        min-width: 36px;
+        height: 36px;
+        min-height: 36px;
+        flex: 0 0 36px;
     }
 
     .admin-profile-badge .avatar-circle {
-        width: 32px;
-        height: 32px;
-        min-width: 32px;
+        width: 36px;
+        height: 36px;
+        min-width: 36px;
     }
 
     .navbar nav,
     .app-topbar #mainNav {
-        top: calc(54px + env(safe-area-inset-top, 0px) + 6px);
+        top: calc(56px + env(safe-area-inset-top, 0px) + 6px);
     }
 
     .mobile-nav-backdrop {
-        inset: calc(54px + env(safe-area-inset-top, 0px)) 0 0;
+        inset: calc(56px + env(safe-area-inset-top, 0px)) 0 0;
     }
 
     .profile-dropdown,
     .notif-dropdown,
     .sa-dropdown-menu,
     .client-notif-dropdown {
-        top: calc(54px + env(safe-area-inset-top, 0px) + 6px) !important;
+        top: calc(56px + env(safe-area-inset-top, 0px) + 6px) !important;
+    }
+
+    .main-content,
+    .dashboard-content,
+    .sa-content {
+        padding: 14px 14px max(32px, env(safe-area-inset-bottom, 0px));
     }
 }
 
@@ -892,10 +925,8 @@ html {
     text-size-adjust: 100%;
 }
 
-/* App-shell workspaces prevent document bounce without blocking scrolling pull-to-refresh on public pages */
-html:has(.admin-topbar, .sa-topbar),
-body.admin-body,
-body.superadmin-body {
+/* App-shell workspaces prevent document bounce without blocking touch scrolling on body */
+html:has(.admin-topbar, .sa-topbar) {
     overscroll-behavior-y: none;
 }
 
@@ -1075,60 +1106,60 @@ button,
     }
 
     .cat-arrow {
-        width: 36px;
-        height: 36px;
-        min-width: 36px;
-        min-height: 36px;
+        width: 38px;
+        height: 38px;
+        min-width: 38px;
+        min-height: 38px;
     }
 
     .cat-tab,
     .filter-tab {
-        min-height: 34px;
+        min-height: 38px;
         display: inline-flex;
         align-items: center;
     }
 
     .carousel-arrow {
-        width: 36px;
-        height: 36px;
+        width: 38px;
+        height: 38px;
     }
 
     .carousel-zoom-btn {
-        min-height: 36px;
-        padding: 6px 12px;
+        min-height: 38px;
+        padding: 7px 14px;
     }
 
     .toggle-pw,
     .password-toggle-btn,
     .calendar-nav-btn,
     .datepicker-trigger-btn {
-        min-width: 34px;
-        min-height: 34px;
+        min-width: 38px;
+        min-height: 38px;
     }
 
     .topbar-right .theme-toggle-btn,
     .sa-topbar-right .theme-toggle-btn,
     .notif-btn {
-        min-width: 34px;
-        min-height: 34px;
+        min-width: 38px;
+        min-height: 38px;
     }
 
     .search-select-trigger,
     .sort-select-trigger,
     .search-bar input {
-        min-height: 38px;
+        min-height: 42px;
     }
 
     .legal-back-btn,
     .go-back-btn {
-        min-height: 36px;
+        min-height: 38px;
         display: inline-flex;
         align-items: center;
     }
 
     .card-icon-btn {
-        min-width: 34px;
-        min-height: 34px;
+        min-width: 38px;
+        min-height: 38px;
     }
 
     .prop-action-btn,
@@ -1137,32 +1168,32 @@ button,
     .action-view-btn,
     .btn-change-avatar,
     .btn-reset-avatar {
-        min-height: 36px;
+        min-height: 38px;
         display: inline-flex;
         align-items: center;
     }
 
     .status-select-pill {
-        min-height: 34px;
+        min-height: 38px;
         height: auto;
-        padding: 5px 10px;
+        padding: 6px 12px;
     }
 
     .action-btn {
-        min-height: 34px;
-        padding: 6px 11px;
+        min-height: 38px;
+        padding: 7px 12px;
     }
 
     #propertiesTable .actions button {
-        min-height: 34px;
-        min-width: 34px;
-        padding: 6px 10px;
+        min-height: 38px;
+        min-width: 38px;
+        padding: 7px 11px;
     }
 
     .admin-toast-close {
-        min-width: 34px;
-        min-height: 34px;
-        padding: 5px !important;
+        min-width: 38px;
+        min-height: 38px;
+        padding: 6px !important;
         display: inline-flex;
         align-items: center;
         justify-content: center;
@@ -1171,7 +1202,7 @@ button,
     }
 }
 
-/* Narrow phone layout polish for long custom-select labels & floating actions */
+/* Narrow phone layout polish for long custom-select labels & form clearance */
 @media (max-width: 480px) {
     .custom-select-value {
         white-space: normal;
@@ -1179,38 +1210,14 @@ button,
         overflow: visible;
     }
 
-    .contact-fab {
-        bottom: max(10px, env(safe-area-inset-bottom, 0px));
-        right: max(10px, env(safe-area-inset-right, 0px));
-    }
-
-    .fab-main-btn {
-        width: 38px;
-        height: 38px;
-    }
-
-    .back-to-top-btn {
-        bottom: calc(56px + env(safe-area-inset-bottom, 0px));
-        right: max(10px, env(safe-area-inset-right, 0px));
-        width: 36px;
-        height: 36px;
-    }
-
-    .btt-progress-ring {
-        width: 34px;
-        height: 34px;
-        top: 0;
-        left: 0;
-    }
-
     .inquiry-page-container,
     .legal-main-container,
     .history-container {
-        padding-bottom: 64px;
+        padding-bottom: 84px;
     }
 
     .form-panel {
-        padding-bottom: max(20px, env(safe-area-inset-bottom, 0px));
+        padding-bottom: max(24px, env(safe-area-inset-bottom, 0px));
     }
 }
 
@@ -1244,11 +1251,11 @@ button,
     .admin-topbar,
     .sa-topbar,
     .app-topbar {
-        height: calc(56px + env(safe-area-inset-top, 0px));
-        min-height: calc(56px + env(safe-area-inset-top, 0px));
+        height: calc(58px + env(safe-area-inset-top, 0px));
+        min-height: calc(58px + env(safe-area-inset-top, 0px));
         padding-top: env(safe-area-inset-top, 0px);
-        padding-left: max(12px, env(safe-area-inset-left, 0px));
-        padding-right: max(12px, env(safe-area-inset-right, 0px));
+        padding-left: max(14px, env(safe-area-inset-left, 0px));
+        padding-right: max(14px, env(safe-area-inset-right, 0px));
         box-sizing: border-box;
     }
 
@@ -1256,20 +1263,137 @@ button,
     .sa-topbar-right .theme-toggle-btn,
     .notif-btn,
     #notifButton {
-        width: 36px;
-        min-width: 36px;
-        height: 36px;
-        min-height: 36px;
+        width: 38px;
+        min-width: 38px;
+        height: 38px;
+        min-height: 38px;
         padding: 0;
-        flex: 0 0 36px;
+        flex: 0 0 38px;
     }
 
+    /* Pass 2 Balanced Floating Actions: 52px Chat FAB + 44px Back-to-Top stacked cleanly */
+    .contact-fab {
+        bottom: max(16px, env(safe-area-inset-bottom, 0px));
+        right: max(16px, env(safe-area-inset-right, 0px));
+    }
+
+    .fab-main-btn {
+        width: 52px;
+        height: 52px;
+    }
+
+    .fab-main-btn svg {
+        width: 24px;
+        height: 24px;
+    }
+
+    .fab-action-btn {
+        min-height: 40px;
+        padding: 8px 14px;
+        font-size: 13.5px;
+        gap: 9px;
+        position: relative;
+        z-index: 10002;
+    }
+
+    .fab-action-btn svg {
+        width: 18px;
+        height: 18px;
+        flex-shrink: 0;
+    }
+
+    .back-to-top-btn {
+        bottom: calc(80px + env(safe-area-inset-bottom, 0px));
+        right: max(20px, env(safe-area-inset-right, 0px));
+        width: 44px;
+        height: 44px;
+    }
+
+    .btt-progress-ring {
+        width: 100%;
+        height: 100%;
+        inset: 0;
+    }
+
+    .btt-icon svg {
+        width: 19px;
+        height: 19px;
+    }
+
+    /* Pass 2 Balanced Mobile Footer with generous bottom clearance for FAB + Back-to-Top */
     .footer {
         padding-bottom: 0;
     }
 
+    .footer-top {
+        padding: 32px 18px 24px;
+        gap: 24px;
+    }
+
+    .footer h3 {
+        font-size: 15.5px;
+        margin-bottom: 10px;
+    }
+
+    .footer-about p {
+        font-size: 14px;
+        line-height: 1.6;
+    }
+
+    .footer-contact {
+        gap: 10px;
+    }
+
+    .footer-contact-item,
+    .footer-contact-info p {
+        font-size: 14px;
+        line-height: 1.5;
+        gap: 10px;
+        margin-bottom: 10px;
+    }
+
+    .footer-contact-item svg,
+    .footer-contact-info svg {
+        width: 18px;
+        height: 18px;
+    }
+
     .footer-bottom {
-        padding-bottom: max(14px, env(safe-area-inset-bottom, 0px));
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        padding: 22px 18px calc(90px + env(safe-area-inset-bottom, 0px));
+        gap: 16px;
+        font-size: 13px;
+        line-height: 1.55;
+    }
+
+    .socials {
+        gap: 16px;
+    }
+
+    .social-icon {
+        width: 40px;
+        height: 40px;
+    }
+
+    .social-icon svg {
+        width: 19px;
+        height: 19px;
+    }
+
+    .legal,
+    .footer-legal {
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 20px;
+        font-size: 13.5px;
+    }
+
+    .legal a,
+    .footer-legal a {
+        font-size: 13.5px;
+        line-height: 1.4;
     }
 
     /* Phase 1: Ensure no sections wait invisible during quick touch scrolling */
@@ -1284,7 +1408,7 @@ button,
         text-align: left !important;
     }
 
-    /* Phase 1: Shared Mobile Scale Contract Typography */
+    /* Phase 1: Pass 2 Balanced Mobile Typography */
     .about-text p,
     .faq-answer-inner p,
     .faq-answer-inner li,
@@ -1294,8 +1418,8 @@ button,
     .property-description,
     .overview-box p,
     .detail-block p {
-        font-size: 13.5px;
-        line-height: 1.55;
+        font-size: 14.5px;
+        line-height: 1.58;
     }
 
     .tcp-disclaimer,
@@ -1307,13 +1431,13 @@ button,
     .upload-area small,
     .field-hint,
     .input-hint {
-        font-size: 12px;
-        line-height: 1.45;
+        font-size: 12.5px;
+        line-height: 1.5;
     }
 
     .amenities-grid li {
-        font-size: 13.5px;
-        line-height: 1.45;
+        font-size: 14px;
+        line-height: 1.5;
     }
 
     /* Inline links, brand badges & checkbox labels stay natural inline height */
@@ -1335,7 +1459,7 @@ button,
     }
 
     #statusFilter {
-        min-height: 38px;
+        min-height: 42px;
     }
 
     .dots-container .dot {
@@ -1373,9 +1497,9 @@ button,
     .cat-tab {
         flex: 1 1 auto !important;
         min-width: 0;
-        min-height: 36px;
-        padding: 6px 8px;
-        font-size: 12.5px;
+        min-height: 38px;
+        padding: 7px 10px;
+        font-size: 13px;
         justify-content: center;
         text-align: center;
         white-space: nowrap;
@@ -1384,18 +1508,18 @@ button,
     .filter-tabs {
         flex-wrap: wrap !important;
         overflow-x: visible !important;
-        gap: 6px !important;
+        gap: 8px !important;
     }
 
     .filter-tab {
-        min-height: 34px;
-        font-size: 12.5px;
-        padding: 6px 11px;
+        min-height: 38px;
+        font-size: 13px;
+        padding: 7px 12px;
     }
 
     /* Phase 1: Move Admin Notification Toast to top so bottom cards stay clear */
     .admin-shell-toast {
-        top: calc(64px + env(safe-area-inset-top, 0px)) !important;
+        top: calc(66px + env(safe-area-inset-top, 0px)) !important;
         bottom: auto !important;
         left: 12px !important;
         right: 12px !important;
@@ -1407,20 +1531,20 @@ button,
     .mobile-expand-wrap:not([hidden]) {
         display: flex;
         justify-content: center;
-        margin-top: 12px;
+        margin-top: 14px;
         width: 100%;
     }
 
     .mobile-expand-btn {
-        min-height: 38px;
-        padding: 7px 16px;
+        min-height: 42px;
+        padding: 9px 18px;
         border-radius: 999px;
         border: 1.5px solid var(--green, #2d5c39);
         background: var(--light-green, #eef5ef);
         color: var(--dark-green, #1a3b23);
         font-family: inherit;
         font-weight: 700;
-        font-size: 13px;
+        font-size: 14px;
         cursor: pointer;
     }
 
@@ -1430,28 +1554,28 @@ button,
     }
 
     #propertyGrid.property-grid {
-        gap: 10px !important;
+        gap: 12px !important;
     }
 
     #propertyGrid .property-card {
         display: grid !important;
-        grid-template-columns: 104px minmax(0, 1fr) !important;
+        grid-template-columns: 108px minmax(0, 1fr) !important;
         align-items: stretch;
-        border-radius: 12px;
+        border-radius: 14px;
     }
 
     #propertyGrid .property-image {
-        width: 104px !important;
+        width: 108px !important;
         height: auto !important;
-        min-height: 128px !important;
-        border-radius: 12px 0 0 12px !important;
+        min-height: 134px !important;
+        border-radius: 14px 0 0 14px !important;
     }
 
     #propertyGrid .property-status-badge {
         top: 6px;
         left: 6px;
-        padding: 3px 7px;
-        font-size: 10.5px;
+        padding: 3px 8px;
+        font-size: 11.5px;
     }
 
     #propertyGrid .card-actions {
@@ -1461,29 +1585,34 @@ button,
     }
 
     #propertyGrid .card-icon-btn {
-        width: 34px;
-        height: 34px;
-        min-width: 34px;
-        min-height: 34px;
+        width: 38px;
+        height: 38px;
+        min-width: 38px;
+        min-height: 38px;
+    }
+
+    #propertyGrid .card-icon-btn svg {
+        width: 18px;
+        height: 18px;
     }
 
     #propertyGrid .property-info {
-        padding: 10px 12px !important;
+        padding: 12px 14px !important;
         min-width: 0;
         display: flex;
         flex-direction: column;
         justify-content: space-between;
-        gap: 3px;
+        gap: 4px;
     }
 
     #propertyGrid .property-info h3 {
-        font-size: 14.5px;
-        line-height: 1.25;
+        font-size: 15.5px;
+        line-height: 1.28;
         margin-bottom: 1px;
     }
 
     #propertyGrid .property-location {
-        font-size: 12px;
+        font-size: 12.5px;
         margin-bottom: 2px;
         display: -webkit-box;
         -webkit-line-clamp: 1;
@@ -1492,34 +1621,34 @@ button,
     }
 
     #propertyGrid .property-details {
-        gap: 4px 8px;
-        font-size: 12px;
+        gap: 5px 10px;
+        font-size: 12.5px;
         margin-bottom: 2px;
     }
 
     #propertyGrid .property-tcp-container {
-        padding-top: 5px;
+        padding-top: 6px;
         margin-top: 2px;
     }
 
     #propertyGrid .tcp-pill-tag {
-        font-size: 10.5px;
-        padding: 2px 7px;
-        margin-bottom: 2px;
+        font-size: 11.5px;
+        padding: 3px 8px;
+        margin-bottom: 3px;
     }
 
     #propertyGrid .property-price {
-        font-size: 15px;
+        font-size: 16.5px;
     }
 
     #propertyGrid .tcp-subtext {
-        font-size: 11.5px;
-        line-height: 1.3;
+        font-size: 12.5px;
+        line-height: 1.35;
     }
 
     /* Phase 2: Home - Compact About + Inline Avatar + Read More */
     .about {
-        padding: 28px 14px;
+        padding: 32px 16px;
     }
 
     .about-image-card {
@@ -1530,18 +1659,18 @@ button,
         display: flex !important;
         align-items: center;
         gap: 12px;
-        margin-bottom: 10px;
+        margin-bottom: 12px;
     }
 
     .about-mobile-header h2 {
         margin-bottom: 0 !important;
-        font-size: 18px;
+        font-size: 19px;
     }
 
     .about-mobile-avatar {
         display: block !important;
-        width: 52px;
-        height: 52px;
+        width: 56px;
+        height: 56px;
         border-radius: 50%;
         object-fit: cover;
         object-position: top center;
@@ -1567,11 +1696,11 @@ button,
         color: var(--green, #2d5c39);
         font-family: inherit;
         font-weight: 700;
-        font-size: 13px;
+        font-size: 13.5px;
         text-decoration: underline;
         text-underline-offset: 3px;
         cursor: pointer;
-        margin: 2px 0 6px;
+        margin: 4px 0 8px;
     }
 
     /* Phase 2: Home - Compact FAQs (4 initial) & Compact Footer */
@@ -1580,8 +1709,8 @@ button,
     }
 
     .faq-q-text {
-        font-size: 13.5px;
-        line-height: 1.4;
+        font-size: 14px;
+        line-height: 1.45;
     }
 
     .footer-links-column {
@@ -1591,14 +1720,14 @@ button,
     /* Phase 2: Property Detail & Showcases (2-up specs/amenities, bottom CTA bar) */
     .specs-bar {
         grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-        gap: 10px !important;
+        gap: 12px !important;
     }
 
     .amenities-grid ul {
         display: grid !important;
         grid-template-columns: repeat(2, minmax(0, 1fr));
-        column-gap: 10px;
-        row-gap: 6px;
+        column-gap: 12px;
+        row-gap: 8px;
     }
 
     body.has-property-cta-bar .contact-fab {
@@ -1606,24 +1735,29 @@ button,
     }
 
     body.has-property-cta-bar .back-to-top-btn {
-        bottom: calc(68px + env(safe-area-inset-bottom, 0px)) !important;
+        bottom: calc(78px + env(safe-area-inset-bottom, 0px)) !important;
+        right: max(16px, env(safe-area-inset-right, 0px));
     }
 
     body.has-property-cta-bar .footer,
     body.has-property-cta-bar footer {
-        padding-bottom: calc(74px + env(safe-area-inset-bottom, 0px)) !important;
+        padding-bottom: calc(78px + env(safe-area-inset-bottom, 0px)) !important;
+    }
+
+    body.has-property-cta-bar .footer-bottom {
+        padding-bottom: 24px;
     }
 
     .mobile-property-cta-bar {
         display: grid !important;
         grid-template-columns: minmax(0, 1fr) minmax(0, 1.3fr);
-        gap: 8px;
+        gap: 10px;
         position: fixed;
         left: 0;
         right: 0;
         bottom: 0;
         z-index: 980;
-        padding: 8px 12px calc(8px + env(safe-area-inset-bottom, 0px));
+        padding: 10px 14px calc(10px + env(safe-area-inset-bottom, 0px));
         background: rgba(255, 255, 255, 0.96);
         backdrop-filter: blur(12px);
         -webkit-backdrop-filter: blur(12px);
@@ -1636,11 +1770,11 @@ button,
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        gap: 6px;
-        min-height: 40px;
-        padding: 8px 12px;
-        border-radius: 10px;
-        font-size: 13.5px;
+        gap: 7px;
+        min-height: 44px;
+        padding: 10px 14px;
+        border-radius: 12px;
+        font-size: 14px;
         font-weight: 700;
         text-decoration: none;
     }
@@ -1666,8 +1800,8 @@ button,
     /* Phase 2: Legal Pages (Dropdown Jump + Collapsible Sections) */
     .legal-main-container {
         grid-template-columns: 1fr !important;
-        gap: 12px !important;
-        margin: 16px auto 32px !important;
+        gap: 14px !important;
+        margin: 18px auto 36px !important;
     }
 
     .legal-sidebar {
@@ -1677,25 +1811,25 @@ button,
     .legal-mobile-jump {
         display: flex !important;
         flex-direction: column;
-        gap: 6px;
+        gap: 8px;
         background: var(--surface, #ffffff);
         border: 1px solid var(--border-color, #d7e3da);
-        border-radius: 12px;
-        padding: 10px 12px;
+        border-radius: 14px;
+        padding: 12px 14px;
     }
 
     .legal-mobile-jump label {
-        font-size: 12.5px;
+        font-size: 13.5px;
         font-weight: 700;
         color: var(--dark-green, #1a3b23);
     }
 
     .legal-jump-select {
         width: 100%;
-        min-height: 38px;
-        height: 38px;
-        padding: 6px 11px;
-        border-radius: 8px;
+        min-height: 42px;
+        height: 42px;
+        padding: 8px 12px;
+        border-radius: 10px;
         border: 1px solid var(--border-input, #c9d8cd);
         font-family: inherit;
         font-size: 16px;
@@ -1705,13 +1839,13 @@ button,
     }
 
     .legal-content-card {
-        padding: 14px;
-        border-radius: 12px;
+        padding: 16px;
+        border-radius: 14px;
     }
 
     .legal-section {
-        margin-bottom: 10px;
-        padding-bottom: 10px;
+        margin-bottom: 12px;
+        padding-bottom: 12px;
         border-bottom: 1px solid var(--border-subtle, #edf3ee);
     }
 
@@ -1720,18 +1854,18 @@ button,
         display: flex;
         align-items: center;
         justify-content: space-between;
-        gap: 8px;
-        min-height: 38px;
+        gap: 10px;
+        min-height: 40px;
         margin-bottom: 0 !important;
     }
 
     .legal-section.is-expanded .section-head {
-        margin-bottom: 8px !important;
+        margin-bottom: 10px !important;
     }
 
     .legal-section .section-head h2 {
         flex: 1;
-        font-size: 16.5px;
+        font-size: 18px;
         line-height: 1.35;
     }
 
@@ -1763,22 +1897,22 @@ button,
     /* Phase 2: Auth Compact Top Showcase */
     .showcase-panel {
         height: auto;
-        min-height: 132px;
+        min-height: 144px;
         max-height: none;
-        padding: 12px 14px;
+        padding: 14px 16px;
     }
 
     .cursive-tagline {
-        font-size: 22px;
+        font-size: 24px;
     }
 
     .showcase-caption-title {
-        font-size: 14.5px;
+        font-size: 15.5px;
     }
 
     .showcase-caption-desc {
-        font-size: 12px;
-        line-height: 1.35;
+        font-size: 12.5px;
+        line-height: 1.4;
         display: -webkit-box;
         -webkit-line-clamp: 1;
         -webkit-box-orient: vertical;
@@ -1789,8 +1923,8 @@ button,
     .mobile-cards-list {
         display: flex;
         flex-direction: column;
-        gap: 10px;
-        padding: 10px 12px 12px;
+        gap: 12px;
+        padding: 12px 14px 14px;
     }
 
     .clients-card .table-container,
@@ -1802,20 +1936,20 @@ button,
 
     .mobile-empty-state {
         text-align: center;
-        padding: 20px 14px;
+        padding: 24px 16px;
         color: var(--text-muted, #526658);
-        font-size: 13.5px;
+        font-size: 14.5px;
     }
 
     .mobile-data-card {
         background: var(--surface, #ffffff);
         border: 1px solid var(--border-color, #d7e3da);
-        border-radius: 12px;
-        padding: 12px;
+        border-radius: 14px;
+        padding: 14px;
         box-shadow: 0 2px 10px rgba(26, 59, 35, 0.04);
         display: flex;
         flex-direction: column;
-        gap: 8px;
+        gap: 10px;
     }
 
     .mobile-card-top {
@@ -1831,7 +1965,7 @@ button,
 
     .mobile-card-title-block strong {
         display: block;
-        font-size: 14.5px;
+        font-size: 15.5px;
         color: var(--text-dark, #0f1f14);
         line-height: 1.3;
     }
@@ -1839,14 +1973,14 @@ button,
     .mobile-card-title-block small,
     .mobile-card-sub {
         display: block;
-        font-size: 12px;
+        font-size: 12.5px;
         color: var(--text-muted, #526658);
-        line-height: 1.35;
+        line-height: 1.4;
         overflow-wrap: anywhere;
     }
 
     .mobile-card-date {
-        font-size: 11.5px;
+        font-size: 12px;
         font-weight: 600;
         color: var(--text-muted, #526658);
         white-space: nowrap;
@@ -1855,14 +1989,14 @@ button,
 
     .mobile-card-detail strong {
         display: block;
-        font-size: 13.5px;
+        font-size: 14.5px;
         color: var(--dark-green, #1a3b23);
         line-height: 1.35;
     }
 
     .mobile-card-detail small {
         display: block;
-        font-size: 12px;
+        font-size: 12.5px;
         color: var(--text-muted, #526658);
     }
 
@@ -1872,14 +2006,14 @@ button,
         gap: 6px;
         min-height: 0;
         padding: 2px 0;
-        font-size: 13px;
+        font-size: 13.5px;
         font-weight: 700;
         color: var(--green, #2d5c39);
         text-decoration: none;
     }
 
     .mobile-card-phone-muted {
-        font-size: 12px;
+        font-size: 12.5px;
         color: var(--text-muted, #526658);
     }
 
@@ -1888,35 +2022,35 @@ button,
         align-items: center;
         justify-content: space-between;
         gap: 8px;
-        padding-top: 8px;
+        padding-top: 10px;
         border-top: 1px solid var(--border-subtle, #edf3ee);
     }
 
     .mobile-card-actions-bar .status-select-pill {
-        min-height: 34px;
-        font-size: 12px;
-        padding: 5px 10px;
+        min-height: 38px;
+        font-size: 13px;
+        padding: 6px 12px;
     }
 
     .mobile-card-actions-bar .action-btn.view,
     .mobile-card-actions-bar .action-view-btn {
-        min-height: 34px;
-        padding: 6px 11px;
-        font-size: 12.5px;
+        min-height: 38px;
+        padding: 8px 13px;
+        font-size: 13px;
         margin-left: auto;
     }
 
     /* Phase 3: Admin Property List Mobile Cards */
     .mobile-prop-top {
         display: flex;
-        gap: 10px;
+        gap: 12px;
         align-items: flex-start;
     }
 
     .mobile-prop-thumb {
-        width: 68px;
-        height: 68px;
-        border-radius: 10px;
+        width: 72px;
+        height: 72px;
+        border-radius: 12px;
         object-fit: cover;
         flex-shrink: 0;
         border: 1px solid var(--border-color, #d7e3da);
@@ -1932,7 +2066,7 @@ button,
         min-width: 0;
         display: flex;
         flex-direction: column;
-        gap: 3px;
+        gap: 4px;
     }
 
     .mobile-card-title-row {
@@ -1943,15 +2077,15 @@ button,
     }
 
     .mobile-card-title-row strong {
-        font-size: 14.5px;
+        font-size: 15.5px;
         color: var(--text-dark, #0f1f14);
-        line-height: 1.25;
+        line-height: 1.28;
     }
 
     .mobile-status-chip {
-        padding: 3px 8px;
+        padding: 3px 9px;
         border-radius: 999px;
-        font-size: 11px;
+        font-size: 11.5px;
         font-weight: 700;
         white-space: nowrap;
         flex-shrink: 0;
@@ -1976,17 +2110,17 @@ button,
     }
 
     .mobile-prop-price {
-        font-size: 14.5px;
+        font-size: 15.5px;
         font-weight: 800;
         color: var(--dark-green, #1a3b23);
     }
 
     .mobile-type-tag {
-        padding: 2px 7px;
+        padding: 3px 8px;
         border-radius: 6px;
         background: var(--light-green, #eef5ef);
         color: var(--dark-green, #1a3b23);
-        font-size: 11px;
+        font-size: 11.5px;
         font-weight: 600;
     }
 
@@ -1994,15 +2128,15 @@ button,
         display: grid;
         grid-template-columns: repeat(2, minmax(0, 1fr));
         gap: 8px;
-        padding-top: 8px;
+        padding-top: 10px;
         border-top: 1px solid var(--border-subtle, #edf3ee);
     }
 
     .mobile-prop-actions button {
-        min-height: 36px;
-        padding: 6px 10px;
-        border-radius: 8px;
-        font-size: 12.5px;
+        min-height: 38px;
+        padding: 8px 12px;
+        border-radius: 10px;
+        font-size: 13px;
         font-weight: 700;
     }
 
@@ -2010,7 +2144,7 @@ button,
     .dashboard-content {
         display: flex !important;
         flex-direction: column !important;
-        gap: 12px !important;
+        gap: 14px !important;
     }
 
     .welcome-banner {
@@ -2021,43 +2155,43 @@ button,
     .kpi-grid {
         order: 2;
         grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-        gap: 10px !important;
+        gap: 12px !important;
         margin-bottom: 0 !important;
     }
 
     .kpi-card {
-        padding: 10px 12px;
+        padding: 12px 14px;
         gap: 10px;
-        border-radius: 12px;
+        border-radius: 14px;
     }
 
     .kpi-icon {
-        width: 34px;
-        height: 34px;
-        border-radius: 9px;
+        width: 36px;
+        height: 36px;
+        border-radius: 10px;
     }
 
     .kpi-icon svg {
-        width: 18px;
-        height: 18px;
+        width: 19px;
+        height: 19px;
     }
 
     .kpi-value {
-        font-size: 20px;
+        font-size: 22px;
         line-height: 1.15;
     }
 
     .kpi-label {
-        font-size: 11.5px;
+        font-size: 12px;
         white-space: normal;
         overflow: visible;
         text-overflow: clip;
-        line-height: 1.25;
+        line-height: 1.3;
     }
 
     .kpi-sub {
-        font-size: 11.5px;
-        line-height: 1.3;
+        font-size: 12px;
+        line-height: 1.35;
     }
 
     .dashboard-feature-grid {
@@ -2110,14 +2244,14 @@ button,
         justify-content: space-between;
         gap: 8px;
         width: 100%;
-        min-height: 38px;
-        padding: 7px 12px;
+        min-height: 40px;
+        padding: 8px 13px;
         border-radius: 10px;
         border: 1.5px solid var(--green, #2d5c39);
         background: var(--light-green, #eef5ef);
         color: var(--dark-green, #1a3b23);
         font-family: inherit;
-        font-size: 13px;
+        font-size: 13.5px;
         font-weight: 700;
         cursor: pointer;
     }
@@ -2127,7 +2261,7 @@ button,
     }
 
     .calendar-mobile-summary {
-        font-size: 12px;
+        font-size: 12.5px;
         font-weight: 600;
         color: var(--text-muted, #526658);
     }
@@ -2142,10 +2276,10 @@ button,
     }
 
     .mobile-dash-prop {
-        font-size: 13.5px;
+        font-size: 14.5px;
         font-weight: 700;
         color: var(--dark-green, #1a3b23);
-        line-height: 1.35;
+        line-height: 1.38;
         margin: 0;
     }
 
@@ -2185,14 +2319,14 @@ button,
         display: inline-flex !important;
         align-items: center;
         gap: 6px;
-        min-height: 36px;
-        padding: 6px 11px;
-        border-radius: 8px;
+        min-height: 38px;
+        padding: 7px 12px;
+        border-radius: 10px;
         border: 1.5px solid var(--green, #2d5c39);
         background: var(--light-green, #eef5ef);
         color: var(--dark-green, #1a3b23);
         font-family: inherit;
-        font-size: 12.5px;
+        font-size: 13px;
         font-weight: 700;
         cursor: pointer;
         margin-left: auto;
@@ -2225,13 +2359,13 @@ button,
 
     .mobile-sa-user-id strong {
         display: block;
-        font-size: 14.5px;
+        font-size: 15.5px;
         color: var(--text-dark, #0f1f14);
     }
 
     .mobile-sa-user-id small {
         display: block;
-        font-size: 12px;
+        font-size: 12.5px;
         color: var(--text-muted, #526658);
         overflow-wrap: anywhere;
     }
@@ -2240,7 +2374,7 @@ button,
         display: flex;
         flex-wrap: wrap;
         gap: 4px 12px;
-        font-size: 12px;
+        font-size: 12.5px;
         color: var(--text-muted, #526658);
     }
 
@@ -2252,9 +2386,9 @@ button,
     }
 
     .mobile-sa-user-actions .btn-table-action {
-        min-height: 34px;
-        padding: 6px 11px;
-        font-size: 12.5px;
+        min-height: 38px;
+        padding: 7px 12px;
+        font-size: 13px;
     }
 
     /* Dark Mode Coverage for New Mobile UX Components */
@@ -2399,25 +2533,25 @@ button,
         color: #ffffff !important;
     }
 
-    /* Compact Control Sizes & Eyebrow/Tag Scale */
+    /* Balanced Control Sizes & Eyebrow/Tag Scale */
     .carousel-arrow,
     .toggle-pw,
     .password-toggle-btn,
     .datepicker-trigger-btn {
-        min-width: 34px;
-        min-height: 34px;
+        min-width: 38px;
+        min-height: 38px;
     }
 
     .welcome-eyebrow,
     .section-eyebrow,
     .page-heading .eyebrow,
     .sa-executive-tag {
-        font-size: 11px;
+        font-size: 11.5px;
         letter-spacing: 0.5px;
     }
 
     .fab-action-btn {
-        min-height: 34px;
+        min-height: 40px;
         position: relative;
         z-index: 10002;
     }
@@ -2435,8 +2569,8 @@ button,
     .admin-topbar,
     .sa-topbar,
     .app-topbar {
-        height: calc(54px + env(safe-area-inset-top, 0px));
-        min-height: calc(54px + env(safe-area-inset-top, 0px));
+        height: calc(56px + env(safe-area-inset-top, 0px));
+        min-height: calc(56px + env(safe-area-inset-top, 0px));
         padding-top: env(safe-area-inset-top, 0px);
         padding-left: max(12px, env(safe-area-inset-left, 0px));
         padding-right: max(12px, env(safe-area-inset-right, 0px));
@@ -2446,11 +2580,44 @@ button,
     .sa-topbar-right .theme-toggle-btn,
     .notif-btn,
     #notifButton {
-        width: 34px;
-        min-width: 34px;
-        height: 34px;
-        min-height: 34px;
-        flex: 0 0 34px;
+        width: 36px;
+        min-width: 36px;
+        height: 36px;
+        min-height: 36px;
+        flex: 0 0 36px;
+    }
+
+    .contact-fab {
+        bottom: max(16px, env(safe-area-inset-bottom, 0px));
+        right: max(16px, env(safe-area-inset-right, 0px));
+    }
+
+    .fab-main-btn {
+        width: 50px;
+        height: 50px;
+    }
+
+    .fab-main-btn svg {
+        width: 24px;
+        height: 24px;
+    }
+
+    .back-to-top-btn {
+        bottom: calc(78px + env(safe-area-inset-bottom, 0px));
+        right: max(20px, env(safe-area-inset-right, 0px));
+        width: 42px;
+        height: 42px;
+    }
+
+    .btt-progress-ring {
+        width: 100%;
+        height: 100%;
+        inset: 0;
+    }
+
+    .btt-icon svg {
+        width: 18px;
+        height: 18px;
     }
 }
 
