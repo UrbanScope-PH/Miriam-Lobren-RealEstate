@@ -298,10 +298,20 @@
     </main>
 
     <!-- INQUIRY DETAILS MODAL -->
-    <div class="modal-overlay" id="inquiryModal">
+    <div class="modal-overlay" id="inquiryModal" role="dialog" aria-modal="true" aria-labelledby="inquiryModalTitle" hidden>
         <div class="modal-box">
             <div class="modal-header">
-                <h3>Client Inquiry Details</h3>
+                <div class="modal-title-group">
+                    <span class="modal-header-icon" aria-hidden="true">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                        </svg>
+                    </span>
+                    <div>
+                        <h3 id="inquiryModalTitle">Inquiry Details</h3>
+                        <p class="modal-subtitle">Review inquiry information and client details</p>
+                    </div>
+                </div>
                 <button class="modal-close" id="closeModalBtn" type="button" aria-label="Close modal">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                         <line x1="18" y1="6" x2="6" y2="18"></line>

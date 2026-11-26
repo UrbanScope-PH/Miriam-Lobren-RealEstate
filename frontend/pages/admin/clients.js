@@ -69,14 +69,28 @@ document.addEventListener('DOMContentLoaded', async () => {
     const modalContent = document.getElementById('modalContent');
     const closeModalBtn = document.getElementById('closeModalBtn');
 
+    function closeInquiryDetailsModal() {
+        if (!modal) return;
+        modal.classList.remove('open');
+        window.setTimeout(() => {
+            if (!modal.classList.contains('open')) modal.hidden = true;
+        }, 220);
+        document.body.style.overflow = '';
+    }
+
     if (closeModalBtn) {
-        closeModalBtn.addEventListener('click', () => modal.classList.remove('open'));
+        closeModalBtn.addEventListener('click', closeInquiryDetailsModal);
     }
     if (modal) {
         modal.addEventListener('click', (e) => {
-            if (e.target === modal) modal.classList.remove('open');
+            if (e.target === modal) closeInquiryDetailsModal();
         });
     }
+    document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape' && modal && modal.classList.contains('open')) {
+            closeInquiryDetailsModal();
+        }
+    });
 
     // 5. Fetch Properties & Inquiries
     function loadData(options = {}) {
@@ -601,113 +615,210 @@ document.addEventListener('DOMContentLoaded', async () => {
     // View inquiry details modal handler
     window.viewInquiryDetails = (inquiryId) => {
         const inq = inquiries.find(i => String(i.id) === String(inquiryId));
-        if (!inq) return;
+        if (!inq || !modal || !modalContent) return;
 
-        const name = inq.client_name || inq.name || 'Anonymous Client';
-        const email = inq.email || inq.client_email || 'N/A';
-        const phone = inq.phone || inq.client_phone || inq.contact_number || 'N/A';
+        const clientName = inq.client_name || inq.name || 'Anonymous Client';
+        const email = inq.email || inq.client_email || '';
+        const phone = inq.phone || inq.client_phone || inq.contact_number || '';
         const rawPropTitle = inq.property_title || propertiesMap[inq.property_id] || (inq.property_id ? `Property #${inq.property_id}` : '');
-        const propTitle = formatInquiryLabel(rawPropTitle);
-        const normStatus = getNormalizedStatus(inq.status);
+        const propertyTitle = formatInquiryLabel(rawPropTitle);
         const parsedSchedule = parseInquirySchedule(inq.message || inq.notes, inq.schedule_date || inq.preferred_date);
         const schedule = parsedSchedule.display || 'No schedule requested';
         const message = parsedSchedule.cleanMessage || 'No message content provided.';
-        const dateStr = inq.created_at ? new Date(inq.created_at).toLocaleString() : 'N/A';
-
-        let actionButtonHtml = '';
-        if (normStatus === 'Approved') {
-            actionButtonHtml = `
-                <button type="button" class="action-btn btn-modal-approve approved" disabled style="padding: 9px 18px; font-size: 0.9rem; border-radius: 8px;">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                    Approved
-                </button>
-            `;
-        } else if (normStatus === 'Cancelled') {
-            const actor = String(inq.cancelled_by || '').toLowerCase().trim();
-            const cancelledLabel = actor === 'admin'
-                ? 'Cancelled by Admin'
-                : actor === 'client'
-                    ? 'Cancelled by Client'
-                    : 'Cancelled';
-            actionButtonHtml = `
-                <button type="button" class="action-btn btn-modal-cancelled" disabled style="padding: 9px 18px; font-size: 0.9rem; border-radius: 8px;">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"></circle><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"></line></svg>
-                    ${cancelledLabel}
-                </button>
-            `;
-        } else {
-            actionButtonHtml = `
-                <button type="button" id="modalApproveInqBtn" class="action-btn btn-modal-approve" style="padding: 9px 18px; font-size: 0.9rem; border-radius: 8px;">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                    Approve Inquiry
-                </button>
-            `;
-        }
+        const createdAt = inq.created_at
+            ? new Date(inq.created_at).toLocaleString('en-US', {
+                month: 'short',
+                day: 'numeric',
+                year: 'numeric',
+                hour: 'numeric',
+                minute: '2-digit'
+            })
+            : 'N/A';
+        const status = getNormalizedStatus(inq.status);
+        const isApproved = status === 'Approved';
+        const isCancelled = status === 'Cancelled';
+        const isCompleted = status === 'Completed';
+        const cancelledBy = String(inq.cancelled_by || '').toLowerCase().trim();
+        const cancelledLabel = cancelledBy === 'client' ? 'Cancelled by Client' : cancelledBy === 'admin' ? 'Cancelled by Admin' : 'Cancelled';
+        const displayStatus = isCancelled ? cancelledLabel : status;
+        const initials = clientName.split(' ').filter(Boolean).slice(0, 2).map(part => part[0].toUpperCase()).join('') || 'CL';
+        const inquiryTag = `INQ-${String(inquiryId).replace(/^INQ-/i, '')}`;
 
         modalContent.innerHTML = `
-            <div style="display: flex; flex-direction: column; gap: 16px;">
-                <div style="background: var(--light-green); padding: 14px 18px; border-radius: 10px; display: flex; justify-content: space-between; align-items: center;">
-                    <div>
-                        <strong style="color: var(--dark-green); font-size: 1.1rem; display: block;">${escapeHtml(name)}</strong>
-                        <span style="color: var(--text-muted); font-size: 0.85rem;">Submitted on: ${escapeHtml(dateStr)}</span>
+            <div class="inquiry-modal-detail">
+                <div class="inquiry-client-banner">
+                    <div class="inquiry-client-info">
+                        <div class="inquiry-avatar-pill" aria-hidden="true">${escapeHtml(initials)}</div>
+                        <div>
+                            <h4 class="inquiry-client-name">${escapeHtml(clientName)}</h4>
+                            <span class="inquiry-submitted-date">
+                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                                    <circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline>
+                                </svg>
+                                Submitted: ${escapeHtml(createdAt)}
+                            </span>
+                        </div>
                     </div>
-                    <span class="status-badge ${escapeHtml(getBadgeClass(normStatus))}">${escapeHtml(normStatus)}</span>
-                </div>
-
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; font-size: 0.9rem;">
-                    <div>
-                        <strong style="display: block; color: var(--text-muted); font-size: 0.78rem; text-transform: uppercase;">Email</strong>
-                        <a href="mailto:${escapeHtml(email)}" style="color: var(--green); text-decoration: none; font-weight: 600;">${escapeHtml(email)}</a>
-                    </div>
-                    <div>
-                        <strong style="display: block; color: var(--text-muted); font-size: 0.78rem; text-transform: uppercase;">Phone Number</strong>
-                        <a href="tel:${escapeHtml(phone)}" style="color: var(--green); text-decoration: none; font-weight: 600;">${escapeHtml(phone)}</a>
-                    </div>
-                    <div>
-                        <strong style="display: block; color: var(--text-muted); font-size: 0.78rem; text-transform: uppercase;">Property of Interest</strong>
-                        <span style="font-weight: 600; color: var(--text-dark);">${escapeHtml(propTitle)}</span>
-                    </div>
-                    <div>
-                        <strong style="display: block; color: var(--text-muted); font-size: 0.78rem; text-transform: uppercase;">Preferred Tour Schedule</strong>
-                        <span style="font-weight: 600; color: var(--text-dark);">${escapeHtml(schedule)}</span>
+                    <div class="inquiry-banner-meta">
+                        <span class="status-badge ${escapeHtml(getBadgeClass(status))}">${escapeHtml(displayStatus)}</span>
+                        <span class="inquiry-id-tag">${escapeHtml(inquiryTag)}</span>
                     </div>
                 </div>
 
-                <div>
-                    <strong style="display: block; color: var(--text-muted); font-size: 0.78rem; text-transform: uppercase; margin-bottom: 6px;">Message / Client Notes</strong>
-                    <div class="inquiry-message-box" style="background: var(--surface-hover); border: 1px solid var(--border-color); border-radius: 8px; padding: 14px; font-size: 0.92rem; line-height: 1.6; color: var(--text-secondary); white-space: pre-wrap;">${escapeHtml(message)}</div>
+                <div class="inquiry-info-grid">
+                    <div class="info-grid-card">
+                        <span class="info-label">Email Address</span>
+                        ${email ? `<a href="mailto:${escapeHtml(email)}" class="info-value info-link"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg><span>${escapeHtml(email)}</span></a>` : '<span class="info-value muted">Not provided</span>'}
+                    </div>
+                    <div class="info-grid-card">
+                        <span class="info-label">Phone Number</span>
+                        ${phone ? `<a href="tel:${escapeHtml(phone)}" class="info-value info-link"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg><span>${escapeHtml(phone)}</span></a>` : '<span class="info-value muted">Not provided</span>'}
+                    </div>
+                    <div class="info-grid-card">
+                        <span class="info-label">Property Interested</span>
+                        <div class="info-value"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg><span>${escapeHtml(propertyTitle)}</span></div>
+                    </div>
+                    <div class="info-grid-card">
+                        <span class="info-label">Preferred Schedule</span>
+                        <div class="info-value"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg><span>${escapeHtml(schedule)}</span></div>
+                    </div>
                 </div>
 
-                <div style="display: flex; justify-content: flex-end; align-items: center; gap: 10px; margin-top: 10px; padding-top: 14px; border-top: 1px solid var(--border-subtle);">
-                    ${actionButtonHtml}
-                    <a href="mailto:${encodeURIComponent(email)}?subject=Re:%20Inquiry%20regarding%20${encodeURIComponent(propTitle)}" class="action-btn" style="background: var(--btn-primary-bg); color: #ffffff; padding: 9px 18px; font-size: 0.9rem; text-decoration: none; border-radius: 8px;">
-                        Reply via Email
-                    </a>
+                <div class="inquiry-message-section">
+                    <span class="info-label">Message / Client Request</span>
+                    <div class="inquiry-message-box">${escapeHtml(message)}</div>
+                </div>
+
+                <div class="modal-actions-footer">
+                    <button type="button" class="btn-modal-secondary btn-close-modal" id="modalCloseActionBtn">Close</button>
+                    ${!isCompleted ? `
+                        <div class="modal-status-dropdown" id="modalStatusDropdown">
+                            <div class="modal-status-split ${isApproved ? 'is-approved' : isCancelled ? 'is-cancelled' : 'is-approve-ready'}" id="modalStatusSplit">
+                                <button type="button" class="modal-status-main-btn" id="modalQuickApproveBtn" data-current-state="${isApproved ? 'approved' : isCancelled ? 'cancelled' : 'pending'}">
+                                    <span class="modal-status-main-icon" aria-hidden="true">${isCancelled ? '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>' : '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"><polyline points="20 6 9 17 4 12"></polyline></svg>'}</span>
+                                    <span class="modal-status-trigger-label">${isApproved ? 'Approved' : isCancelled ? escapeHtml(cancelledLabel) : 'Approve'}</span>
+                                </button>
+                                <button type="button" class="modal-status-chevron-btn" id="modalStatusTriggerBtn" aria-label="More decision options" aria-haspopup="menu" aria-expanded="false">
+                                    <svg class="modal-status-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                                </button>
+                            </div>
+                            <div class="modal-status-menu" id="modalStatusMenu" role="menu" aria-label="Inquiry decision actions" hidden>
+                                <button type="button" class="modal-status-option approve${isApproved ? ' is-selected' : ''}" role="menuitemradio" aria-checked="${isApproved}" data-next-status="Approved">
+                                    <span class="modal-option-left"><span class="modal-option-dot green" aria-hidden="true"></span><span>${isApproved ? 'Approved' : 'Approve Inquiry'}</span></span>
+                                    <svg class="modal-option-check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                                </button>
+                                <button type="button" class="modal-status-option cancel${isCancelled ? ' is-selected' : ''}" role="menuitemradio" aria-checked="${isCancelled}" data-next-status="Cancelled">
+                                    <span class="modal-option-left"><span class="modal-option-dot red" aria-hidden="true"></span><span>${isCancelled ? 'Cancelled' : 'Cancel Inquiry'}</span></span>
+                                    <svg class="modal-option-check" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                                </button>
+                            </div>
+                        </div>
+                    ` : ''}
+                    ${email ? `<a href="mailto:${encodeURIComponent(email)}?subject=Re:%20Inquiry%20regarding%20${encodeURIComponent(propertyTitle)}" class="btn-modal-primary" target="_blank" rel="noopener"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg><span>Reply via Email</span></a>` : ''}
                 </div>
             </div>
         `;
-        modal.classList.add('open');
 
-        const modalApproveBtn = document.getElementById('modalApproveInqBtn');
-        if (modalApproveBtn) {
-            modalApproveBtn.addEventListener('click', async () => {
-                modalApproveBtn.disabled = true;
-                modalApproveBtn.innerHTML = `<span>Approving...</span>`;
-                await window.handleStatusChange({ target: { value: 'Approved' } }, inquiryId);
-                closeStatusMenu(false);
-                modalApproveBtn.outerHTML = `
-                    <button type="button" class="action-btn btn-modal-approve approved" disabled style="padding: 9px 18px; font-size: 0.9rem; border-radius: 8px;">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                        Approved
-                    </button>
-                `;
-                const modalBadge = modalContent.querySelector('.status-badge');
-                if (modalBadge) {
-                    modalBadge.textContent = 'Approved';
-                    modalBadge.className = 'status-badge approved';
+        const closeActionButton = modalContent.querySelector('#modalCloseActionBtn');
+        if (closeActionButton) closeActionButton.addEventListener('click', closeInquiryDetailsModal);
+
+        const dropdown = modalContent.querySelector('#modalStatusDropdown');
+        const split = modalContent.querySelector('#modalStatusSplit');
+        const mainButton = modalContent.querySelector('#modalQuickApproveBtn');
+        const triggerButton = modalContent.querySelector('#modalStatusTriggerBtn');
+        const menu = modalContent.querySelector('#modalStatusMenu');
+
+        const closeDecisionMenu = () => {
+            if (!dropdown || !triggerButton || !menu) return;
+            menu.hidden = true;
+            dropdown.classList.remove('is-open');
+            triggerButton.setAttribute('aria-expanded', 'false');
+        };
+        const toggleDecisionMenu = () => {
+            if (!dropdown || !triggerButton || !menu) return;
+            const open = menu.hidden;
+            menu.hidden = !open;
+            dropdown.classList.toggle('is-open', open);
+            triggerButton.setAttribute('aria-expanded', String(open));
+        };
+        const applyDecision = async (nextStatus) => {
+            if (!mainButton || !triggerButton || !split || !menu) return;
+            closeDecisionMenu();
+            const label = mainButton.querySelector('.modal-status-trigger-label');
+            const icon = mainButton.querySelector('.modal-status-main-icon');
+            const previousLabel = label ? label.textContent : '';
+            mainButton.disabled = true;
+            triggerButton.disabled = true;
+            if (label) label.textContent = nextStatus === 'Approved' ? 'Approving...' : 'Cancelling...';
+
+            try {
+                await window.handleStatusChange(nextStatus, inquiryId);
+                const nowApproved = nextStatus === 'Approved';
+                const nowCancelled = nextStatus === 'Cancelled';
+                const updatedLabel = nowCancelled ? 'Cancelled by Admin' : nextStatus;
+                const badge = modalContent.querySelector('.inquiry-banner-meta .status-badge');
+                if (badge) {
+                    badge.textContent = updatedLabel;
+                    badge.className = `status-badge ${getBadgeClass(nextStatus)}`;
                 }
+                split.className = `modal-status-split ${nowApproved ? 'is-approved' : nowCancelled ? 'is-cancelled' : 'is-approve-ready'}`;
+                mainButton.setAttribute('data-current-state', nowApproved ? 'approved' : nowCancelled ? 'cancelled' : 'pending');
+                if (label) label.textContent = updatedLabel;
+                if (icon) {
+                    icon.innerHTML = nowCancelled
+                        ? '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>'
+                        : '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"><polyline points="20 6 9 17 4 12"></polyline></svg>';
+                }
+                menu.querySelectorAll('.modal-status-option').forEach(option => {
+                    const selected = option.getAttribute('data-next-status') === nextStatus;
+                    option.classList.toggle('is-selected', selected);
+                    option.setAttribute('aria-checked', String(selected));
+                    const optionText = option.querySelector('.modal-option-left span:last-child');
+                    if (optionText) {
+                        const optionStatus = option.getAttribute('data-next-status');
+                        optionText.textContent = optionStatus === nextStatus ? (nowCancelled ? 'Cancelled' : 'Approved') : `${optionStatus === 'Approved' ? 'Approve' : 'Cancel'} Inquiry`;
+                    }
+                });
+            } catch (error) {
+                console.error(`Failed to set inquiry status (${nextStatus}) from clients modal:`, error);
+                if (label) label.textContent = previousLabel || 'Retry';
+            } finally {
+                mainButton.disabled = false;
+                triggerButton.disabled = false;
+            }
+        };
+
+        if (mainButton && triggerButton && menu && dropdown) {
+            mainButton.addEventListener('click', event => {
+                event.stopPropagation();
+                if (mainButton.getAttribute('data-current-state') === 'pending') applyDecision('Approved');
+                else toggleDecisionMenu();
+            });
+            triggerButton.addEventListener('click', event => {
+                event.stopPropagation();
+                toggleDecisionMenu();
+            });
+            menu.addEventListener('click', event => {
+                event.stopPropagation();
+                const option = event.target.closest('.modal-status-option[data-next-status]');
+                if (!option) return;
+                const nextStatus = option.getAttribute('data-next-status');
+                if ((nextStatus === 'Approved' && mainButton.getAttribute('data-current-state') === 'approved') ||
+                    (nextStatus === 'Cancelled' && mainButton.getAttribute('data-current-state') === 'cancelled')) {
+                    closeDecisionMenu();
+                    return;
+                }
+                applyDecision(nextStatus);
+            });
+            modalContent.addEventListener('click', event => {
+                if (!event.target.closest('#modalStatusDropdown')) closeDecisionMenu();
             });
         }
+
+        modal.hidden = false;
+        void modal.offsetWidth;
+        modal.classList.add('open');
+        document.body.style.overflow = 'hidden';
     };
 
     // Filter tab listeners
