@@ -111,7 +111,9 @@ function rebuildCalendarSchedule() {
             time: appointment.appointment_time || "Time to be confirmed",
             title: appointment.title || appointment.property_title || "Client property viewing",
             description: appointment.description
-                || (appointment.client_name ? `Client: ${appointment.client_name}` : "Scheduled property viewing.")
+                || (appointment.client_name ? `Client: ${appointment.client_name}` : "Scheduled property viewing."),
+            dateKey,
+            appointmentRecord: appointment
         });
     });
 
@@ -119,7 +121,9 @@ function rebuildCalendarSchedule() {
         addAppointment(request.dateKey, {
             time: request.time,
             title: request.title,
-            description: request.description
+            description: request.description,
+            dateKey: request.dateKey,
+            inquiry: request.inquiry || null
         });
     });
 
@@ -204,7 +208,107 @@ function getInquiryCalendarRequest(inquiry) {
         time,
         title: `${isViewingRequest ? "Viewing" : "Consultation"} request · ${inquiryTitle}`,
         description: `Requested by ${clientName} · ${status}`,
-        identity
+        identity,
+        inquiry
+    };
+}
+
+function buildInquiryModalPayload(inquiry) {
+    if (!inquiry || typeof inquiry !== "object") return null;
+
+    const inquiryId = inquiry.inquiry_code || `INQ-${inquiry.id ?? "N/A"}`;
+    const createdAt = inquiry.created_at
+        ? new Date(inquiry.created_at).toLocaleString("en-US", {
+            month: "short",
+            day: "numeric",
+            year: "numeric",
+            hour: "numeric",
+            minute: "2-digit"
+        })
+        : "Date unavailable";
+    const parsedSchedule = parseInquirySchedule(
+        inquiry.message || inquiry.notes,
+        inquiry.schedule_date || inquiry.preferred_date
+    );
+
+    return {
+        rawId: inquiry.id != null ? String(inquiry.id) : "",
+        inquiryId,
+        clientName: inquiry.client_name || "Client",
+        propertyTitle: formatInquiryLabel(inquiry.property_title),
+        createdAt,
+        status: inquiry.status || "Pending",
+        statusClass: getStatusClass(inquiry.status),
+        cancelledBy: String(inquiry.cancelled_by || "").toLowerCase().trim(),
+        inquiryPhone: inquiry.client_phone || inquiry.phone || inquiry.contact_number || "N/A",
+        inquiryEmail: inquiry.client_email || inquiry.email || "N/A",
+        inquiryMessage: parsedSchedule.cleanMessage || "No inquiry message provided.",
+        scheduleDate: parsedSchedule.display || ""
+    };
+}
+
+function resolveAgendaInquiryModalPayload(appointment) {
+    if (!appointment || typeof appointment !== "object") return null;
+
+    let matchedInquiry = appointment.inquiry || null;
+    const rawList = Array.isArray(allDashboardInquiries) ? allDashboardInquiries : [];
+
+    // Prefer the freshest matching record from allDashboardInquiries
+    if (matchedInquiry && matchedInquiry.id != null && rawList.length > 0) {
+        const fresh = rawList.find(item => String(item.id) === String(matchedInquiry.id));
+        if (fresh) matchedInquiry = fresh;
+    }
+
+    if (!matchedInquiry && appointment.appointmentRecord && rawList.length > 0) {
+        const rec = appointment.appointmentRecord;
+        if (rec.inquiry_id != null) {
+            matchedInquiry = rawList.find(item => String(item.id) === String(rec.inquiry_id)) || null;
+        }
+        if (!matchedInquiry) {
+            const recEmail = String(rec.client_email || "").trim().toLowerCase();
+            const recName = String(rec.client_name || "").trim().toLowerCase();
+            const recProp = String(rec.property_title || rec.title || "").trim().toLowerCase();
+            matchedInquiry = rawList.find(item => {
+                const iEmail = String(item.client_email || item.email || "").trim().toLowerCase();
+                const iName = String(item.client_name || "").trim().toLowerCase();
+                const iProp = String(item.property_title || "").trim().toLowerCase();
+                if (recEmail && iEmail === recEmail) return true;
+                if (recName && iName === recName && recProp && (iProp.includes(recProp) || recProp.includes(iProp))) return true;
+                return false;
+            }) || null;
+        }
+    }
+
+    if (matchedInquiry) {
+        return buildInquiryModalPayload(matchedInquiry);
+    }
+
+    // Fallback for standalone appointment records without a linked inquiry
+    const rec = appointment.appointmentRecord || {};
+    const dateParts = String(appointment.dateKey || selectedDate || "").split("-").map(Number);
+    const dateObj = dateParts.length === 3 ? new Date(dateParts[0], dateParts[1] - 1, dateParts[2]) : null;
+    const dateLabel = dateObj && !Number.isNaN(dateObj.getTime())
+        ? dateObj.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric", year: "numeric" })
+        : (appointment.dateKey || "");
+    const scheduleDisplay = dateLabel
+        ? (appointment.time ? `${dateLabel} · ${appointment.time}` : dateLabel)
+        : (appointment.time || "");
+
+    return {
+        rawId: rec.inquiry_id != null ? String(rec.inquiry_id) : "",
+        inquiryId: rec.inquiry_id != null ? `INQ-${rec.inquiry_id}` : "APPT",
+        clientName: rec.client_name || "Client",
+        propertyTitle: rec.property_title || appointment.title || "Property Viewing",
+        createdAt: rec.created_at
+            ? new Date(rec.created_at).toLocaleString("en-US", { month: "short", day: "numeric", year: "numeric" })
+            : (dateLabel || "Scheduled"),
+        status: rec.status || "Scheduled",
+        statusClass: getStatusClass(rec.status || "Approved"),
+        cancelledBy: "",
+        inquiryPhone: rec.client_phone || rec.phone || "N/A",
+        inquiryEmail: rec.client_email || rec.email || "N/A",
+        inquiryMessage: rec.notes || rec.description || appointment.description || "Scheduled property viewing appointment.",
+        scheduleDate: scheduleDisplay
     };
 }
 
@@ -426,17 +530,60 @@ function renderAgenda() {
         return;
     }
 
-    calendarAgenda.innerHTML = appointments.map(appointment => `
-        <article class="agenda-event">
-            <span class="agenda-event-time">
-                ${escapeHTML(appointment.time)}
-            </span>
+    calendarAgenda.innerHTML = appointments.map((appointment, idx) => `
+        <article
+            class="agenda-event is-clickable"
+            role="button"
+            tabindex="0"
+            data-agenda-index="${idx}"
+            aria-label="View inquiry details: ${escapeHTML(appointment.title)}"
+        >
+            <div class="agenda-event-head">
+                <span class="agenda-event-time">
+                    ${escapeHTML(appointment.time)}
+                </span>
+                <span class="agenda-event-hint" aria-hidden="true">
+                    <span>View details</span>
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="9 18 15 12 9 6"></polyline>
+                    </svg>
+                </span>
+            </div>
 
             <strong>${escapeHTML(appointment.title)}</strong>
 
             <p>${escapeHTML(appointment.description)}</p>
         </article>
     `).join("");
+}
+
+function handleAgendaEventActivation(targetEl) {
+    const card = targetEl && targetEl.closest ? targetEl.closest(".agenda-event.is-clickable") : null;
+    if (!card) return;
+
+    const index = Number(card.dataset.agendaIndex);
+    const appointments = calendarAppointments[selectedDate] || [];
+    const appointment = Number.isInteger(index) ? appointments[index] : null;
+    if (!appointment) return;
+
+    const payload = resolveAgendaInquiryModalPayload(appointment);
+    if (payload && typeof openInquiryModal === "function") {
+        openInquiryModal(payload);
+    }
+}
+
+if (calendarAgenda) {
+    calendarAgenda.addEventListener("click", (event) => {
+        handleAgendaEventActivation(event.target);
+    });
+
+    calendarAgenda.addEventListener("keydown", (event) => {
+        if (event.key !== "Enter" && event.key !== " ") return;
+        const card = event.target && event.target.closest ? event.target.closest(".agenda-event.is-clickable") : null;
+        if (!card) return;
+        event.preventDefault();
+        handleAgendaEventActivation(card);
+    });
 }
 
 if (previousMonthBtn) {
@@ -497,6 +644,168 @@ function getStatusClass(status) {
 
 /* INQUIRY STATUS DONUT & NOTIFICATIONS */
 
+const DONUT_CIRCUMFERENCE = 2 * Math.PI * 60; // ~376.99
+const inquiryDonutState = {
+    hasAnimatedData: false,
+    rafId: null,
+    observer: null,
+    pendingCounts: null,
+    target: null,
+    current: {
+        underReview: 0,
+        approved: 0,
+        completed: 0,
+        cancelled: 0,
+        total: 0,
+        slices: [
+            { id: 'donutUnderReview', start: 0, len: 0 },
+            { id: 'donutApproved', start: 0, len: 0 },
+            { id: 'donutCompleted', start: 0, len: 0 },
+            { id: 'donutCancelled', start: 0, len: 0 }
+        ]
+    }
+};
+
+function computeDonutSlices(counts) {
+    const safeTotal = counts.total > 0 ? counts.total : 1;
+    const raw = [
+        { id: 'donutUnderReview', count: counts.underReview },
+        { id: 'donutApproved', count: counts.approved },
+        { id: 'donutCompleted', count: counts.completed },
+        { id: 'donutCancelled', count: counts.cancelled }
+    ];
+    let offset = 0;
+    return raw.map((item) => {
+        const len = counts.total > 0 ? (item.count / safeTotal) * DONUT_CIRCUMFERENCE : 0;
+        const slice = { id: item.id, start: offset, len };
+        offset += len;
+        return slice;
+    });
+}
+
+function setDonutCountsText(counts) {
+    const totalEl = document.getElementById('donutTotalInquiries');
+    if (totalEl) totalEl.textContent = Math.round(counts.total);
+    const lRev = document.getElementById('legendReviewCount');
+    if (lRev) lRev.textContent = Math.round(counts.underReview);
+    const lApp = document.getElementById('legendApprovedCount');
+    if (lApp) lApp.textContent = Math.round(counts.approved);
+    const lComp = document.getElementById('legendCompletedCount');
+    if (lComp) lComp.textContent = Math.round(counts.completed);
+    const lCanc = document.getElementById('legendCancelledCount');
+    if (lCanc) lCanc.textContent = Math.round(counts.cancelled);
+}
+
+function applyDonutSlicesStatic(slices) {
+    slices.forEach((slice) => {
+        const el = document.getElementById(slice.id);
+        if (!el) return;
+        el.setAttribute('stroke-dasharray', `${slice.len.toFixed(2)} ${DONUT_CIRCUMFERENCE.toFixed(2)}`);
+        el.setAttribute('stroke-dashoffset', `${(-slice.start).toFixed(2)}`);
+        el.setAttribute('stroke-opacity', slice.len > 0.05 ? '1' : '0');
+        el.removeAttribute('transform');
+    });
+}
+
+function runDonutRollAnimation(targetCounts) {
+    const svg = document.getElementById('inquiryDonutSvg');
+    if (svg) svg.classList.remove('is-donut-loading');
+
+    const targetSlices = computeDonutSlices(targetCounts);
+    inquiryDonutState.target = { ...targetCounts };
+
+    if (inquiryDonutState.rafId) {
+        cancelAnimationFrame(inquiryDonutState.rafId);
+        inquiryDonutState.rafId = null;
+    }
+
+    const prefersReducedMotion = typeof window.matchMedia === 'function'
+        && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    if (prefersReducedMotion || targetCounts.total === 0) {
+        setDonutCountsText(targetCounts);
+        applyDonutSlicesStatic(targetSlices);
+        inquiryDonutState.current = { ...targetCounts, slices: targetSlices };
+        if (targetCounts.total > 0) inquiryDonutState.hasAnimatedData = true;
+        return;
+    }
+
+    const isInitialRoll = !inquiryDonutState.hasAnimatedData;
+    const prev = inquiryDonutState.current;
+    const duration = isInitialRoll ? 1050 : 550;
+    const startAngle = -135;
+    const startTime = performance.now();
+
+    inquiryDonutState.hasAnimatedData = true;
+
+    const easeOutCubic = (t) => 1 - Math.pow(1 - t, 3);
+
+    const step = (now) => {
+        const rawProgress = Math.min(1, (now - startTime) / duration);
+        const eased = easeOutCubic(rawProgress);
+
+        if (isInitialRoll) {
+            // Rolling clockwise sweep + rotational roll-in on initial load
+            const sweepHead = eased * DONUT_CIRCUMFERENCE;
+            const rollDeg = startAngle * (1 - eased);
+
+            targetSlices.forEach((slice) => {
+                const el = document.getElementById(slice.id);
+                if (!el) return;
+                const visibleLen = Math.max(0, Math.min(slice.len, sweepHead - slice.start));
+                el.setAttribute('stroke-dasharray', `${visibleLen.toFixed(2)} ${DONUT_CIRCUMFERENCE.toFixed(2)}`);
+                el.setAttribute('stroke-dashoffset', `${(-slice.start).toFixed(2)}`);
+                el.setAttribute('stroke-opacity', visibleLen > 0.05 ? '1' : '0');
+                if (rawProgress < 1 && Math.abs(rollDeg) > 0.05) {
+                    el.setAttribute('transform', `rotate(${rollDeg.toFixed(2)} 80 80)`);
+                } else {
+                    el.removeAttribute('transform');
+                }
+            });
+
+            setDonutCountsText({
+                total: targetCounts.total * eased,
+                underReview: targetCounts.underReview * eased,
+                approved: targetCounts.approved * eased,
+                completed: targetCounts.completed * eased,
+                cancelled: targetCounts.cancelled * eased
+            });
+        } else {
+            // Smooth transition between status counts on live updates
+            targetSlices.forEach((slice, idx) => {
+                const el = document.getElementById(slice.id);
+                if (!el) return;
+                const from = prev.slices[idx] || { start: 0, len: 0 };
+                const curLen = from.len + (slice.len - from.len) * eased;
+                const curStart = from.start + (slice.start - from.start) * eased;
+                el.setAttribute('stroke-dasharray', `${Math.max(0, curLen).toFixed(2)} ${DONUT_CIRCUMFERENCE.toFixed(2)}`);
+                el.setAttribute('stroke-dashoffset', `${(-curStart).toFixed(2)}`);
+                el.setAttribute('stroke-opacity', curLen > 0.05 ? '1' : '0');
+                el.removeAttribute('transform');
+            });
+
+            setDonutCountsText({
+                total: prev.total + (targetCounts.total - prev.total) * eased,
+                underReview: prev.underReview + (targetCounts.underReview - prev.underReview) * eased,
+                approved: prev.approved + (targetCounts.approved - prev.approved) * eased,
+                completed: prev.completed + (targetCounts.completed - prev.completed) * eased,
+                cancelled: prev.cancelled + (targetCounts.cancelled - prev.cancelled) * eased
+            });
+        }
+
+        if (rawProgress < 1) {
+            inquiryDonutState.rafId = requestAnimationFrame(step);
+        } else {
+            inquiryDonutState.rafId = null;
+            setDonutCountsText(targetCounts);
+            applyDonutSlicesStatic(targetSlices);
+            inquiryDonutState.current = { ...targetCounts, slices: targetSlices };
+        }
+    };
+
+    inquiryDonutState.rafId = requestAnimationFrame(step);
+}
+
 function updateInquiryDonut(inquiries) {
     if (!Array.isArray(inquiries)) return;
 
@@ -513,36 +822,52 @@ function updateInquiryDonut(inquiries) {
         else underReview++;
     });
 
-    const total = inquiries.length;
-    const totalEl = document.getElementById('donutTotalInquiries');
-    if (totalEl) totalEl.textContent = total;
-
-    const lRev = document.getElementById('legendReviewCount');
-    if (lRev) lRev.textContent = underReview;
-    const lApp = document.getElementById('legendApprovedCount');
-    if (lApp) lApp.textContent = approved;
-    const lComp = document.getElementById('legendCompletedCount');
-    if (lComp) lComp.textContent = completed;
-    const lCanc = document.getElementById('legendCancelledCount');
-    if (lCanc) lCanc.textContent = cancelled;
-
-    const C = 377; // 2 * PI * 60
-    const safeTotal = total > 0 ? total : 1;
-
-    let offset = 0;
-    const setSlice = (id, count) => {
-        const el = document.getElementById(id);
-        if (!el) return;
-        const len = (count / safeTotal) * C;
-        el.setAttribute('stroke-dasharray', `${len} ${C}`);
-        el.setAttribute('stroke-dashoffset', `-${offset}`);
-        offset += len;
+    const nextCounts = {
+        underReview,
+        approved,
+        completed,
+        cancelled,
+        total: inquiries.length
     };
 
-    setSlice('donutUnderReview', underReview);
-    setSlice('donutApproved', approved);
-    setSlice('donutCompleted', completed);
-    setSlice('donutCancelled', cancelled);
+    // Skip re-animating during background polling or duplicate load calls when counts match
+    const active = inquiryDonutState.target || inquiryDonutState.current;
+    if (
+        inquiryDonutState.hasAnimatedData
+        && active.total === nextCounts.total
+        && active.underReview === nextCounts.underReview
+        && active.approved === nextCounts.approved
+        && active.completed === nextCounts.completed
+        && active.cancelled === nextCounts.cancelled
+    ) {
+        return;
+    }
+
+    const svg = document.getElementById('inquiryDonutSvg');
+    if (svg && !inquiryDonutState.hasAnimatedData && nextCounts.total > 0 && typeof IntersectionObserver === 'function') {
+        const rect = svg.getBoundingClientRect();
+        const inViewport = rect.width > 0 && rect.height > 0 && rect.top < window.innerHeight && rect.bottom > 0;
+        if (!inViewport) {
+            inquiryDonutState.pendingCounts = nextCounts;
+            if (!inquiryDonutState.observer) {
+                inquiryDonutState.observer = new IntersectionObserver((entries) => {
+                    if (entries.some((entry) => entry.isIntersecting)) {
+                        if (inquiryDonutState.observer) {
+                            inquiryDonutState.observer.disconnect();
+                            inquiryDonutState.observer = null;
+                        }
+                        const pending = inquiryDonutState.pendingCounts;
+                        inquiryDonutState.pendingCounts = null;
+                        if (pending) runDonutRollAnimation(pending);
+                    }
+                }, { threshold: 0.25 });
+                inquiryDonutState.observer.observe(svg);
+            }
+            return;
+        }
+    }
+
+    runDonutRollAnimation(nextCounts);
 }
 
 /* INQUIRY TABLE */
