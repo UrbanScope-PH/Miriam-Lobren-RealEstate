@@ -24,7 +24,9 @@ SECURITY DEFINER
 SET search_path = pg_catalog, public, auth
 AS $$
 BEGIN
-    IF session_user NOT IN ('postgres', 'supabase_admin') AND COALESCE(auth.role(), '') <> 'service_role' THEN
+    IF NOT pg_has_role(session_user, 'postgres', 'MEMBER')
+       AND session_user NOT IN ('postgres', 'supabase_admin')
+       AND COALESCE(auth.role(), '') <> 'service_role' THEN
         IF TG_OP = 'INSERT' THEN
             NEW.role := 'client';
             NEW.email_verified_at := NULL;
