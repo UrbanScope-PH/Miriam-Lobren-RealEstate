@@ -588,7 +588,7 @@ window.addEventListener('DOMContentLoaded', () => {
     const urlParams = new URLSearchParams(window.location.search);
     const propId = urlParams.get('id');
     if (propId) {
-        window.setTimeout(() => document.documentElement.classList.remove('detail-hydrating'), 600);
+        window.setTimeout(() => document.documentElement.classList.remove('detail-hydrating'), 4500);
         loadPropertyFromDb();
     } else {
         document.documentElement.classList.remove('detail-hydrating');

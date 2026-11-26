@@ -14,6 +14,7 @@
     <link rel="stylesheet" href="properties.css">
     <link rel="stylesheet" href="proplist.css">
     <link rel="stylesheet" href="../../shared/css/mobile-shell.css">
+    <script src="../../shared/js/skeleton.js"></script>
     <script src="../../shared/js/supabase.js"></script>
 </head>
 
@@ -213,10 +214,25 @@
             <div class="card-header proplist-card-header">
                 <div class="proplist-header-left">
                     <h3>Property Listings</h3>
-                    <span class="proplist-count-badge" id="propListCountBadge">Loading...</span>
+                    <span class="proplist-count-badge" id="propListCountBadge"><span class="sk sk-badge-inline" aria-hidden="true"></span></span>
                 </div>
             </div>
-            <div class="mobile-cards-list" id="propertiesMobileList" aria-label="Property listings mobile view"></div>
+            <div class="mobile-cards-list" id="propertiesMobileList" aria-label="Property listings mobile view">
+                <div class="sk-mobile-card" aria-hidden="true">
+                    <div class="sk-mobile-card-head">
+                        <div class="sk-cell-media" style="flex:1"><span class="sk sk-cell-thumb"></span><div class="sk-cell-stack"><span class="sk sk-line sk-md" style="width:72%"></span><span class="sk sk-line sk-xs" style="width:52%"></span></div></div>
+                        <span class="sk sk-pill" style="width:76px;height:24px"></span>
+                    </div>
+                    <span class="sk sk-line sk-sm" style="width:86%"></span>
+                </div>
+                <div class="sk-mobile-card" aria-hidden="true">
+                    <div class="sk-mobile-card-head">
+                        <div class="sk-cell-media" style="flex:1"><span class="sk sk-cell-thumb"></span><div class="sk-cell-stack"><span class="sk sk-line sk-md" style="width:66%"></span><span class="sk sk-line sk-xs" style="width:46%"></span></div></div>
+                        <span class="sk sk-pill" style="width:76px;height:24px"></span>
+                    </div>
+                    <span class="sk sk-line sk-sm" style="width:78%"></span>
+                </div>
+            </div>
             <div class="table-container">
                 <table class="data-table" id="propertiesTable">
                     <thead>
@@ -230,9 +246,10 @@
                         </tr>
                     </thead>
                     <tbody id="propertyTableBody">
-                        <tr>
-                            <td colspan="6" style="text-align: center; padding: 24px; color: var(--text-muted);">Loading listings...</td>
-                        </tr>
+                        <tr class="sk-table-row" aria-hidden="true"><td><div class="sk-cell-media"><span class="sk sk-cell-thumb"></span><div class="sk-cell-stack"><span class="sk sk-line sk-md" style="width:74%"></span><span class="sk sk-line sk-xs" style="width:54%"></span></div></div></td><td><span class="sk sk-line sk-sm" style="width:76%"></span></td><td><span class="sk sk-pill" style="width:88px;height:24px"></span></td><td><span class="sk sk-line sk-md" style="width:78px"></span></td><td><span class="sk sk-pill" style="width:82px;height:24px"></span></td><td><div class="sk-cell-actions"><span class="sk sk-btn" style="width:94px;height:32px"></span></div></td></tr>
+                        <tr class="sk-table-row" aria-hidden="true"><td><div class="sk-cell-media"><span class="sk sk-cell-thumb"></span><div class="sk-cell-stack"><span class="sk sk-line sk-md" style="width:64%"></span><span class="sk sk-line sk-xs" style="width:48%"></span></div></div></td><td><span class="sk sk-line sk-sm" style="width:68%"></span></td><td><span class="sk sk-pill" style="width:84px;height:24px"></span></td><td><span class="sk sk-line sk-md" style="width:74px"></span></td><td><span class="sk sk-pill" style="width:80px;height:24px"></span></td><td><div class="sk-cell-actions"><span class="sk sk-btn" style="width:94px;height:32px"></span></div></td></tr>
+                        <tr class="sk-table-row" aria-hidden="true"><td><div class="sk-cell-media"><span class="sk sk-cell-thumb"></span><div class="sk-cell-stack"><span class="sk sk-line sk-md" style="width:80%"></span><span class="sk sk-line sk-xs" style="width:58%"></span></div></div></td><td><span class="sk sk-line sk-sm" style="width:82%"></span></td><td><span class="sk sk-pill" style="width:92px;height:24px"></span></td><td><span class="sk sk-line sk-md" style="width:82px"></span></td><td><span class="sk sk-pill" style="width:82px;height:24px"></span></td><td><div class="sk-cell-actions"><span class="sk sk-btn" style="width:94px;height:32px"></span></div></td></tr>
+                        <tr class="sk-table-row" aria-hidden="true"><td><div class="sk-cell-media"><span class="sk sk-cell-thumb"></span><div class="sk-cell-stack"><span class="sk sk-line sk-md" style="width:70%"></span><span class="sk sk-line sk-xs" style="width:50%"></span></div></div></td><td><span class="sk sk-line sk-sm" style="width:72%"></span></td><td><span class="sk sk-pill" style="width:86px;height:24px"></span></td><td><span class="sk sk-line sk-md" style="width:76px"></span></td><td><span class="sk sk-pill" style="width:78px;height:24px"></span></td><td><div class="sk-cell-actions"><span class="sk sk-btn" style="width:94px;height:32px"></span></div></td></tr>
                     </tbody>
                 </table>
             </div>

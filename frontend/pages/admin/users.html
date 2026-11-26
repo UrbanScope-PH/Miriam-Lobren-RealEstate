@@ -14,6 +14,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="users.css">
     <link rel="stylesheet" href="../../shared/css/mobile-shell.css">
+    <script src="../../shared/js/skeleton.js"></script>
     <script src="../../shared/js/supabase.js"></script>
 </head>
 <body class="admin-body">
@@ -200,7 +201,22 @@
 
         <!-- USERS TABLE -->
         <div class="sa-table-container users-card">
-            <div class="mobile-cards-list" id="usersMobileList" aria-label="User accounts mobile list"></div>
+            <div class="mobile-cards-list" id="usersMobileList" aria-label="User accounts mobile list">
+                <div class="sk-mobile-card" aria-hidden="true">
+                    <div class="sk-mobile-card-head">
+                        <div class="sk-cell-media" style="flex:1"><span class="sk sk-cell-avatar"></span><div class="sk-cell-stack"><span class="sk sk-line sk-md" style="width:72%"></span><span class="sk sk-line sk-xs" style="width:54%"></span></div></div>
+                        <span class="sk sk-pill" style="width:72px;height:24px"></span>
+                    </div>
+                    <span class="sk sk-line sk-sm" style="width:68%"></span>
+                </div>
+                <div class="sk-mobile-card" aria-hidden="true">
+                    <div class="sk-mobile-card-head">
+                        <div class="sk-cell-media" style="flex:1"><span class="sk sk-cell-avatar"></span><div class="sk-cell-stack"><span class="sk sk-line sk-md" style="width:64%"></span><span class="sk sk-line sk-xs" style="width:48%"></span></div></div>
+                        <span class="sk sk-pill" style="width:72px;height:24px"></span>
+                    </div>
+                    <span class="sk sk-line sk-sm" style="width:62%"></span>
+                </div>
+            </div>
             <div class="table-container">
                 <table class="sa-table" id="usersTable">
                     <thead>
@@ -214,9 +230,10 @@
                         </tr>
                     </thead>
                     <tbody id="usersTableBody">
-                        <tr>
-                            <td colspan="6" class="text-center py-4">Loading user records from database...</td>
-                        </tr>
+                        <tr class="sk-table-row" aria-hidden="true"><td><span class="sk sk-line sk-sm" style="width:42px"></span></td><td><div class="sk-cell-media"><span class="sk sk-cell-avatar"></span><div class="sk-cell-stack"><span class="sk sk-line sk-md" style="width:72%"></span><span class="sk sk-line sk-xs" style="width:54%"></span></div></div></td><td><span class="sk sk-line sk-sm" style="width:108px"></span></td><td><span class="sk sk-pill" style="width:78px;height:24px"></span></td><td><span class="sk sk-line sk-sm" style="width:88px"></span></td><td><div class="sk-cell-actions"><span class="sk sk-btn" style="width:66px;height:30px"></span><span class="sk sk-btn" style="width:66px;height:30px"></span></div></td></tr>
+                        <tr class="sk-table-row" aria-hidden="true"><td><span class="sk sk-line sk-sm" style="width:42px"></span></td><td><div class="sk-cell-media"><span class="sk sk-cell-avatar"></span><div class="sk-cell-stack"><span class="sk sk-line sk-md" style="width:64%"></span><span class="sk sk-line sk-xs" style="width:48%"></span></div></div></td><td><span class="sk sk-line sk-sm" style="width:108px"></span></td><td><span class="sk sk-pill" style="width:78px;height:24px"></span></td><td><span class="sk sk-line sk-sm" style="width:88px"></span></td><td><div class="sk-cell-actions"><span class="sk sk-btn" style="width:66px;height:30px"></span><span class="sk sk-btn" style="width:66px;height:30px"></span></div></td></tr>
+                        <tr class="sk-table-row" aria-hidden="true"><td><span class="sk sk-line sk-sm" style="width:42px"></span></td><td><div class="sk-cell-media"><span class="sk sk-cell-avatar"></span><div class="sk-cell-stack"><span class="sk sk-line sk-md" style="width:78%"></span><span class="sk sk-line sk-xs" style="width:58%"></span></div></div></td><td><span class="sk sk-line sk-sm" style="width:108px"></span></td><td><span class="sk sk-pill" style="width:78px;height:24px"></span></td><td><span class="sk sk-line sk-sm" style="width:88px"></span></td><td><div class="sk-cell-actions"><span class="sk sk-btn" style="width:66px;height:30px"></span><span class="sk sk-btn" style="width:66px;height:30px"></span></div></td></tr>
+                        <tr class="sk-table-row" aria-hidden="true"><td><span class="sk sk-line sk-sm" style="width:42px"></span></td><td><div class="sk-cell-media"><span class="sk sk-cell-avatar"></span><div class="sk-cell-stack"><span class="sk sk-line sk-md" style="width:68%"></span><span class="sk sk-line sk-xs" style="width:50%"></span></div></div></td><td><span class="sk sk-line sk-sm" style="width:108px"></span></td><td><span class="sk sk-pill" style="width:78px;height:24px"></span></td><td><span class="sk sk-line sk-sm" style="width:88px"></span></td><td><div class="sk-cell-actions"><span class="sk sk-btn" style="width:66px;height:30px"></span><span class="sk sk-btn" style="width:66px;height:30px"></span></div></td></tr>
                     </tbody>
                 </table>
             </div>

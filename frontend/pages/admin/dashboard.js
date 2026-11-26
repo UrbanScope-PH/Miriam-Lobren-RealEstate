@@ -506,12 +506,15 @@ function renderAgenda() {
     });
 
     if (!calendarAppointmentsLoaded) {
-        calendarAgenda.innerHTML = `
-            <div class="agenda-empty">
-                <strong>Loading scheduled viewings</strong>
-                <p>Checking appointment records for this date.</p>
-            </div>
-        `;
+        calendarAgenda.innerHTML = (window.UrbanSkeleton && typeof window.UrbanSkeleton.agendaCard === "function")
+            ? window.UrbanSkeleton.agendaCard()
+            : `
+                <div class="sk-agenda-card" aria-hidden="true">
+                    <span class="sk sk-line sk-xs" style="width:36%"></span>
+                    <span class="sk sk-line sk-md" style="width:86%"></span>
+                    <span class="sk sk-line sk-sm" style="width:62%"></span>
+                </div>
+            `;
 
         return;
     }
@@ -865,6 +868,28 @@ function updateInquiryDonut(inquiries) {
             }
             return;
         }
+    }
+
+    if (
+        !inquiryDonutState.hasAnimatedData
+        && nextCounts.total > 0
+        && document.getElementById('usPageSkeleton')
+        && window.UrbanSkeleton
+        && typeof window.UrbanSkeleton.whenDone === 'function'
+    ) {
+        inquiryDonutState.pendingCounts = nextCounts;
+        if (!inquiryDonutState.waitingForSkeleton) {
+            inquiryDonutState.waitingForSkeleton = true;
+            window.UrbanSkeleton.whenDone(() => {
+                inquiryDonutState.waitingForSkeleton = false;
+                const pending = inquiryDonutState.pendingCounts;
+                inquiryDonutState.pendingCounts = null;
+                if (pending && !inquiryDonutState.hasAnimatedData) {
+                    runDonutRollAnimation(pending);
+                }
+            });
+        }
+        return;
     }
 
     runDonutRollAnimation(nextCounts);

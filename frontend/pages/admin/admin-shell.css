@@ -2251,15 +2251,11 @@ html.dark-mode .status-pill.status-review {
     font-style: normal !important;
 }
 
-/* Static Loading Skeleton for Admin (Rule 19) */
+/* Shimmer Loading Skeleton for Admin (Rule 19 — animated via skeleton.css) */
 .admin-table-skeleton-row {
     height: 48px;
-    background: var(--border-subtle);
     border-radius: 6px;
     margin: 8px 0;
-}
-html.dark-mode .admin-table-skeleton-row {
-    background: var(--surface-hover);
 }
 
 /* ============================================================

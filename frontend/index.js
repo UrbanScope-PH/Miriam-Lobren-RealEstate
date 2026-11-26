@@ -711,7 +711,15 @@ async function loadHomeProperties(category = 'all', options = {}) {
 
     // 1. Instant 0ms synchronous hydration from local browser cache (+ canonical defaults)
     if (!allCachedProperties || allCachedProperties.length === 0 || options.fromSyncEvent) {
-        applyHomePropertiesState(getInitialCachedHomeProperties());
+        const cachedInitial = getInitialCachedHomeProperties();
+        if (cachedInitial && cachedInitial.length > 0) {
+            applyHomePropertiesState(cachedInitial);
+        } else {
+            const grid = document.getElementById('propertyGrid');
+            if (grid && window.UrbanSkeleton) {
+                grid.innerHTML = window.UrbanSkeleton.propertyCards(4);
+            }
+        }
     } else {
         applyCurrentFiltersAndRender();
     }

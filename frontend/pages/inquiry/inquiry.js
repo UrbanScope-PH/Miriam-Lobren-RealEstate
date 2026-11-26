@@ -347,6 +347,13 @@ function onPropertySelectionChange() {
 }
 
 async function loadPropertiesCatalog() {
+    const previewSkeleton = document.getElementById('inquiryPropPreviewSkeleton');
+    const summaryBox = document.getElementById('propertySummaryBox');
+    if (previewSkeleton && summaryBox) {
+        previewSkeleton.hidden = false;
+        summaryBox.style.display = 'none';
+    }
+
     try {
         if (typeof apiGetProperties === 'function') {
             const list = await apiGetProperties();
@@ -356,6 +363,11 @@ async function loadPropertiesCatalog() {
         }
     } catch (err) {
         console.warn('Error fetching live properties catalog:', err);
+    } finally {
+        if (previewSkeleton) previewSkeleton.hidden = true;
+        if (summaryBox && summaryBox.style.display === 'none') {
+            summaryBox.style.display = '';
+        }
     }
 
     // Fallback if needed

@@ -160,53 +160,57 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 
     async function loadProperty() {
+        const editFormEl = document.querySelector("form");
+        if (editFormEl) editFormEl.classList.add("us-form-loading");
         if (currentImageContainer) {
-            currentImageContainer.replaceChildren();
-            const loading = document.createElement("div");
-            loading.className = "image-placeholder";
-            loading.textContent = "Loading current property details...";
-            currentImageContainer.appendChild(loading);
+            currentImageContainer.innerHTML = (window.UrbanSkeleton && typeof window.UrbanSkeleton.galleryPlaceholders === "function")
+                ? window.UrbanSkeleton.galleryPlaceholders(3)
+                : `<div class="sk-gallery-grid" aria-hidden="true"><span class="sk sk-gallery-tile"></span><span class="sk sk-gallery-tile"></span><span class="sk sk-gallery-tile"></span></div>`;
         }
 
         let data = null;
-        if (typeof apiGetPropertyById === "function") {
-            try {
-                data = await apiGetPropertyById(propertyId);
-            } catch (err) {
-                console.warn("Could not fetch property by ID:", err);
+        try {
+            if (typeof apiGetPropertyById === "function") {
+                try {
+                    data = await apiGetPropertyById(propertyId);
+                } catch (err) {
+                    console.warn("Could not fetch property by ID:", err);
+                }
             }
-        }
 
-        if (!data) {
-            // Check fallback from localStorage cache
-            try {
-                const list = JSON.parse(localStorage.getItem("properties") || "[]")
-                    .concat(JSON.parse(localStorage.getItem("urbanScopeProperties") || "[]"));
-                data = list.find((p) => String(p.id) === String(propertyId));
-            } catch (e) {}
-        }
-
-        if (!data) {
-            if (typeof window.showFeedbackToast === 'function') {
-                window.showFeedbackToast("The selected property was not found.", "error");
+            if (!data) {
+                // Check fallback from localStorage cache
+                try {
+                    const list = JSON.parse(localStorage.getItem("properties") || "[]")
+                        .concat(JSON.parse(localStorage.getItem("urbanScopeProperties") || "[]"));
+                    data = list.find((p) => String(p.id) === String(propertyId));
+                } catch (e) {}
             }
-            window.location.href = "propertylist.html";
-            return;
+
+            if (!data) {
+                if (typeof window.showFeedbackToast === 'function') {
+                    window.showFeedbackToast("The selected property was not found.", "error");
+                }
+                window.location.href = "propertylist.html";
+                return;
+            }
+
+            currentProperty = data;
+
+            setFieldValue("property-name", data.title || data.propertyName || data.name);
+            setFieldValue("location", data.location || data.address);
+            setFieldValue("property-type", normalizeType(data.property_type || data.propertyType));
+            setFieldValue("price", data.price);
+            setFieldValue("status", normalizeStatus(data.status));
+            setFieldValue("lot-area", data.lot_area || data.lotArea);
+            setFieldValue("floor-area", data.floor_area || data.floorArea);
+            setFieldValue("description", data.description);
+
+            currentImageUrl = data.image_url || "";
+            renderCurrentImages(currentImageUrl);
+        } finally {
+            if (editFormEl) editFormEl.classList.remove("us-form-loading");
         }
-
-        currentProperty = data;
-
-        setFieldValue("property-name", data.title || data.propertyName || data.name);
-        setFieldValue("location", data.location || data.address);
-        setFieldValue("property-type", normalizeType(data.property_type || data.propertyType));
-        setFieldValue("price", data.price);
-        setFieldValue("status", normalizeStatus(data.status));
-        setFieldValue("lot-area", data.lot_area || data.lotArea);
-        setFieldValue("floor-area", data.floor_area || data.floorArea);
-        setFieldValue("description", data.description);
-
-        currentImageUrl = data.image_url || "";
-        renderCurrentImages(currentImageUrl);
     }
 
     async function readImageFileAsDataUrl(file) {
