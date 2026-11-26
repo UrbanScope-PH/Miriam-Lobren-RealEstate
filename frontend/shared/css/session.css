@@ -518,151 +518,151 @@ html.auth-checking body {
 @media (max-width: 768px) {
     .theme-toggle-btn,
     .client-notif-btn {
-        width: 36px;
-        height: 36px;
+        width: 38px;
+        height: 38px;
     }
 
     .theme-icon-wrap {
-        width: 18px;
-        height: 18px;
+        width: 20px;
+        height: 20px;
     }
 
     .client-notif-badge {
         top: -2px;
         right: -2px;
-        min-width: 16px;
-        height: 16px;
+        min-width: 17px;
+        height: 17px;
         padding: 0 4px;
-        font-size: 10px;
+        font-size: 10.5px;
         border-width: 1.5px;
     }
 
     .profile-avatar {
-        width: 30px;
-        height: 30px;
-        font-size: 0.72rem;
+        width: 36px;
+        height: 36px;
+        font-size: 0.78rem;
     }
 
     .profile-dropdown {
-        top: calc(56px + env(safe-area-inset-top, 0px) + 6px);
+        top: calc(58px + env(safe-area-inset-top, 0px) + 6px);
         right: 12px;
-        border-radius: 12px;
-        padding: 6px;
-        min-width: 220px;
+        border-radius: 14px;
+        padding: 8px;
+        min-width: 228px;
         max-width: calc(100vw - 24px);
-        max-height: calc(100dvh - 72px);
+        max-height: calc(100dvh - 76px);
         overflow-y: auto;
         overscroll-behavior: contain;
     }
 
     .profile-dropdown-head {
         gap: 10px;
-        padding: 8px 10px 10px;
+        padding: 10px 10px 12px;
         margin-bottom: 4px;
     }
 
     .profile-dropdown-head .profile-avatar {
-        width: 34px;
-        height: 34px;
-        font-size: 0.76rem;
+        width: 38px;
+        height: 38px;
+        font-size: 0.84rem;
     }
 
     .profile-dropdown-head strong {
-        font-size: 13.5px;
+        font-size: 14.5px;
     }
 
     .profile-dropdown-head small {
-        font-size: 11.5px;
+        font-size: 12px;
     }
 
     .profile-dropdown a,
     .profile-dropdown button {
-        gap: 8px;
-        min-height: 36px;
-        padding: 7px 10px;
-        border-radius: 8px;
-        font-size: 13px;
+        gap: 10px;
+        min-height: 40px;
+        padding: 8px 12px;
+        border-radius: 10px;
+        font-size: 13.5px;
     }
 
     .profile-dropdown-divider {
-        margin: 4px 6px;
+        margin: 5px 6px;
     }
 
     .client-notif-dropdown {
-        top: calc(56px + env(safe-area-inset-top, 0px) + 6px);
+        top: calc(58px + env(safe-area-inset-top, 0px) + 6px);
         right: 12px;
-        border-radius: 12px;
-        width: min(310px, calc(100vw - 24px));
+        border-radius: 14px;
+        width: min(326px, calc(100vw - 24px));
         max-width: calc(100vw - 24px);
     }
 
     .client-notif-head {
-        padding: 10px 12px;
+        padding: 12px 14px;
     }
 
     .client-notif-head strong {
-        font-size: 13.5px;
+        font-size: 14.5px;
     }
 
     .client-notif-view-all {
-        font-size: 12px;
+        font-size: 12.5px;
     }
 
     .client-notif-list {
-        max-height: min(280px, 50dvh);
+        max-height: min(300px, 52dvh);
     }
 
     .client-notif-item {
         gap: 10px;
-        padding: 10px 12px;
+        padding: 12px 14px;
     }
 
     .client-notif-icon {
-        width: 30px;
-        height: 30px;
-        font-size: 12px;
+        width: 34px;
+        height: 34px;
+        font-size: 13px;
     }
 
     .client-notif-body strong {
-        font-size: 12.5px;
+        font-size: 13.5px;
     }
 
     .client-notif-body p {
-        font-size: 12px;
-        line-height: 1.4;
-        margin: 0 0 2px;
+        font-size: 12.5px;
+        line-height: 1.45;
+        margin: 0 0 3px;
     }
 
     .client-notif-time {
-        font-size: 11px;
+        font-size: 11.5px;
     }
 
     .client-notif-empty {
-        padding: 20px 14px;
-        font-size: 12.5px;
+        padding: 24px 16px;
+        font-size: 13.5px;
     }
 
     .client-approval-toast {
-        bottom: calc(14px + env(safe-area-inset-bottom, 0px));
+        bottom: calc(16px + env(safe-area-inset-bottom, 0px));
         right: 12px;
         left: 12px;
         max-width: none;
-        padding: 10px 12px;
-        border-radius: 12px;
+        padding: 12px 14px;
+        border-radius: 14px;
         gap: 10px;
     }
 
     .client-approval-toast-icon {
-        width: 30px;
-        height: 30px;
+        width: 32px;
+        height: 32px;
     }
 
     .client-approval-toast-content strong {
-        font-size: 13px;
+        font-size: 13.5px;
     }
 
     .client-approval-toast-content span {
-        font-size: 12px;
+        font-size: 12.5px;
     }
 }
 
@@ -678,30 +678,30 @@ html.auth-checking body {
     }
 
     .profile-dropdown {
-        min-width: 220px;
+        min-width: 228px;
         max-width: calc(100vw - 24px);
         right: 0;
     }
 
     .client-notif-dropdown {
-        width: min(310px, calc(100vw - 24px));
+        width: min(326px, calc(100vw - 24px));
     }
 }
 
 @media (max-width: 480px) {
     .theme-toggle-btn,
     .client-notif-btn {
-        width: 34px;
-        height: 34px;
+        width: 36px;
+        height: 36px;
     }
 
     .profile-dropdown,
     .client-notif-dropdown {
         position: fixed;
-        top: calc(54px + env(safe-area-inset-top, 0px) + 6px);
+        top: calc(56px + env(safe-area-inset-top, 0px) + 6px);
         right: 12px;
         left: auto;
-        width: min(300px, calc(100vw - 24px));
+        width: min(312px, calc(100vw - 24px));
         min-width: 0;
     }
 }
@@ -1192,16 +1192,16 @@ html[data-theme="dark"] .s-icon-btn {
 @media (max-width: 768px) {
     html.dark-mode .s-icon-btn,
     html[data-theme="dark"] .s-icon-btn {
-        width: 36px;
-        height: 36px;
+        width: 38px;
+        height: 38px;
     }
 }
 
 @media (max-width: 480px) {
     html.dark-mode .s-icon-btn,
     html[data-theme="dark"] .s-icon-btn {
-        width: 34px;
-        height: 34px;
+        width: 36px;
+        height: 36px;
     }
 }
 
@@ -1929,38 +1929,49 @@ html.dark-mode .contact-fab.fab-wiggle .fab-main-btn {
 }
 
 @media (max-width: 768px) {
+    .contact-fab {
+        bottom: max(16px, env(safe-area-inset-bottom, 0px));
+        right: max(16px, env(safe-area-inset-right, 0px));
+    }
+
     body.has-contact-fab .client-approval-toast,
     body.has-contact-fab .toast-notice {
-        bottom: calc(64px + env(safe-area-inset-bottom, 0px)) !important;
+        bottom: calc(80px + env(safe-area-inset-bottom, 0px)) !important;
     }
 
     .fab-main-btn {
-        width: 40px;
-        height: 40px;
+        width: 52px;
+        height: 52px;
     }
 
     .fab-main-btn svg {
-        width: 20px;
-        height: 20px;
+        width: 24px;
+        height: 24px;
     }
 
     .fab-action-btn {
-        min-height: 34px;
-        padding: 6px 11px;
-        font-size: 12.5px;
-        gap: 8px;
+        min-height: 40px;
+        padding: 8px 14px;
+        font-size: 13.5px;
+        gap: 9px;
+    }
+
+    .fab-action-btn svg {
+        width: 18px;
+        height: 18px;
+        flex-shrink: 0;
     }
 }
 
 @media (max-width: 480px) {
     .fab-main-btn {
-        width: 38px;
-        height: 38px;
+        width: 50px;
+        height: 50px;
     }
 
     .fab-main-btn svg {
-        width: 18px;
-        height: 18px;
+        width: 24px;
+        height: 24px;
     }
 }
 
