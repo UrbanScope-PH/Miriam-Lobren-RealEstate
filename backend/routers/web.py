@@ -10,10 +10,8 @@ from fastapi.responses import FileResponse, JSONResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 
 from backend.auth import (
-    AUTHORIZED_ADMIN_EMAILS,
-    AUTHORIZED_ADMIN_ROLES,
-    AUTHORIZED_SUPERADMIN_EMAILS,
     get_current_user_from_request,
+    is_main_admin_email,
 )
 
 ROOT_DIR = Path(__file__).resolve().parent.parent.parent
@@ -102,11 +100,8 @@ for _section in ["properties", "inquiry", "auth", "admin"]:
 def serve_home(request: Request):
     """Serves root landing page index.html (redirects authenticated admin to dashboard)."""
     user = get_current_user_from_request(request)
-    if user:
-        role = user.get("role", "")
-        email = (user.get("email") or "").lower().strip()
-        if role in AUTHORIZED_ADMIN_ROLES or email in AUTHORIZED_ADMIN_EMAILS or email in AUTHORIZED_SUPERADMIN_EMAILS:
-            return RedirectResponse(url="/pages/admin/dashboard.html", status_code=status.HTTP_302_FOUND)
+    if user and is_main_admin_email(user.get("email")):
+        return RedirectResponse(url="/pages/admin/dashboard.html", status_code=status.HTTP_302_FOUND)
     return FileResponse(str(FRONTEND_DIR / "index.html"))
 
 
@@ -114,11 +109,8 @@ def serve_home(request: Request):
 def serve_index(request: Request):
     """Serves index.html (redirects authenticated admin to dashboard)."""
     user = get_current_user_from_request(request)
-    if user:
-        role = user.get("role", "")
-        email = (user.get("email") or "").lower().strip()
-        if role in AUTHORIZED_ADMIN_ROLES or email in AUTHORIZED_ADMIN_EMAILS or email in AUTHORIZED_SUPERADMIN_EMAILS:
-            return RedirectResponse(url="/pages/admin/dashboard.html", status_code=status.HTTP_302_FOUND)
+    if user and is_main_admin_email(user.get("email")):
+        return RedirectResponse(url="/pages/admin/dashboard.html", status_code=status.HTTP_302_FOUND)
     return FileResponse(str(FRONTEND_DIR / "index.html"))
 
 

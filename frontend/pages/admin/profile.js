@@ -465,7 +465,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             const customAvatarNow = localStorage.getItem('urbanscope_profile_avatar');
             const avatarToPersist = customAvatarNow || (isCustomAvatar(storedAdmin.avatar_url) ? storedAdmin.avatar_url : 'assets/images/agent.jpg');
-            const prevEmail = (storedAdmin.email || savedProfile.email || currentProfile.email || 'admin.realestate@gmail.com').trim().toLowerCase();
+            const prevEmail = (storedAdmin.email || savedProfile.email || currentProfile.email || 'miriamalobren@gmail.com').trim().toLowerCase();
 
             const updatedData = {
                 name: newName,

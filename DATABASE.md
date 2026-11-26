@@ -102,7 +102,7 @@ Client and admin accounts.
 | `password_hash` | TEXT | NOT NULL | Format `"<salt_hex>$<pbkdf2_hex>"` — see §6 |
 | `full_name` | TEXT | NOT NULL | |
 | `phone` | TEXT | — | Free-form; frontend validates PH formats (`+639…` / `09…`) |
-| `role` | TEXT | `CHECK(role IN ('user', 'admin', 'superadmin')) DEFAULT 'user'` | Initial role assigned on insert via trigger `trg_user_role_insert` (`urbanscope.cvsu@gmail.com` → `'superadmin'`, `miriamalobren@gmail.com` / `admin.realestate@gmail.com` → `'admin'`, others → `'user'`). Trigger `trg_user_role_update` preserves `OLD.role` on email changes. Superadmins modify roles via `PUT /api/superadmin/users/{id}`. |
+| `role` | TEXT | `CHECK(role IN ('user', 'admin', 'superadmin')) DEFAULT 'user'` | Single-admin RBAC policy: only `miriamalobren@gmail.com` receives `'admin'` via `trg_user_role_insert` / `trg_user_role_update`; all other accounts receive `'user'` (or `'client'` in Postgres). Role promotion/demotion endpoints reject modifications (`400`/`403`). |
 | `avatar_url` | TEXT | `DEFAULT 'assets/images/agent.jpg'` | Profile picture image path, Google avatar URL, or data URL (max client upload size: 5MB) |
 | `google_id` | TEXT | Partial `UNIQUE` (`idx_users_google_id`) | Google OpenID `sub` identifier linked on Google Sign-In (*added by non-destructive migration*) |
 | `license_number` | TEXT | `DEFAULT ''` | Professional real estate broker / agent PRC registration identifier |
@@ -276,7 +276,7 @@ Defined in [`backend/auth.py`](backend/auth.py).
 - **Mail delivery configuration:** Set `RESEND_API_KEY`, a verified `RESEND_FROM_EMAIL` (e.g., `UrbanScope <noreply@miriamlobren.site>`), and private `AUTH_OTP_SECRET` (at least 32 characters). Vercel also needs server-only `SUPABASE_SERVICE_ROLE_KEY`. Apply the migrations before deploying Vercel OTP/API functions; never expose server secrets in frontend code.
 - **JWT:** HS256, 7-day expiry, payload `{ sub: "<user id>", email, role, exp, iat }`.
   Secret from env var `URBANSCOPE_SECRET_KEY` (required in production; local development generates a persistent random key under git-ignored `backend/.urbanscope_dev_secret`).
-- **Vercel Admin Page Session & API Proxy:** Since Vercel serves the frontend statically, root Routing Middleware (`proxy.js`) verifies a signed `HttpOnly`, `Secure`, `SameSite=Lax` cookie before returning Admin/Superadmin HTML. User login/profile sessions (`api/session.js`) and privileged admin routes (`api/auth/edge-session.js`, `api/inquiries.js`, `api/properties.js`, `api/superadmin/users.js`) use signed `HttpOnly` cookies, CSRF double-submit tokens (`X-CSRF-Token` matching `urbanscope_csrf` cookie), and server-only `SUPABASE_SERVICE_ROLE_KEY`. Configure `VERCEL_ADMIN_SESSION_SECRET` (minimum 32 characters) in Vercel Project Settings before deployment. Admin staff can access Admin; only `urbanscope.cvsu@gmail.com` can access Superadmin.
+- **Vercel Admin Page Session & API Proxy:** Since Vercel serves the frontend statically, root Routing Middleware (`proxy.js`) verifies a signed `HttpOnly`, `Secure`, `SameSite=Lax` cookie before returning Admin HTML. User login/profile sessions (`api/session.js`) and privileged admin routes (`api/auth/edge-session.js`, `api/inquiries.js`, `api/properties.js`, `api/superadmin/users.js`) use signed `HttpOnly` cookies, CSRF double-submit tokens (`X-CSRF-Token` matching `urbanscope_csrf` cookie), and server-only `SUPABASE_SERVICE_ROLE_KEY`. Configure `VERCEL_ADMIN_SESSION_SECRET` (minimum 32 characters) in Vercel Project Settings before deployment. Admin & Account Management access is restricted exclusively to `miriamalobren@gmail.com`.
 - **Client storage:** Non-sensitive display cache and preference keys only (`urbanscope_user`, `urbanscope_admin_profile`, `adminUser`, plus `file:`-only `urbanscope_demo_user`). Plaintext password keys and legacy `urbanscope_jwt_token` fallbacks are never stored on client storage.
 
 ---
@@ -289,9 +289,7 @@ Seeding happens inside `init_db()` **only when the table is empty** or missing i
 
 | Email | Role | Password Provisioning | Name |
 | :--- | :--- | :--- | :--- |
-| `urbanscope.cvsu@gmail.com` | `superadmin` | `SEED_SUPERADMIN_PASSWORD` env var, or generated once in dev into git-ignored `backend/.bootstrap_credentials.txt` | UrbanScope Superadmin (CvSU) |
-| `miriamalobren@gmail.com` | `admin` | `SEED_MIRIAM_PASSWORD` env var, or generated once in dev into `backend/.bootstrap_credentials.txt` | Miriam Lobren (Lead Admin) |
-| `admin.realestate@gmail.com` | `admin` | `SEED_ADMIN_PASSWORD` env var, or generated once in dev into `backend/.bootstrap_credentials.txt` | Real Estate Admin |
+| `miriamalobren@gmail.com` | `admin` | `SEED_MIRIAM_PASSWORD` env var, or generated once in dev into `backend/.bootstrap_credentials.txt` | Miriam Lobren |
 
 **Properties (7 accredited featured listings)**
 
@@ -447,6 +445,8 @@ supabase/
                                              Updates Kathleen - Place 5 gallery imagery and removes legacy RFO metadata
   migrations/20261121232500_add_inquiry_cancelled_by.sql
                                              Adds inquiries.cancelled_by ('client' | 'admin') column and CHECK constraint to distinguish client vs. admin cancellations
+  migrations/20261126164500_single_admin_miriamalobren.sql
+                                             Enforces single-admin policy: grants 'admin' solely to miriamalobren@gmail.com, demotes all other admin/superadmin rows to 'user', re-points property agent_id, and locks Postgres trigger enforcement
   seed.sql                                   Demo data (users, 6 properties, inquiries, ...)
   scripts/                                   One-off data fixes to paste into the SQL Editor (never auto-run)
 ```

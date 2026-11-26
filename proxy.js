@@ -67,7 +67,7 @@ export default async function proxy(request) {
     const isRootLanding = pathname === '/' || pathname === '/index.html' || pathname === '/frontend/index.html';
     if (isRootLanding) {
         const session = readAdminSession(request);
-        if (session && ['admin', 'superadmin'].includes(session.role)) {
+        if (session && isMainAdminEmail(session.email) && ['admin', 'superadmin'].includes(session.role)) {
             return new Response(null, {
                 status: 302,
                 headers: { Location: '/pages/admin/dashboard.html', 'Cache-Control': 'private, no-store, max-age=0' }
@@ -82,7 +82,7 @@ export default async function proxy(request) {
     const session = readAdminSession(request);
     if (!session) return redirectToLogin(request, Boolean(request.headers.get('cookie')));
 
-    if (!['admin', 'superadmin'].includes(session.role)) {
+    if (!isMainAdminEmail(session.email) || !['admin', 'superadmin'].includes(session.role)) {
         return forbiddenResponse();
     }
 

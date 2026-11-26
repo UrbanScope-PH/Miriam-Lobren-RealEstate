@@ -10,7 +10,7 @@ import {
     parseJsonBody,
     updateCloudUserById
 } from '../../lib/email-auth.js';
-import { isMainAdminEmail, MAIN_ADMIN_EMAIL, SUPERADMIN_EMAIL } from '../../lib/admin-session.js';
+import { isMainAdminEmail, MAIN_ADMIN_EMAIL } from '../../lib/admin-session.js';
 import {
     checkRateLimit,
     getClientIp,
@@ -86,6 +86,9 @@ export default async function handler(req, res) {
             if (!['user', 'admin', 'superadmin'].includes(role)) {
                 return jsonResponse({ success: false, error: 'Invalid role.' }, 400, res);
             }
+            if (payload.role !== undefined && role !== 'user') {
+                return jsonResponse({ success: false, error: 'Role promotion is disabled. Only miriamalobren@gmail.com holds the Realty Admin role.' }, 400, res);
+            }
             if (!isValidEmail(email) || fullName.length < 2 || fullName.length > 120 || phone.length > 40 || password.length < 8 || password.length > 128) {
                 return jsonResponse({ success: false, error: 'Enter a valid email, name, and password of at least 8 characters.' }, 400, res);
             }
@@ -96,7 +99,7 @@ export default async function handler(req, res) {
                 password_hash: await createPasswordHash(password),
                 full_name: fullName,
                 phone,
-                role: email === SUPERADMIN_EMAIL ? 'superadmin' : role,
+                role: email === MAIN_ADMIN_EMAIL ? 'admin' : 'user',
                 avatar_url: 'assets/images/agent.jpg',
                 bio: '',
                 email_verified_at: now,
@@ -124,22 +127,24 @@ export default async function handler(req, res) {
             if (!isValidEmail(nextEmail) || fullName.length > 120 || phone.length > 40) {
                 return jsonResponse({ success: false, error: 'Check the account details and try again.' }, 400, res);
             }
-            const nextRole = payload.role === undefined ? target.role : role;
-            if (targetEmail === SUPERADMIN_EMAIL && (nextEmail !== SUPERADMIN_EMAIL || nextRole !== 'superadmin')) {
-                return jsonResponse({ success: false, error: 'The root Superadmin account cannot be renamed or demoted.' }, 400, res);
+            const expectedRole = targetEmail === MAIN_ADMIN_EMAIL ? 'admin' : 'user';
+            if (payload.role !== undefined && role !== expectedRole) {
+                return jsonResponse({ success: false, error: 'Role promotion and demotion are disabled. Only miriamalobren@gmail.com holds the Realty Admin role.' }, 400, res);
             }
-            if (targetEmail === MAIN_ADMIN_EMAIL && (nextEmail !== MAIN_ADMIN_EMAIL || !['admin', 'superadmin'].includes(String(nextRole || '').toLowerCase()))) {
+            if (targetEmail === MAIN_ADMIN_EMAIL && nextEmail !== MAIN_ADMIN_EMAIL) {
                 return jsonResponse({ success: false, error: 'The main administrator account cannot be renamed or demoted.' }, 400, res);
+            }
+            if (targetEmail !== MAIN_ADMIN_EMAIL && nextEmail === MAIN_ADMIN_EMAIL) {
+                return jsonResponse({ success: false, error: 'That email address is reserved for the main administrator account.' }, 400, res);
             }
             if (nextEmail !== targetEmail) {
                 const duplicate = await getCloudUser(nextEmail);
                 if (duplicate && String(duplicate.id) !== id) return jsonResponse({ success: false, error: 'Email is already in use by another account.' }, 409, res);
             }
-            const patch = { updated_at: new Date().toISOString() };
+            const patch = { updated_at: new Date().toISOString(), role: expectedRole };
             if (fullName) patch.full_name = fullName;
             if (payload.email !== undefined) patch.email = nextEmail;
             if (payload.phone !== undefined) patch.phone = phone;
-            if (payload.role !== undefined) patch.role = role;
             if (password) {
                 if (password.length < 8 || password.length > 128) return jsonResponse({ success: false, error: 'Password must contain at least 8 characters.' }, 400, res);
                 patch.password_hash = await createPasswordHash(password);
@@ -166,11 +171,8 @@ export default async function handler(req, res) {
             const targetEmail = target ? normalizeEmail(target.email) : email;
             const targetId = target ? target.id : id;
 
-            if (targetEmail === SUPERADMIN_EMAIL || targetEmail === 'urbanscope.cvsu@gmail.com') {
-                return jsonResponse({ success: false, error: 'Cannot delete root Superadmin account.' }, 400, res);
-            }
-            if (['admin.realestate@gmail.com', 'miriamalobren@gmail.com', 'miriam@gmail.com'].includes(targetEmail)) {
-                return jsonResponse({ success: false, error: 'Cannot delete primary Realty Admin account.' }, 400, res);
+            if (targetEmail === MAIN_ADMIN_EMAIL) {
+                return jsonResponse({ success: false, error: 'Cannot delete the main Realty Admin account.' }, 400, res);
             }
 
             await deleteCloudUserAndAssociatedData(targetId, targetEmail);

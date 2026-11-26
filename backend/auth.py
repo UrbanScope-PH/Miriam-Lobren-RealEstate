@@ -217,17 +217,15 @@ def verify_google_token(
         detail="Missing Google credential or access_token."
     )
 
-# Authorized administrator accounts and roles for RBAC
+# Single authorized administrator account and role for RBAC
+MAIN_ADMIN_EMAIL = "miriamalobren@gmail.com"
+
 AUTHORIZED_ADMIN_EMAILS: Set[str] = {
-    "admin.realestate@gmail.com",
-    "miriam@gmail.com",
-    "miriamalobren@gmail.com",
-    "urbanscope.cvsu@gmail.com"
+    MAIN_ADMIN_EMAIL
 }
 
 AUTHORIZED_ADMIN_ROLES: Set[str] = {
-    "admin",
-    "superadmin"
+    "admin"
 }
 
 
@@ -372,7 +370,7 @@ def require_user(user: Optional[dict] = Depends(get_current_user_from_request)) 
 def require_admin(user: Optional[dict] = Depends(get_current_user_from_request)) -> dict:
     """
     Strict server-side dependency guard: requires an active session whose live DB
-    record has an admin/superadmin role or a built-in staff email.
+    record belongs exclusively to the designated Realty Admin (miriamalobren@gmail.com).
     """
     if not user:
         raise HTTPException(
@@ -380,25 +378,16 @@ def require_admin(user: Optional[dict] = Depends(get_current_user_from_request))
             detail="Authentication required. Please log in."
         )
 
-    clean_email = user.get("email", "").strip().lower()
-    role = user.get("role", "")
-
-    is_authorized = (
-        role in AUTHORIZED_ADMIN_ROLES or
-        clean_email in AUTHORIZED_ADMIN_EMAILS
-    )
-
-    if not is_authorized:
+    if not is_main_admin_email(user.get("email")):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Forbidden: Admin access restricted to authorized administrators."
+            detail="Forbidden: Admin access restricted to the authorized administrator."
         )
 
     return user
 
 
-AUTHORIZED_SUPERADMIN_EMAILS = {"urbanscope.cvsu@gmail.com"}
-MAIN_ADMIN_EMAIL = "miriamalobren@gmail.com"
+AUTHORIZED_SUPERADMIN_EMAILS = {MAIN_ADMIN_EMAIL}
 
 
 def is_main_admin_email(email: Optional[str]) -> bool:

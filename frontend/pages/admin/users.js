@@ -5,8 +5,8 @@
 (function () {
     'use strict';
 
+    const MAIN_ADMIN_EMAIL = 'miriamalobren@gmail.com';
     let allUsers = [];
-    let pendingRoleChange = null;
     let pendingDeleteUser = null;
     let isDeletingUser = false;
 
@@ -20,12 +20,6 @@
         btnCreateUserFromTable: document.getElementById('btnCreateUserFromTable'),
         btnCloseCreateUserModal: document.getElementById('btnCloseCreateUserModal'),
         btnCancelCreateUser: document.getElementById('btnCancelCreateUser'),
-
-        roleChangeModal: document.getElementById('roleChangeModal'),
-        roleChangeMessage: document.getElementById('roleChangeMessage'),
-        btnCloseRoleModal: document.getElementById('btnCloseRoleModal'),
-        btnCancelRoleChange: document.getElementById('btnCancelRoleChange'),
-        btnConfirmRoleChange: document.getElementById('btnConfirmRoleChange'),
 
         deleteUserModal: document.getElementById('deleteUserModal'),
         deleteUserMessage: document.getElementById('deleteUserMessage'),
@@ -63,19 +57,9 @@
         return headers;
     }
 
-    function normalizeRole(role, email) {
+    function normalizeRole(_role, email) {
         const cleanEmail = String(email || '').trim().toLowerCase();
-        const r = String(role || '').trim().toLowerCase();
-        if (r === 'admin' || r === 'superadmin' || r === 'agent') return 'admin';
-        if (
-            cleanEmail === 'urbanscope.cvsu@gmail.com' ||
-            cleanEmail === 'admin.realestate@gmail.com' ||
-            cleanEmail === 'miriamalobren@gmail.com' ||
-            cleanEmail === 'miriam@gmail.com'
-        ) {
-            return 'admin';
-        }
-        return 'user';
+        return cleanEmail === MAIN_ADMIN_EMAIL ? 'admin' : 'user';
     }
 
     function showToast(message, isError = false) {
@@ -118,8 +102,6 @@
             return dateStr;
         }
     }
-
-    const MAIN_ADMIN_EMAIL = 'miriamalobren@gmail.com';
 
     async function verifyAdminAccess() {
         try {
@@ -212,12 +194,7 @@
         elements.usersTableBody.innerHTML = users.map(u => {
             const cleanEmail = (u.email || '').toLowerCase().trim();
             const role = normalizeRole(u.role, cleanEmail);
-            const isProtectedPrimaryAdmin = (
-                cleanEmail === 'urbanscope.cvsu@gmail.com' ||
-                cleanEmail === 'admin.realestate@gmail.com' ||
-                cleanEmail === 'miriamalobren@gmail.com' ||
-                cleanEmail === 'miriam@gmail.com'
-            );
+            const isProtectedPrimaryAdmin = (cleanEmail === MAIN_ADMIN_EMAIL);
             const safeIdAttr = escapeHtml(String(u.id));
 
             const roleBadge = role === 'admin'
@@ -240,16 +217,10 @@
                         <span class="sa-badge-emerald" title="Primary Realty Admin">Realty Admin</span>
                     </div>`;
             } else {
-                const nextRole = (role === 'admin') ? 'user' : 'admin';
-                const nextRoleLabel = (role === 'admin') ? 'Demote' : 'Promote';
-
                 actionsHtml = `
                     <div class="action-btns-group">
                         <button type="button" class="btn-table-action" onclick="window.saEditUserPrompt('${safeIdAttr}')">
                             Edit
-                        </button>
-                        <button type="button" class="btn-table-action" onclick="window.saRoleChangePrompt('${safeIdAttr}', '${nextRole}')">
-                            ${nextRoleLabel}
                         </button>
                         <button type="button" class="btn-table-action danger" onclick="window.saDeleteUserPrompt('${safeIdAttr}')">
                             Delete
@@ -305,20 +276,6 @@
             mobileList.innerHTML = mobileCardsHtml.join('');
         }
     }
-
-    window.saRoleChangePrompt = function (userId, arg2, arg3) {
-        const matched = allUsers.find(u => String(u.id) === String(userId));
-        const newRole = arg3 !== undefined ? arg3 : arg2;
-        const email = arg3 !== undefined ? arg2 : (matched ? matched.email : `#${userId}`);
-
-        pendingRoleChange = { userId, email, newRole };
-        if (elements.roleChangeMessage) {
-            elements.roleChangeMessage.innerHTML = `Are you sure you want to change the role of <strong>${escapeHtml(email)}</strong> to <strong>${escapeHtml(String(newRole || '').toUpperCase())}</strong>?`;
-        }
-        if (elements.roleChangeModal) {
-            elements.roleChangeModal.hidden = false;
-        }
-    };
 
     function closeDeleteUserModal(force = false) {
         if (isDeletingUser && !force) return;
@@ -402,46 +359,6 @@
         });
     }
 
-    if (elements.btnConfirmRoleChange) {
-        elements.btnConfirmRoleChange.addEventListener('click', async () => {
-            if (!pendingRoleChange) return;
-            const { userId, email, newRole } = pendingRoleChange;
-            const btn = elements.btnConfirmRoleChange;
-            btn.disabled = true;
-            btn.textContent = 'Updating...';
-
-            try {
-                let result = null;
-                if (typeof apiSuperadminUpdateUserRole === 'function') {
-                    result = await apiSuperadminUpdateUserRole(userId, newRole, email);
-                } else if (isLocalDevBackend()) {
-                    const res = await fetch(`${getApiBase()}/superadmin/users/${encodeURIComponent(userId)}/role`, {
-                        method: 'PUT',
-                        headers: getAuthHeaders(),
-                        credentials: 'include',
-                        body: JSON.stringify({ role: newRole })
-                    });
-                    const data = await res.json().catch(() => ({}));
-                    result = { success: res.ok && data.success, error: data.detail };
-                }
-
-                if (result && result.success) {
-                    showToast(`Role for ${email} updated to ${newRole.toUpperCase()}.`);
-                    elements.roleChangeModal.hidden = true;
-                    pendingRoleChange = null;
-                    await loadUsers();
-                } else {
-                    showToast((result && result.error) || 'Failed to update role.', true);
-                }
-            } catch (err) {
-                showToast('Role update error: ' + err.message, true);
-            } finally {
-                btn.disabled = false;
-                btn.textContent = 'Confirm Change';
-            }
-        });
-    }
-
     if (elements.createUserForm) {
         elements.createUserForm.addEventListener('submit', async (e) => {
             e.preventDefault();
@@ -453,8 +370,7 @@
                 full_name: document.getElementById('newFullName').value.trim(),
                 email: document.getElementById('newEmail').value.trim(),
                 phone: document.getElementById('newPhone').value.trim(),
-                password: document.getElementById('newPassword').value,
-                role: document.getElementById('newRole').value
+                password: document.getElementById('newPassword').value
             };
 
             try {
@@ -473,7 +389,7 @@
                 }
 
                 if (result && result.success) {
-                    showToast(`Account for ${payload.email} created as ${payload.role.toUpperCase()}!`);
+                    showToast(`Account for ${payload.email} created as Client User!`);
                     elements.createUserModal.hidden = true;
                     elements.createUserForm.reset();
                     await loadUsers();
@@ -501,9 +417,6 @@
     if (elements.btnCloseCreateUserModal) elements.btnCloseCreateUserModal.addEventListener('click', closeCreateUserModal);
     if (elements.btnCancelCreateUser) elements.btnCancelCreateUser.addEventListener('click', closeCreateUserModal);
 
-    if (elements.btnCloseRoleModal) elements.btnCloseRoleModal.addEventListener('click', () => { elements.roleChangeModal.hidden = true; });
-    if (elements.btnCancelRoleChange) elements.btnCancelRoleChange.addEventListener('click', () => { elements.roleChangeModal.hidden = true; });
-
     const editUserForm = document.getElementById('editUserForm');
     const editModalEl = document.getElementById('editUserModal');
 
@@ -512,14 +425,12 @@
         if (!u) return;
 
         const cleanEmail = (u.email || '').toLowerCase().trim();
-        const isRoot = cleanEmail === 'urbanscope.cvsu@gmail.com';
-        const normalizedRole = normalizeRole(u.role, cleanEmail);
+        const isMainAdmin = cleanEmail === MAIN_ADMIN_EMAIL;
 
         document.getElementById('editUserId').value = u.id;
         document.getElementById('editFullName').value = u.full_name || '';
         document.getElementById('editEmail').value = u.email || '';
         document.getElementById('editPhone').value = u.phone || '';
-        document.getElementById('editRole').value = normalizedRole;
         document.getElementById('editPassword').value = '';
 
         if (editUserForm) {
@@ -527,9 +438,7 @@
         }
 
         const emailInput = document.getElementById('editEmail');
-        const roleSelect = document.getElementById('editRole');
-        if (emailInput) emailInput.disabled = isRoot;
-        if (roleSelect) roleSelect.disabled = isRoot;
+        if (emailInput) emailInput.disabled = isMainAdmin;
 
         if (editModalEl) editModalEl.hidden = false;
     };
@@ -547,8 +456,7 @@
                 full_name: document.getElementById('editFullName').value.trim(),
                 email: document.getElementById('editEmail').value.trim(),
                 original_email: originalEmail,
-                phone: document.getElementById('editPhone').value.trim(),
-                role: document.getElementById('editRole').value
+                phone: document.getElementById('editPhone').value.trim()
             };
 
             const newPass = document.getElementById('editPassword').value;
@@ -602,7 +510,7 @@
         if (editModalEl) editModalEl.hidden = true;
     });
 
-    [elements.createUserModal, editModalEl, elements.roleChangeModal, elements.deleteUserModal].forEach(modal => {
+    [elements.createUserModal, editModalEl, elements.deleteUserModal].forEach(modal => {
         if (!modal) return;
         modal.addEventListener('click', (e) => {
             if (e.target !== modal) return;
@@ -735,7 +643,6 @@
             closeRoleFilterMenu();
             if (elements.createUserModal && !elements.createUserModal.hidden) elements.createUserModal.hidden = true;
             if (editModalEl && !editModalEl.hidden) editModalEl.hidden = true;
-            if (elements.roleChangeModal && !elements.roleChangeModal.hidden) elements.roleChangeModal.hidden = true;
             if (elements.deleteUserModal && !elements.deleteUserModal.hidden) closeDeleteUserModal();
         }
     });

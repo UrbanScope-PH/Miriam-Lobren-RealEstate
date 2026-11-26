@@ -574,14 +574,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         const user = (authResult && authResult.data && authResult.data.user) || {};
         const cleanEmail = (user.email || "").toLowerCase().trim();
-        const role = (user.role || "user").toLowerCase();
-        const isAuthorizedStaffEmail = [
-            "admin.realestate@gmail.com",
-            "miriam@gmail.com",
-            "miriamalobren@gmail.com",
-            "urbanscope.cvsu@gmail.com"
-        ].includes(cleanEmail);
-        const isAdminUser = role === "admin" || role === "superadmin" || isAuthorizedStaffEmail;
+        const isAdminUser = cleanEmail === "miriamalobren@gmail.com";
 
         if (isAdminUser) {
             window.location.href = "../admin/dashboard.html";
@@ -914,15 +907,8 @@ document.addEventListener("DOMContentLoaded", () => {
                     window.__activeGooglePending = null;
 
                     const user = verifyRes.data?.user || {};
-                    const role = String(user.role || '').toLowerCase();
                     const email = String(user.email || '').toLowerCase().trim();
-                    const isAuthorizedStaffEmail = [
-                        'admin.realestate@gmail.com',
-                        'miriam@gmail.com',
-                        'miriamalobren@gmail.com',
-                        'urbanscope.cvsu@gmail.com'
-                    ].includes(email);
-                    if ((role === 'admin' || role === 'superadmin' || isAuthorizedStaffEmail) && !verifyRes.data?.admin_session_ready) {
+                    if (email === 'miriamalobren@gmail.com' && !verifyRes.data?.admin_session_ready) {
                         const adminSessionFn = typeof apiCreateHostedAdminSession === 'function'
                             ? apiCreateHostedAdminSession
                             : (typeof window.apiCreateHostedAdminSession === 'function' ? window.apiCreateHostedAdminSession : null);
@@ -1018,15 +1004,8 @@ document.addEventListener("DOMContentLoaded", () => {
                     }
                     if (res && res.success) {
                         const user = res.data?.user || {};
-                        const role = String(user.role || '').toLowerCase();
                         const email = String(user.email || '').toLowerCase().trim();
-                        const isAuthorizedStaffEmail = [
-                            'admin.realestate@gmail.com',
-                            'miriam@gmail.com',
-                            'miriamalobren@gmail.com',
-                            'urbanscope.cvsu@gmail.com'
-                        ].includes(email);
-                        if ((role === 'admin' || role === 'superadmin' || isAuthorizedStaffEmail) && !res.data?.admin_session_ready) {
+                        if (email === 'miriamalobren@gmail.com' && !res.data?.admin_session_ready) {
                             if (typeof apiCreateHostedAdminSession !== 'function') {
                                 setLoadingState(false);
                                 renderGoogleBanner(btn, 'Admin session service is unavailable. Please try again later.', 'error');

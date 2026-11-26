@@ -255,7 +255,7 @@ async function handleSessionRequest(req, res) {
                     return jsonWithCookies(sanitizePublicLeadAgent(null), 200, res);
                 }
                 const r = await fetch(restUrl('users', {
-                    or: '(role.eq.admin,role.eq.superadmin,email.eq.miriamalobren@gmail.com,email.eq.admin.realestate@gmail.com,email.eq.miriam@gmail.com)',
+                    or: '(email.eq.miriamalobren@gmail.com,role.eq.admin)',
                     select: 'email,full_name,phone,license_number,title,brokerage,bio,avatar_url,role',
                     order: 'id.asc'
                 }), { headers: serviceHeaders({}, true) });
@@ -266,9 +266,6 @@ async function handleSessionRequest(req, res) {
                     : [];
                 const preferred =
                     activeRows.find((u) => normalizeEmail(u.email) === 'miriamalobren@gmail.com') ||
-                    activeRows.find((u) => u.role === 'admin' && !['admin.realestate@gmail.com', 'urbanscope.cvsu@gmail.com'].includes(normalizeEmail(u.email))) ||
-                    activeRows.find((u) => u.role === 'admin') ||
-                    activeRows[0] ||
                     null;
                 return jsonWithCookies(sanitizePublicLeadAgent(preferred), 200, res);
             } catch (_) {
@@ -663,6 +660,12 @@ async function handleSessionRequest(req, res) {
                 return jsonWithCookies({ success: false, error: 'Enter a valid email address.' }, 400, res);
             }
             if (nextEmail !== normalizeEmail(currentUser.email)) {
+                if (normalizeEmail(currentUser.email) === 'miriamalobren@gmail.com') {
+                    return jsonWithCookies({ success: false, error: 'The main administrator email address cannot be changed.' }, 400, res);
+                }
+                if (nextEmail === 'miriamalobren@gmail.com') {
+                    return jsonWithCookies({ success: false, error: 'That email address is reserved for the main administrator account.' }, 400, res);
+                }
                 const duplicate = await fetchUserByEmail(nextEmail);
                 if (duplicate && String(duplicate.id) !== String(currentUser.id)) {
                     return jsonWithCookies({ success: false, error: 'Email is already in use by another account.' }, 409, res);

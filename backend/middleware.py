@@ -250,8 +250,8 @@ def get_authenticated_user_role(token: str) -> Optional[tuple[str, str]]:
 async def rbac_admin_guard_middleware(request: Request, call_next):
     """
     Strict server-side route guard:
-    - Superadmin portal (/superadmin, /pages/superadmin/*): ONLY urbanscope.cvsu@gmail.com with role == 'superadmin'.
-    - Admin portal (/admin, /pages/admin/*): ONLY authorized admins/superadmins (admin.realestate@gmail.com / urbanscope.cvsu@gmail.com).
+    - Superadmin / RBAC routes (/superadmin, /pages/superadmin/*, /pages/admin/users.html): ONLY miriamalobren@gmail.com.
+    - Admin portal (/admin, /pages/admin/*): ONLY miriamalobren@gmail.com (single-admin policy).
     - Public home/catalog pages: Admins/superadmins are forbidden from viewing public pages (home page, catalog, inquiry). They are redirected directly to their admin dashboard.
     """
     path = request.url.path
@@ -263,8 +263,8 @@ async def rbac_admin_guard_middleware(request: Request, call_next):
         if token:
             user_info = get_authenticated_user_role(token)
             if user_info:
-                user_email, user_role = user_info
-                if user_role in AUTHORIZED_ADMIN_ROLES or user_email in AUTHORIZED_ADMIN_EMAILS or user_email in AUTHORIZED_SUPERADMIN_EMAILS:
+                user_email, _user_role = user_info
+                if is_main_admin_email(user_email):
                     return RedirectResponse(url="/pages/admin/dashboard.html", status_code=status.HTTP_302_FOUND)
 
     # Check if request targets legacy superadmin routes or Admin Accounts & Roles RBAC page
@@ -319,11 +319,8 @@ async def rbac_admin_guard_middleware(request: Request, call_next):
                 login_redirect = "/pages/auth/login.html?reason=expired"
                 return RedirectResponse(url=login_redirect, status_code=status.HTTP_302_FOUND)
 
-            user_email, user_role = user_info
-            is_authorized_admin = (
-                user_role in AUTHORIZED_ADMIN_ROLES or
-                user_email in AUTHORIZED_ADMIN_EMAILS
-            )
+            user_email, _user_role = user_info
+            is_authorized_admin = is_main_admin_email(user_email)
 
             # 2. Strict Role Checks:
             if not is_authorized_admin:
