@@ -1,0 +1,666 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+html {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: clip;
+}
+
+body {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: clip;
+    font-family: 'Plus Jakarta Sans', Arial, sans-serif;
+    background-color: var(--bg-main);
+    color: var(--text-dark);
+    line-height: 1.6;
+    min-height: 100vh;
+    min-height: 100dvh;
+    display: flex;
+    flex-direction: column;
+}
+
+.account-container {
+    max-width: 1080px;
+    width: 100%;
+    margin: 32px auto 60px;
+    padding: 0 20px;
+    flex: 1;
+}
+
+/* HERO */
+.account-hero {
+    background: var(--brand-banner-bg);
+    border-radius: 20px;
+    color: #ffffff;
+    padding: 34px 36px;
+    margin-bottom: 24px;
+    box-shadow: 0 10px 25px rgba(20, 53, 30, 0.15);
+}
+
+.account-hero-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 18px;
+}
+
+.account-hero-text h1 {
+    font-size: 1.9rem;
+    font-weight: 800;
+    line-height: 1.2;
+    margin-bottom: 6px;
+    letter-spacing: -0.5px;
+    color: #ffffff;
+}
+
+.account-hero-text p {
+    color: var(--brand-banner-muted);
+    font-size: 0.96rem;
+    max-width: 600px;
+}
+
+.hero-action-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: #ffffff;
+    color: var(--dark-green);
+    padding: 11px 22px;
+    border-radius: 999px;
+    font-family: inherit;
+    font-size: 0.9rem;
+    font-weight: 700;
+    text-decoration: none;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.12);
+    transition: var(--motion-transition-ui);
+}
+
+@media (hover: hover) and (pointer: fine) {
+    .hero-action-btn:hover {
+        background: var(--light-green);
+        transform: translateY(-2px);
+        box-shadow: 0 6px 18px rgba(0, 0, 0, 0.18);
+    }
+}
+
+/* RED REMINDER BANNER FOR GOOGLE USERS WITHOUT A PASSWORD */
+.security-reminder-banner {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    background: var(--danger-light);
+    border: 1.5px solid var(--danger-border);
+    border-radius: 16px;
+    padding: 18px 22px;
+    margin-bottom: 24px;
+    color: var(--danger-text);
+    box-shadow: var(--shadow-sm);
+}
+
+.security-reminder-banner[hidden] {
+    display: none !important;
+}
+
+.reminder-icon-wrap {
+    position: relative;
+    width: 42px;
+    height: 42px;
+    border-radius: 12px;
+    background: var(--surface);
+    border: 1px solid var(--danger-border);
+    color: var(--danger-text);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.reminder-dot-pulse {
+    position: absolute;
+    top: -4px;
+    right: -4px;
+    width: 11px;
+    height: 11px;
+    border-radius: 50%;
+    background: var(--danger-dot, #ef4444);
+    border: 2px solid var(--surface);
+}
+
+.reminder-content {
+    flex: 1;
+    min-width: 0;
+}
+
+.reminder-content strong {
+    display: block;
+    font-size: 0.96rem;
+    font-weight: 700;
+    margin-bottom: 2px;
+    color: var(--danger-text);
+}
+
+.reminder-content p {
+    font-size: 0.86rem;
+    line-height: 1.45;
+    color: var(--text-dark);
+    opacity: 0.92;
+}
+
+.reminder-cta-btn {
+    border: none;
+    border-radius: 999px;
+    background: var(--danger-btn-bg, #c53030);
+    color: #ffffff;
+    font-family: inherit;
+    font-size: 0.85rem;
+    font-weight: 700;
+    padding: 10px 18px;
+    cursor: pointer;
+    white-space: nowrap;
+    flex-shrink: 0;
+    transition: var(--motion-transition-fast);
+}
+
+@media (hover: hover) and (pointer: fine) {
+    .reminder-cta-btn:hover {
+        background: var(--danger-btn-hover, #9b2c2c);
+        transform: translateY(-1px);
+    }
+}
+
+/* CARDS GRID */
+.account-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 24px;
+    align-items: start;
+}
+
+.account-card {
+    background: var(--surface);
+    border: 1px solid var(--border-color);
+    border-radius: 20px;
+    padding: 28px;
+    box-shadow: var(--shadow);
+}
+
+.account-card-wide {
+    grid-column: 1 / -1;
+}
+
+.google-brand-icon {
+    width: 42px;
+    height: 42px;
+    border-radius: 12px;
+    background: var(--surface-muted);
+    border: 1px solid var(--border-color);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.google-status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 6px 12px;
+    border-radius: 999px;
+    font-size: 0.78rem;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.google-status-badge .status-badge-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+}
+
+.google-status-badge.is-connected {
+    background: var(--status-success-bg);
+    color: var(--status-success-text);
+    border: 1px solid var(--status-success-border);
+}
+
+.google-status-badge.is-connected .status-badge-dot {
+    background: var(--status-success-dot);
+}
+
+.google-status-badge.is-disconnected {
+    background: var(--status-neutral-bg);
+    color: var(--status-neutral-text);
+    border: 1px solid var(--status-neutral-border);
+}
+
+.google-status-badge.is-disconnected .status-badge-dot {
+    background: var(--status-neutral-text);
+}
+
+.google-connect-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 18px;
+    flex-wrap: wrap;
+}
+
+.google-connect-meta {
+    flex: 1;
+    min-width: 240px;
+}
+
+.google-connection-detail {
+    font-size: 0.92rem;
+    color: var(--text-secondary);
+    line-height: 1.5;
+}
+
+.btn-google-connect {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 11px 20px;
+    border-radius: 12px;
+    border: 1.5px solid var(--border-color);
+    background: var(--surface);
+    color: var(--text-dark);
+    font-family: inherit;
+    font-size: 0.9rem;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: var(--shadow-xs);
+    transition: var(--motion-transition-ui);
+}
+
+.btn-google-connect[hidden] {
+    display: none !important;
+}
+
+@media (hover: hover) and (pointer: fine) {
+    .btn-google-connect:hover:not(:disabled) {
+        border-color: var(--green);
+        background: var(--surface-hover);
+        transform: translateY(-1px);
+    }
+}
+
+.btn-google-connect:disabled {
+    opacity: 0.65;
+    cursor: wait;
+}
+
+.card-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    padding-bottom: 18px;
+    margin-bottom: 22px;
+    border-bottom: 1px solid var(--border-subtle);
+}
+
+.card-header-split {
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.card-header-lead {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    flex: 1;
+    min-width: 220px;
+}
+
+.card-header-icon {
+    width: 42px;
+    height: 42px;
+    border-radius: 12px;
+    background: var(--light-green);
+    color: var(--green);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.card-header h2 {
+    font-size: 1.15rem;
+    font-weight: 800;
+    color: var(--text-dark);
+    margin-bottom: 3px;
+}
+
+.card-subtitle {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    line-height: 1.45;
+}
+
+/* PASSWORD STATUS BADGE */
+.password-status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 6px 12px;
+    border-radius: 999px;
+    font-size: 0.78rem;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.password-status-badge .status-badge-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+}
+
+.password-status-badge.is-active {
+    background: var(--status-success-bg);
+    color: var(--status-success-text);
+    border: 1px solid var(--status-success-border);
+}
+
+.password-status-badge.is-active .status-badge-dot {
+    background: var(--status-success-dot);
+}
+
+.password-status-badge.is-missing {
+    background: var(--danger-light);
+    color: var(--danger-text);
+    border: 1px solid var(--danger-border);
+}
+
+.password-status-badge.is-missing .status-badge-dot {
+    background: var(--danger-dot, #ef4444);
+}
+
+/* FORM CONTROLS */
+.account-form {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.form-group[hidden] {
+    display: none !important;
+}
+
+.form-group label {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    font-size: 0.86rem;
+    font-weight: 700;
+    color: var(--text-dark);
+}
+
+.req-mark {
+    color: var(--danger-text);
+    margin-left: 2px;
+}
+
+.locked-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 9px;
+    border-radius: 999px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    background: var(--surface-muted);
+    color: var(--text-muted);
+    border: 1px solid var(--border-subtle);
+}
+
+.form-input {
+    width: 100%;
+    padding: 12px 14px;
+    border: 1.5px solid var(--border-color);
+    border-radius: 12px;
+    background: var(--surface-input);
+    color: var(--text-dark);
+    font-family: inherit;
+    font-size: 0.94rem;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.form-input:focus {
+    outline: none;
+    border-color: var(--green);
+    box-shadow: 0 0 0 3px rgba(45, 92, 57, 0.14);
+}
+
+.form-input.is-readonly {
+    background: var(--surface-muted);
+    color: var(--text-muted);
+    cursor: not-allowed;
+}
+
+.password-input-wrap {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.password-input-wrap .form-input {
+    padding-right: 44px;
+}
+
+.password-toggle-btn {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 32px;
+    height: 32px;
+    border: none;
+    background: transparent;
+    color: var(--text-muted);
+    border-radius: 8px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s;
+}
+
+@media (hover: hover) and (pointer: fine) {
+    .password-toggle-btn:hover {
+        background: var(--surface-hover);
+        color: var(--text-dark);
+    }
+}
+
+.field-hint {
+    font-size: 0.78rem;
+    color: var(--text-muted);
+    line-height: 1.45;
+}
+
+.form-alert {
+    padding: 11px 14px;
+    border-radius: 12px;
+    background: var(--danger-light);
+    border: 1px solid var(--danger-border);
+    color: var(--danger-text);
+    font-size: 0.86rem;
+    font-weight: 600;
+    line-height: 1.45;
+}
+
+.form-alert[hidden] {
+    display: none !important;
+}
+
+.card-actions {
+    display: flex;
+    justify-content: flex-end;
+    padding-top: 4px;
+}
+
+.security-footer-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 14px;
+    padding-top: 4px;
+}
+
+.forgot-pw-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.87rem;
+    font-weight: 700;
+    color: var(--green);
+    text-decoration: none;
+}
+
+@media (hover: hover) and (pointer: fine) {
+    .forgot-pw-link:hover {
+        text-decoration: underline;
+    }
+}
+
+.btn-primary-save {
+    border: none;
+    border-radius: 12px;
+    background: var(--btn-primary-bg);
+    color: #ffffff;
+    font-family: inherit;
+    font-size: 0.92rem;
+    font-weight: 700;
+    padding: 12px 22px;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(45, 92, 57, 0.22);
+    transition: var(--motion-transition-ui);
+}
+
+@media (hover: hover) and (pointer: fine) {
+    .btn-primary-save:hover:not(:disabled) {
+        background: var(--btn-primary-hover);
+        transform: translateY(-1px);
+    }
+}
+
+.btn-primary-save:disabled {
+    opacity: 0.65;
+    cursor: wait;
+}
+
+/* TOAST NOTICE */
+.toast-notice {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 13px 18px;
+    border-radius: 14px;
+    background: var(--brand-banner-bg);
+    color: #ffffff;
+    border: 1px solid var(--brand-banner-border);
+    box-shadow: var(--shadow-lg);
+    font-size: 0.9rem;
+    font-weight: 600;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(10px);
+    transition: var(--motion-transition-ui);
+    max-width: calc(100vw - 32px);
+}
+
+.toast-notice.show {
+    opacity: 1;
+    visibility: visible;
+    transform: none;
+}
+
+.toast-notice.error {
+    background: var(--danger-btn-bg, #c53030);
+    border-color: var(--danger-border);
+}
+
+/* DARK MODE ADAPTATIONS */
+html.dark-mode .hero-action-btn,
+html[data-theme="dark"] .hero-action-btn {
+    background: var(--green);
+    color: #ffffff;
+}
+
+html.dark-mode .hero-action-btn:hover,
+html[data-theme="dark"] .hero-action-btn:hover {
+    background: var(--green-hover);
+}
+
+html.dark-mode .reminder-content p,
+html[data-theme="dark"] .reminder-content p {
+    color: var(--text-secondary);
+}
+
+/* RESPONSIVE */
+@media (max-width: 860px) {
+    .account-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 640px) {
+    .account-container {
+        margin: 18px auto 44px;
+        padding: 0 14px;
+    }
+
+    .account-hero {
+        padding: 24px 20px;
+        border-radius: 16px;
+        margin-bottom: 18px;
+    }
+
+    .account-hero-text h1 {
+        font-size: 1.5rem;
+    }
+
+    .security-reminder-banner {
+        flex-direction: column;
+        align-items: flex-start;
+        padding: 16px;
+        gap: 12px;
+    }
+
+    .reminder-cta-btn {
+        width: 100%;
+        text-align: center;
+    }
+
+    .account-card {
+        padding: 20px 18px;
+        border-radius: 16px;
+    }
+
+    .card-actions .btn-primary-save,
+    .security-footer-row .btn-primary-save {
+        width: 100%;
+    }
+}

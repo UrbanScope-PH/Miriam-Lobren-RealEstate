@@ -77,6 +77,7 @@ export default async function handler(req, res) {
         }
         const updated = await updateCloudUser(email, {
             password_hash: await createPasswordHash(password),
+            has_password: true,
             email_verified_at: new Date().toISOString(),
             updated_at: new Date().toISOString()
         });
