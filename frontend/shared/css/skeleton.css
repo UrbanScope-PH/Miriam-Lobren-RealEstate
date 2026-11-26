@@ -1,0 +1,759 @@
+/* ==========================================================================
+   UrbanScope - Sitewide Skeleton Loader System (Light & Dark Mode)
+   Loaded automatically across all public, client, legal, auth, and admin pages.
+   ========================================================================== */
+
+:root {
+    --sk-bg: #f6f9f6;
+    --sk-surface: #ffffff;
+    --sk-border: #e2ece4;
+    --sk-base: #e3ece5;
+    --sk-highlight: #f3f8f4;
+    --sk-accent-soft: #d5e6d9;
+}
+
+html.dark-mode,
+html[data-theme="dark"] {
+    --sk-bg: #0e1611;
+    --sk-surface: #142119;
+    --sk-border: #23382b;
+    --sk-base: #1b2c22;
+    --sk-highlight: #274031;
+    --sk-accent-soft: #21382a;
+}
+
+@keyframes usSkeletonWave {
+    0% {
+        background-position: 200% 0;
+    }
+    100% {
+        background-position: -200% 0;
+    }
+}
+
+/* Core Shimmer Surface */
+.sk,
+.skeleton-shimmer,
+.property-skeleton-img,
+.skeleton-bar,
+.history-skeleton-card .skeleton-line,
+.admin-table-skeleton-row {
+    background-color: var(--sk-base);
+    background-image: linear-gradient(
+        105deg,
+        var(--sk-base) 25%,
+        var(--sk-highlight) 50%,
+        var(--sk-base) 75%
+    );
+    background-size: 220% 100%;
+    animation: usSkeletonWave 1.45s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+    border-radius: 8px;
+}
+
+/* Primitive Shapes */
+.sk-line {
+    display: block;
+    height: 14px;
+    width: 100%;
+    border-radius: 6px;
+}
+
+.sk-line.sk-xs { height: 10px; }
+.sk-line.sk-sm { height: 12px; }
+.sk-line.sk-md { height: 15px; }
+.sk-line.sk-lg { height: 22px; border-radius: 7px; }
+.sk-line.sk-xl { height: 32px; border-radius: 8px; }
+.sk-line.sk-hero { height: 44px; border-radius: 10px; }
+
+.sk-pill {
+    display: inline-block;
+    height: 26px;
+    width: 92px;
+    border-radius: 999px;
+}
+
+.sk-circle {
+    display: inline-block;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.sk-rect {
+    display: block;
+    width: 100%;
+    border-radius: 12px;
+}
+
+.sk-btn {
+    display: inline-block;
+    height: 38px;
+    width: 118px;
+    border-radius: 10px;
+}
+
+/* Inline KPI value skeleton */
+.sk-kpi-inline {
+    display: inline-block;
+    width: 44px;
+    height: 24px;
+    vertical-align: middle;
+    border-radius: 6px;
+}
+
+.sk-badge-inline {
+    display: inline-block;
+    width: 66px;
+    height: 18px;
+    vertical-align: middle;
+    border-radius: 999px;
+}
+
+/* ==========================================================================
+   PROGRESSIVE IMAGE SHIMMER (Uncached photos fade in smoothly)
+   ========================================================================== */
+img.us-img-loading {
+    background-color: var(--sk-base);
+    background-image: linear-gradient(
+        105deg,
+        var(--sk-base) 25%,
+        var(--sk-highlight) 50%,
+        var(--sk-base) 75%
+    );
+    background-size: 220% 100%;
+    animation: usSkeletonWave 1.45s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+    color: transparent;
+}
+
+img.us-img-loaded {
+    animation: usImgFadeIn 0.28s ease-out;
+}
+
+@keyframes usImgFadeIn {
+    from { opacity: 0.35; }
+    to { opacity: 1; }
+}
+
+/* ==========================================================================
+   INLINE ASYNC DATA SKELETONS (Tables, Cards, Notifications, Agenda, Forms)
+   ========================================================================== */
+
+/* Admin & Data Table Skeleton Rows */
+.sk-table-row td {
+    padding: 15px 14px !important;
+    vertical-align: middle;
+}
+
+.sk-cell-media {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.sk-cell-thumb {
+    width: 52px;
+    height: 40px;
+    border-radius: 8px;
+    flex-shrink: 0;
+}
+
+.sk-cell-avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.sk-cell-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+    flex: 1;
+    min-width: 90px;
+}
+
+.sk-cell-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+}
+
+/* Mobile Card Skeletons (Admin Lists) */
+.sk-mobile-card {
+    background: var(--sk-surface);
+    border: 1px solid var(--sk-border);
+    border-radius: 14px;
+    padding: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.sk-mobile-card-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.sk-mobile-card-body {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.sk-mobile-card-foot {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding-top: 10px;
+    border-top: 1px solid var(--sk-border);
+}
+
+/* Notification List Skeleton Items */
+.sk-notif-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 11px 12px;
+    border-radius: 11px;
+    border: 1px solid var(--sk-border);
+    background: var(--sk-surface);
+}
+
+.sk-notif-icon {
+    width: 34px;
+    height: 34px;
+    border-radius: 10px;
+    flex-shrink: 0;
+}
+
+.sk-notif-body {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+}
+
+/* Calendar Agenda Skeleton Card */
+.sk-agenda-card {
+    padding: 14px;
+    border: 1px solid var(--sk-border);
+    border-left: 4px solid var(--sk-accent-soft);
+    border-radius: 11px;
+    background: var(--sk-surface);
+    display: flex;
+    flex-direction: column;
+    gap: 9px;
+}
+
+/* Inquiry History Card Skeleton Enhancements */
+.history-skeleton-card {
+    background: var(--sk-surface);
+    border: 1px solid var(--sk-border);
+    border-radius: 16px;
+    padding: 22px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.history-sk-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.history-sk-body {
+    display: flex;
+    flex-direction: column;
+    gap: 9px;
+}
+
+.history-sk-foot {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding-top: 12px;
+    border-top: 1px solid var(--sk-border);
+}
+
+/* Inquiry Form Property Preview Skeleton */
+.sk-inquiry-preview {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 14px;
+    border-radius: 14px;
+    border: 1px solid var(--sk-border);
+    background: var(--sk-surface);
+    margin-top: 14px;
+}
+
+.sk-inquiry-thumb {
+    width: 92px;
+    height: 74px;
+    border-radius: 10px;
+    flex-shrink: 0;
+}
+
+.sk-inquiry-meta {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+/* Property Detail Hydration Skeleton (replaces blank opacity:0 during ?id= fetch) */
+html.detail-hydrating .detail-container {
+    opacity: 1 !important;
+    visibility: visible !important;
+}
+
+html.detail-hydrating .detail-container > :not(.us-detail-skeleton) {
+    display: none !important;
+}
+
+.us-detail-skeleton {
+    display: none;
+    flex-direction: column;
+    gap: 24px;
+    padding: 8px 0 32px;
+}
+
+html.detail-hydrating .us-detail-skeleton {
+    display: flex;
+}
+
+.us-detail-sk-header {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 20px;
+    flex-wrap: wrap;
+}
+
+.us-detail-sk-title {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    flex: 1;
+    min-width: 240px;
+}
+
+.us-detail-sk-carousel {
+    height: 440px;
+    border-radius: 18px;
+}
+
+.us-detail-sk-thumbs {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 12px;
+}
+
+.us-detail-sk-thumb {
+    height: 76px;
+    border-radius: 10px;
+}
+
+.us-detail-sk-specs {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 16px;
+}
+
+.us-detail-sk-spec-box {
+    height: 82px;
+    border-radius: 14px;
+}
+
+.us-detail-sk-prose {
+    background: var(--sk-surface);
+    border: 1px solid var(--sk-border);
+    border-radius: 16px;
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+/* Edit Property Form & Gallery Loading Skeleton */
+.sk-gallery-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: 12px;
+    width: 100%;
+}
+
+.sk-gallery-tile {
+    height: 96px;
+    border-radius: 10px;
+}
+
+.us-form-loading input:not([type="file"]):not([type="hidden"]),
+.us-form-loading textarea,
+.us-form-loading select {
+    color: transparent !important;
+    background-color: var(--sk-base) !important;
+    background-image: linear-gradient(
+        105deg,
+        var(--sk-base) 25%,
+        var(--sk-highlight) 50%,
+        var(--sk-base) 75%
+    ) !important;
+    background-size: 220% 100% !important;
+    animation: usSkeletonWave 1.45s cubic-bezier(0.4, 0, 0.2, 1) infinite !important;
+    pointer-events: none;
+}
+
+.us-form-loading input::placeholder,
+.us-form-loading textarea::placeholder {
+    color: transparent !important;
+}
+
+/* ==========================================================================
+   UNIVERSAL PAGE ENTRY SKELETON SHELL (#usPageSkeleton)
+   Covers initial paint across ALL 24 active pages, then cross-fades cleanly.
+   ========================================================================== */
+#usPageSkeleton {
+    position: fixed;
+    inset: 0;
+    z-index: 99990;
+    background: var(--sk-bg);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    opacity: 1;
+    transition: opacity 0.24s cubic-bezier(0.22, 1, 0.36, 1), visibility 0.24s ease;
+    pointer-events: auto;
+}
+
+#usPageSkeleton.is-leaving {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+}
+
+/* Shared Topbar Skeleton */
+.us-sk-topbar {
+    height: 68px;
+    flex-shrink: 0;
+    background: var(--sk-surface);
+    border-bottom: 1px solid var(--sk-border);
+    padding: 0 5%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+}
+
+.us-sk-topbar-brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.us-sk-topbar-nav {
+    display: flex;
+    align-items: center;
+    gap: 22px;
+}
+
+.us-sk-topbar-acts {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.us-sk-body {
+    flex: 1;
+    width: 100%;
+    max-width: 1360px;
+    margin: 0 auto;
+    padding: 28px 5%;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+/* Template: Home */
+.us-sk-home-hero {
+    width: 100%;
+    height: min(46vh, 390px);
+    min-height: 240px;
+    border-radius: 20px;
+    padding: 36px;
+    background: var(--sk-surface);
+    border: 1px solid var(--sk-border);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 16px;
+}
+
+.us-sk-home-search {
+    width: min(860px, 100%);
+    height: 64px;
+    border-radius: 16px;
+    margin-top: 10px;
+}
+
+.us-sk-card-grid-4 {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 22px;
+}
+
+.us-sk-prop-card {
+    background: var(--sk-surface);
+    border: 1px solid var(--sk-border);
+    border-radius: 18px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+.us-sk-prop-card-img {
+    height: 190px;
+    border-radius: 0;
+}
+
+.us-sk-prop-card-body {
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+/* Template: Auth Split */
+.us-sk-auth-split {
+    flex: 1;
+    display: grid;
+    grid-template-columns: 46% 54%;
+    min-height: 100vh;
+}
+
+.us-sk-auth-visual {
+    background: var(--sk-base);
+    padding: 40px;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    gap: 14px;
+}
+
+.us-sk-auth-form-wrap {
+    background: var(--sk-surface);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 32px;
+}
+
+.us-sk-auth-card {
+    width: 100%;
+    max-width: 420px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+/* Template: Legal */
+.us-sk-legal-hero {
+    height: 148px;
+    border-radius: 18px;
+    background: var(--sk-surface);
+    border: 1px solid var(--sk-border);
+    padding: 28px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 12px;
+}
+
+.us-sk-legal-grid {
+    display: grid;
+    grid-template-columns: 260px minmax(0, 1fr);
+    gap: 28px;
+    align-items: start;
+}
+
+.us-sk-panel {
+    background: var(--sk-surface);
+    border: 1px solid var(--sk-border);
+    border-radius: 16px;
+    padding: 22px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+/* Template: Inquiry / Admin Form */
+.us-sk-form-grid-2 {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px;
+}
+
+/* Template: Admin Dashboard */
+.us-sk-kpi-grid-5 {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 14px;
+}
+
+.us-sk-kpi-box {
+    background: var(--sk-surface);
+    border: 1px solid var(--sk-border);
+    border-radius: 14px;
+    padding: 18px 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.us-sk-dash-row-2 {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 20px;
+}
+
+.us-sk-donut-wrap {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 28px;
+    padding: 12px 0;
+}
+
+/* Template: History Stat Pills */
+.us-sk-stats-4 {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 14px;
+}
+
+/* Template: Table Lines inside Panel */
+.us-sk-row-item {
+    display: grid;
+    grid-template-columns: 1.4fr 1.2fr 0.9fr 0.8fr 0.7fr;
+    gap: 14px;
+    align-items: center;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--sk-border);
+}
+
+.us-sk-row-item:last-child {
+    border-bottom: none;
+}
+
+/* Wide Desktop (>= 1600px) */
+@media (min-width: 1600px) {
+    .us-sk-topbar {
+        padding: 0 3.5%;
+    }
+    .us-sk-body {
+        max-width: 1840px;
+        padding: 28px 3.5%;
+    }
+}
+
+/* Tablet */
+@media (max-width: 1100px) {
+    .us-sk-card-grid-4 {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    .us-sk-kpi-grid-5 {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+    .us-sk-dash-row-2,
+    .us-sk-legal-grid {
+        grid-template-columns: 1fr;
+    }
+    .us-sk-topbar-nav {
+        display: none;
+    }
+}
+
+/* Mobile */
+@media (max-width: 768px) {
+    .us-sk-topbar {
+        height: 58px;
+        padding: 0 16px;
+    }
+    .us-sk-body {
+        padding: 18px 16px;
+        gap: 16px;
+    }
+    .us-sk-home-hero {
+        height: 230px;
+        min-height: 200px;
+        padding: 20px;
+    }
+    .us-sk-card-grid-4,
+    .us-sk-form-grid-2,
+    .us-sk-auth-split {
+        grid-template-columns: 1fr;
+    }
+    .us-sk-auth-visual {
+        display: none;
+    }
+    .us-sk-kpi-grid-5,
+    .us-sk-stats-4,
+    .us-detail-sk-specs {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+    }
+    .us-detail-sk-carousel {
+        height: 240px;
+    }
+    .us-detail-sk-thumbs {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 8px;
+    }
+    .us-detail-sk-thumb {
+        height: 56px;
+    }
+    .us-sk-row-item {
+        grid-template-columns: 1.6fr 1fr 0.8fr;
+    }
+    .us-sk-row-item > :nth-child(n+4) {
+        display: none;
+    }
+    .us-sk-donut-wrap {
+        flex-direction: column;
+        gap: 16px;
+    }
+    .sk-inquiry-preview {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    .sk-inquiry-thumb {
+        width: 100%;
+        height: 140px;
+    }
+}
+
+/* Reduced Motion */
+@media (prefers-reduced-motion: reduce) {
+    .sk,
+    .skeleton-shimmer,
+    .property-skeleton-img,
+    .skeleton-bar,
+    .history-skeleton-card .skeleton-line,
+    .admin-table-skeleton-row,
+    img.us-img-loading {
+        animation: none !important;
+        background-image: none !important;
+    }
+    #usPageSkeleton,
+    img.us-img-loaded {
+        transition: none !important;
+        animation: none !important;
+    }
+}

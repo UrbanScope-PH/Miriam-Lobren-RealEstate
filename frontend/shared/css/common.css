@@ -1168,15 +1168,15 @@ html[data-theme="dark"] #urbanFeedbackToast {
     box-shadow: 0 12px 32px rgba(0, 0, 0, 0.6);
 }
 
-/* Universal Static Loading Skeleton (Rule 19) */
+/* Universal Loading Skeleton Shimmer (Rule 19 — animated via skeleton.css) */
 .skeleton-shimmer {
-    background: var(--border-subtle);
+    background-color: var(--sk-base, var(--border-subtle));
     border-radius: var(--radius-sm, 6px);
 }
 
 html.dark-mode .skeleton-shimmer,
 html[data-theme="dark"] .skeleton-shimmer {
-    background: var(--surface-hover);
+    background-color: var(--sk-base, var(--surface-hover));
 }
 
 /* Universal CTA Button Emphasis (Rule 10) */

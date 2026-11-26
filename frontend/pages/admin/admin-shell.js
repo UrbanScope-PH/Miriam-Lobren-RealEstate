@@ -759,7 +759,9 @@
                     <a href="${targetUrl}" class="view-all-link">View All</a>
                 </div>
                 <div class="notif-list" id="topbarNotifList">
-                    <div class="notif-empty">Loading notifications...</div>
+                    ${(window.UrbanSkeleton && typeof window.UrbanSkeleton.notifItems === "function")
+                        ? window.UrbanSkeleton.notifItems(3)
+                        : '<div class="sk-notif-item"><span class="sk sk-notif-icon"></span><div class="sk-notif-body"><span class="sk sk-line sk-sm" style="width:76%"></span><span class="sk sk-line sk-xs" style="width:48%"></span></div></div>'}
                 </div>
             `;
             topbarRight.appendChild(notifDropdown);

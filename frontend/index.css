@@ -776,7 +776,7 @@ html.dark-mode .search-select-option.is-selected .search-select-option-sub {
     font-variant-numeric: tabular-nums;
 }
 
-/* Static Skeleton Loaders (Rule 19: Add loading states) */
+/* Shimmering Skeleton Loaders (Rule 19 — animated via skeleton.css) */
 .property-skeleton-card {
     background: var(--surface);
     border-radius: 18px;
@@ -788,7 +788,6 @@ html.dark-mode .search-select-option.is-selected .search-select-option-sub {
 
 .property-skeleton-img {
     height: 240px;
-    background: var(--border-subtle);
 }
 
 .property-skeleton-info {
@@ -800,17 +799,11 @@ html.dark-mode .search-select-option.is-selected .search-select-option-sub {
 
 .skeleton-bar {
     border-radius: 6px;
-    background: var(--border-subtle);
 }
 
 html.dark-mode .property-skeleton-card {
     background: var(--surface);
     border-color: var(--border-color);
-}
-
-html.dark-mode .property-skeleton-img,
-html.dark-mode .skeleton-bar {
-    background: var(--surface-muted);
 }
 
 html.dark-mode .property-status-badge.badge-rfo {

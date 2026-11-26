@@ -14,6 +14,7 @@
     <link rel="icon" href="../../assets/images/favicon.jpg" type="image/x-icon">
     <link rel="stylesheet" href="dashboard.css">
     <link rel="stylesheet" href="../../shared/css/mobile-shell.css">
+    <script src="../../shared/js/skeleton.js"></script>
     <script src="../../shared/js/supabase.js"></script>
 </head>
 
@@ -218,7 +219,7 @@
                 </div>
                 <div class="kpi-info">
                     <span class="kpi-label">Total Properties</span>
-                    <strong class="kpi-value" id="kpiTotalProperties">—</strong>
+                    <strong class="kpi-value" id="kpiTotalProperties"><span class="sk sk-kpi-inline" aria-hidden="true"></span></strong>
                 </div>
             </article>
 
@@ -233,7 +234,7 @@
                 </div>
                 <div class="kpi-info">
                     <span class="kpi-label">Total Clients</span>
-                    <strong class="kpi-value" id="kpiTotalClients">—</strong>
+                    <strong class="kpi-value" id="kpiTotalClients"><span class="sk sk-kpi-inline" aria-hidden="true"></span></strong>
                 </div>
             </article>
 
@@ -246,7 +247,7 @@
                 </div>
                 <div class="kpi-info">
                     <span class="kpi-label">Total Inquiries</span>
-                    <strong class="kpi-value" id="kpiTotalInquiries">—</strong>
+                    <strong class="kpi-value" id="kpiTotalInquiries"><span class="sk sk-kpi-inline" aria-hidden="true"></span></strong>
                 </div>
             </article>
 
@@ -259,7 +260,7 @@
                 </div>
                 <div class="kpi-info">
                     <span class="kpi-label">Pending Review</span>
-                    <strong class="kpi-value" id="kpiPendingInquiries">—</strong>
+                    <strong class="kpi-value" id="kpiPendingInquiries"><span class="sk sk-kpi-inline" aria-hidden="true"></span></strong>
                 </div>
             </article>
 
@@ -272,7 +273,7 @@
                 </div>
                 <div class="kpi-info">
                     <span class="kpi-label">Completed Inquiries</span>
-                    <strong class="kpi-value" id="kpiCompletedInquiries">—</strong>
+                    <strong class="kpi-value" id="kpiCompletedInquiries"><span class="sk sk-kpi-inline" aria-hidden="true"></span></strong>
                 </div>
             </article>
 
@@ -365,7 +366,27 @@
                 </div>
 
                 <div class="notif-list" id="dashboardNotifList">
-                    <!-- Populated dynamically -->
+                    <div class="sk-notif-item" aria-hidden="true">
+                        <span class="sk sk-notif-icon"></span>
+                        <div class="sk-notif-body">
+                            <span class="sk sk-line sk-sm" style="width:78%"></span>
+                            <span class="sk sk-line sk-xs" style="width:46%"></span>
+                        </div>
+                    </div>
+                    <div class="sk-notif-item" aria-hidden="true">
+                        <span class="sk sk-notif-icon"></span>
+                        <div class="sk-notif-body">
+                            <span class="sk sk-line sk-sm" style="width:68%"></span>
+                            <span class="sk sk-line sk-xs" style="width:52%"></span>
+                        </div>
+                    </div>
+                    <div class="sk-notif-item" aria-hidden="true">
+                        <span class="sk sk-notif-icon"></span>
+                        <div class="sk-notif-body">
+                            <span class="sk sk-line sk-sm" style="width:82%"></span>
+                            <span class="sk sk-line sk-xs" style="width:40%"></span>
+                        </div>
+                    </div>
                 </div>
             </div>
         </section>
@@ -425,7 +446,13 @@
                         <h4 id="selectedDateLabel" aria-live="polite"></h4>
                     </div>
 
-                    <div id="calendarAgenda" class="calendar-agenda-list"></div>
+                    <div id="calendarAgenda" class="calendar-agenda-list">
+                        <div class="sk-agenda-card" aria-hidden="true">
+                            <span class="sk sk-line sk-xs" style="width:36%"></span>
+                            <span class="sk sk-line sk-md" style="width:86%"></span>
+                            <span class="sk sk-line sk-sm" style="width:62%"></span>
+                        </div>
+                    </div>
 
                 </aside>
 
@@ -444,7 +471,22 @@
                 </a>
             </div>
 
-            <div class="mobile-cards-list" id="recentInquiriesMobileList" aria-label="Recent inquiries mobile list"></div>
+            <div class="mobile-cards-list" id="recentInquiriesMobileList" aria-label="Recent inquiries mobile list">
+                <div class="sk-mobile-card" aria-hidden="true">
+                    <div class="sk-mobile-card-head">
+                        <div class="sk-cell-stack"><span class="sk sk-line sk-md" style="width:68%"></span><span class="sk sk-line sk-xs" style="width:48%"></span></div>
+                        <span class="sk sk-pill" style="width:78px;height:24px"></span>
+                    </div>
+                    <span class="sk sk-line sk-sm" style="width:86%"></span>
+                </div>
+                <div class="sk-mobile-card" aria-hidden="true">
+                    <div class="sk-mobile-card-head">
+                        <div class="sk-cell-stack"><span class="sk sk-line sk-md" style="width:62%"></span><span class="sk sk-line sk-xs" style="width:44%"></span></div>
+                        <span class="sk sk-pill" style="width:74px;height:24px"></span>
+                    </div>
+                    <span class="sk sk-line sk-sm" style="width:78%"></span>
+                </div>
+            </div>
             <div class="table-scroll">
                 <table>
                     <thead>
@@ -458,6 +500,10 @@
                         </tr>
                     </thead>
                     <tbody id="recentInquiryRows">
+                        <tr class="sk-table-row" aria-hidden="true"><td><span class="sk sk-line sk-sm" style="width:82px"></span></td><td><span class="sk sk-line sk-md" style="width:72%"></span></td><td><span class="sk sk-line sk-sm" style="width:86%"></span></td><td><span class="sk sk-line sk-sm" style="width:110px"></span></td><td><span class="sk sk-pill" style="width:92px;height:25px"></span></td><td><span class="sk sk-btn" style="width:74px;height:32px"></span></td></tr>
+                        <tr class="sk-table-row" aria-hidden="true"><td><span class="sk sk-line sk-sm" style="width:82px"></span></td><td><span class="sk sk-line sk-md" style="width:64%"></span></td><td><span class="sk sk-line sk-sm" style="width:78%"></span></td><td><span class="sk sk-line sk-sm" style="width:104px"></span></td><td><span class="sk sk-pill" style="width:86px;height:25px"></span></td><td><span class="sk sk-btn" style="width:74px;height:32px"></span></td></tr>
+                        <tr class="sk-table-row" aria-hidden="true"><td><span class="sk sk-line sk-sm" style="width:82px"></span></td><td><span class="sk sk-line sk-md" style="width:78%"></span></td><td><span class="sk sk-line sk-sm" style="width:82%"></span></td><td><span class="sk sk-line sk-sm" style="width:114px"></span></td><td><span class="sk sk-pill" style="width:90px;height:25px"></span></td><td><span class="sk sk-btn" style="width:74px;height:32px"></span></td></tr>
+                        <tr class="sk-table-row" aria-hidden="true"><td><span class="sk sk-line sk-sm" style="width:82px"></span></td><td><span class="sk sk-line sk-md" style="width:68%"></span></td><td><span class="sk sk-line sk-sm" style="width:74%"></span></td><td><span class="sk sk-line sk-sm" style="width:108px"></span></td><td><span class="sk sk-pill" style="width:84px;height:25px"></span></td><td><span class="sk sk-btn" style="width:74px;height:32px"></span></td></tr>
                     </tbody>
                 </table>
             </div>

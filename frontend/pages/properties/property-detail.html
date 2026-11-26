@@ -29,6 +29,7 @@
     <link rel="stylesheet" href="../../shared/css/mobile-shell.css">
     <script>if (new URLSearchParams(location.search).has('id')) document.documentElement.classList.add('detail-hydrating');</script>
     <script src="../../shared/js/splash.js"></script>
+    <script src="../../shared/js/skeleton.js"></script>
     <script src="../../shared/js/supabase.js"></script>
     <script src="../../shared/js/session.js"></script>
 </head>
@@ -64,6 +65,38 @@
     </header>
 
     <main class="detail-container" id="detailContainer">
+        <!-- SHIMMERING HYDRATION SKELETON (shown while ?id=... fetches live data) -->
+        <div class="us-detail-skeleton" id="propertyDetailSkeleton" aria-hidden="true">
+            <div class="us-detail-sk-header">
+                <div class="us-detail-sk-title">
+                    <span class="sk sk-pill" style="width:96px;height:26px"></span>
+                    <span class="sk sk-line sk-xl" style="width:62%"></span>
+                    <span class="sk sk-line sk-sm" style="width:44%"></span>
+                </div>
+                <span class="sk sk-line sk-xl" style="width:180px"></span>
+            </div>
+            <span class="sk us-detail-sk-carousel"></span>
+            <div class="us-detail-sk-thumbs">
+                <span class="sk us-detail-sk-thumb"></span>
+                <span class="sk us-detail-sk-thumb"></span>
+                <span class="sk us-detail-sk-thumb"></span>
+                <span class="sk us-detail-sk-thumb"></span>
+                <span class="sk us-detail-sk-thumb"></span>
+            </div>
+            <div class="us-detail-sk-specs">
+                <span class="sk us-detail-sk-spec-box"></span>
+                <span class="sk us-detail-sk-spec-box"></span>
+                <span class="sk us-detail-sk-spec-box"></span>
+                <span class="sk us-detail-sk-spec-box"></span>
+            </div>
+            <div class="us-detail-sk-prose">
+                <span class="sk sk-line sk-lg" style="width:32%"></span>
+                <span class="sk sk-line sk-sm" style="width:96%"></span>
+                <span class="sk sk-line sk-sm" style="width:90%"></span>
+                <span class="sk sk-line sk-sm" style="width:76%"></span>
+            </div>
+        </div>
+
         <!-- PROPERTY HEADER (PAGE 7) -->
         <div class="detail-header">
             <div class="header-left">

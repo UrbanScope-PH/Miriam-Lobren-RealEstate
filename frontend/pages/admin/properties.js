@@ -78,9 +78,13 @@ function normalizePropertyRowMeta(property) {
 
 async function loadSavedProperties() {
     if (!propertyTableBody) return;
-    propertyTableBody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding: 24px; color:var(--text-muted);">Loading listings...</td></tr>`;
+    propertyTableBody.innerHTML = (window.UrbanSkeleton && typeof window.UrbanSkeleton.tableRows === "function")
+        ? window.UrbanSkeleton.tableRows(5, "properties")
+        : `<tr><td colspan="6" style="text-align:center; padding: 24px; color:var(--text-muted);">Loading listings...</td></tr>`;
     if (propertiesMobileList) {
-        propertiesMobileList.innerHTML = `<div class="mobile-empty-state">Loading listings...</div>`;
+        propertiesMobileList.innerHTML = (window.UrbanSkeleton && typeof window.UrbanSkeleton.mobileCards === "function")
+            ? window.UrbanSkeleton.mobileCards(3, "properties")
+            : `<div class="mobile-empty-state">Loading listings...</div>`;
     }
 
     let properties = [];

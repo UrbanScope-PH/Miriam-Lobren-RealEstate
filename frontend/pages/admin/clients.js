@@ -90,6 +90,11 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     async function _loadDataInner(options = {}) {
         try {
+            if (inquiries.length === 0 && window.UrbanSkeleton) {
+                if (tableBody) tableBody.innerHTML = window.UrbanSkeleton.tableRows(5, 'clients');
+                const mobileList = document.getElementById('clientsMobileList');
+                if (mobileList) mobileList.innerHTML = window.UrbanSkeleton.mobileCards(3, 'clients');
+            }
             // Load lightweight property id/title lookup once (or on propertiesUpdated)
             if ((!propertiesLoaded || (options && options.forceProperties)) && typeof apiGetProperties === 'function') {
                 const props = await apiGetProperties({ columns: 'id,title' });

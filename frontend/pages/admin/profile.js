@@ -153,6 +153,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Asynchronously refresh with server profile if available
     (async function refreshWithRemoteProfile() {
+        const shouldShowFormSkeleton = profileForm && !savedProfile.email && !storedAdmin.email;
+        if (shouldShowFormSkeleton) profileForm.classList.add('us-form-loading');
         try {
             if (typeof apiGetLeadAgentProfile === 'function') {
                 const lead = await apiGetLeadAgentProfile();
@@ -205,7 +207,10 @@ document.addEventListener('DOMContentLoaded', async () => {
                     }
                 }
             }
-        } catch (_) {}
+        } catch (_) {
+        } finally {
+            if (shouldShowFormSkeleton && profileForm) profileForm.classList.remove('us-form-loading');
+        }
     })();
 
     // Avatar Elements

@@ -1,3 +1,5 @@
+@import url('skeleton.css');
+
 /* Shared responsive frame and navigation for client, admin, and superadmin pages. */
 
 /* Enforce active page color-scheme & branded sleek scrollbars site-wide

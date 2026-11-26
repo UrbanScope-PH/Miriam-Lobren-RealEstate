@@ -62,8 +62,8 @@ frontend/              Everything the browser loads (served at /)
   pages/auth/          Unified login (auto-routes by role), register, and forgot-password flow
   pages/legal/         Terms of Service (terms.html) & Privacy Policy (privacy.html)
   pages/admin/         Dashboard, propertylist.html, add-property, edit-property, clients, users.html (Accounts & Role Access RBAC management), profile, legacy login redirect
-  shared/css/          tokens.css (canonical light/dark palette and motion tokens), common.css (layout, spacing/radius tokens, navbar, footer), session.css, splash.css, mobile-shell.css
-  shared/js/           supabase.js (API gateway), session.js, splash.js, api.js
+  shared/css/          tokens.css (canonical light/dark palette and motion tokens), common.css (layout, spacing/radius tokens, navbar, footer), session.css, splash.css, skeleton.css (sitewide shimmer & page skeletons), mobile-shell.css
+  shared/js/           supabase.js (API gateway), session.js, splash.js, skeleton.js (page skeleton shell & async builders), api.js
   assets/images/       Photos, logos, icons
 supabase/              Supabase CLI project: config.toml, migrations/ (timestamped .sql), seed.sql, scripts/ (one-off SQL Editor fixes) — see DATABASE.md §10
 ```
@@ -1558,6 +1558,11 @@ path when rendering from a page.
   - Attached the linked inquiry record to each calendar agenda event in `getInquiryCalendarRequest()` / `rebuildCalendarSchedule()` and rendered agenda cards in `renderAgenda()` as interactive, keyboard-accessible cards (`.agenda-event.is-clickable`, `role="button"`, `tabindex="0"`) with a `"View details ›"` affordance in `.agenda-event-head`.
   - Wired delegated `click` and `Enter`/`Space` keyboard handlers on `#calendarAgenda` (`handleAgendaEventActivation()` + `resolveAgendaInquiryModalPayload()` / `buildInquiryModalPayload()`) to resolve the latest matching inquiry from `allDashboardInquiries` (with graceful fallback for standalone appointment records) and open the existing `#inquiryModal` via `openInquiryModal(data)`.
   - Added Light & Dark Mode hover, focus-visible, and left-accent border styles in `dashboard.css` and `admin-shell.css` (gated inside `@media (hover: hover) and (pointer: fine)`).
+
+174. **Sitewide Skeleton Loader System Across All 24 Active Pages (`frontend/shared/css/skeleton.css`, `frontend/shared/js/skeleton.js`, `mobile-shell.css`, `common.css`, and all page HTML/JS controllers):**
+  - **Shared Shimmer Engine & Page Entry Skeletons (`skeleton.css`, `skeleton.js`, `@import url('skeleton.css')` at top of `mobile-shell.css`):** Built a Light & Dark Mode wave shimmer system (`.sk`, `.sk-line`, `.sk-pill`, `.sk-circle`, `.sk-rect`, `.sk-btn`, `.sk-kpi-inline`) respecting `prefers-reduced-motion: reduce`, a responsive layout-matched page entry skeleton (`#usPageSkeleton`) with 9 page templates (`home`, `property`, `inquiry`, `history`, `auth`, `legal`, `admin-dashboard`, `admin-table`, `admin-form`) that skips automatically when Welcome Splash (`#splash`) is active, and a progressive `MutationObserver` image shimmer (`img.us-img-loading` → `us-img-loaded`) for uncached photos on every page.
+  - **Wired `<script src="...shared/js/skeleton.js"></script>` in `<head>` across all 24 active pages** (`index.html`, all 8 property pages, `inquiry.html`, `history.html`, all 3 auth pages, both legal pages, and all 8 admin pages — excluding only the `0s` `admin/login.html` redirect stub).
+  - **Inline Async Data Skeletons:** Replaced raw `"Loading..."` strings and spinners with structure-matched shimmering skeletons across every async data view: Homepage property grid (`index.js`, `index.css`), Property Detail `?id=` hydration (`property-detail.html`, `property-detail.js`), Inquiry property preview (`inquiry.html`, `inquiry.js`), Client Inquiry History KPIs & cards (`history.html`, `history.js`), Admin Dashboard KPIs / notifications / calendar agenda / recent inquiries + synced donut roll start via `UrbanSkeleton.whenDone()` (`dashboard.html`, `dashboard.js`, `admin-shell.js`, `admin-shell.css`), Properties table & mobile cards (`propertylist.html`, `properties.js`), Client Inquiries KPIs / table / mobile cards (`clients.html`, `clients.js`), Accounts & Roles table / mobile cards (`users.html`, `users.js`), Edit Property form & gallery tiles (`edit-property.html`, `edit-property.js`), and Admin Profile remote hydration (`profile.js`).
 
 ## Safety Rules
 

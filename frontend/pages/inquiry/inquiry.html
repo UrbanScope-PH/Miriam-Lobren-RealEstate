@@ -29,6 +29,7 @@
     <link rel="stylesheet" href="inquiry.css">
     <link rel="stylesheet" href="../../shared/css/mobile-shell.css">
     <script src="../../shared/js/splash.js"></script>
+    <script src="../../shared/js/skeleton.js"></script>
     <script src="../../shared/js/supabase.js"></script>
     <script src="../../shared/js/session.js"></script>
 </head>
@@ -183,6 +184,14 @@
                 </div>
 
                 <p class="sold-property-notice" id="soldPropertyNotice" role="alert" hidden></p>
+                <div class="sk-inquiry-preview" id="inquiryPropPreviewSkeleton" hidden aria-hidden="true">
+                    <span class="sk sk-inquiry-thumb"></span>
+                    <div class="sk-inquiry-meta">
+                        <span class="sk sk-line sk-md" style="width:58%"></span>
+                        <span class="sk sk-line sk-xs" style="width:76%"></span>
+                        <span class="sk sk-line sk-sm" style="width:36%"></span>
+                    </div>
+                </div>
                 <div class="property-summary-box" id="propertySummaryBox">
                     <img src="../../assets/images/property1.jpg" alt="Property Thumbnail" class="summary-thumb" id="propSummaryThumb">
                     <div class="summary-details">

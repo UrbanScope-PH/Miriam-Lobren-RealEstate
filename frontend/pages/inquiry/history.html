@@ -14,6 +14,7 @@
     <link rel="stylesheet" href="../../shared/css/session.css">
     <link rel="stylesheet" href="history.css">
     <link rel="stylesheet" href="../../shared/css/mobile-shell.css">
+    <script src="../../shared/js/skeleton.js"></script>
     <script src="../../shared/js/supabase.js"></script>
     <script src="../../shared/js/session.js"></script>
 </head>
@@ -75,19 +76,19 @@
             <div class="history-stats-bar">
                 <div class="stat-pill">
                     <span class="stat-pill-label">Total Inquiries</span>
-                    <span class="stat-pill-value" id="statTotal">0</span>
+                    <span class="stat-pill-value" id="statTotal"><span class="sk sk-kpi-inline" aria-hidden="true"></span></span>
                 </div>
                 <div class="stat-pill">
                     <span class="stat-pill-label">Under Review</span>
-                    <span class="stat-pill-value" id="statUnderReview">0</span>
+                    <span class="stat-pill-value" id="statUnderReview"><span class="sk sk-kpi-inline" aria-hidden="true"></span></span>
                 </div>
                 <div class="stat-pill">
                     <span class="stat-pill-label">Approved</span>
-                    <span class="stat-pill-value" id="statApproved">0</span>
+                    <span class="stat-pill-value" id="statApproved"><span class="sk sk-kpi-inline" aria-hidden="true"></span></span>
                 </div>
                 <div class="stat-pill">
                     <span class="stat-pill-label">Cancelled</span>
-                    <span class="stat-pill-value" id="statCancelled">0</span>
+                    <span class="stat-pill-value" id="statCancelled"><span class="sk sk-kpi-inline" aria-hidden="true"></span></span>
                 </div>
             </div>
         </section>
@@ -114,7 +115,45 @@
 
         <!-- INQUIRIES LIST CONTAINER -->
         <div id="inquiriesList" class="inquiries-list">
-            <!-- Injected dynamically by history.js -->
+            <div class="history-skeleton-card" aria-hidden="true">
+                <div class="history-sk-head">
+                    <div style="flex:1;display:flex;flex-direction:column;gap:8px">
+                        <span class="sk sk-line sk-xs" style="width:120px"></span>
+                        <span class="sk sk-line sk-lg" style="width:62%"></span>
+                    </div>
+                    <span class="sk sk-pill" style="width:98px;height:28px"></span>
+                </div>
+                <div class="history-sk-body">
+                    <span class="sk sk-line sk-sm" style="width:94%"></span>
+                    <span class="sk sk-line sk-sm" style="width:74%"></span>
+                </div>
+                <div class="history-sk-foot">
+                    <span class="sk sk-line sk-xs" style="width:150px"></span>
+                    <div style="display:flex;gap:8px">
+                        <span class="sk sk-btn" style="width:92px;height:34px"></span>
+                        <span class="sk sk-btn" style="width:86px;height:34px"></span>
+                    </div>
+                </div>
+            </div>
+            <div class="history-skeleton-card" aria-hidden="true">
+                <div class="history-sk-head">
+                    <div style="flex:1;display:flex;flex-direction:column;gap:8px">
+                        <span class="sk sk-line sk-xs" style="width:110px"></span>
+                        <span class="sk sk-line sk-lg" style="width:54%"></span>
+                    </div>
+                    <span class="sk sk-pill" style="width:92px;height:28px"></span>
+                </div>
+                <div class="history-sk-body">
+                    <span class="sk sk-line sk-sm" style="width:88%"></span>
+                    <span class="sk sk-line sk-sm" style="width:68%"></span>
+                </div>
+                <div class="history-sk-foot">
+                    <span class="sk sk-line sk-xs" style="width:140px"></span>
+                    <div style="display:flex;gap:8px">
+                        <span class="sk sk-btn" style="width:92px;height:34px"></span>
+                    </div>
+                </div>
+            </div>
         </div>
 
         <!-- EMPTY STATE -->

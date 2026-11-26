@@ -156,6 +156,15 @@
 
     async function loadUsers() {
         try {
+            if (allUsers.length === 0 && window.UrbanSkeleton) {
+                if (elements.usersTableBody) {
+                    elements.usersTableBody.innerHTML = window.UrbanSkeleton.tableRows(5, 'users');
+                }
+                const mobileList = document.getElementById('usersMobileList');
+                if (mobileList) {
+                    mobileList.innerHTML = window.UrbanSkeleton.mobileCards(3, 'users');
+                }
+            }
             let users = null;
             if (typeof apiGetSuperadminUsers === 'function') {
                 users = await apiGetSuperadminUsers();
