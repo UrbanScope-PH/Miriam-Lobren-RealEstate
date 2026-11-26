@@ -1543,6 +1543,9 @@ path when rendering from a page.
   - **Balanced Mobile Scale (Pass 2 across all 21 frontend CSS files):** Nudged mobile scale (`<= 768px`, `<= 480px`, etc.) up cleanly (`58px`/`56px` topbar with `32px`/`30px` logo, `15px` untruncated `UrbanScope` title, `38px`/`36px` utility buttons; `25px`–`25.35px` hero H1, `21px`–`23px` internal H1s, `18px`–`20px` H2s, `14.5px` body prose at `1.58` line-height, `16px` mobile inputs at `42px`–`44px` height, `44px` primary CTAs, `38px`–`40px` secondary/icon buttons, `22px`–`23px` 2-up KPI values, and `14px`–`16px` card padding/gaps) while keeping desktop (`> 768px`, `1440px`, `>= 1600px`), dark mode, and mobile-native invariants intact.
   - **Verification:** Pass 2 headless Chrome CDP verification across 65 runs (13 pages × `390x844` light/dark, `375x667` light/dark, and `1440x900` desktop) confirmed `body` `overflowY === 'visible'`, touch-emulated scrolling (`173px`–`596px` vertical scroll range across admin & public pages), zero horizontal overflow, zero FAB/footer overlap, and untruncated admin topbars.
 
+170. **Unified Sitewide Footer Copyright (`&copy; 2026 UrbanScope &bull; All Rights Reserved`):**
+  - Standardized the footer copyright line to `© 2026 UrbanScope • All Rights Reserved` (`&copy; 2026 UrbanScope &bull; All Rights Reserved`) across all 14 public, legal, property showcase/detail, and auth pages (`frontend/index.html`, `frontend/pages/legal/{terms,privacy}.html`, `frontend/pages/properties/{property-detail,casasuerte,kathleen,Liora,Airmen,benecia,amore-classico,midori}.html`, and `frontend/pages/auth/{login,register,forgot-password}.html`), replacing `"© 2026 Miriam Lobren · CD Miranda Realty. Website by UrbanScope. All rights reserved."`, `"© 2026 Miriam Lobren Real Estate. All rights reserved."`, and the `"UrbanScope2026"` typo on `register.html`.
+
 ## Safety Rules
 
 - Do **not** commit `backend/urbanscope.db`, `.env`, or virtualenvs (already in `.gitignore`).
