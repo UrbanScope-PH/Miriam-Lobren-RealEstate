@@ -1622,6 +1622,139 @@ async function initDynamicAgentDetails() {
     document.addEventListener('visibilitychange', () => {
         if (!document.hidden) handleReSync();
     });
+
+    initHomepageNavScrollSpy();
+}
+
+function initHomepageNavScrollSpy() {
+    const nav = document.getElementById('mainNav');
+    if (!nav) return;
+
+    const links = Array.from(nav.querySelectorAll('a'));
+    if (links.length === 0) return;
+
+    const sectionIds = ['properties', 'about', 'faqs', 'contact'];
+    const linkByKey = new Map();
+
+    links.forEach((link) => {
+        const href = (link.getAttribute('href') || '').trim();
+        if (href.startsWith('#')) {
+            const id = href.slice(1).toLowerCase();
+            if (id) linkByKey.set(id, link);
+        } else if (href === 'index.html' || href === './' || href === '/' || href === '#home') {
+            linkByKey.set('home', link);
+        }
+    });
+
+    let currentActiveKey = '';
+    let clickLockUntil = 0;
+    let rafPending = false;
+
+    function setActiveNav(key) {
+        const targetKey = linkByKey.has(key) ? key : 'home';
+        if (targetKey === currentActiveKey) return;
+        currentActiveKey = targetKey;
+
+        links.forEach((link) => {
+            const isMatch = linkByKey.get(targetKey) === link;
+            link.classList.toggle('active', isMatch);
+            if (isMatch) {
+                link.setAttribute('aria-current', targetKey === 'home' ? 'page' : 'location');
+            } else {
+                link.removeAttribute('aria-current');
+            }
+        });
+    }
+
+    function computeActiveKeyFromScroll() {
+        const scrollY = window.scrollY || window.pageYOffset || 0;
+        const viewportH = window.innerHeight || document.documentElement.clientHeight || 800;
+        const docH = Math.max(
+            document.body ? document.body.scrollHeight : 0,
+            document.documentElement ? document.documentElement.scrollHeight : 0
+        );
+
+        // At bottom of page (CTA banner / Contact footer) -> always highlight Contact
+        if (docH > viewportH + 40 && scrollY + viewportH >= docH - 60 && linkByKey.has('contact')) {
+            return 'contact';
+        }
+
+        // Near very top of hero -> always highlight Home
+        if (scrollY < 80) {
+            return 'home';
+        }
+
+        const navbar = document.querySelector('.navbar');
+        const navHeight = navbar ? navbar.offsetHeight : 72;
+        const probeY = scrollY + navHeight + Math.min(180, Math.round(viewportH * 0.28));
+
+        let activeKey = 'home';
+        for (const id of sectionIds) {
+            const el = document.getElementById(id);
+            if (!el) continue;
+            const top = el.getBoundingClientRect().top + scrollY;
+            if (probeY >= top) {
+                activeKey = id;
+            }
+        }
+        return activeKey;
+    }
+
+    function syncNavFromScroll() {
+        rafPending = false;
+        if (Date.now() < clickLockUntil) return;
+        setActiveNav(computeActiveKeyFromScroll());
+    }
+
+    function onScrollOrResize() {
+        if (rafPending) return;
+        rafPending = true;
+        window.requestAnimationFrame(syncNavFromScroll);
+    }
+
+    // Immediate highlight on navbar link clicks
+    links.forEach((link) => {
+        link.addEventListener('click', (e) => {
+            if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
+            const href = (link.getAttribute('href') || '').trim();
+            if (href.startsWith('#')) {
+                const key = href.slice(1).toLowerCase();
+                if (linkByKey.has(key)) {
+                    clickLockUntil = Date.now() + 700;
+                    setActiveNav(key);
+                }
+            } else if (href === 'index.html' || href === './' || href === '/') {
+                e.preventDefault();
+                clickLockUntil = Date.now() + 700;
+                setActiveNav('home');
+                if (window.location.hash) {
+                    try { window.history.replaceState(null, '', window.location.pathname + window.location.search); } catch (_) {}
+                }
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+        });
+    });
+
+    window.addEventListener('scroll', onScrollOrResize, { passive: true });
+    window.addEventListener('resize', onScrollOrResize, { passive: true });
+    window.addEventListener('hashchange', () => {
+        const hashKey = (window.location.hash || '').replace(/^#/, '').toLowerCase();
+        if (hashKey && linkByKey.has(hashKey)) {
+            clickLockUntil = Date.now() + 600;
+            setActiveNav(hashKey);
+        } else {
+            syncNavFromScroll();
+        }
+    });
+
+    // Initial state on page load (respects URL hash like #contact or #about)
+    const initialHash = (window.location.hash || '').replace(/^#/, '').toLowerCase();
+    if (initialHash && linkByKey.has(initialHash)) {
+        clickLockUntil = Date.now() + 500;
+        setActiveNav(initialHash);
+    } else {
+        setActiveNav(computeActiveKeyFromScroll());
+    }
 }
 
 if (document.readyState === 'loading') {
