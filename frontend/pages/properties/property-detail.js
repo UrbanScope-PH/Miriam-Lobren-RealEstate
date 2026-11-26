@@ -614,6 +614,21 @@ window.addEventListener('DOMContentLoaded', () => {
         loadStaticPropertyAvailability();
     }
     checkInquiryAuthNote();
+    const detailBackBtn = document.getElementById('detailBackBtn');
+    if (detailBackBtn) {
+        detailBackBtn.addEventListener('click', (e) => {
+            try {
+                const ref = document.referrer ? new URL(document.referrer) : null;
+                const sameOrigin = Boolean(ref && ref.origin === window.location.origin);
+                const samePage = Boolean(ref && ref.pathname === window.location.pathname && ref.search === window.location.search);
+                if (sameOrigin && !samePage && window.history.length > 1) {
+                    e.preventDefault();
+                    window.history.back();
+                }
+            } catch (_) {}
+        });
+    }
+
     const searchToggle = document.getElementById('searchToggle');
     if (searchToggle) {
         searchToggle.addEventListener('click', () => {

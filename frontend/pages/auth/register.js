@@ -104,11 +104,8 @@
     let isTermsModalOpen = false;
     let pendingGoogleSignup = false;
 
-    const DEFAULT_LOCKED_HINT = 'Scroll down to read the entire agreement to enable \u201cI Agree\u201d';
-    const SUBMIT_LOCKED_HINT = 'Please scroll to the bottom and click \u201cI Agree\u201d before creating your account';
-    const GOOGLE_LOCKED_HINT = 'Please scroll to the bottom and click \u201cI Agree\u201d before signing up with Google';
-    const READY_HINT = 'You have read the agreement \u2014 click \u201cI Agree\u201d to continue';
-    const GOOGLE_READY_HINT = 'You have read the agreement \u2014 click \u201cI Agree\u201d to continue with Google';
+    const READY_HINT = 'Click \u201cI Agree\u201d to confirm and continue';
+    const GOOGLE_READY_HINT = 'Click \u201cI Agree\u201d to continue with Google';
 
     if (termsCheckbox) {
         termsCheckbox.checked = false;
@@ -116,28 +113,18 @@
 
     function updateTermsLabelUI() {
         if (!termsLabel) return;
-        termsLabel.classList.toggle('is-accepted', Boolean(hasAcceptedTerms && termsCheckbox && termsCheckbox.checked));
+        termsLabel.classList.toggle('is-accepted', Boolean(termsCheckbox && termsCheckbox.checked));
     }
 
-    function pulseScrollHint() {
-        if (!termsScrollHint) return;
-        termsScrollHint.classList.remove('pulse-attention');
-        void termsScrollHint.offsetWidth;
-        termsScrollHint.classList.add('pulse-attention');
-    }
-
-    function setAcceptButtonUnlocked(unlocked, customLockedMessage) {
+    function setAcceptButtonUnlocked() {
         if (acceptTermsBtn) {
-            acceptTermsBtn.disabled = !unlocked;
+            acceptTermsBtn.disabled = false;
         }
         if (termsScrollHint) {
-            termsScrollHint.classList.toggle('is-ready', Boolean(unlocked));
+            termsScrollHint.classList.add('is-ready');
         }
         if (termsScrollHintText) {
-            const readyText = pendingGoogleSignup ? GOOGLE_READY_HINT : READY_HINT;
-            termsScrollHintText.textContent = unlocked
-                ? readyText
-                : (customLockedMessage || DEFAULT_LOCKED_HINT);
+            termsScrollHintText.textContent = pendingGoogleSignup ? GOOGLE_READY_HINT : READY_HINT;
         }
     }
 
@@ -173,11 +160,7 @@
         if (termsScrollBar) {
             termsScrollBar.style.width = (remaining <= threshold ? 100 : progressPct) + '%';
         }
-
-        if (remaining <= threshold && !hasScrolledToBottom) {
-            hasScrolledToBottom = true;
-            setAcceptButtonUnlocked(true);
-        }
+        hasScrolledToBottom = true;
     }
 
     termsModalTabs.forEach(function (tab) {
@@ -196,7 +179,7 @@
         });
     });
 
-    function openTermsModal(sectionTarget, fromSubmitAttempt, triggerSource) {
+    function openTermsModal(sectionTarget) {
         if (!termsModalOverlay || !termsModalBody) return;
 
         isTermsModalOpen = true;
@@ -204,18 +187,9 @@
         termsModalOverlay.classList.add('open');
         termsModalOverlay.setAttribute('aria-hidden', 'false');
 
-        if (!hasAcceptedTerms) {
-            hasScrolledToBottom = false;
-            const lockedMsg = triggerSource === 'google'
-                ? GOOGLE_LOCKED_HINT
-                : (fromSubmitAttempt ? SUBMIT_LOCKED_HINT : DEFAULT_LOCKED_HINT);
-            setAcceptButtonUnlocked(false, lockedMsg);
-            if (termsScrollBar) termsScrollBar.style.width = '0%';
-        } else {
-            hasScrolledToBottom = true;
-            setAcceptButtonUnlocked(true);
-            if (termsScrollBar) termsScrollBar.style.width = '100%';
-        }
+        hasScrolledToBottom = true;
+        setAcceptButtonUnlocked();
+        if (termsScrollBar) termsScrollBar.style.width = '0%';
 
         // Reset or jump to requested section inside scrollable container
         requestAnimationFrame(function () {
@@ -229,10 +203,6 @@
 
             evaluateTermsScroll();
             termsModalBody.focus({ preventScroll: true });
-
-            if (fromSubmitAttempt && !hasAcceptedTerms) {
-                pulseScrollHint();
-            }
         });
     }
 
@@ -243,9 +213,6 @@
         termsModalOverlay.setAttribute('aria-hidden', 'true');
         document.body.classList.remove('terms-modal-open');
 
-        if (!hasAcceptedTerms && termsCheckbox) {
-            termsCheckbox.checked = false;
-        }
         updateTermsLabelUI();
 
         if (focusTarget && typeof focusTarget.focus === 'function') {
@@ -258,7 +225,7 @@
     }
     window.addEventListener('resize', evaluateTermsScroll);
 
-    // Intercept clicks on the Terms checkbox, label text, and inline Terms/Privacy links
+    // Allow direct checkbox toggle; clicking inline Terms/Privacy links opens optional preview modal
     if (termsLabel) {
         termsLabel.addEventListener('click', function (e) {
             const clickedLink = e.target.closest('a');
@@ -267,44 +234,21 @@
                 e.stopPropagation();
                 saveRegisterDraft();
                 const targetPart = clickedLink.id === 'openPrivacyLink' ? 'privacy' : 'terms';
-                openTermsModal(targetPart, false);
-                return;
-            }
-
-            if (!hasAcceptedTerms) {
-                e.preventDefault();
-                setTimeout(function () {
-                    if (!hasAcceptedTerms && termsCheckbox) {
-                        termsCheckbox.checked = false;
-                    }
-                }, 0);
-                openTermsModal('terms', false);
+                openTermsModal(targetPart);
             }
         });
     }
 
     if (termsCheckbox) {
         termsCheckbox.addEventListener('change', function () {
-            if (this.checked && !hasAcceptedTerms) {
-                this.checked = false;
-                openTermsModal('terms', false);
-                return;
-            }
-            if (!this.checked) {
-                hasAcceptedTerms = false;
-                hasScrolledToBottom = false;
-                updateTermsLabelUI();
-            }
+            hasAcceptedTerms = Boolean(this.checked);
+            updateTermsLabelUI();
         });
     }
 
     if (acceptTermsBtn) {
         acceptTermsBtn.addEventListener('click', function () {
             if (window.__activeGooglePending) return;
-            if (!hasScrolledToBottom) {
-                pulseScrollHint();
-                return;
-            }
             const shouldContinueWithGoogle = pendingGoogleSignup;
             pendingGoogleSignup = false;
             hasAcceptedTerms = true;
@@ -321,25 +265,10 @@
         });
     }
 
-    // Pulse scroll hint if user clicks near locked button area before scrolling
-    const modalActionsWrap = document.querySelector('.terms-modal-actions');
-    if (modalActionsWrap) {
-        modalActionsWrap.addEventListener('click', function (e) {
-            if (!hasScrolledToBottom && e.target !== declineTermsBtn) {
-                pulseScrollHint();
-            }
-        });
-    }
-
     if (declineTermsBtn) {
         declineTermsBtn.addEventListener('click', function () {
             const returnFocusEl = pendingGoogleSignup && googleSignupBtn ? googleSignupBtn : termsCheckbox;
             pendingGoogleSignup = false;
-            hasAcceptedTerms = false;
-            hasScrolledToBottom = false;
-            if (termsCheckbox) {
-                termsCheckbox.checked = false;
-            }
             closeTermsModal(returnFocusEl);
         });
     }
@@ -496,11 +425,15 @@
                 return;
             }
 
-            if (!hasAcceptedTerms || !termsCheckbox || !termsCheckbox.checked) {
-                if (termsCheckbox) termsCheckbox.checked = false;
-                openTermsModal('terms', true);
+            if (!termsCheckbox || !termsCheckbox.checked) {
+                if (notice) {
+                    notice.hidden = false;
+                    notice.textContent = 'Please check the box to confirm that you accept the UrbanScope Terms of Service and Privacy Policy.';
+                }
+                if (termsCheckbox) termsCheckbox.focus();
                 return;
             }
+            hasAcceptedTerms = true;
 
             btn.disabled = true;
             btn.innerText = 'Sending Verification Code…';

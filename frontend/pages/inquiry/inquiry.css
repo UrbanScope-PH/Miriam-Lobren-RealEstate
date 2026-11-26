@@ -27,9 +27,101 @@ body {
 
 /* CONTAINER */
 .inquiry-page-container {
+    position: relative;
     max-width: 1000px;
     margin: 36px auto 60px;
     padding: 0 4%;
+}
+
+.inquiry-top-nav {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    margin-bottom: 10px;
+}
+
+.inquiry-back-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    border: none;
+    border-radius: 10px;
+    background: transparent;
+    color: var(--dark-green);
+    text-decoration: none;
+    cursor: pointer;
+    transition: color 0.18s ease, background-color 0.18s ease, transform 0.18s ease;
+    touch-action: manipulation;
+}
+
+.inquiry-back-btn:visited {
+    color: var(--dark-green);
+}
+
+.inquiry-back-btn svg {
+    display: block;
+    transition: transform 0.2s ease;
+    flex-shrink: 0;
+}
+
+@media (hover: hover) and (pointer: fine) {
+    .inquiry-back-btn:hover {
+        background: var(--light-green);
+        color: var(--dark-green);
+    }
+
+    .inquiry-back-btn:hover svg {
+        transform: translateX(-3px);
+    }
+}
+
+.inquiry-back-btn:focus-visible {
+    outline: 2px solid var(--green);
+    outline-offset: 2px;
+}
+
+html.dark-mode .inquiry-back-btn,
+html.dark-mode .inquiry-back-btn:visited {
+    background: transparent;
+    color: var(--dark-green);
+}
+
+@media (hover: hover) and (pointer: fine) {
+    html.dark-mode .inquiry-back-btn:hover {
+        background: rgba(134, 239, 172, 0.12);
+        color: var(--dark-green);
+    }
+}
+
+@media (min-width: 1040px) {
+    .inquiry-top-nav {
+        position: absolute;
+        top: 0;
+        left: 0;
+        margin-bottom: 0;
+        z-index: 5;
+    }
+}
+
+@media (min-width: 1120px) {
+    .inquiry-top-nav {
+        left: -44px;
+    }
+}
+
+@media (max-width: 768px) {
+    .inquiry-top-nav {
+        margin-bottom: 8px;
+    }
+
+    .inquiry-back-btn {
+        width: 36px;
+        height: 36px;
+        margin-left: -6px;
+    }
 }
 
 .guest-inquiry-banner {

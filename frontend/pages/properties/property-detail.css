@@ -3,10 +3,102 @@
 /* PROPERTY DETAIL STYLING (WIREFRAME PAGES 7-9) */
 
 .detail-container {
+    position: relative;
     max-width: 1200px;
     margin: 0 auto;
     padding: 34px 4% 80px;
     transition: opacity 0.14s ease;
+}
+
+.detail-top-nav {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    margin-bottom: 10px;
+}
+
+.detail-back-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    border: none;
+    border-radius: 10px;
+    background: transparent;
+    color: var(--dark-green);
+    text-decoration: none;
+    cursor: pointer;
+    transition: color 0.18s ease, background-color 0.18s ease, transform 0.18s ease;
+    touch-action: manipulation;
+}
+
+.detail-back-btn:visited {
+    color: var(--dark-green);
+}
+
+.detail-back-btn svg {
+    display: block;
+    transition: transform 0.2s ease;
+    flex-shrink: 0;
+}
+
+@media (hover: hover) and (pointer: fine) {
+    .detail-back-btn:hover {
+        background: var(--light-green);
+        color: var(--dark-green);
+    }
+
+    .detail-back-btn:hover svg {
+        transform: translateX(-3px);
+    }
+}
+
+.detail-back-btn:focus-visible {
+    outline: 2px solid var(--green);
+    outline-offset: 2px;
+}
+
+html.dark-mode .detail-back-btn,
+html.dark-mode .detail-back-btn:visited {
+    background: transparent;
+    color: var(--dark-green);
+}
+
+@media (hover: hover) and (pointer: fine) {
+    html.dark-mode .detail-back-btn:hover {
+        background: rgba(134, 239, 172, 0.12);
+        color: var(--dark-green);
+    }
+}
+
+@media (min-width: 1200px) {
+    .detail-top-nav {
+        position: absolute;
+        top: 30px;
+        left: 0;
+        margin-bottom: 0;
+        z-index: 5;
+    }
+}
+
+@media (min-width: 1360px) {
+    .detail-top-nav {
+        left: -44px;
+    }
+}
+
+@media (max-width: 768px) {
+    .detail-top-nav {
+        margin-bottom: 8px;
+    }
+
+    .detail-back-btn {
+        width: 36px;
+        height: 36px;
+        margin-left: -6px;
+    }
 }
 
 html.detail-hydrating .detail-container {
@@ -265,6 +357,8 @@ html.detail-hydrating .detail-container {
     font-size: 15.5px;
     line-height: 1.7;
     color: var(--text-secondary);
+    text-align: justify;
+    text-justify: inter-word;
 }
 
 .amenities-grid {
@@ -1834,6 +1928,11 @@ html.dark-mode .tcp-document-modal-image-wrap {
     .detail-container {
         max-width: 1680px;
         padding: 36px 3.5% 80px;
+    }
+
+    .detail-top-nav {
+        top: 32px;
+        left: -44px;
     }
 
     .main-carousel {

@@ -25,11 +25,17 @@
         }
     };
 
-    // Update back buttons text and state
+    // Update back button accessible label/tooltip
     document.addEventListener('DOMContentLoaded', function () {
+        const backLabel = isFromRegister ? 'Back to Registration' : 'Go Back';
+        const legalBackBtn = document.getElementById('legalBackBtn');
+        if (legalBackBtn) {
+            legalBackBtn.setAttribute('aria-label', backLabel);
+            legalBackBtn.setAttribute('title', backLabel);
+        }
         const backBtnTexts = document.querySelectorAll('.legal-back-text');
         backBtnTexts.forEach(function (el) {
-            el.textContent = isFromRegister ? 'Back to Registration' : 'Go Back';
+            el.textContent = backLabel;
         });
 
         // Ensure doc switcher preserves ?from=register

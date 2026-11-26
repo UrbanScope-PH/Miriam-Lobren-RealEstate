@@ -17,7 +17,7 @@
             root.classList.remove("dark-mode");
             root.setAttribute("data-theme", "light");
         }
-    } catch (e) {}
+    } catch (e) { }
 
     function setAuthTheme(mode, animate) {
         const isDark = mode === "dark";
@@ -33,12 +33,12 @@
         const commitThemeDom = () => {
             root.classList.toggle("dark-mode", isDark);
             root.setAttribute("data-theme", cleanMode);
-            try { localStorage.setItem(THEME_STORAGE_KEY, cleanMode); } catch (e) {}
-            try { document.cookie = "urbanscope_theme=" + cleanMode + "; path=/; max-age=31536000; SameSite=Lax"; } catch (e) {}
+            try { localStorage.setItem(THEME_STORAGE_KEY, cleanMode); } catch (e) { }
+            try { document.cookie = "urbanscope_theme=" + cleanMode + "; path=/; max-age=31536000; SameSite=Lax"; } catch (e) { }
             try {
                 const baseName = String(window.name || "").replace(/\s*__urbanscope_theme=(?:dark|light)/g, "").trim();
                 window.name = (baseName ? baseName + " " : "") + "__urbanscope_theme=" + cleanMode;
-            } catch (e) {}
+            } catch (e) { }
 
             document.querySelectorAll(".theme-toggle-btn").forEach((btn) => {
                 btn.setAttribute("aria-pressed", String(isDark));
@@ -163,7 +163,7 @@ function updateDots(dotIdx) {
     currentDot = dotIdx;
     try {
         sessionStorage.setItem("auth_slide_index", String(dotIdx));
-    } catch(err) {}
+    } catch (err) { }
     const dots = document.querySelectorAll(".dots-container .dot");
     dots.forEach((dot, idx) => {
         if (idx === dotIdx) {
@@ -378,7 +378,7 @@ function initCarousel() {
                 savedIndex = parsed;
             }
         }
-    } catch(err) {}
+    } catch (err) { }
 
     trackIndex = savedIndex + 1;
     currentDot = savedIndex;
@@ -414,7 +414,7 @@ function togglePassword(inputId, btn) {
     const isPassword = input.type === "password";
     input.type = isPassword ? "text" : "password";
 
-    const eyeSvg = isPassword 
+    const eyeSvg = isPassword
         ? `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"/><path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"/><path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61"/><line x1="2" x2="22" y1="2" y2="22"/></svg>`
         : `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>`;
 
@@ -514,7 +514,7 @@ document.addEventListener("DOMContentLoaded", () => {
                         preloadedGoogleConfig = cfg;
                     }
                 })
-                .catch(() => {});
+                .catch(() => { });
         }
     }
 
@@ -566,7 +566,7 @@ document.addEventListener("DOMContentLoaded", () => {
     function redirectAuthenticatedGoogleUser(authResult) {
         try {
             sessionStorage.removeItem("urbanscope_register_draft");
-        } catch (_) {}
+        } catch (_) { }
 
         const queryParams = new URLSearchParams(window.location.search);
         const rawNext = queryParams.get("redirect") || "";
@@ -634,7 +634,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         if (!googleData.otp_already_sent && typeof apiStartRegistrationOtp === "function") {
             const botData = window.UrbanBotGuard ? window.UrbanBotGuard.collect() : {};
-            apiStartRegistrationOtp(googleData.email, botData).catch(() => {});
+            apiStartRegistrationOtp(googleData.email, botData).catch(() => { });
         }
 
         function startGoogleOtpCountdown() {
@@ -845,9 +845,11 @@ document.addEventListener("DOMContentLoaded", () => {
                 document.body.classList.add("terms-modal-open");
                 termsBody.scrollTop = 0;
                 if (termsScrollBar) termsScrollBar.style.width = "0%";
-                if (acceptTermsBtn) acceptTermsBtn.disabled = true;
+                if (acceptTermsBtn) acceptTermsBtn.disabled = false;
+                const scrollHintEl = document.getElementById("termsScrollHint");
+                if (scrollHintEl) scrollHintEl.classList.add("is-ready");
                 if (termsScrollHintText) {
-                    termsScrollHintText.textContent = "Scroll down to read the entire agreement to enable “I Agree”";
+                    termsScrollHintText.textContent = "Click “I Agree” to confirm and complete registration.";
                 }
                 window.setTimeout(() => { termsBody.focus({ preventScroll: true }); }, 120);
             }, true);
@@ -855,16 +857,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
         function onTermsScroll() {
             if (!window.__activeGooglePending || !termsBody) return;
-            const remaining = termsBody.scrollHeight - (termsBody.scrollTop + termsBody.clientHeight);
             const totalScrollable = termsBody.scrollHeight - termsBody.clientHeight;
             const progress = totalScrollable > 0 ? Math.min(100, Math.max(0, (termsBody.scrollTop / totalScrollable) * 100)) : 100;
             if (termsScrollBar) termsScrollBar.style.width = progress + "%";
-            if (remaining <= 35 || progress >= 98) {
-                if (acceptTermsBtn) acceptTermsBtn.disabled = false;
-                if (termsScrollHintText) {
-                    termsScrollHintText.textContent = "✓ You have read the entire agreement. Click “I Agree” to complete registration.";
-                }
-            }
         }
 
         if (termsBody && !termsBody.dataset.googleBound) {
@@ -1212,7 +1207,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 formTimestamps.set(formId, Date.now());
             }
             if (turnstileId) {
-                renderTurnstileIfEnabled(turnstileId).catch(() => {});
+                renderTurnstileIfEnabled(turnstileId).catch(() => { });
             }
         },
         collect(formId, turnstileId) {
@@ -1244,7 +1239,7 @@ document.addEventListener("DOMContentLoaded", () => {
             if (window.turnstile && container.dataset.widgetId) {
                 try {
                     window.turnstile.reset(container.dataset.widgetId);
-                } catch (_) {}
+                } catch (_) { }
             }
         }
     };
