@@ -1546,6 +1546,19 @@ path when rendering from a page.
 170. **Unified Sitewide Footer Copyright (`&copy; 2026 UrbanScope &bull; All Rights Reserved`):**
   - Standardized the footer copyright line to `© 2026 UrbanScope • All Rights Reserved` (`&copy; 2026 UrbanScope &bull; All Rights Reserved`) across all 14 public, legal, property showcase/detail, and auth pages (`frontend/index.html`, `frontend/pages/legal/{terms,privacy}.html`, `frontend/pages/properties/{property-detail,casasuerte,kathleen,Liora,Airmen,benecia,amore-classico,midori}.html`, and `frontend/pages/auth/{login,register,forgot-password}.html`), replacing `"© 2026 Miriam Lobren · CD Miranda Realty. Website by UrbanScope. All rights reserved."`, `"© 2026 Miriam Lobren Real Estate. All rights reserved."`, and the `"UrbanScope2026"` typo on `register.html`.
 
+171. **Removed PRC License Number & Brokerage / Company Fields from Admin Profile (`frontend/pages/admin/profile.html`, `profile.js`):**
+  - Removed the `PRC License Number` (`#adminLicense`) and `Brokerage / Company` (`#adminBrokerage`) form inputs from `/pages/admin/profile.html` (leaving the 2×2 grid of Full Name, Professional Title / Role, Email Address, and Contact Phone Number) and updated the Profile Information card subtitle to `"Update your personal information, role, and contact details."`.
+  - Updated `frontend/pages/admin/profile.js` submit and remote-hydration handlers to safely guard `licenseInput` and `brokerageInput` against `null` while preserving existing stored values in the profile payload so saving profile updates works without errors or clobbering server metadata.
+
+172. **Admin Dashboard Inquiry Status Donut Rolling Load Animation (`frontend/pages/admin/dashboard.html`, `dashboard.css`, `dashboard.js`):**
+  - Added a smooth 60fps rolling clockwise load animation (`runDonutRollAnimation` in `dashboard.js`) for `#inquiryDonutSvg`: on initial data load, the four status arcs (`Under Review`, `Approved`, `Completed`, `Cancelled`) sweep sequentially clockwise around the ring while rolling `-135deg → 0deg` (`1050ms` cubic ease-out) in sync with rolling count-up numbers for `#donutTotalInquiries` and all four legend counts.
+  - Preserved all 5 `<circle>` elements as direct children of `#inquiryDonutSvg` so dark-mode `circle:first-of-type` track styling stays intact, added a subtle `.is-donut-loading` track pulse before first data arrival, added tabular numerals on `#donutTotalInquiries`, triggered the roll via `IntersectionObserver` if the chart loads below the fold on mobile, skipped redundant animations on unchanged background polls while smoothly interpolating live count changes (`550ms`), and respected `prefers-reduced-motion: reduce`.
+
+173. **Clickable Calendar Agenda Consultation Cards Opening Inquiry Details Modal (`frontend/pages/admin/dashboard.js`, `dashboard.css`, `admin-shell.css`):**
+  - Attached the linked inquiry record to each calendar agenda event in `getInquiryCalendarRequest()` / `rebuildCalendarSchedule()` and rendered agenda cards in `renderAgenda()` as interactive, keyboard-accessible cards (`.agenda-event.is-clickable`, `role="button"`, `tabindex="0"`) with a `"View details ›"` affordance in `.agenda-event-head`.
+  - Wired delegated `click` and `Enter`/`Space` keyboard handlers on `#calendarAgenda` (`handleAgendaEventActivation()` + `resolveAgendaInquiryModalPayload()` / `buildInquiryModalPayload()`) to resolve the latest matching inquiry from `allDashboardInquiries` (with graceful fallback for standalone appointment records) and open the existing `#inquiryModal` via `openInquiryModal(data)`.
+  - Added Light & Dark Mode hover, focus-visible, and left-accent border styles in `dashboard.css` and `admin-shell.css` (gated inside `@media (hover: hover) and (pointer: fine)`).
+
 ## Safety Rules
 
 - Do **not** commit `backend/urbanscope.db`, `.env`, or virtualenvs (already in `.gitignore`).

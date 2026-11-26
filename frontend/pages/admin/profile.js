@@ -163,13 +163,22 @@ document.addEventListener('DOMContentLoaded', async () => {
                     }
                     if (lead.phone && !savedProfile.phone && phoneInput) phoneInput.value = lead.phone;
                     if ((lead.full_name || lead.name) && !savedProfile.name && fullNameInput) fullNameInput.value = lead.full_name || lead.name;
-                    if (lead.license && !savedProfile.license && licenseInput) licenseInput.value = lead.license;
+                    if (lead.license && !savedProfile.license) {
+                        currentProfile.license = lead.license;
+                        if (licenseInput) licenseInput.value = lead.license;
+                    }
                     if (lead.title && !savedProfile.title) {
                         if (titleInput) titleInput.value = lead.title;
                         if (adminTitleDisplay) adminTitleDisplay.textContent = lead.title;
                     }
-                    if (lead.brokerage && !savedProfile.brokerage && brokerageInput) brokerageInput.value = lead.brokerage;
-                    if (lead.bio && !savedProfile.bio && bioInput) bioInput.value = lead.bio;
+                    if (lead.brokerage && !savedProfile.brokerage) {
+                        currentProfile.brokerage = lead.brokerage;
+                        if (brokerageInput) brokerageInput.value = lead.brokerage;
+                    }
+                    if (lead.bio && !savedProfile.bio) {
+                        currentProfile.bio = lead.bio;
+                        if (bioInput) bioInput.value = lead.bio;
+                    }
                 }
             }
             if (typeof apiGetCurrentUser === 'function') {
@@ -178,13 +187,22 @@ document.addEventListener('DOMContentLoaded', async () => {
                     if (u.phone && !savedProfile.phone && phoneInput) phoneInput.value = u.phone;
                     if ((u.full_name || u.name) && !savedProfile.name && fullNameInput) fullNameInput.value = u.full_name || u.name;
                     if (u.email && !savedProfile.email && u.email !== 'admin.realestate@gmail.com' && emailInput) emailInput.value = u.email;
-                    if (u.license_number && !savedProfile.license && licenseInput) licenseInput.value = u.license_number;
+                    if (u.license_number && !savedProfile.license) {
+                        currentProfile.license = u.license_number;
+                        if (licenseInput) licenseInput.value = u.license_number;
+                    }
                     if (u.title && !savedProfile.title) {
                         if (titleInput) titleInput.value = u.title;
                         if (adminTitleDisplay) adminTitleDisplay.textContent = u.title;
                     }
-                    if (u.brokerage && !savedProfile.brokerage && brokerageInput) brokerageInput.value = u.brokerage;
-                    if (u.bio && !savedProfile.bio && bioInput) bioInput.value = u.bio;
+                    if (u.brokerage && !savedProfile.brokerage) {
+                        currentProfile.brokerage = u.brokerage;
+                        if (brokerageInput) brokerageInput.value = u.brokerage;
+                    }
+                    if (u.bio && !savedProfile.bio) {
+                        currentProfile.bio = u.bio;
+                        if (bioInput) bioInput.value = u.bio;
+                    }
                 }
             }
         } catch (_) {}
@@ -436,8 +454,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             const newTitle = titleInput.value.trim() || 'Real Estate Salesperson';
             const newEmail = emailInput.value.trim();
             const newPhone = phoneInput.value.trim();
-            const newLicense = licenseInput.value.trim();
-            const newBrokerage = brokerageInput.value.trim();
+            const newLicense = licenseInput ? licenseInput.value.trim() : (storedAdmin.license || storedAdmin.license_number || savedProfile.license || currentProfile.license || '');
+            const newBrokerage = brokerageInput ? brokerageInput.value.trim() : (storedAdmin.brokerage || savedProfile.brokerage || currentProfile.brokerage || defaultProfile.brokerage);
             const newBio = bioInput ? bioInput.value.trim() : (storedAdmin.bio || savedProfile.bio || currentProfile.bio || '');
 
             const customAvatarNow = localStorage.getItem('urbanscope_profile_avatar');

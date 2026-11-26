@@ -1920,6 +1920,26 @@ html.dark-mode .agenda-event-time {
     color: var(--dark-green);
 }
 
+html.dark-mode .agenda-event {
+    border-left-color: var(--emerald-primary) !important;
+}
+
+html.dark-mode .agenda-event-hint {
+    color: var(--text-muted);
+}
+
+@media (hover: hover) and (pointer: fine) {
+    html.dark-mode .agenda-event.is-clickable:hover {
+        background: var(--surface-hover) !important;
+        border-color: var(--green) !important;
+        border-left-color: var(--emerald-primary) !important;
+    }
+
+    html.dark-mode .agenda-event.is-clickable:hover .agenda-event-hint {
+        color: var(--dark-green);
+    }
+}
+
 html.dark-mode .agenda-note {
     border-top-color: var(--border-color);
     color: var(--text-muted);
