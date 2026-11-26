@@ -1656,6 +1656,9 @@ path when rendering from a page.
 202. **Consistent Completed Inquiries KPI Height (`frontend/shared/css/mobile-shell.css`):**
   - Set the full-width mobile Completed Inquiries card to an `85px` minimum height so it matches the other KPI cards while retaining room to grow for wrapped content.
 
+203. **Unified Admin Inquiry Details Modal (`frontend/pages/admin/{dashboard,clients}.{html,js,css}`):**
+  - Matched the Client Inquiries modal to the dashboard's detailed client banner, contact and schedule cards, message panel, and responsive footer. Both pages provide the split decision control with Approve and Cancel actions, update the visible status immediately, and retain email reply and close controls.
+
 ## Safety Rules
 
 - Do **not** commit `backend/urbanscope.db`, `.env`, or virtualenvs (already in `.gitignore`).

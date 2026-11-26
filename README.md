@@ -103,7 +103,7 @@ To reset local SQLite data, delete `backend/urbanscope.db` and restart the serve
 ### 2. Administrator Guide (Miriam Lobren & Team)
 - **Unified Sign-In:** Log in via `/pages/auth/login.html`. Authorized administrative accounts are automatically routed to the Admin Dashboard.
 - **Shared Admin Navigation:** Dashboard, Properties, Client Inquiries, Accounts & Roles, and Profile & Security use the same sidebar icons, section labels, active state, and UrbanScope green palette across admin screens.
-- **Dashboard Overview & Inquiry Modal:** Monitor business health with key metrics: Total Properties, Total Inquiries, Pending Follow-ups, and recent activity streams. Click **View** on any inquiry to open an interactive modal with full message details, tour schedule, direct email reply, and instant **Approve Inquiry** action that immediately updates the client's inquiry history in real time.
+- **Dashboard & Client Inquiry Details:** Open a consistent inquiry details modal from the dashboard or Client Inquiries page, review contact and schedule details, reply by email, and approve or cancel inquiries with status updates reflected in the client's history.
 - **Property Viewing Calendar:** Opens on today's browser-local date, marks the current day, supports month and date selection, and shows configured appointments plus client inquiry requests with preferred dates and times.
 - **Managing Properties (CRUD):**
   - **View Listings:** Access `propertylist.html` to browse active catalog listings with status indicators.
