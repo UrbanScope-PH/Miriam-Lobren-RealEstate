@@ -1391,7 +1391,26 @@ body {
 .match-hint.ok { color: var(--brand-primary-green); }
 .match-hint.error { color: #c0392b; }
 
-/* Terms checkbox */
+/* Terms checkbox & inline confirmation note */
+.terms-consent-group {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    margin-bottom: 4px;
+}
+
+.terms-consent-note {
+    margin: 0;
+    padding-left: 24px;
+    font-size: 11px;
+    line-height: 1.45;
+    color: var(--text-muted);
+}
+
+html.dark-mode .terms-consent-note {
+    color: var(--text-muted);
+}
+
 .terms-label {
     align-items: flex-start;
     font-size: 11px;

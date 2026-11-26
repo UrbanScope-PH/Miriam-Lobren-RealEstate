@@ -1564,6 +1564,24 @@ path when rendering from a page.
   - **Wired `<script src="...shared/js/skeleton.js"></script>` in `<head>` across all 24 active pages** (`index.html`, all 8 property pages, `inquiry.html`, `history.html`, all 3 auth pages, both legal pages, and all 8 admin pages — excluding only the `0s` `admin/login.html` redirect stub).
   - **Inline Async Data Skeletons:** Replaced raw `"Loading..."` strings and spinners with structure-matched shimmering skeletons across every async data view: Homepage property grid (`index.js`, `index.css`), Property Detail `?id=` hydration (`property-detail.html`, `property-detail.js`), Inquiry property preview (`inquiry.html`, `inquiry.js`, with `[hidden] { display: none !important; }` in `skeleton.css` so `.sk-inquiry-preview` hides cleanly once listings finish loading), Client Inquiry History KPIs & cards (`history.html`, `history.js`), Admin Dashboard KPIs / notifications / calendar agenda / recent inquiries + synced donut roll start via `UrbanSkeleton.whenDone()` (`dashboard.html`, `dashboard.js`, `admin-shell.js`, `admin-shell.css`), Properties table & mobile cards (`propertylist.html`, `properties.js`), Client Inquiries KPIs / table / mobile cards (`clients.html`, `clients.js`), Accounts & Roles table / mobile cards (`users.html`, `users.js`), Edit Property form & gallery tiles (`edit-property.html`, `edit-property.js`), and Admin Profile remote hydration (`profile.js`).
 
+175. **Property Detail & Showcase Left-Side Icon-Only Back Button (`frontend/pages/properties/*.html`, `property-detail.css`, `property-detail.js`, `skeleton.css`):**
+  - Added a minimal borderless left-arrow icon button (`.detail-top-nav` / `#detailBackBtn.detail-back-btn`, `24px` SVG, no pill border or label) across `property-detail.html` and all 7 showcase pages (`Airmen.html`, `amore-classico.html`, `benecia.html`, `casasuerte.html`, `kathleen.html`, `Liora.html`, `midori.html`), staying visible even during `detail-hydrating`.
+  - Positioned in the left margin beside `.detail-header` on desktop (`>= 1200px` at `left: 0`, `>= 1360px` / `>= 1600px` at `left: -44px`) and flowing cleanly left-aligned above `.detail-header` on `< 1200px` / mobile, with smart `window.history.back()` navigation in `property-detail.js` (falling back to `../../index.html#properties`) and subtle Light & Dark Mode hover tint in `property-detail.css`.
+
+176. **Removed Mandatory Scroll-to-Accept & Added Inline Registration Terms Note (`frontend/pages/auth/register.html`, `register.js`, `login.html`, `auth.js`, `auth.css`):**
+  - Removed the forced scroll-to-bottom modal lock on the registration Terms & Privacy checkbox (`#terms` now toggles directly on click without intercepting via modal, while clicking **Terms of Service** or **Privacy Policy** links still opens the optional preview modal with `#acceptTermsBtn` enabled immediately across both `register.html` and `login.html` / `auth.js` Google OAuth flows).
+  - Added the compact `.terms-consent-note` (`11px`, muted, aligned beneath the checkbox inside `.terms-consent-group`) stating `"By checking this box, you confirm that you have read, understood, and accepted the UrbanScope Terms of Service and Privacy Policy."`, and updated form submission to display an inline `#authNotice` prompt if submitted unchecked.
+
+177. **Inquiry Page Top-Left Icon-Only Back Button (`frontend/pages/inquiry/inquiry.html`, `inquiry.css`, `inquiry.js`):**
+  - Added the matching minimal borderless left-arrow icon button (`.inquiry-top-nav` / `#inquiryBackBtn.inquiry-back-btn`, `24px` SVG) at the top-left of `.inquiry-page-container` (`position: absolute; top: 0; left: 0` at `>= 1040px`, `left: -44px` at `>= 1120px`, and flowing left-aligned above the banner/heading on smaller screens & mobile).
+  - Wired smart back navigation in `inquiry.js` (`window.history.back()` for different same-origin referrers, falling back to `../../index.html`) with Light & Dark Mode hover and focus-visible styling.
+
+178. **Legal Pages Icon-Only Back Button (`frontend/pages/legal/privacy.html`, `terms.html`, `legal.css`, `legal.js`):**
+  - Converted `.legal-back-btn` (`#legalBackBtn`) on both Privacy Policy and Terms of Service from the pill `"← Go Back"` button to the matching borderless `24px` left-arrow icon button (`40×40px`, transparent resting background, subtle light tint on hover with `-3px` arrow nudge, and contextual `aria-label`/`title` set in `legal.js`).
+
+179. **Justified Property Description Paragraphs (`frontend/pages/properties/property-detail.css`):**
+  - Added `text-align: justify; text-justify: inter-word;` to `.detail-block p` so all "About This Property" descriptions across `property-detail.html` and all 7 showcase pages render with cleanly justified left and right margins.
+
 ## Safety Rules
 
 - Do **not** commit `backend/urbanscope.db`, `.env`, or virtualenvs (already in `.gitignore`).

@@ -322,7 +322,7 @@ html.detail-hydrating .detail-container {
     visibility: visible !important;
 }
 
-html.detail-hydrating .detail-container > :not(.us-detail-skeleton) {
+html.detail-hydrating .detail-container > :not(.us-detail-skeleton):not(.detail-top-nav) {
     display: none !important;
 }
 

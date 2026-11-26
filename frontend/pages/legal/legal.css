@@ -59,35 +59,35 @@ body {
 .legal-back-btn {
     display: inline-flex;
     align-items: center;
-    gap: 8px;
-    background: rgba(255, 255, 255, 0.14);
-    border: 1px solid rgba(255, 255, 255, 0.28);
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    background: transparent;
+    border: none;
     color: #ffffff;
-    font-family: inherit;
-    font-size: 13.5px;
-    font-weight: 700;
-    padding: 8px 18px;
-    border-radius: 999px;
+    border-radius: 10px;
     cursor: pointer;
     text-decoration: none;
-    transition: var(--motion-transition-ui);
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+    transition: background-color 0.18s ease, color 0.18s ease, transform 0.18s ease;
+    touch-action: manipulation;
 }
 
 @media (hover: hover) and (pointer: fine) {
     .legal-back-btn:hover {
-        background: rgba(255, 255, 255, 0.26);
-        border-color: rgba(255, 255, 255, 0.5);
+        background: rgba(255, 255, 255, 0.14);
         color: #ffffff;
-        transform: translateX(-3px);
-        box-shadow: 0 4px 14px rgba(0, 0, 0, 0.18);
     }
 }
 
+.legal-back-btn:focus-visible {
+    outline: 2px solid rgba(255, 255, 255, 0.75);
+    outline-offset: 2px;
+}
+
 .legal-back-btn svg {
-    transition: transform 0.22s ease;
+    display: block;
+    transition: transform 0.2s ease;
     flex-shrink: 0;
 }
 
@@ -689,18 +689,18 @@ html.dark-mode .btn-contact-secondary {
     }
 
     .legal-back-btn {
-        min-height: 38px;
-        padding: 8px 13px;
-        font-size: 13.5px;
-        gap: 7px;
+        width: 36px;
+        height: 36px;
+        padding: 0;
+        margin-left: -6px;
         touch-action: manipulation;
         -webkit-user-select: none;
         user-select: none;
     }
 
     .legal-back-btn svg {
-        width: 16px;
-        height: 16px;
+        width: 22px;
+        height: 22px;
     }
 
     .legal-badge {
