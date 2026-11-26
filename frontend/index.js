@@ -1380,16 +1380,6 @@ function initHomepage() {
         });
     }
 
-    const aboutReadMoreBtn = document.getElementById('aboutReadMoreBtn');
-    const aboutBioExtra = document.getElementById('aboutBioExtra');
-    if (aboutReadMoreBtn && aboutBioExtra) {
-        aboutReadMoreBtn.addEventListener('click', () => {
-            const isExpanded = aboutBioExtra.classList.toggle('is-expanded');
-            aboutReadMoreBtn.setAttribute('aria-expanded', String(isExpanded));
-            aboutReadMoreBtn.textContent = isExpanded ? 'Show less' : 'Read full bio';
-        });
-    }
-
     // 9. Smooth scroll for FAQs anchor
     document.querySelectorAll('a[href="#faqs"]').forEach(link => {
         link.addEventListener('click', (e) => {
@@ -1507,7 +1497,6 @@ function renderHomepageAgentDetails(profile) {
     if (aboutMobileAvatar && avatarUrl) {
         aboutMobileAvatar.src = avatarUrl;
     }
-
     // 3. FAQs Section
     const faqName = document.getElementById('faqAgentName');
     if (faqName) faqName.textContent = cleanName;

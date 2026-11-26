@@ -1228,9 +1228,7 @@ button,
    ========================================================================== */
 .mobile-cards-list,
 .mobile-expand-wrap,
-.about-mobile-avatar,
 .mobile-inline-toggle,
-.mobile-property-cta-bar,
 .legal-mobile-jump,
 .legal-section-chevron,
 .mobile-only-quick-action,
@@ -1343,7 +1341,11 @@ button,
     }
 
     .footer-contact {
-        gap: 10px;
+        gap: 7px;
+    }
+
+    .footer-contact > h3 {
+        margin-bottom: 6px;
     }
 
     .footer-contact-item,
@@ -1351,7 +1353,11 @@ button,
         font-size: 14px;
         line-height: 1.5;
         gap: 10px;
-        margin-bottom: 10px;
+        margin-bottom: 6px;
+    }
+
+    .footer-contact-item {
+        margin-bottom: 0;
     }
 
     .footer-contact-item svg,
@@ -1364,10 +1370,20 @@ button,
         flex-direction: column;
         align-items: center;
         text-align: center;
-        padding: 22px 18px calc(90px + env(safe-area-inset-bottom, 0px));
+        padding: 22px 18px max(20px, env(safe-area-inset-bottom, 0px));
         gap: 16px;
         font-size: 13px;
         line-height: 1.55;
+    }
+
+    .footer-bottom > span,
+    .footer-bottom > p {
+        box-sizing: border-box;
+        width: 100%;
+        padding-right: 0;
+        text-align: center;
+        font-size: clamp(10px, 2vw, 12px);
+        white-space: nowrap;
     }
 
     .socials {
@@ -1405,9 +1421,11 @@ button,
         transition: none !important;
     }
 
-    /* Phase 1: Left-align About body prose on narrow phone viewports */
+    /* Phase 1: Justify About body prose on narrow phone viewports */
     .about-text p {
-        text-align: left !important;
+        text-align: justify !important;
+        text-justify: inter-word;
+        text-indent: 1em;
     }
 
     /* Phase 1: Pass 2 Balanced Mobile Typography */
@@ -1648,7 +1666,7 @@ button,
         line-height: 1.35;
     }
 
-    /* Phase 2: Home - Compact About + Inline Avatar + Read More */
+    /* Phase 2: Home - Compact About + Full Bio + Circular Portrait */
     .about {
         padding: 32px 16px;
     }
@@ -1659,33 +1677,36 @@ button,
 
     .about-mobile-header {
         display: flex !important;
+        flex-direction: column;
         align-items: center;
         gap: 12px;
-        margin-bottom: 12px;
+        margin-bottom: 14px;
     }
 
-    .about-mobile-header h2 {
+    .about .about-mobile-header h2 {
+        width: 100%;
         margin-bottom: 0 !important;
-        font-size: 19px;
+        font-size: 21px;
+        text-align: center;
     }
 
     .about-mobile-avatar {
         display: block !important;
-        width: 56px;
-        height: 56px;
+        align-self: center;
+        width: clamp(144px, 40vw, 176px);
+        height: clamp(144px, 40vw, 176px);
+        border: 3px solid #cbe0d1;
         border-radius: 50%;
         object-fit: cover;
-        object-position: top center;
-        border: 2px solid #cbe0d1;
-        flex-shrink: 0;
+        object-position: center 24%;
+        box-shadow: var(--card-shadow);
     }
 
-    .about-bio-extra {
-        display: none;
-    }
-
-    .about-bio-extra.is-expanded {
-        display: block;
+    .about-content {
+        display: flex;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 16px;
     }
 
     .mobile-inline-toggle {
@@ -1719,84 +1740,10 @@ button,
         display: none !important;
     }
 
-    /* Phase 2: Property Detail & Showcases (2-up specs/amenities, bottom CTA bar) */
+    /* Phase 2: Property Detail & Showcases (2-up specs and amenities) */
     .specs-bar {
         grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
         gap: 12px !important;
-    }
-
-    .amenities-grid ul {
-        display: grid !important;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        column-gap: 12px;
-        row-gap: 8px;
-    }
-
-    body.has-property-cta-bar .contact-fab {
-        display: none !important;
-    }
-
-    body.has-property-cta-bar .back-to-top-btn {
-        bottom: calc(78px + env(safe-area-inset-bottom, 0px)) !important;
-        right: max(16px, env(safe-area-inset-right, 0px));
-    }
-
-    body.has-property-cta-bar .footer,
-    body.has-property-cta-bar footer {
-        padding-bottom: calc(78px + env(safe-area-inset-bottom, 0px)) !important;
-    }
-
-    body.has-property-cta-bar .footer-bottom {
-        padding-bottom: 24px;
-    }
-
-    .mobile-property-cta-bar {
-        display: grid !important;
-        grid-template-columns: minmax(0, 1fr) minmax(0, 1.3fr);
-        gap: 10px;
-        position: fixed;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        z-index: 980;
-        padding: 10px 14px calc(10px + env(safe-area-inset-bottom, 0px));
-        background: rgba(255, 255, 255, 0.96);
-        backdrop-filter: blur(12px);
-        -webkit-backdrop-filter: blur(12px);
-        border-top: 1px solid var(--border-color, #d7e3da);
-        box-shadow: 0 -6px 24px rgba(15, 36, 20, 0.12);
-    }
-
-    .mobile-cta-call-btn,
-    .mobile-cta-inquire-btn {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        gap: 7px;
-        min-height: 44px;
-        padding: 10px 14px;
-        border-radius: 12px;
-        font-size: 14px;
-        font-weight: 700;
-        text-decoration: none;
-    }
-
-    .mobile-cta-call-btn {
-        background: var(--light-green, #eef5ef);
-        color: var(--dark-green, #1a3b23);
-        border: 1.5px solid var(--green-border-soft, #cbe0d1);
-    }
-
-    .mobile-cta-inquire-btn {
-        background: var(--btn-primary-bg, #2d5c39);
-        color: #ffffff;
-    }
-
-    .mobile-cta-inquire-btn.is-closed {
-        background: var(--text-subtle, #64748b);
-        color: #ffffff;
-        cursor: not-allowed;
-        opacity: 0.85;
     }
 
     /* Phase 2: Legal Pages (Dropdown Jump + Collapsible Sections) */
@@ -2405,11 +2352,6 @@ button,
         color: var(--text-dark, #e7f0e9);
     }
 
-    html.dark-mode .about-mobile-avatar,
-    html[data-theme="dark"] .about-mobile-avatar {
-        border-color: var(--green-border-soft, #2f4e39);
-    }
-
     html.dark-mode .mobile-inline-toggle,
     html[data-theme="dark"] .mobile-inline-toggle {
         color: var(--dark-green, #86efac);
@@ -2418,25 +2360,6 @@ button,
     html.dark-mode .calendar-mobile-summary,
     html[data-theme="dark"] .calendar-mobile-summary {
         color: var(--text-muted, #9ab09f);
-    }
-
-    html.dark-mode .mobile-property-cta-bar,
-    html[data-theme="dark"] .mobile-property-cta-bar {
-        background: rgba(15, 25, 19, 0.96);
-        border-top-color: var(--border-color, #273c2e);
-    }
-
-    html.dark-mode .mobile-cta-call-btn,
-    html[data-theme="dark"] .mobile-cta-call-btn {
-        background: var(--light-green, #1c3123);
-        color: var(--text-dark, #e7f0e9);
-        border-color: var(--green-border-soft, #2f4e39);
-    }
-
-    html.dark-mode .mobile-cta-inquire-btn,
-    html[data-theme="dark"] .mobile-cta-inquire-btn {
-        background: var(--btn-primary-bg, #2d6e3f);
-        color: #ffffff;
     }
 
     html.dark-mode .legal-mobile-jump,
@@ -2626,5 +2549,16 @@ button,
 @media (max-width: 359px) {
     .specs-bar {
         grid-template-columns: 1fr !important;
+    }
+}
+
+@media (max-width: 768px) {
+    .footer-about h3 {
+        margin-bottom: 5px;
+    }
+
+    .footer-about p {
+        margin: 0;
+        line-height: 1.45;
     }
 }

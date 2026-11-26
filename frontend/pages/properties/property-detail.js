@@ -38,6 +38,38 @@ function _safeDetailImg(url, fallback = '../../assets/images/property1.jpg') {
     return fallback;
 }
 
+function _splitPropertyDescription(description) {
+    const source = String(description || '').trim();
+    if (!source) return [];
+
+    const segmenter = typeof Intl !== 'undefined' && typeof Intl.Segmenter === 'function'
+        ? new Intl.Segmenter(undefined, { granularity: 'sentence' })
+        : null;
+
+    const paragraphs = [];
+    source.split(/\n+/).map(paragraph => paragraph.trim()).filter(Boolean).forEach(paragraph => {
+        let sentences;
+        if (segmenter) {
+            sentences = Array.from(segmenter.segment(paragraph), part => part.segment.trim()).filter(Boolean);
+        } else {
+            const segments = paragraph.split(/([.!?]["')\]]*)\s+(?=[A-Z])/);
+            sentences = [];
+            for (let index = 0; index < segments.length; index += 2) {
+                sentences.push(`${segments[index] || ''}${segments[index + 1] || ''}`.trim());
+            }
+            sentences = sentences.filter(Boolean);
+        }
+
+        const groups = [];
+        for (let index = 0; index < sentences.length; index += 2) {
+            groups.push(sentences.slice(index, index + 2).join(' '));
+        }
+        paragraphs.push(...groups);
+    });
+
+    return paragraphs;
+}
+
 function initGallery() {
     const mainImg = document.getElementById('mainGalleryImg');
     const thumbs = document.querySelectorAll('.thumb');
@@ -470,7 +502,19 @@ function renderPropertyDetails(property) {
     const descBlock = document.querySelector('.detail-block p');
     if (descBlock) {
         const cleanDesc = String(property.description || '').trim();
-        descBlock.innerText = cleanDesc || `${cleanTitle || 'This property'} in ${property.location || 'Cavite & Las Piñas'} is available for inquiry and scheduled site viewing.`;
+        const fallbackDescription = `${cleanTitle || 'This property'} in ${property.location || 'Cavite & Las Piñas'} is available for inquiry and scheduled site viewing.`;
+        const descriptionParagraphs = _splitPropertyDescription(cleanDesc || fallbackDescription);
+        const aboutBlock = descBlock.parentElement;
+
+        aboutBlock.querySelectorAll('.dynamic-property-description').forEach(paragraph => paragraph.remove());
+        descBlock.textContent = descriptionParagraphs[0] || fallbackDescription;
+
+        descriptionParagraphs.slice(1).forEach(text => {
+            const paragraph = document.createElement('p');
+            paragraph.className = 'dynamic-property-description';
+            paragraph.textContent = text;
+            aboutBlock.appendChild(paragraph);
+        });
     }
 
     const amenitiesGrid = document.querySelector('.amenities-grid');
@@ -668,15 +712,6 @@ function ensureLightboxDom() {
         <div class="lightbox-header">
             <span class="lightbox-counter" id="lightboxCounter">1 / 1</span>
             <div class="lightbox-controls">
-                <button type="button" class="lightbox-btn" id="lightboxZoomOutBtn" title="Zoom out (-)" aria-label="Zoom out">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-                </button>
-                <button type="button" class="lightbox-btn" id="lightboxResetBtn" title="Reset zoom (0)" aria-label="Reset zoom" style="width: auto; padding: 0 12px; border-radius: 999px;">
-                    100%
-                </button>
-                <button type="button" class="lightbox-btn" id="lightboxZoomInBtn" title="Zoom in (+)" aria-label="Zoom in">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-                </button>
                 <button type="button" class="lightbox-btn close-btn" id="lightboxCloseBtn" title="Close (Esc)" aria-label="Close">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
                 </button>
@@ -703,9 +738,6 @@ function ensureLightboxDom() {
 
     // Button actions
     document.getElementById('lightboxCloseBtn').addEventListener('click', closeLightbox);
-    document.getElementById('lightboxZoomInBtn').addEventListener('click', () => zoomLightbox(0.5));
-    document.getElementById('lightboxZoomOutBtn').addEventListener('click', () => zoomLightbox(-0.5));
-    document.getElementById('lightboxResetBtn').addEventListener('click', resetLightboxZoom);
     document.getElementById('lightboxPrevBtn').addEventListener('click', () => changeLightboxSlide(-1));
     document.getElementById('lightboxNextBtn').addEventListener('click', () => changeLightboxSlide(1));
 
@@ -880,7 +912,6 @@ function resetLightboxZoom() {
 function applyLightboxTransform() {
     const stage = document.getElementById('lightboxImgStage');
     const viewport = document.getElementById('lightboxViewport');
-    const resetBtn = document.getElementById('lightboxResetBtn');
     if (!stage) return;
 
     stage.style.transform = `translate(${panX}px, ${panY}px) scale(${zoomLevel})`;
@@ -893,10 +924,6 @@ function applyLightboxTransform() {
             viewport.classList.remove('zoom-1');
             viewport.classList.add('is-zoomed');
         }
-    }
-
-    if (resetBtn) {
-        resetBtn.textContent = `${Math.round(zoomLevel * 100)}%`;
     }
 }
 

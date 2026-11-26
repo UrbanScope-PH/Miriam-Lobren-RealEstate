@@ -394,12 +394,19 @@ body {
 .back-home-link {
     display: inline-flex;
     align-items: center;
-    gap: 6px;
+    gap: 8px;
     font-size: 14px;
     font-weight: 600;
     color: #2d5c39;
     text-decoration: none;
     transition: transform 0.2s, color 0.2s;
+}
+
+.back-home-link svg {
+    display: block;
+    width: 18px;
+    height: 18px;
+    flex: 0 0 18px;
 }
 @media (hover: hover) and (pointer: fine) {
     .back-home-link:hover { transform: translateX(-3px); color: #1a3b23; }
