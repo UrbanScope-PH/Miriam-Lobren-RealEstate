@@ -7,6 +7,32 @@
 -- assignment via an idempotent Postgres trigger on public.users.
 -- ==============================================================================
 
+-- 0. Ensure Supabase CLI login roles (`pg_has_role(..., 'postgres', 'MEMBER')`) can run migrations
+CREATE OR REPLACE FUNCTION public.protect_user_email_verification()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = pg_catalog, public, auth
+AS $$
+BEGIN
+    IF NOT pg_has_role(session_user, 'postgres', 'MEMBER')
+       AND session_user NOT IN ('postgres', 'supabase_admin')
+       AND COALESCE(auth.role(), '') <> 'service_role' THEN
+        IF TG_OP = 'INSERT' THEN
+            NEW.role := 'client';
+            NEW.email_verified_at := NULL;
+        ELSIF NEW.role IS DISTINCT FROM OLD.role THEN
+            RAISE EXCEPTION 'Role changes must use a verified server-side account-management flow.';
+        ELSIF NEW.password_hash IS DISTINCT FROM OLD.password_hash THEN
+            RAISE EXCEPTION 'Password changes must use a verified server-side authentication flow.';
+        ELSIF NEW.email_verified_at IS DISTINCT FROM OLD.email_verified_at THEN
+            RAISE EXCEPTION 'Email verification must use a verified server-side authentication flow.';
+        END IF;
+    END IF;
+    RETURN NEW;
+END;
+$$;
+
 -- 1. Ensure miriamalobren@gmail.com holds the 'admin' role and verified status
 UPDATE public.users
 SET
