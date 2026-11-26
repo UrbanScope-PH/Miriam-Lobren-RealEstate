@@ -1582,6 +1582,59 @@ path when rendering from a page.
 179. **Justified Property Description Paragraphs (`frontend/pages/properties/property-detail.css`):**
   - Added `text-align: justify; text-justify: inter-word;` to `.detail-block p` so all "About This Property" descriptions across `property-detail.html` and all 7 showcase pages render with cleanly justified left and right margins.
 
+180. **Compact Mobile Footer Order & Clearance (`frontend/shared/css/common.css`, `frontend/shared/css/mobile-shell.css`, `frontend/pages/legal/legal.css`, and public footer HTML):**
+  - Moved the copyright after the social icons and Privacy Policy / Terms of Service links in mobile reading order across the homepage, legal pages, property detail, and showcases; desktop footer order remains copyright, socials, then legal links.
+  - Replaced the mobile footer's `90px` bottom reserve with `max(20px, env(safe-area-inset-bottom, 0px))`; the copyright is centered across the footer and kept on one line with a responsive `10px`–`12px` size.
+  - Removed footer bottom borders and shadows so the footer background meets the page background without a bright edge.
+  - Tightened the mobile contact column with a `7px` row gap, removed duplicate item margins, and reduced the CONTACT heading gap to `6px`.
+
+181. **Homepage Mobile About Presentation (`frontend/index.html`, `frontend/index.js`, `frontend/shared/css/mobile-shell.css`):**
+  - Centers the “About Me” heading above a centered circular portrait (`144px`–`176px`) and the bio; syncs the mobile portrait to the admin-managed agent avatar.
+  - Removed the mobile “Read full bio” toggle and its collapsed state so both bio paragraphs are always visible.
+
+182. **Justified Mobile Footer Bio (`frontend/shared/css/common.css`):**
+  - Changed `.footer-about p` from left alignment to `text-align: justify` with `text-justify: inter-word` on mobile, matching the desktop footer bio.
+
+183. **Property Detail Back Button Beside Availability (`frontend/pages/properties/*.html`, `property-detail.css`):**
+  - Moved the back button into the property status row, immediately left of the Available / Sold Out badge across the dynamic detail page and all showcase pages. The badge’s normal heading margin is cleared in this row so it centers vertically beside the arrow. Desktop wide-screen positioning remains in the left margin.
+
+184. **Mobile Property Amenities Columns (`frontend/pages/properties/property-detail.css`):**
+  - Kept the two amenity lists as exactly two mobile columns instead of nesting a second grid inside each list, removed the later mobile-shell grid override, and explicitly keeps each list vertical so a four-column layout cannot reappear. Bullets align with their text, the gutter is `16px`, and a single-list fallback spans the full width.
+
+185. **Auth Back-to-Home Icon (`frontend/pages/auth/{login,register}.html`, `auth.css`):**
+  - Replaced the text arrow with a matching 18px inline SVG arrow on both sign-in and registration pages, aligned to the label with a consistent 8px gap.
+
+186. **Removed Sticky Mobile Property CTA Bar (`frontend/shared/js/session.js`, `frontend/shared/css/mobile-shell.css`):**
+  - Removed the fixed “Call Miriam” / “Inquire Now” button bar from property pages, including its contact-FAB suppression, footer padding reservation, and light/dark styles. In-page contact and inquiry actions remain available.
+
+187. **Simplified Property Photo Lightbox Controls (`frontend/pages/properties/property-detail.js`):**
+  - Removed the zoom percentage, zoom-in, and zoom-out buttons from the fullscreen photo viewer while keeping its close button and existing scroll and double-click zoom interactions.
+
+188. **Slightly Larger Mobile About Heading (`frontend/shared/css/mobile-shell.css`):**
+  - Increased the centered homepage “About Me” heading from `19px` to `21px` on mobile.
+
+189. **Matched Home and Property Footer Contacts (`frontend/pages/properties/*.html`, `frontend/shared/css/common.css`, `mobile-shell.css`):**
+  - Standardized property footer contact rows to match the homepage: phone, email, then location, using shared icons and compact row spacing. Phone and email links update with the site’s agent contact settings.
+  - Tightened the mobile Miriam Lobren footer bio spacing while keeping its justified alignment.
+
+190. **Spaced Property Description Paragraphs (`frontend/pages/properties/*.html`, `property-detail.css`):**
+  - Split the Casasuerte overview into three paragraphs and applied consistent `14px` spacing between consecutive property-description paragraphs across showcase pages.
+
+191. **Mobile About Me Paragraph Indentation (`frontend/shared/css/mobile-shell.css`):**
+  - Indented the first line of each homepage About Me paragraph by `1em` on mobile while preserving the left-aligned body text.
+
+192. **Paragraph Breaks Across Property Overviews (`frontend/pages/properties/*.html`, `property-detail.css`, `property-detail.js`):**
+  - Split long static property overviews into readable paragraphs and applied the shared `14px` paragraph gap. Dynamic property descriptions now preserve entered line breaks and group sentences in pairs for the same spaced presentation.
+
+193. **Justified Mobile About Me Copy (`frontend/shared/css/mobile-shell.css`):**
+  - Removed the first-line indent and justified the homepage About Me paragraphs on mobile, keeping each paragraph flush with the same left edge.
+
+194. **Indented Property Overview Paragraphs (`frontend/pages/properties/property-detail.css`):**
+  - Added a first-line indent to every property overview paragraph across the static showcases and dynamically loaded property detail page.
+
+195. **Indented Justified Mobile About Me Copy (`frontend/shared/css/mobile-shell.css`):**
+  - Added a `1em` first-line indent to the justified homepage About Me paragraphs on mobile.
+
 ## Safety Rules
 
 - Do **not** commit `backend/urbanscope.db`, `.env`, or virtualenvs (already in `.gitignore`).

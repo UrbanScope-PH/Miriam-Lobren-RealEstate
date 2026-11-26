@@ -773,7 +773,7 @@ html.dark-mode .btn-contact-secondary {
     }
 
     body.has-contact-fab .footer-bottom {
-        padding-bottom: calc(90px + env(safe-area-inset-bottom, 0px));
+        padding-bottom: max(20px, env(safe-area-inset-bottom, 0px));
     }
 
     .legal-sidebar {

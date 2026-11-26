@@ -1532,86 +1532,9 @@
         }
     });
 
-    // ------------------------------------------------------------------
-    // Sticky Mobile Property Quick CTA Bar (Call + Inquire on Property Pages)
-    // ------------------------------------------------------------------
-    function initPropertyMobileCtaBar() {
-        var path = location.pathname.toLowerCase().replace(/\\/g, '/');
-        if (!path.includes('/pages/properties/')) return;
-        var sourceInquire = document.querySelector('.submit-inquiry-btn');
-        if (!sourceInquire) return;
-        if (document.getElementById('mobilePropertyCtaBar')) return;
-
-        var currentPhone = CONTACT_CONFIG.fallbackPhone;
-        try {
-            var p = JSON.parse(localStorage.getItem('urbanscope_admin_profile') || 'null');
-            if (p && p.phone) currentPhone = p.phone;
-        } catch (_) {}
-        var cleanDigits = currentPhone.replace(/[^\d+]/g, '');
-
-        var bar = document.createElement('div');
-        bar.className = 'mobile-property-cta-bar';
-        bar.id = 'mobilePropertyCtaBar';
-        bar.setAttribute('role', 'region');
-        bar.setAttribute('aria-label', 'Property quick contact actions');
-        bar.innerHTML =
-            '<a href="tel:' + cleanDigits + '" class="mobile-cta-call-btn" id="mobilePropertyCallBtn" aria-label="Call Miriam Lobren">' +
-                '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>' +
-                '<span>Call Miriam</span>' +
-            '</a>' +
-            '<a href="' + esc(sourceInquire.getAttribute('href') || '../inquiry/inquiry.html') + '" class="mobile-cta-inquire-btn" id="mobilePropertyInquireBtn">' +
-                '<span>Inquire Now</span>' +
-                '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>' +
-            '</a>';
-
-        document.body.appendChild(bar);
-        document.body.classList.add('has-property-cta-bar');
-
-        var ctaInq = document.getElementById('mobilePropertyInquireBtn');
-        var ctaCall = document.getElementById('mobilePropertyCallBtn');
-
-        function syncCtaState() {
-            var footerPhone = document.getElementById('footerAgentPhone');
-            if (ctaCall && footerPhone && footerPhone.textContent.trim()) {
-                var digits = footerPhone.textContent.replace(/[^\d+]/g, '');
-                if (digits) ctaCall.setAttribute('href', 'tel:' + digits);
-            }
-            if (!ctaInq || !sourceInquire) return;
-            var isClosed = sourceInquire.classList.contains('inquiry-closed') || sourceInquire.getAttribute('aria-disabled') === 'true';
-            var targetHref = sourceInquire.getAttribute('href') || '../inquiry/inquiry.html';
-            ctaInq.setAttribute('href', isClosed ? '#' : targetHref);
-            ctaInq.classList.toggle('is-closed', isClosed);
-            var span = ctaInq.querySelector('span');
-            if (span) {
-                span.textContent = isClosed ? 'Sold Out' : 'Inquire Now';
-            }
-            if (isClosed) {
-                ctaInq.setAttribute('aria-disabled', 'true');
-                ctaInq.setAttribute('tabindex', '-1');
-            } else {
-                ctaInq.removeAttribute('aria-disabled');
-                ctaInq.removeAttribute('tabindex');
-            }
-        }
-
-        if (ctaInq) {
-            ctaInq.addEventListener('click', function (e) {
-                if (ctaInq.getAttribute('aria-disabled') === 'true') e.preventDefault();
-            });
-        }
-
-        syncCtaState();
-        if (typeof MutationObserver !== 'undefined') {
-            var observer = new MutationObserver(syncCtaState);
-            observer.observe(sourceInquire, { attributes: true, childList: true, subtree: true, characterData: true });
-        }
-        window.addEventListener('urbanscope:profileUpdated', syncCtaState);
-    }
-
     document.addEventListener('DOMContentLoaded', function () {
         initThemeToggle();
         initContactFab();
-        initPropertyMobileCtaBar();
         initScrollReveals();
         initBackToTop();
         if (root.classList.contains('logged-in') || root.getAttribute('data-auth-state') === 'logged-in') {
