@@ -1191,7 +1191,7 @@ html.dark-mode .faq-item.active .faq-icon {
 
 html.dark-mode .faq-disclaimer-note {
     background-color: var(--bg-subtle);
-    border-left-color: var(--green);
+    border-color: var(--border-color);
     color: var(--text-secondary);
 }
 

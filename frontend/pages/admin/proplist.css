@@ -173,34 +173,6 @@
     flex-shrink: 0;
 }
 
-.proplist-status-dot {
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    flex-shrink: 0;
-    display: inline-block;
-}
-
-.proplist-status-dot.dot-all {
-    background: var(--accent-green);
-}
-
-.proplist-status-dot.dot-available {
-    background: #22c55e;
-}
-
-.proplist-status-dot.dot-review {
-    background: #f59e0b;
-}
-
-.proplist-status-dot.dot-reserved {
-    background: #3b82f6;
-}
-
-.proplist-status-dot.dot-sold {
-    background: #ef4444;
-}
-
 .proplist-custom-menu {
     position: absolute;
     top: calc(100% + 8px);
@@ -288,18 +260,6 @@
     align-items: center;
     gap: 9px;
     min-width: 0;
-}
-
-.proplist-option-type-bullet {
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-    background: var(--border-strong);
-    flex-shrink: 0;
-}
-
-.proplist-custom-option.is-selected .proplist-option-type-bullet {
-    background: var(--accent-green);
 }
 
 .proplist-option-right {

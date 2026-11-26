@@ -245,26 +245,6 @@
     color: var(--accent-green);
 }
 
-.role-filter-dot {
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    flex-shrink: 0;
-    display: inline-block;
-}
-
-.role-filter-dot.dot-all {
-    background: var(--accent-green);
-}
-
-.role-filter-dot.dot-admin {
-    background: #22c55e;
-}
-
-.role-filter-dot.dot-user {
-    background: #3b82f6;
-}
-
 .role-filter-menu {
     position: absolute;
     top: calc(100% + 8px);
@@ -676,7 +656,6 @@ td {
     gap: 10px;
     background: var(--surface);
     border: 1px solid var(--status-success-border);
-    border-left: 5px solid var(--emerald-primary);
     border-radius: 10px;
     padding: 12px 18px;
     box-shadow: var(--shadow);
@@ -688,7 +667,6 @@ td {
 
 .sa-toast.error {
     border-color: var(--danger-border);
-    border-left-color: var(--danger-btn-bg);
     color: var(--danger-text);
 }
 

@@ -1153,7 +1153,7 @@ html[data-rbac-access="true"] .admin-sidebar a.nav-item[href$="users.html"] {
     font-size: 13px;
     font-weight: 600;
     box-shadow: 0 14px 35px rgba(0, 0, 0, 0.32);
-    border-left: 4px solid var(--emerald-bright);
+    border: 1px solid rgba(255, 255, 255, 0.14);
     max-width: 380px;
     width: calc(100% - 48px);
     transform: translateY(20px);
@@ -1762,22 +1762,6 @@ html.dark-mode .status-dropdown-option:focus-visible {
     }
 }
 
-html.dark-mode .status-dropdown-option.review .status-menu-dot {
-    background: var(--status-warning-dot);
-}
-
-html.dark-mode .status-dropdown-option.approved .status-menu-dot {
-    background: var(--status-success-dot);
-}
-
-html.dark-mode .status-dropdown-option.completed .status-menu-dot {
-    background: var(--status-info-dot);
-}
-
-html.dark-mode .status-dropdown-option.cancelled .status-menu-dot {
-    background: var(--danger-dot);
-}
-
 html.dark-mode .status-dropdown-option.review.is-selected {
     background: var(--status-warning-bg);
     color: var(--status-warning-text);
@@ -1920,10 +1904,6 @@ html.dark-mode .agenda-event-time {
     color: var(--dark-green);
 }
 
-html.dark-mode .agenda-event {
-    border-left-color: var(--emerald-primary) !important;
-}
-
 html.dark-mode .agenda-event-hint {
     color: var(--text-muted);
 }
@@ -1932,7 +1912,6 @@ html.dark-mode .agenda-event-hint {
     html.dark-mode .agenda-event.is-clickable:hover {
         background: var(--surface-hover) !important;
         border-color: var(--green) !important;
-        border-left-color: var(--emerald-primary) !important;
     }
 
     html.dark-mode .agenda-event.is-clickable:hover .agenda-event-hint {

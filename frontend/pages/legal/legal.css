@@ -332,8 +332,7 @@ body {
 .legal-callout {
     background: var(--light-green);
     border: 1px solid var(--green-border-soft);
-    border-left: 4px solid var(--green);
-    border-radius: 0 12px 12px 0;
+    border-radius: 12px;
     padding: 16px 20px;
     margin: 20px 0;
 }
@@ -341,7 +340,6 @@ body {
 .legal-callout.warning {
     background: var(--status-warning-bg);
     border-color: var(--status-warning-border);
-    border-left: 4px solid var(--accent-warm);
 }
 
 .legal-callout h4 {
@@ -580,13 +578,11 @@ html.dark-mode .section-number {
 html.dark-mode .legal-callout {
     background: var(--surface-muted);
     border-color: var(--border-color);
-    border-left: 4px solid var(--green);
 }
 
 html.dark-mode .legal-callout.warning {
     background: var(--status-warning-bg);
     border-color: var(--status-warning-border);
-    border-left: 4px solid var(--accent-warm);
 }
 
 html.dark-mode .legal-section strong {
