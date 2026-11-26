@@ -1582,6 +1582,15 @@ path when rendering from a page.
 179. **Justified Property Description Paragraphs (`frontend/pages/properties/property-detail.css`):**
   - Added `text-align: justify; text-justify: inter-word;` to `.detail-block p` so all "About This Property" descriptions across `property-detail.html` and all 7 showcase pages render with cleanly justified left and right margins.
 
+180. **Hidden Mobile-Only About Avatar on Desktop (`frontend/shared/css/mobile-shell.css`, `frontend/index.css`):**
+  - Added `.about-mobile-avatar` to the desktop (`> 768px`) `display: none` defaults in `mobile-shell.css` (and `index.css`), fixing the duplicate full-size Miriam Lobren portrait appearing above the "About Me" bio on desktop viewports while preserving the circular mobile portrait inside `@media (max-width: 768px)` (`display: block !important`).
+
+181. **Homepage Navbar Active Link Scroll-Spy (`frontend/index.js`):**
+  - Added `initHomepageNavScrollSpy()` so the green `.active` navbar highlight (and `aria-current`) dynamically follows the section in view (`Home`, `Properties`, `About`, `FAQs`, `Contact`) as the user scrolls or navigates via `#hash` links, automatically highlighting `Contact` when scrolled to the bottom CTA/footer and smoothly scrolling to top when clicking `Home` on the homepage.
+
+182. **Homepage Search/Sort Dropdown Z-Index Kept Below Sticky Navbar (`frontend/index.css`):**
+  - Lowered `.hero.has-open-dropdown` (`1500` → `80`), `.search-bar.has-open-dropdown` (`1550` → `85`), `.search-select-wrap.is-open` (`1600` → `90`), `.search-select-dropdown` (`1650` → `95`), and `.featured-header-row` / `.home-sort-control` / `.sort-select-wrap.is-open` (`1200–1300` → `75–85`) so opening **Property Type**, **Location**, or **Sort By** stays cleanly above featured cards (`z-index: 20`) while remaining below the sticky `.navbar` (`z-index: 100`), preventing the hero section from painting over and hiding the upper navigation bar.
+
 180. **Compact Mobile Footer Order & Clearance (`frontend/shared/css/common.css`, `frontend/shared/css/mobile-shell.css`, `frontend/pages/legal/legal.css`, and public footer HTML):**
   - Moved the copyright after the social icons and Privacy Policy / Terms of Service links in mobile reading order across the homepage, legal pages, property detail, and showcases; desktop footer order remains copyright, socials, then legal links.
   - Replaced the mobile footer's `90px` bottom reserve with `max(20px, env(safe-area-inset-bottom, 0px))`; the copyright is centered across the footer and kept on one line with a responsive `10px`–`12px` size.
