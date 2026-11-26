@@ -174,6 +174,43 @@ def _cloud_user_by_email(email: str) -> Optional[dict]:
         return None
 
 
+def _supabase_json_request(url: str, payload: dict, key: str, method: str = "PATCH", timeout: float = 4.0) -> tuple[bool, Any]:
+    """Perform a Supabase REST write and retry without optional columns on PGRST204."""
+    mutable = dict(payload)
+    for _ in range(3):
+        body = json.dumps(mutable).encode("utf-8")
+        req = urllib.request.Request(
+            url,
+            data=body,
+            headers={
+                "apikey": key,
+                "Authorization": f"Bearer {key}",
+                "Content-Type": "application/json",
+                "Prefer": "return=representation",
+            },
+            method=method,
+        )
+        try:
+            with urllib.request.urlopen(req, timeout=timeout) as resp:
+                raw = resp.read().decode("utf-8")
+                return True, (json.loads(raw) if raw else None)
+        except urllib.error.HTTPError as exc:
+            err_body = ""
+            try:
+                err_body = exc.read().decode("utf-8", errors="ignore")
+            except Exception:
+                pass
+            match = re.search(r"Could not find the '([A-Za-z0-9_]+)' column", err_body)
+            missing_col = match.group(1) if match else None
+            if exc.code == 400 and missing_col in ("has_password", "google_id", "google_email", "updated_at") and missing_col in mutable:
+                mutable.pop(missing_col, None)
+                continue
+            return False, None
+        except Exception:
+            return False, None
+    return False, None
+
+
 def _verified_cloud_password_update(email: str, password_hash: str) -> bool:
     """Update a cloud password after OTP proof; service credentials can set verification state."""
     if _is_cloud_sync_disabled():
@@ -181,25 +218,22 @@ def _verified_cloud_password_update(email: str, password_hash: str) -> bool:
     key = _supabase_service_role_key()
     if not key:
         return False
-    try:
-        encoded = urllib.parse.quote(email, safe="")
-        url = f"{SUPABASE_URL}/rest/v1/users?email=eq.{encoded}"
-        body = json.dumps({
+    encoded = urllib.parse.quote(email, safe="")
+    url = f"{SUPABASE_URL}/rest/v1/users?email=eq.{encoded}"
+    now_iso = datetime.now(timezone.utc).isoformat()
+    ok, rows = _supabase_json_request(
+        url,
+        {
             "password_hash": password_hash,
-            "email_verified_at": datetime.now(timezone.utc).isoformat(),
-            "updated_at": datetime.now(timezone.utc).isoformat()
-        }).encode("utf-8")
-        req = urllib.request.Request(url, data=body, headers={
-            "apikey": key,
-            "Authorization": f"Bearer {key}",
-            "Content-Type": "application/json",
-            "Prefer": "return=representation"
-        }, method="PATCH")
-        with urllib.request.urlopen(req, timeout=4) as resp:
-            rows = json.loads(resp.read().decode("utf-8"))
-        return bool(rows)
-    except Exception:
-        return False
+            "has_password": True,
+            "email_verified_at": now_iso,
+            "updated_at": now_iso,
+        },
+        key,
+        method="PATCH",
+        timeout=4.0,
+    )
+    return bool(ok and rows)
 
 
 def _issue_otp_for_local_request(email: str, purpose: str, request: Request) -> bool:
@@ -236,50 +270,80 @@ def sync_password_to_supabase(email: str, password_hash: str) -> bool:
         clean_email = email.strip().lower()
         encoded_email = urllib.parse.quote(clean_email, safe="")
         url = f"{SUPABASE_URL}/rest/v1/users?email=eq.{encoded_email}"
-        body = json.dumps({
-            "password_hash": password_hash,
-            "updated_at": datetime.now(timezone.utc).isoformat()
-        }).encode("utf-8")
-        req = urllib.request.Request(
+        ok, res = _supabase_json_request(
             url,
-            data=body,
-            headers={
-                "apikey": key,
-                "Authorization": f"Bearer {key}",
-                "Content-Type": "application/json",
-                "Prefer": "return=representation"
+            {
+                "password_hash": password_hash,
+                "has_password": True,
+                "updated_at": datetime.now(timezone.utc).isoformat(),
             },
-            method="PATCH"
+            key,
+            method="PATCH",
+            timeout=4.0,
         )
-        with urllib.request.urlopen(req, timeout=4) as resp:
-            res = json.loads(resp.read().decode("utf-8"))
-            if res and len(res) > 0:
-                return True
-
-        # If user did not exist in Supabase yet, insert it
-        create_url = f"{SUPABASE_URL}/rest/v1/users"
-        create_body = json.dumps({
-            "email": clean_email,
-            "password_hash": password_hash,
-            "full_name": "Miriam Lobren",
-            "role": "admin" if is_main_admin_email(clean_email) else "user",
-            "avatar_url": "assets/images/agent.jpg",
-            "email_verified_at": datetime.now(timezone.utc).isoformat()
-        }).encode("utf-8")
-        req_post = urllib.request.Request(
-            create_url,
-            data=create_body,
-            headers={
-                "apikey": key,
-                "Authorization": f"Bearer {key}",
-                "Content-Type": "application/json"
-            },
-            method="POST"
-        )
-        with urllib.request.urlopen(req_post, timeout=4) as resp:
+        if ok and res and len(res) > 0:
             return True
+
+        create_url = f"{SUPABASE_URL}/rest/v1/users"
+        ok_post, _ = _supabase_json_request(
+            create_url,
+            {
+                "email": clean_email,
+                "password_hash": password_hash,
+                "has_password": True,
+                "full_name": "Miriam Lobren",
+                "role": "admin" if is_main_admin_email(clean_email) else "user",
+                "avatar_url": "assets/images/agent.jpg",
+                "email_verified_at": datetime.now(timezone.utc).isoformat(),
+            },
+            key,
+            method="POST",
+            timeout=4.0,
+        )
+        return ok_post
     except Exception:
         return False
+
+
+def _sync_client_profile_to_supabase(email: str, full_name: Optional[str], phone: Optional[str]) -> bool:
+    """Best-effort sync of client profile fields (full_name and phone) to Supabase Cloud."""
+    key = _supabase_service_role_key()
+    if _is_cloud_sync_disabled() or not key or not email:
+        return False
+    patch = {"updated_at": datetime.now(timezone.utc).isoformat()}
+    if full_name is not None and full_name.strip():
+        patch["full_name"] = full_name.strip()
+    if phone is not None:
+        patch["phone"] = phone.strip()
+    if len(patch) <= 1:
+        return True
+    encoded_email = urllib.parse.quote(email.strip().lower(), safe="")
+    url = f"{SUPABASE_URL}/rest/v1/users?email=eq.{encoded_email}"
+    ok, _ = _supabase_json_request(url, patch, key, method="PATCH", timeout=3.0)
+    return ok
+
+
+def _sync_google_link_to_supabase(email: str, google_sub: str, google_email: str) -> bool:
+    """Best-effort sync of linked Google OpenID credentials to Supabase Cloud."""
+    key = _supabase_service_role_key()
+    if _is_cloud_sync_disabled() or not key or not email or not google_sub:
+        return False
+    encoded_email = urllib.parse.quote(email.strip().lower(), safe="")
+    url = f"{SUPABASE_URL}/rest/v1/users?email=eq.{encoded_email}"
+    now_iso = datetime.now(timezone.utc).isoformat()
+    ok, _ = _supabase_json_request(
+        url,
+        {
+            "google_id": google_sub,
+            "google_email": google_email.strip().lower(),
+            "email_verified_at": now_iso,
+            "updated_at": now_iso,
+        },
+        key,
+        method="PATCH",
+        timeout=3.0,
+    )
+    return ok
 
 
 def sync_new_user_to_supabase(user_dict: dict, password_hash: str) -> bool:
@@ -301,56 +365,51 @@ def sync_new_user_to_supabase(user_dict: dict, password_hash: str) -> bool:
             existing = json.loads(resp.read().decode("utf-8"))
 
         role_val = normalize_db_role(user_dict.get("role"), clean_email)
+        raw_has_pw = user_dict.get("has_password")
+        has_pw_val = True if raw_has_pw is None else bool(raw_has_pw)
         if existing and isinstance(existing, list) and len(existing) > 0:
             if existing[0].get("bio") == "__URBANSCOPE_DELETED__":
                 patch_url = f"{SUPABASE_URL}/rest/v1/users?id=eq.{existing[0]['id']}"
-                patch_body = json.dumps({
-                    "email": clean_email,
-                    "password_hash": password_hash,
-                    "full_name": user_dict.get("full_name") or clean_email.split("@")[0],
-                    "phone": user_dict.get("phone") or "",
-                    "role": role_val,
-                    "bio": "",
-                    "email_verified_at": datetime.now(timezone.utc).isoformat(),
-                    "updated_at": datetime.now(timezone.utc).isoformat()
-                }).encode("utf-8")
-                req_patch = urllib.request.Request(
+                ok_patch, _ = _supabase_json_request(
                     patch_url,
-                    data=patch_body,
-                    headers={
-                        "apikey": key,
-                        "Authorization": f"Bearer {key}",
-                        "Content-Type": "application/json"
+                    {
+                        "email": clean_email,
+                        "password_hash": password_hash,
+                        "has_password": has_pw_val,
+                        "full_name": user_dict.get("full_name") or clean_email.split("@")[0],
+                        "phone": user_dict.get("phone") or "",
+                        "role": role_val,
+                        "bio": "",
+                        "email_verified_at": datetime.now(timezone.utc).isoformat(),
+                        "updated_at": datetime.now(timezone.utc).isoformat(),
                     },
-                    method="PATCH"
+                    key,
+                    method="PATCH",
+                    timeout=2.5,
                 )
-                with urllib.request.urlopen(req_patch, timeout=2.5):
-                    return True
+                return ok_patch
             return True
 
         post_url = f"{SUPABASE_URL}/rest/v1/users"
-        post_body = json.dumps({
-            "email": clean_email,
-            "password_hash": password_hash,
-            "full_name": user_dict.get("full_name") or clean_email.split("@")[0],
-            "phone": user_dict.get("phone") or "",
-            "role": role_val,
-            "avatar_url": user_dict.get("avatar_url") or "",
-            "google_id": user_dict.get("google_id") or None,
-            "email_verified_at": datetime.now(timezone.utc).isoformat()
-        }).encode("utf-8")
-        req_post = urllib.request.Request(
+        ok_post, _ = _supabase_json_request(
             post_url,
-            data=post_body,
-            headers={
-                "apikey": key,
-                "Authorization": f"Bearer {key}",
-                "Content-Type": "application/json"
+            {
+                "email": clean_email,
+                "password_hash": password_hash,
+                "has_password": has_pw_val,
+                "full_name": user_dict.get("full_name") or clean_email.split("@")[0],
+                "phone": user_dict.get("phone") or "",
+                "role": role_val,
+                "avatar_url": user_dict.get("avatar_url") or "",
+                "google_id": user_dict.get("google_id") or None,
+                "google_email": user_dict.get("google_email") or "",
+                "email_verified_at": datetime.now(timezone.utc).isoformat(),
             },
-            method="POST"
+            key,
+            method="POST",
+            timeout=2.5,
         )
-        with urllib.request.urlopen(req_post, timeout=2.5):
-            return True
+        return ok_post
     except Exception:
         return False
 
@@ -365,7 +424,7 @@ def sync_password_from_supabase_if_valid(clean_email: str, plain_password: str) 
         url = (
             f"{SUPABASE_URL}/rest/v1/users"
             f"?email=eq.{encoded_email}"
-            f"&select=id,email,password_hash,full_name,phone,role,avatar_url,google_id,bio,email_verified_at"
+            f"&select=id,email,password_hash,full_name,phone,role,avatar_url,google_id,google_email,bio,email_verified_at"
         )
         req = urllib.request.Request(url, headers={
             "apikey": key,
@@ -394,8 +453,8 @@ def sync_password_from_supabase_if_valid(clean_email: str, plain_password: str) 
                     else:
                         c.execute(
                             """
-                            INSERT INTO users (email, password_hash, full_name, phone, role, avatar_url, google_id, email_verified_at)
-                            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                            INSERT INTO users (email, password_hash, full_name, phone, role, avatar_url, google_id, google_email, email_verified_at)
+                            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
                             """,
                             (
                                 clean_email,
@@ -405,6 +464,7 @@ def sync_password_from_supabase_if_valid(clean_email: str, plain_password: str) 
                                 norm_role,
                                 row.get("avatar_url") or "assets/images/agent.jpg",
                                 row.get("google_id") or None,
+                                row.get("google_email") or "",
                                 row.get("email_verified_at")
                             )
                         )
@@ -437,7 +497,7 @@ def sync_latest_password_from_supabase(clean_email: str) -> Optional[str]:
                 if remote_hash:
                     conn = get_db_connection()
                     c = conn.cursor()
-                    c.execute("UPDATE users SET password_hash = ? WHERE LOWER(email) = ?", (remote_hash, clean_email))
+                    c.execute("UPDATE users SET password_hash = ?, has_password = 1 WHERE LOWER(email) = ?", (remote_hash, clean_email))
                     conn.commit()
                     conn.close()
                     return remote_hash
@@ -565,14 +625,14 @@ def complete_email_registration(payload: EmailOtpRegistrationComplete, request: 
         if cursor.fetchone():
             raise HTTPException(status_code=400, detail="That code is invalid or expired. Request a new code and try again.")
         cursor.execute(
-            """INSERT INTO users (email, password_hash, full_name, phone, role, email_verified_at)
-               VALUES (?, ?, ?, ?, 'user', ?)""",
+            """INSERT INTO users (email, password_hash, full_name, phone, role, has_password, email_verified_at)
+               VALUES (?, ?, ?, ?, 'user', 1, ?)""",
             (clean_email, password_hash, payload.full_name.strip(), (payload.phone or "").strip(), datetime.now(timezone.utc).isoformat())
         )
         user_id = cursor.lastrowid
         conn.commit()
         cursor.execute(
-            "SELECT id, email, full_name, phone, role, avatar_url, created_at FROM users WHERE id = ?",
+            "SELECT id, email, full_name, phone, role, avatar_url, google_id, google_email, has_password, created_at FROM users WHERE id = ?",
             (user_id,)
         )
         user_dict = row_to_dict(cursor.fetchone())
@@ -705,7 +765,7 @@ def complete_password_reset(payload: PasswordResetComplete, request: Request):
         conn = get_db_connection()
         try:
             conn.execute(
-                "UPDATE users SET password_hash = ?, email_verified_at = ? WHERE id = ?",
+                "UPDATE users SET password_hash = ?, has_password = 1, email_verified_at = ? WHERE id = ?",
                 (new_hash, datetime.now(timezone.utc).isoformat(), local_row["id"])
             )
             conn.commit()
@@ -852,16 +912,20 @@ def google_authenticate(payload: GoogleAuthRequest, request: Request, response: 
     cursor = conn.cursor()
 
     cursor.execute(
-        "SELECT * FROM users WHERE google_id = ? OR LOWER(email) = ?",
-        (google_sub, clean_email)
+        """
+        SELECT * FROM users
+        WHERE (google_id = ? OR LOWER(email) = ?)
+          AND COALESCE(bio, '') != '__URBANSCOPE_DELETED__'
+          AND COALESCE(password_hash, '') != '__DELETED_ACCOUNT__'
+        ORDER BY CASE WHEN google_id = ? THEN 0 ELSE 1 END
+        LIMIT 1
+        """,
+        (google_sub, clean_email, google_sub)
     )
     existing_row = cursor.fetchone()
 
     if existing_row:
         existing = row_to_dict(existing_row)
-        if existing.get("bio") == "__URBANSCOPE_DELETED__" or existing.get("password_hash") == "__DELETED_ACCOUNT__":
-            conn.close()
-            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="This account has been deactivated.")
         user_id = existing["id"]
         updates = ["email_verified_at = ?"]
         params = [datetime.now(timezone.utc).isoformat()]
@@ -869,6 +933,10 @@ def google_authenticate(payload: GoogleAuthRequest, request: Request, response: 
         if not existing.get("google_id"):
             updates.append("google_id = ?")
             params.append(google_sub)
+
+        if not (existing.get("google_email") or "").strip():
+            updates.append("google_email = ?")
+            params.append(clean_email)
 
         if not (existing.get("full_name") or "").strip() and google_name:
             updates.append("full_name = ?")
@@ -887,7 +955,7 @@ def google_authenticate(payload: GoogleAuthRequest, request: Request, response: 
             conn.commit()
 
         cursor.execute(
-            "SELECT id, email, full_name, phone, role, avatar_url, created_at FROM users WHERE id = ?",
+            "SELECT id, email, full_name, phone, role, avatar_url, google_id, google_email, has_password, created_at FROM users WHERE id = ?",
             (user_id,)
         )
         user_dict = row_to_dict(cursor.fetchone())
@@ -1005,8 +1073,8 @@ def complete_google_registration(payload: GoogleRegistrationComplete, request: R
                 raise HTTPException(status_code=403, detail="This account has been deactivated.")
             user_id = existing_user["id"]
             cursor.execute(
-                "UPDATE users SET email_verified_at = ?, google_id = COALESCE(google_id, ?) WHERE id = ?",
-                (datetime.now(timezone.utc).isoformat(), google_sub or None, user_id)
+                "UPDATE users SET email_verified_at = ?, google_id = COALESCE(google_id, ?), google_email = COALESCE(NULLIF(google_email, ''), ?) WHERE id = ?",
+                (datetime.now(timezone.utc).isoformat(), google_sub or None, clean_email, user_id)
             )
             conn.commit()
         else:
@@ -1014,9 +1082,9 @@ def complete_google_registration(payload: GoogleRegistrationComplete, request: R
             role = determine_user_role(clean_email)
             pwd_hash = hash_password(secrets.token_urlsafe(32))
             cursor.execute("""
-                INSERT INTO users (email, password_hash, full_name, phone, role, avatar_url, google_id, email_verified_at)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-            """, (clean_email, pwd_hash, google_name or clean_email.split('@')[0], (payload.phone or "").strip(), role, google_avatar, google_sub or None, datetime.now(timezone.utc).isoformat()))
+                INSERT INTO users (email, password_hash, full_name, phone, role, avatar_url, google_id, google_email, has_password, email_verified_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0, ?)
+            """, (clean_email, pwd_hash, google_name or clean_email.split('@')[0], (payload.phone or "").strip(), role, google_avatar, google_sub or None, clean_email, datetime.now(timezone.utc).isoformat()))
             conn.commit()
             user_id = cursor.lastrowid
             try:
@@ -1030,7 +1098,7 @@ def complete_google_registration(payload: GoogleRegistrationComplete, request: R
                 pass
 
         cursor.execute(
-            "SELECT id, email, full_name, phone, role, avatar_url, created_at FROM users WHERE id = ?",
+            "SELECT id, email, full_name, phone, role, avatar_url, google_id, google_email, has_password, created_at FROM users WHERE id = ?",
             (user_id,)
         )
         user_dict = row_to_dict(cursor.fetchone())
@@ -1101,14 +1169,46 @@ def _update_user_profile_impl(payload: AdminProfileUpdate, user: dict, *, allow_
     params = []
 
     if payload.full_name is not None and payload.full_name.strip():
+        clean_name = payload.full_name.strip()
+        if len(clean_name) < 2 or len(clean_name) > 120:
+            conn.close()
+            raise HTTPException(status_code=400, detail="Full name must be between 2 and 120 characters.")
         updates.append("full_name = ?")
-        params.append(payload.full_name.strip())
+        params.append(clean_name)
 
     if payload.phone is not None:
+        clean_phone = payload.phone.strip()
+        if len(clean_phone) > 40:
+            conn.close()
+            raise HTTPException(status_code=400, detail="Phone number is too long.")
+        if not allow_staff_fields and clean_phone:
+            digits_only = re.sub(r"[\s\-()]", "", clean_phone)
+            if re.fullmatch(r"09\d{9}", digits_only):
+                clean_phone = "+63" + digits_only[1:]
+            elif re.fullmatch(r"639\d{9}", digits_only):
+                clean_phone = "+" + digits_only
+            elif re.fullmatch(r"9\d{9}", digits_only):
+                clean_phone = "+63" + digits_only
+            elif re.fullmatch(r"\+639\d{9}", digits_only):
+                clean_phone = digits_only
+            else:
+                conn.close()
+                raise HTTPException(
+                    status_code=400,
+                    detail="Please enter a valid Philippine mobile number (e.g. 0917 123 4567 or +63 917 123 4567).",
+                )
         updates.append("phone = ?")
-        params.append(payload.phone.strip())
+        params.append(clean_phone)
 
-    if payload.email is not None and payload.email.strip():
+    if not allow_staff_fields:
+        if payload.email is not None and payload.email.strip().lower() != target_row["email"].lower():
+            conn.close()
+            raise HTTPException(status_code=403, detail="Only your full name and contact number can be updated here.")
+        if payload.avatar_url is not None and payload.avatar_url.strip() != (target_row["avatar_url"] or "").strip():
+            conn.close()
+            raise HTTPException(status_code=403, detail="Profile photo changes are not available for client accounts.")
+
+    if allow_staff_fields and payload.email is not None and payload.email.strip():
         clean_email = payload.email.strip().lower()
         if not _email_is_valid(clean_email):
             conn.close()
@@ -1121,7 +1221,7 @@ def _update_user_profile_impl(payload: AdminProfileUpdate, user: dict, *, allow_
             updates.append("email = ?")
             params.append(clean_email)
 
-    if payload.avatar_url is not None:
+    if allow_staff_fields and payload.avatar_url is not None:
         try:
             safe_avatar = sanitize_image_url(payload.avatar_url, default="assets/images/agent.jpg")
         except ValueError as exc:
@@ -1159,6 +1259,16 @@ def _update_user_profile_impl(payload: AdminProfileUpdate, user: dict, *, allow_
 
     if not updated_row:
         raise HTTPException(status_code=404, detail="User not found.")
+
+    if not allow_staff_fields:
+        try:
+            _sync_client_profile_to_supabase(
+                updated_row["email"],
+                updated_row["full_name"],
+                updated_row["phone"],
+            )
+        except Exception:
+            pass
 
     return UserResponse(**sanitize_user_dict(dict(updated_row)))
 
@@ -1202,12 +1312,16 @@ def _update_user_password_impl(payload: PasswordChangeRequest, request: Request,
         conn.close()
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Not authenticated. Please log in.")
 
-    if not verify_password(payload.current_password, target_row["password_hash"]):
-        conn.close()
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="The current password you entered is incorrect."
-        )
+    raw_has_pw = target_row["has_password"] if "has_password" in target_row.keys() else 1
+    user_has_password = True if raw_has_pw is None else bool(raw_has_pw)
+
+    if user_has_password:
+        if not payload.current_password or not verify_password(payload.current_password, target_row["password_hash"]):
+            conn.close()
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="The current password you entered is incorrect."
+            )
 
     clean_new_password = payload.new_password.strip()
     if len(clean_new_password) < 8:
@@ -1218,8 +1332,10 @@ def _update_user_password_impl(payload: PasswordChangeRequest, request: Request,
         )
 
     new_hash = hash_password(clean_new_password)
-    cursor.execute("UPDATE users SET password_hash = ? WHERE id = ?", (new_hash, user_id))
+    cursor.execute("UPDATE users SET password_hash = ?, has_password = 1 WHERE id = ?", (new_hash, user_id))
     conn.commit()
+    cursor.execute("SELECT * FROM users WHERE id = ?", (user_id,))
+    updated_row = cursor.fetchone()
     conn.close()
 
     try:
@@ -1229,7 +1345,12 @@ def _update_user_password_impl(payload: PasswordChangeRequest, request: Request,
     except Exception:
         pass
 
-    return {"success": True, "message": "Password updated successfully."}
+    clean_user = sanitize_user_dict(dict(updated_row)) if updated_row else None
+    return {
+        "success": True,
+        "user": clean_user,
+        "message": "Password updated successfully." if user_has_password else "Password added successfully.",
+    }
 
 
 @router.put("/api/admin/password", tags=["Admin"])
@@ -1250,6 +1371,153 @@ def update_user_password(
 ):
     """Changes password for the currently authenticated user after verifying current password."""
     return _update_user_password_impl(payload, request, user)
+
+
+@router.post("/api/auth/google/link", tags=["Auth"])
+def link_google_account(
+    payload: GoogleAuthRequest,
+    request: Request,
+    user: dict = Depends(require_user),
+):
+    """Connects a Google account (Gmail) to the currently authenticated user's profile."""
+    if not _request_origin_allowed(request):
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="This request is not allowed.")
+
+    _enforce_bot_and_rate(
+        request,
+        "google_link",
+        email=user.get("email", ""),
+        limit=10,
+        window_seconds=300,
+        block_seconds=600,
+        check_bot=False,
+    )
+
+    google_info = verify_google_token(
+        credential=payload.credential,
+        access_token=payload.access_token,
+    )
+    google_sub = (google_info["google_id"] or "").strip()
+    google_email = (google_info["email"] or "").strip().lower()
+    try:
+        google_avatar = sanitize_image_url(google_info.get("avatar_url"), default="")
+    except ValueError:
+        google_avatar = ""
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    user_id = user["id"]
+    cursor.execute("SELECT * FROM users WHERE id = ?", (user_id,))
+    target_row = cursor.fetchone()
+
+    if not target_row or target_row["bio"] == "__URBANSCOPE_DELETED__" or target_row["password_hash"] == "__DELETED_ACCOUNT__":
+        conn.close()
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Not authenticated. Please log in.")
+
+    existing_sub = (target_row["google_id"] or "").strip() if "google_id" in target_row.keys() else ""
+    existing_g_email = (target_row["google_email"] or "").strip().lower() if "google_email" in target_row.keys() else ""
+    current_email = (target_row["email"] or "").strip().lower()
+
+    if existing_sub:
+        if existing_sub == google_sub:
+            if not existing_g_email:
+                cursor.execute("UPDATE users SET google_email = ? WHERE id = ?", (google_email, user_id))
+                conn.commit()
+            cursor.execute("SELECT * FROM users WHERE id = ?", (user_id,))
+            refreshed = cursor.fetchone()
+            conn.close()
+            return {
+                "success": True,
+                "user": sanitize_user_dict(dict(refreshed)),
+                "message": "Google account is already connected.",
+            }
+        conn.close()
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="A different Google account is already connected to this profile.",
+        )
+
+    is_current_admin = is_main_admin_email(current_email)
+    if is_current_admin and not is_main_admin_email(google_email):
+        conn.close()
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="The administrator account can only be linked to miriamalobren@gmail.com.",
+        )
+    if not is_current_admin and is_main_admin_email(google_email):
+        conn.close()
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="This Google account cannot be linked to a client profile.",
+        )
+
+    cursor.execute(
+        """
+        SELECT id FROM users
+        WHERE google_id = ?
+          AND id != ?
+          AND COALESCE(bio, '') != '__URBANSCOPE_DELETED__'
+          AND COALESCE(password_hash, '') != '__DELETED_ACCOUNT__'
+        """,
+        (google_sub, user_id),
+    )
+    if cursor.fetchone():
+        conn.close()
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="This Google account is already connected to another UrbanScope account.",
+        )
+
+    if google_email != current_email:
+        cursor.execute(
+            """
+            SELECT id FROM users
+            WHERE (LOWER(email) = ? OR LOWER(COALESCE(google_email, '')) = ?)
+              AND id != ?
+              AND COALESCE(bio, '') != '__URBANSCOPE_DELETED__'
+              AND COALESCE(password_hash, '') != '__DELETED_ACCOUNT__'
+            """,
+            (google_email, google_email, user_id),
+        )
+        if cursor.fetchone():
+            conn.close()
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="That Google email is already associated with another UrbanScope account.",
+            )
+
+    now_iso = datetime.now(timezone.utc).isoformat()
+    updates = [
+        "google_id = ?",
+        "google_email = ?",
+        "email_verified_at = COALESCE(email_verified_at, ?)",
+    ]
+    params = [google_sub, google_email, now_iso]
+
+    cur_avatar = (target_row["avatar_url"] or "").strip()
+    is_regular_user = (target_row["role"] or "").strip().lower() == "user"
+    if not is_current_admin and is_regular_user and google_avatar and (not cur_avatar or cur_avatar == "assets/images/agent.jpg"):
+        updates.append("avatar_url = ?")
+        params.append(google_avatar)
+
+    params.append(user_id)
+    cursor.execute(f"UPDATE users SET {', '.join(updates)} WHERE id = ?", params)
+    conn.commit()
+    cursor.execute("SELECT * FROM users WHERE id = ?", (user_id,))
+    updated_row = cursor.fetchone()
+    conn.close()
+
+    try:
+        if current_email:
+            _sync_google_link_to_supabase(current_email, google_sub, google_email)
+    except Exception:
+        pass
+
+    return {
+        "success": True,
+        "user": sanitize_user_dict(dict(updated_row)),
+        "message": "Google account connected successfully!",
+    }
 
 
 @router.get("/api/agent/profile", tags=["Agent"])

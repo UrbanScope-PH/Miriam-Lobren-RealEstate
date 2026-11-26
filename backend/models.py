@@ -82,6 +82,9 @@ class UserResponse(BaseModel):
     title: Optional[str] = "Real Estate Salesperson"
     brokerage: Optional[str] = "CD Miranda Realty"
     bio: Optional[str] = ""
+    has_password: bool = True
+    google_connected: bool = False
+    google_email: Optional[str] = ""
     created_at: Optional[str] = None
 
 
@@ -117,7 +120,7 @@ class GoogleRegistrationComplete(BaseModel):
 
 
 class PasswordChangeRequest(BaseModel):
-    current_password: str = Field(..., min_length=1, max_length=128, description="Current account password")
+    current_password: str = Field("", max_length=128, description="Current account password (optional when setting initial password for Google accounts)")
     new_password: str = Field(..., min_length=8, max_length=128, description="New password (minimum 8 characters)")
     email: Optional[str] = Field(None, max_length=254, description="Account email address")
 

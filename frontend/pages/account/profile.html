@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en" data-require-auth>
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
+    <meta name="color-scheme" content="light">
+    <meta name="theme-color" media="(prefers-color-scheme: light)" content="#ffffff">
+    <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#0e1611">
+    <meta name="robots" content="noindex, nofollow">
+    <title>Profile &amp; Security - Miriam Lobren Real Estate | UrbanScope</title>
+    <link rel="icon" href="../../assets/images/favicon.jpg" type="image/x-icon">
+    <link rel="stylesheet" href="../../shared/css/common.css">
+    <link rel="stylesheet" href="../../shared/css/session.css">
+    <link rel="stylesheet" href="profile.css">
+    <link rel="stylesheet" href="../../shared/css/mobile-shell.css">
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <script src="../../shared/js/skeleton.js"></script>
+    <script src="../../shared/js/supabase.js"></script>
+    <script src="../../shared/js/session.js"></script>
+</head>
+
+<body>
+
+    <!-- NAVIGATION BAR -->
+    <header class="navbar">
+        <a class="Cname" href="../../index.html">
+            <img src="../../assets/images/logo.png" alt="ML Logo" class="brand-logo" onerror="this.style.display='none'">
+            <span>
+                <strong id="navAgentName">Miriam Lobren</strong>
+                <small id="navAgentTitle">REAL ESTATE SALESPERSON</small>
+            </span>
+        </a>
+
+        <nav id="mainNav" aria-label="Primary navigation">
+            <a href="../../index.html">Home</a>
+            <a href="../../index.html#properties">Properties</a>
+            <a href="../../index.html#about">About</a>
+            <a href="../../index.html#faqs">FAQs</a>
+            <a href="../../index.html#contact">Contact</a>
+        </nav>
+
+        <div class="nav-acts">
+            <a href="../auth/login.html" class="login-btn" id="loginBtn">Log In</a>
+            <a href="../auth/register.html" class="signup-btn" id="signupBtn">Sign Up</a>
+
+            <button class="mobile-nav-toggle" id="mobileNavToggle" type="button" aria-label="Toggle navigation menu"
+                aria-expanded="false">
+                <span class="hamburger-line"></span>
+                <span class="hamburger-line"></span>
+                <span class="hamburger-line"></span>
+            </button>
+        </div>
+    </header>
+
+    <!-- MAIN CONTENT -->
+    <main class="account-container">
+
+        <!-- HERO -->
+        <section class="account-hero">
+            <div class="account-hero-top">
+                <div class="account-hero-text">
+                    <h1>Profile &amp; Security</h1>
+                    <p>Manage your contact details for faster property inquiry autofill and keep your UrbanScope password up to date.</p>
+                </div>
+                <div class="account-hero-actions">
+                    <a href="../inquiry/inquiry.html" class="hero-action-btn">
+                        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                        </svg>
+                        <span>Submit an Inquiry</span>
+                    </a>
+                </div>
+            </div>
+        </section>
+
+        <!-- GOOGLE ACCOUNT PASSWORD REMINDER BANNER -->
+        <section class="security-reminder-banner" id="passwordReminderBanner" role="alert" hidden>
+            <div class="reminder-icon-wrap" aria-hidden="true">
+                <span class="reminder-dot-pulse"></span>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                    <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                </svg>
+            </div>
+            <div class="reminder-content">
+                <strong>Add a password to complete your account security</strong>
+                <p>You signed up directly with Google and haven’t created an UrbanScope password yet. Add a password below so you can also sign in with your email address anytime.</p>
+            </div>
+            <button type="button" class="reminder-cta-btn" id="focusAddPasswordBtn">Add Password</button>
+        </section>
+
+        <!-- ACCOUNT CARDS GRID -->
+        <div class="account-grid">
+
+            <!-- CARD 1: PERSONAL DETAILS (NAME & PHONE ONLY) -->
+            <section class="account-card" aria-labelledby="personalDetailsHeading">
+                <div class="card-header">
+                    <div class="card-header-icon" aria-hidden="true">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                            <circle cx="12" cy="7" r="4"></circle>
+                        </svg>
+                    </div>
+                    <div>
+                        <h2 id="personalDetailsHeading">Personal Details</h2>
+                        <p class="card-subtitle">Saved details automatically pre-fill inquiry and consultation forms.</p>
+                    </div>
+                </div>
+
+                <form id="clientProfileForm" class="account-form" novalidate>
+                    <div class="form-alert" id="profileFormError" role="alert" hidden></div>
+
+                    <div class="form-group">
+                        <label for="profileEmail">
+                            <span>Email Address</span>
+                            <span class="locked-pill">
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true">
+                                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                                    <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                                </svg>
+                                Locked
+                            </span>
+                        </label>
+                        <input type="email" id="profileEmail" class="form-input is-readonly" readonly disabled autocomplete="email" value="">
+                        <p class="field-hint">Your registered email address is used for sign-in and cannot be changed here.</p>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="profileFullName">Full Name <span class="req-mark">*</span></label>
+                        <input type="text" id="profileFullName" name="full_name" class="form-input" minlength="2" maxlength="120" required autocomplete="name" placeholder="Enter your full name">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="profilePhone">Contact Number</label>
+                        <input type="tel" id="profilePhone" name="phone" class="form-input" maxlength="40" autocomplete="tel" inputmode="tel" placeholder="e.g. 0917 123 4567 or +63 917 123 4567">
+                        <p class="field-hint">Philippine mobile format (+63 9XX XXX XXXX or 09XX XXX XXXX). Automatically pre-fills inquiry forms.</p>
+                    </div>
+
+                    <div class="card-actions">
+                        <button type="submit" class="btn-primary-save" id="saveProfileBtn">Save Changes</button>
+                    </div>
+                </form>
+            </section>
+
+            <!-- CARD 2: PASSWORD & SECURITY -->
+            <section class="account-card" id="passwordSecurityCard" aria-labelledby="passwordCardTitle">
+                <div class="card-header card-header-split">
+                    <div class="card-header-lead">
+                        <div class="card-header-icon" aria-hidden="true">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                                <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                            </svg>
+                        </div>
+                        <div>
+                            <h2 id="passwordCardTitle">Change Password</h2>
+                            <p class="card-subtitle" id="passwordCardSubtitle">Keep your UrbanScope account protected with a strong password.</p>
+                        </div>
+                    </div>
+                    <span class="password-status-badge is-active" id="passwordStatusBadge">
+                        <span class="status-badge-dot" aria-hidden="true"></span>
+                        <span id="passwordStatusText">Password active</span>
+                    </span>
+                </div>
+
+                <form id="clientPasswordForm" class="account-form" novalidate>
+                    <div class="form-alert" id="passwordFormError" role="alert" hidden></div>
+
+                    <div class="form-group" id="currentPasswordGroup">
+                        <label for="currentPassword">Current Password <span class="req-mark">*</span></label>
+                        <div class="password-input-wrap">
+                            <input type="password" id="currentPassword" name="current_password" class="form-input" autocomplete="current-password" placeholder="Enter your current password">
+                            <button type="button" class="password-toggle-btn" data-toggle-target="currentPassword" aria-label="Show current password" aria-pressed="false">
+                                <svg class="eye-open" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="newPassword">New Password <span class="req-mark">*</span></label>
+                        <div class="password-input-wrap">
+                            <input type="password" id="newPassword" name="new_password" class="form-input" minlength="8" maxlength="128" required autocomplete="new-password" placeholder="At least 8 characters">
+                            <button type="button" class="password-toggle-btn" data-toggle-target="newPassword" aria-label="Show new password" aria-pressed="false">
+                                <svg class="eye-open" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+                            </button>
+                        </div>
+                        <p class="field-hint">Use at least 8 characters with a mix of letters and numbers.</p>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="confirmPassword">Confirm Password <span class="req-mark">*</span></label>
+                        <div class="password-input-wrap">
+                            <input type="password" id="confirmPassword" name="confirm_password" class="form-input" minlength="8" maxlength="128" required autocomplete="new-password" placeholder="Re-enter your password">
+                            <button type="button" class="password-toggle-btn" data-toggle-target="confirmPassword" aria-label="Show confirm password" aria-pressed="false">
+                                <svg class="eye-open" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="security-footer-row">
+                        <a href="../auth/forgot-password.html?from=profile" class="forgot-pw-link" id="forgotPasswordLink">
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                <circle cx="12" cy="12" r="9"></circle>
+                                <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+                                <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                            </svg>
+                            <span>Forgot Password?</span>
+                        </a>
+                        <button type="submit" class="btn-primary-save" id="savePasswordBtn">Update Password</button>
+                    </div>
+                </form>
+            </section>
+
+            <!-- CARD 3: GOOGLE ACCOUNT CONNECTION -->
+            <section class="account-card account-card-wide" id="googleAccountCard" aria-labelledby="googleCardTitle">
+                <div class="card-header card-header-split">
+                    <div class="card-header-lead">
+                        <div class="google-brand-icon" aria-hidden="true">
+                            <svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true">
+                                <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                                <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                                <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                                <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                            </svg>
+                        </div>
+                        <div>
+                            <h2 id="googleCardTitle">Google Account</h2>
+                            <p class="card-subtitle">Connect your Gmail account to sign in quickly with Google while keeping your email and password intact.</p>
+                        </div>
+                    </div>
+                    <span class="google-status-badge is-disconnected" id="googleStatusBadge">
+                        <span class="status-badge-dot" aria-hidden="true"></span>
+                        <span id="googleStatusText">Not connected</span>
+                    </span>
+                </div>
+
+                <div class="form-alert" id="googleFormError" role="alert" hidden></div>
+
+                <div class="google-connect-row">
+                    <div class="google-connect-meta">
+                        <p class="google-connection-detail" id="googleConnectionDetail">Your profile is not linked to a Google account yet. Connect a Gmail account to enable one-click Google Sign-In.</p>
+                    </div>
+                    <button type="button" class="btn-google-connect" id="connectGoogleBtn">
+                        <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
+                            <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                            <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                            <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                            <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                        </svg>
+                        <span>Connect Google Account</span>
+                    </button>
+                </div>
+            </section>
+
+        </div>
+    </main>
+
+    <!-- TOAST NOTICE -->
+    <div class="toast-notice" id="toastNotice" role="status" aria-live="polite">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
+            <polyline points="20 6 9 17 4 12"></polyline>
+        </svg>
+        <span id="toastMessage">Saved</span>
+    </div>
+
+    <script src="profile.js"></script>
+</body>
+
+</html>

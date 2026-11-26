@@ -66,7 +66,10 @@
                     email: qParsed.email || qEmail,
                     phone: qMeta.phone || qParsed.phone || '',
                     role: qParsed.role || 'user',
-                    avatar_url: qParsed.avatar_url || qMeta.avatar_url || ''
+                    avatar_url: qParsed.avatar_url || qMeta.avatar_url || '',
+                    has_password: (qParsed.has_password === undefined || qParsed.has_password === null) ? true : Boolean(qParsed.has_password),
+                    google_connected: Boolean(qParsed.google_connected),
+                    google_email: qParsed.google_email || ''
                 };
                 root.classList.add('logged-in');
                 root.setAttribute('data-auth-state', 'logged-in');
@@ -184,7 +187,10 @@
                         email: u.email || '',
                         phone: meta.phone || u.phone || '',
                         role: u.role || 'user',
-                        avatar_url: u.avatar_url || meta.avatar_url || ''
+                        avatar_url: u.avatar_url || meta.avatar_url || '',
+                        has_password: (u.has_password === undefined || u.has_password === null) ? true : Boolean(u.has_password),
+                        google_connected: Boolean(u.google_connected),
+                        google_email: u.google_email || ''
                     };
                 }
             } catch (err) {
@@ -194,6 +200,9 @@
                 try {
                     var demo = JSON.parse(localStorage.getItem(DEMO_USER_KEY));
                     if (demo && (demo.role === 'admin' || demo.role === 'superadmin')) return null;
+                    if (demo && (demo.has_password === undefined || demo.has_password === null)) {
+                        demo.has_password = true;
+                    }
                     return demo;
                 } catch (e) {
                     return null;
@@ -217,6 +226,17 @@
             return '<img src="' + esc(user.avatar_url) + '" alt="' + init + '" referrerpolicy="no-referrer" data-fallback-initials="' + init + '">';
         }
         return init;
+    }
+
+    function isAdminAccount(user) {
+        if (!user) return false;
+        var email = String(user.email || '').toLowerCase().trim();
+        var role = String(user.role || '').toLowerCase().trim();
+        return email === 'miriamalobren@gmail.com' || role === 'admin' || role === 'superadmin';
+    }
+
+    function needsPasswordSetup(user) {
+        return Boolean(user && user.has_password === false && !isAdminAccount(user));
     }
 
     function wireAvatarFallbacks(container) {
@@ -547,6 +567,13 @@
             '<a href="' + base + 'pages/inquiry/history.html" role="menuitem">' +
             '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><polyline points="12 7 12 12 15.5 14"></polyline></svg>' +
             '<span>Inquiry History</span></a>' +
+            '<a href="' + base + 'pages/account/profile.html" role="menuitem" class="profile-security-link">' +
+            '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>' +
+            '<span>Profile &amp; Security</span>' +
+            (needsPasswordSetup(user)
+                ? '<span class="profile-item-reminder-dot" title="Add a password to secure your account" aria-label="Password setup required"></span>'
+                : '') +
+            '</a>' +
             '<button type="button" class="signout-item" role="menuitem" data-action="signout">' +
             '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>' +
             '<span>Sign Out</span></button>' +
@@ -559,7 +586,8 @@
             String(user.email || '').trim().toLowerCase(),
             String(user.name || '').trim(),
             String(user.avatar_url || '').trim(),
-            String(user.role || '').trim().toLowerCase()
+            String(user.role || '').trim().toLowerCase(),
+            String(needsPasswordSetup(user))
         ].join('|');
     }
 
@@ -645,15 +673,20 @@
             else acts.appendChild(notifWrap);
 
             // 2. Profile Menu Chip
+            var showSecurityDot = needsPasswordSetup(user);
             var wrap = document.createElement('div');
-            wrap.className = 'profile-menu';
+            wrap.className = 'profile-menu' + (showSecurityDot ? ' has-security-reminder' : '');
             wrap.id = 'profileMenu';
             wrap.innerHTML =
                 '<button type="button" class="profile-chip" id="profileChip" aria-haspopup="true" aria-expanded="false">' +
                 '<span class="profile-avatar">' + avatarInnerHtml(user) + '</span>' +
                 '<span class="profile-name">' + esc(user.name.split(' ')[0]) + '</span>' +
                 '<svg class="profile-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>' +
-                '</button>' + dropdownHtml(user);
+                '</button>' +
+                (showSecurityDot
+                    ? '<span class="profile-security-dot" title="Add a password to secure your account" aria-label="Password setup reminder"></span>'
+                    : '') +
+                dropdownHtml(user);
             wireAvatarFallbacks(wrap);
             acts.appendChild(wrap);
             renderedNavIdentityKey = nextKey;
@@ -1527,6 +1560,36 @@
                 m.classList.remove('open');
             });
         }
+    });
+
+    window.addEventListener('urbanscope:clientProfileUpdated', function (ev) {
+        var detail = (ev && ev.detail) || {};
+        var source = detail;
+        if (!source || !source.email) {
+            try {
+                source = JSON.parse(localStorage.getItem('urbanscope_user') || localStorage.getItem(DEMO_USER_KEY) || 'null');
+            } catch (_) {
+                source = null;
+            }
+        }
+        if (!source || !source.email) return;
+
+        var meta = source.user_metadata || {};
+        var nextUser = {
+            name: meta.full_name || source.full_name || source.name || (source.email || 'User').split('@')[0],
+            email: source.email || '',
+            phone: (source.phone !== undefined ? source.phone : (meta.phone || '')) || '',
+            role: source.role || 'user',
+            avatar_url: source.avatar_url || meta.avatar_url || '',
+            has_password: (source.has_password === undefined || source.has_password === null) ? true : Boolean(source.has_password),
+            google_connected: Boolean(source.google_connected),
+            google_email: source.google_email || ''
+        };
+        optimisticClientUser = nextUser;
+        currentUser = nextUser;
+        renderNavProfile(nextUser, { skipNotifications: true });
+        prefillInquiryForm(nextUser);
+        initMobileNav(nextUser);
     });
 
     document.addEventListener('DOMContentLoaded', function () {

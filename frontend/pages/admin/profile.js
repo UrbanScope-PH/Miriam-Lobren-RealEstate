@@ -43,6 +43,18 @@ document.addEventListener('DOMContentLoaded', async () => {
     const passwordForm = document.getElementById('passwordForm');
     const passwordAlertBox = document.getElementById('passwordAlertBox');
 
+    const adminGoogleStatusBadge = document.getElementById('adminGoogleStatusBadge');
+    const adminGoogleStatusText = document.getElementById('adminGoogleStatusText');
+    const adminGoogleDetail = document.getElementById('adminGoogleDetail');
+    const adminGoogleAlert = document.getElementById('adminGoogleAlert');
+    const connectAdminGoogleBtn = document.getElementById('connectAdminGoogleBtn');
+    let preloadedAdminGoogleConfig = null;
+
+    if (window.location.hostname === '127.0.0.1') {
+        window.location.replace(window.location.href.replace('//127.0.0.1', '//localhost'));
+        return;
+    }
+
     function escProfileHtml(val) {
         if (typeof window.escapeHtml === 'function') return window.escapeHtml(val);
         return String(val ?? '')
@@ -151,6 +163,49 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (bannerName) bannerName.textContent = currentProfile.name || 'Miriam Lobren';
     if (adminTitleDisplay) adminTitleDisplay.textContent = currentProfile.title || 'Real Estate Salesperson';
 
+    function showAdminGoogleAlert(message, type = 'success') {
+        if (!adminGoogleAlert) return;
+        if (!message) {
+            adminGoogleAlert.style.display = 'none';
+            adminGoogleAlert.className = 'alert-box';
+            return;
+        }
+        const safeType = type === 'success' ? 'success' : 'error';
+        adminGoogleAlert.className = `alert-box ${safeType}`;
+        adminGoogleAlert.style.display = 'flex';
+        adminGoogleAlert.innerHTML = `
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                ${safeType === 'success'
+                    ? '<polyline points="20 6 9 17 4 12"></polyline>'
+                    : '<circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line>'
+                }
+            </svg>
+            <span>${escProfileHtml(message)}</span>
+        `;
+    }
+
+    function renderAdminGoogleState(userObj) {
+        const u = userObj || {};
+        const connected = Boolean(u.google_connected);
+        const linkedEmail = String(u.google_email || u.email || 'miriamalobren@gmail.com').trim().toLowerCase();
+
+        if (adminGoogleStatusBadge && adminGoogleStatusText) {
+            adminGoogleStatusBadge.classList.toggle('is-connected', connected);
+            adminGoogleStatusBadge.classList.toggle('is-disconnected', !connected);
+            adminGoogleStatusText.textContent = connected ? 'Connected' : 'Not connected';
+        }
+        if (adminGoogleDetail) {
+            adminGoogleDetail.textContent = connected
+                ? `Connected with Google (${linkedEmail}). You can sign in using Google or your administrator password.`
+                : 'Your administrator account is not linked to Google Sign-In yet. Connect miriamalobren@gmail.com to enable one-click Google sign-in.';
+        }
+        if (connectAdminGoogleBtn) {
+            connectAdminGoogleBtn.hidden = connected;
+        }
+    }
+
+    renderAdminGoogleState(storedAdmin);
+
     // Asynchronously refresh with server profile if available
     (async function refreshWithRemoteProfile() {
         const shouldShowFormSkeleton = profileForm && !savedProfile.email && !storedAdmin.email;
@@ -184,8 +239,9 @@ document.addEventListener('DOMContentLoaded', async () => {
                 }
             }
             if (typeof apiGetCurrentUser === 'function') {
-                const u = await apiGetCurrentUser();
+                const u = await apiGetCurrentUser(true);
                 if (u) {
+                    renderAdminGoogleState(u);
                     if (u.phone && !savedProfile.phone && phoneInput) phoneInput.value = u.phone;
                     if ((u.full_name || u.name) && !savedProfile.name && fullNameInput) fullNameInput.value = u.full_name || u.name;
                     if (u.email && !savedProfile.email && u.email !== 'admin.realestate@gmail.com' && emailInput) emailInput.value = u.email;
@@ -212,6 +268,130 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (shouldShowFormSkeleton && profileForm) profileForm.classList.remove('us-form-loading');
         }
     })();
+
+    if (typeof apiGetGoogleConfig === 'function') {
+        apiGetGoogleConfig().then((cfg) => {
+            if (cfg && cfg.enabled && cfg.client_id) {
+                preloadedAdminGoogleConfig = cfg;
+            }
+        }).catch(() => {});
+    }
+
+    function ensureAdminGoogleSdk(timeoutMs = 6000) {
+        return new Promise((resolve) => {
+            if (window.google && window.google.accounts && window.google.accounts.oauth2) {
+                resolve(true);
+                return;
+            }
+            let script = document.querySelector('script[src*="accounts.google.com/gsi/client"]');
+            if (!script) {
+                script = document.createElement('script');
+                script.src = 'https://accounts.google.com/gsi/client';
+                script.async = true;
+                script.defer = true;
+                document.head.appendChild(script);
+            }
+            const started = Date.now();
+            const timer = setInterval(() => {
+                if (window.google && window.google.accounts && window.google.accounts.oauth2) {
+                    clearInterval(timer);
+                    resolve(true);
+                } else if (Date.now() - started >= timeoutMs) {
+                    clearInterval(timer);
+                    resolve(false);
+                }
+            }, 120);
+        });
+    }
+
+    if (connectAdminGoogleBtn) {
+        const labelSpan = connectAdminGoogleBtn.querySelector('span');
+        const defaultLabel = labelSpan ? labelSpan.textContent : 'Connect Google Account';
+
+        function setAdminGoogleBusy(busy, label) {
+            connectAdminGoogleBtn.disabled = busy;
+            if (labelSpan) labelSpan.textContent = label || defaultLabel;
+        }
+
+        function launchAdminGooglePopup(clientId) {
+            const tokenClient = window.google.accounts.oauth2.initTokenClient({
+                client_id: clientId,
+                scope: 'openid email profile',
+                callback: async (tokenResponse) => {
+                    if (!tokenResponse || tokenResponse.error) {
+                        setAdminGoogleBusy(false);
+                        if (tokenResponse && tokenResponse.error &&
+                            tokenResponse.error !== 'popup_closed_by_user' &&
+                            tokenResponse.error !== 'access_denied') {
+                            showAdminGoogleAlert('Google sign-in error: ' + (tokenResponse.error_description || tokenResponse.error), 'error');
+                        }
+                        return;
+                    }
+                    if (!tokenResponse.access_token) {
+                        setAdminGoogleBusy(false);
+                        return;
+                    }
+                    setAdminGoogleBusy(true, 'Connecting...');
+                    const result = typeof apiLinkGoogleAccount === 'function'
+                        ? await apiLinkGoogleAccount({ access_token: tokenResponse.access_token })
+                        : { success: false, error: 'Google linking service is unavailable.' };
+                    setAdminGoogleBusy(false);
+
+                    if (!result || !result.success) {
+                        showAdminGoogleAlert(result?.error || 'Unable to connect your Google account.', 'error');
+                        return;
+                    }
+
+                    renderAdminGoogleState(result.user || { google_connected: true, google_email: 'miriamalobren@gmail.com' });
+                    showAdminGoogleAlert(result.message || 'Google account connected successfully!', 'success');
+                },
+                error_callback: (err) => {
+                    setAdminGoogleBusy(false);
+                    if (err && err.type === 'popup_failed_to_open') {
+                        showAdminGoogleAlert('Google sign-in popup was blocked. Please allow popups for this site and try again.', 'error');
+                    }
+                }
+            });
+            tokenClient.requestAccessToken({ prompt: 'select_account' });
+        }
+
+        connectAdminGoogleBtn.addEventListener('click', async () => {
+            showAdminGoogleAlert('');
+            setAdminGoogleBusy(true, 'Opening Google...');
+
+            if (
+                preloadedAdminGoogleConfig &&
+                preloadedAdminGoogleConfig.enabled &&
+                preloadedAdminGoogleConfig.client_id &&
+                window.google &&
+                window.google.accounts &&
+                window.google.accounts.oauth2
+            ) {
+                launchAdminGooglePopup(preloadedAdminGoogleConfig.client_id);
+                return;
+            }
+
+            const cfg = typeof apiGetGoogleConfig === 'function'
+                ? await apiGetGoogleConfig()
+                : { enabled: false, client_id: '' };
+
+            if (!cfg || !cfg.enabled || !cfg.client_id) {
+                setAdminGoogleBusy(false);
+                showAdminGoogleAlert('Google Sign-In is not configured on this server.', 'error');
+                return;
+            }
+            preloadedAdminGoogleConfig = cfg;
+
+            const sdkReady = await ensureAdminGoogleSdk(6000);
+            if (!sdkReady || !window.google || !window.google.accounts || !window.google.accounts.oauth2) {
+                setAdminGoogleBusy(false);
+                showAdminGoogleAlert('Could not load Google Identity Services. Please check your connection and try again.', 'error');
+                return;
+            }
+
+            launchAdminGooglePopup(cfg.client_id);
+        });
+    }
 
     // Avatar Elements
     const profileAvatarImg = document.getElementById('profileAvatarImg');

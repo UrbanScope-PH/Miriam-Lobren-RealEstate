@@ -78,10 +78,11 @@ export default async function handler(req, res) {
             role: 'client',
             avatar_url: 'assets/images/agent.jpg',
             bio: '',
+            has_password: true,
             email_verified_at: new Date().toISOString()
         });
 
-        const cleanUser = sanitizeUser(user || { email, full_name: fullName, phone, role: 'user', avatar_url: 'assets/images/agent.jpg', email_verified_at: true });
+        const cleanUser = sanitizeUser(user || { email, full_name: fullName, phone, role: 'user', avatar_url: 'assets/images/agent.jpg', has_password: true, email_verified_at: true });
         const userToken = createUserSessionToken(cleanUser);
         const csrfToken = generateCsrfToken();
         const cookies = buildSessionCookieHeaders({ req, userToken, csrfToken });

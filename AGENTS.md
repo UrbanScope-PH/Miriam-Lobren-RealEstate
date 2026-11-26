@@ -58,6 +58,7 @@ frontend/              Everything the browser loads (served at /)
   robots.txt           Search engine crawler rules
   sitemap.xml          Public XML sitemap (index, 7 showcases, property-detail, inquiry, login, register, legal)
   pages/properties/    property-detail (?id=N), casasuerte.html, kathleen.html, Liora.html, Airmen.html, benecia.html, amore-classico.html & midori.html showcases (properties.html catalog was removed)
+  pages/account/       Client Profile & Security (profile.html/.css/.js; requires login: <html data-require-auth>)
   pages/inquiry/       Inquiry form (inquiry.html) & client history (history.html) (requires login: <html data-require-auth>)
   pages/auth/          Unified login (auto-routes by role), register, and forgot-password flow
   pages/legal/         Terms of Service (terms.html) & Privacy Policy (privacy.html)
@@ -88,8 +89,8 @@ to `/pages/…`.
   to do with Supabase; it's a REST client for FastAPI that exposes globals:
   `apiGetProperties`, `apiGetPropertyById`, `apiAddProperty`, `apiUpdateProperty`,
   `apiDeleteProperty`, `apiSubmitInquiry`, `apiGetInquiries`, `apiSignUp`, `apiSignIn`,
-  `apiGetGoogleConfig`, `apiSignInWithGoogle`, `apiCreateHostedAdminSession`,
-  `apiGetHostedAdminSession`, `apiSignOut`, `apiGetCurrentUser`,
+  `apiCreateHostedAdminSession`, `apiGetHostedAdminSession`, `apiSignOut`, `apiGetCurrentUser`,
+  `apiUpdateClientProfile`, `apiUpdateClientPassword`, `apiLinkGoogleAccount`,
   `apiStartRegistrationOtp`, `apiCompleteRegistrationOtp`, `apiRequestPasswordReset`,
   `apiCompletePasswordReset`,
   `isBackendConfigured` / `isSupabaseConfigured`.
@@ -1672,6 +1673,16 @@ path when rendering from a page.
   - Designated **`miriamalobren@gmail.com`** as the sole Realty Administrator across the entire stack (`require_admin`, `require_superadmin`, `rbac_admin_guard_middleware`, `proxy.js`, `edge-session.js`, `session.js`, `admin-shell.js`, and SQLite triggers/seeding). Legacy accounts (`urbanscope.cvsu@gmail.com`, `admin.realestate@gmail.com`, `miriam@gmail.com`) are demoted to Client Users (`user`), excluded from admin bootstrap seeding, and lose special deletion/rename protections.
   - Removed all **Promote** / **Demote** actions, `#roleChangeModal`, `#newRole` dropdown, and `#editRole` dropdown from `frontend/pages/admin/users.html` and `users.js`. Role mutation endpoints (`PUT /api/superadmin/users/{id}/role`, `POST`/`PUT` role changes in `api/superadmin/users.js` and `backend/routers/superadmin.py`) reject promotions and demotions server-side (`403`/`400`), while preserving `Edit` and `Delete` for all non-`miriamalobren@gmail.com` accounts.
   - Added atomic Supabase migration `supabase/migrations/20261126164500_single_admin_miriamalobren.sql` to ensure `miriamalobren@gmail.com` holds `'admin'`, demote other accounts, re-point `properties.agent_id`, and enforce the single-admin rule at the Postgres trigger level.
+
+205. **Client Profile & Security Page & Google Password-Setup Red-Dot Reminder (`frontend/pages/account/profile.{html,css,js}`, `frontend/shared/js/{supabase,api,session}.js`, `frontend/shared/css/session.css`, `frontend/pages/auth/forgot-password.js`, `api/*`, `backend/*`, `vercel.json`):**
+  - Added `/pages/account/profile.html` (`<html data-require-auth>`) and linked **Profile & Security** directly above Sign Out in the client navbar dropdown (`session.js`). Clients can only edit their **Full Name** and **Contact Number** (normalized in PH format for automatic inquiry form autofill via `prefillInquiryForm`), **Add Password** / **Change Password**, or follow **Forgot Password?** (`?from=profile&email=...`); email and photo edits remain locked server- and client-side (`403` for client email/avatar mutations). Main admin visits redirect to `../admin/profile.html`.
+  - Added explicit `has_password` tracking (`INTEGER NOT NULL DEFAULT 1` in SQLite; `BOOLEAN NOT NULL DEFAULT TRUE` in Postgres via atomic migration `supabase/migrations/20261126200000_add_user_has_password.sql`, protected in `protect_user_email_verification()`). Direct Google OAuth sign-ups (`google-verify` / `google_complete_registration`) initialize `has_password = false` / `0`; email+password sign-ups and OTP password resets initialize/set `has_password = true` / `1`.
+  - Accounts with `has_password === false` display a red notification dot on the navbar account trigger (`.profile-security-dot` sibling outside `.profile-chip` so mobile `overflow: hidden` never clips it), a red dot next to **Profile & Security** in the dropdown (`.profile-item-reminder-dot`), and an alert banner (`#passwordReminderBanner`) on `profile.html`. Adding a password without requiring a current password (`POST /api/session?action=change-password` on Vercel or `PUT /api/auth/password` on FastAPI) flips `has_password = true` and clears all reminder dots immediately via `urbanscope:clientProfileUpdated`.
+
+206. **Google Account Connection Status & Gmail Linking on Profile & Security Pages (`frontend/pages/account/profile.{html,css,js}`, `frontend/pages/admin/profile.{html,css,js}`, `frontend/shared/js/{supabase,api,session}.js`, `api/session.js`, `backend/routers/auth.py`, `backend/routers/superadmin.py`):**
+  - Added explicit `google_connected` (bool) and `google_email` (string) fields derived server-side in `sanitize_user_dict` (`backend/security.py`) and `sanitizeUser` (`lib/server-security.js`) without ever exposing raw `google_id`. Added atomic Supabase migration `supabase/migrations/20261126220000_add_user_google_email.sql` creating `users.google_email`, backfilling linked accounts, adding partial unique index `idx_users_google_email`, and guarding `google_id`/`google_email` in `protect_user_email_verification()`.
+  - Added server-side Gmail linking endpoints (`POST /api/auth/google/link` in FastAPI and `POST /api/session?action=link-google` on Vercel) plus `apiLinkGoogleAccount` in `supabase.js`/`api.js`. Supports linking a Gmail address even when the user registered with a non-Google email (preserving their primary `email`, `role`, and `has_password`), blocks cross-account `google_id` / `google_email` conflicts (`409`), enforces `miriamalobren@gmail.com` admin isolation (`403`), and supports subsequent login via `/auth/google` or `/api/session?action=google`.
+  - Added the **Google Account** connection card (`#googleAccountCard` on `frontend/pages/account/profile.html` and `#adminGoogleCard` on `frontend/pages/admin/profile.html`) displaying **Connected** / **Not connected** status badges, linked Gmail details, and one-click Google Identity Services OAuth popup linking.
 
 ## Safety Rules
 

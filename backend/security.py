@@ -375,8 +375,17 @@ def sanitize_user_dict(user: Optional[dict[str, Any]]) -> Optional[dict[str, Any
     if not user:
         return None
     clean = dict(user)
+    raw_google_id = str(clean.pop("google_id", "") or "").strip()
     clean.pop("password_hash", None)
-    clean.pop("google_id", None)
+    raw_has_password = clean.get("has_password")
+    clean["has_password"] = True if raw_has_password is None else bool(raw_has_password)
+    google_connected = bool(raw_google_id or clean.get("google_connected"))
+    clean["google_connected"] = google_connected
+    raw_google_email = str(clean.get("google_email") or "").strip().lower()
+    if google_connected:
+        clean["google_email"] = raw_google_email or str(clean.get("email") or "").strip().lower()
+    else:
+        clean["google_email"] = ""
     if clean.get("bio") == "__URBANSCOPE_DELETED__":
         clean["bio"] = ""
     return clean

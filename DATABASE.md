@@ -105,6 +105,8 @@ Client and admin accounts.
 | `role` | TEXT | `CHECK(role IN ('user', 'admin', 'superadmin')) DEFAULT 'user'` | Single-admin RBAC policy: only `miriamalobren@gmail.com` receives `'admin'` via `trg_user_role_insert` / `trg_user_role_update`; all other accounts receive `'user'` (or `'client'` in Postgres). Role promotion/demotion endpoints reject modifications (`400`/`403`). |
 | `avatar_url` | TEXT | `DEFAULT 'assets/images/agent.jpg'` | Profile picture image path, Google avatar URL, or data URL (max client upload size: 5MB) |
 | `google_id` | TEXT | Partial `UNIQUE` (`idx_users_google_id`) | Google OpenID `sub` identifier linked on Google Sign-In (*added by non-destructive migration*) |
+| `google_email` | TEXT | `DEFAULT ''`, partial `UNIQUE` (`idx_users_google_email`) | Lower-cased Gmail address linked via Google Sign-In or Profile & Security linking (*added by non-destructive migration*) |
+| `has_password` | INTEGER / BOOLEAN | `DEFAULT 1` (SQLite) / `DEFAULT TRUE` (Postgres) | `false`/`0` when registered directly via Google OAuth without a password; becomes `true`/`1` after adding or resetting a password |
 | `license_number` | TEXT | `DEFAULT ''` | Professional real estate broker / agent PRC registration identifier |
 | `title` | TEXT | `DEFAULT 'Real Estate Agent'` | Professional title or organizational role |
 | `brokerage` | TEXT | `DEFAULT 'UrbanScope'` | Accredited brokerage or realty firm |
@@ -447,6 +449,10 @@ supabase/
                                              Adds inquiries.cancelled_by ('client' | 'admin') column and CHECK constraint to distinguish client vs. admin cancellations
   migrations/20261126164500_single_admin_miriamalobren.sql
                                              Enforces single-admin policy: grants 'admin' solely to miriamalobren@gmail.com, demotes all other admin/superadmin rows to 'user', re-points property agent_id, and locks Postgres trigger enforcement
+  migrations/20261126200000_add_user_has_password.sql
+                                             Adds users.has_password boolean column (DEFAULT TRUE), updates protect_user_email_verification() trigger guard, and reloads PostgREST schema cache
+  migrations/20261126220000_add_user_google_email.sql
+                                             Adds users.google_email column with partial unique index, backfills linked rows, guards google_id/google_email in protect_user_email_verification(), and reloads PostgREST schema cache
   seed.sql                                   Demo data (users, 6 properties, inquiries, ...)
   scripts/                                   One-off data fixes to paste into the SQL Editor (never auto-run)
 ```

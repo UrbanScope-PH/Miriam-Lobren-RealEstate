@@ -326,6 +326,30 @@ html.auth-checking body {
     display: inline-flex;
 }
 
+.profile-security-dot {
+    position: absolute;
+    top: -1px;
+    right: -1px;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--danger-dot, #ef4444);
+    border: 2px solid var(--surface, #ffffff);
+    box-shadow: 0 1px 4px rgba(239, 68, 68, 0.45);
+    pointer-events: none;
+    z-index: 3;
+}
+
+.profile-item-reminder-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--danger-dot, #ef4444);
+    margin-left: auto;
+    flex-shrink: 0;
+    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.16);
+}
+
 .profile-chip {
     display: inline-flex;
     align-items: center;
@@ -541,6 +565,14 @@ html.auth-checking body {
         width: 36px;
         height: 36px;
         font-size: 0.78rem;
+    }
+
+    .profile-security-dot {
+        top: -2px;
+        right: -2px;
+        width: 9px;
+        height: 9px;
+        border-width: 1.5px;
     }
 
     .profile-dropdown {

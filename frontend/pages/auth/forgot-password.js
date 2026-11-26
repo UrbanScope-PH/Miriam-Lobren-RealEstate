@@ -11,6 +11,27 @@
     const resendStatus = document.getElementById('resetResendStatus');
     const title = document.getElementById('resetTitle');
     const subtitle = document.getElementById('resetSubtitle');
+    const backHomeLink = document.querySelector('.back-home-link');
+    const registerPrompt = document.querySelector('.register-prompt');
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const originParam = String(urlParams.get('from') || '').trim().toLowerCase();
+    const prefilledEmail = String(urlParams.get('email') || '').trim().toLowerCase();
+    const cameFromProfile = originParam === 'profile';
+
+    if (prefilledEmail && emailInput && !emailInput.value) {
+        emailInput.value = prefilledEmail;
+    }
+
+    if (cameFromProfile) {
+        if (backHomeLink) {
+            backHomeLink.href = '../account/profile.html';
+            backHomeLink.textContent = '← Back to Profile & Security';
+        }
+        if (registerPrompt) {
+            registerPrompt.innerHTML = '<span>Want to manage your account instead?</span><a href="../account/profile.html">Back to Profile &amp; Security</a>';
+        }
+    }
 
     let currentEmail = '';
     let verifiedCode = '';
@@ -215,10 +236,29 @@
                 : { success: false, error: 'Password update service is unavailable.' };
 
             if (updateResult && updateResult.success) {
-                showStatus('Password updated successfully! Redirecting to login…', 'success');
-                setTimeout(function () {
-                    window.location.href = 'login.html?reset=success&email=' + encodeURIComponent(currentEmail);
-                }, 1200);
+                try {
+                    ['urbanscope_user', 'urbanscope_demo_user'].forEach(function (storageKey) {
+                        const raw = localStorage.getItem(storageKey);
+                        if (!raw) return;
+                        const parsed = JSON.parse(raw);
+                        if (parsed && String(parsed.email || '').trim().toLowerCase() === currentEmail) {
+                            parsed.has_password = true;
+                            localStorage.setItem(storageKey, JSON.stringify(parsed));
+                        }
+                    });
+                } catch (_) {}
+
+                if (cameFromProfile) {
+                    showStatus('Password updated successfully! Returning to Profile & Security…', 'success');
+                    setTimeout(function () {
+                        window.location.href = '../account/profile.html?password_reset=success';
+                    }, 1200);
+                } else {
+                    showStatus('Password updated successfully! Redirecting to login…', 'success');
+                    setTimeout(function () {
+                        window.location.href = 'login.html?reset=success&email=' + encodeURIComponent(currentEmail);
+                    }, 1200);
+                }
             } else {
                 showStatus((updateResult && updateResult.error) || 'Unable to update password. Please try again.', 'error');
                 if (button) { button.disabled = false; button.textContent = originalLabel; }

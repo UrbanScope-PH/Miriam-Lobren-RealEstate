@@ -419,7 +419,10 @@ async function handleSessionRequest(req, res) {
             }), { headers: serviceHeaders({}, true), ...(signal ? { signal } : {}) });
             if (lookupRes.ok) {
                 const rows = await lookupRes.json().catch(() => []);
-                existing = Array.isArray(rows) ? rows[0] : null;
+                const activeRows = Array.isArray(rows) ? rows.filter((u) => !isDeletedUserRow(u)) : [];
+                existing = activeRows.find((u) => String(u.google_id || '') === String(googleInfo.google_id))
+                    || activeRows[0]
+                    || null;
             } else {
                 lookupFailed = true;
             }
@@ -445,6 +448,7 @@ async function handleSessionRequest(req, res) {
                 updated_at: new Date().toISOString()
             };
             if (!existing.google_id) patch.google_id = googleInfo.google_id;
+            if (!String(existing.google_email || '').trim()) patch.google_email = cleanEmail;
             if (!String(existing.full_name || '').trim() && googleInfo.full_name) {
                 patch.full_name = googleInfo.full_name;
             }
@@ -469,7 +473,7 @@ async function handleSessionRequest(req, res) {
                 ...(adminToken ? { token: adminToken } : {}),
                 admin_session_ready: Boolean(adminToken),
                 user: sanitizeUser(merged),
-                redirect_url: redirectForRole(cleanEmail, role),
+                redirect_url: redirectForRole(normalizeEmail(merged.email), role),
                 message: 'Google sign-in successful'
             }, 200, res, { cookies });
         }
@@ -572,6 +576,7 @@ async function handleSessionRequest(req, res) {
                 {
                     email_verified_at: new Date().toISOString(),
                     google_id: existing.google_id || googleInfo.google_id,
+                    google_email: existing.google_email || cleanEmail,
                     updated_at: new Date().toISOString()
                 },
                 { Prefer: 'return=representation' },
@@ -592,6 +597,8 @@ async function handleSessionRequest(req, res) {
                     role: 'client',
                     avatar_url: safeAvatarCheck.ok ? safeAvatarCheck.value : 'assets/images/agent.jpg',
                     google_id: googleInfo.google_id,
+                    google_email: cleanEmail,
+                    has_password: false,
                     bio: '',
                     email_verified_at: new Date().toISOString()
                 },
@@ -647,14 +654,46 @@ async function handleSessionRequest(req, res) {
         }
 
         if (body.phone !== undefined) {
-            const cleanPhone = String(body.phone).trim();
+            let cleanPhone = String(body.phone).trim();
             if (cleanPhone.length > 40) {
                 return jsonWithCookies({ success: false, error: 'Phone number is too long.' }, 400, res);
+            }
+            if (!isStaff && cleanPhone) {
+                const digitsOnly = cleanPhone.replace(/[\s\-()]/g, '');
+                if (/^09\d{9}$/.test(digitsOnly)) {
+                    cleanPhone = '+63' + digitsOnly.slice(1);
+                } else if (/^639\d{9}$/.test(digitsOnly)) {
+                    cleanPhone = '+' + digitsOnly;
+                } else if (/^9\d{9}$/.test(digitsOnly)) {
+                    cleanPhone = '+63' + digitsOnly;
+                } else if (/^\+639\d{9}$/.test(digitsOnly)) {
+                    cleanPhone = digitsOnly;
+                } else {
+                    return jsonWithCookies({
+                        success: false,
+                        error: 'Please enter a valid Philippine mobile number (e.g. 0917 123 4567 or +63 917 123 4567).'
+                    }, 400, res);
+                }
             }
             patch.phone = cleanPhone;
         }
 
-        if (body.email !== undefined && String(body.email).trim()) {
+        if (!isStaff) {
+            if (body.email !== undefined && normalizeEmail(body.email) !== normalizeEmail(currentUser.email)) {
+                return jsonWithCookies({
+                    success: false,
+                    error: 'Only your full name and contact number can be updated here.'
+                }, 403, res);
+            }
+            if (body.avatar_url !== undefined && String(body.avatar_url).trim() !== String(currentUser.avatar_url || '').trim()) {
+                return jsonWithCookies({
+                    success: false,
+                    error: 'Profile photo changes are not available for client accounts.'
+                }, 403, res);
+            }
+        }
+
+        if (isStaff && body.email !== undefined && String(body.email).trim()) {
             const nextEmail = normalizeEmail(body.email);
             if (!isValidEmail(nextEmail)) {
                 return jsonWithCookies({ success: false, error: 'Enter a valid email address.' }, 400, res);
@@ -674,7 +713,7 @@ async function handleSessionRequest(req, res) {
             }
         }
 
-        if (body.avatar_url !== undefined) {
+        if (isStaff && body.avatar_url !== undefined) {
             const avatarCheck = sanitizeImageUrl(body.avatar_url, { defaultValue: 'assets/images/agent.jpg' });
             if (!avatarCheck.ok) {
                 return jsonWithCookies({ success: false, error: avatarCheck.error }, 400, res);
@@ -710,6 +749,251 @@ async function handleSessionRequest(req, res) {
         return jsonWithCookies({
             success: true,
             user: sanitizeUser(updatedUser)
+        }, 200, res, { cookies });
+    }
+
+    if (action === 'change-password') {
+        if (!verifyCsrfIfAuthenticated(req)) {
+            return jsonWithCookies({ success: false, error: 'CSRF validation failed.' }, 403, res);
+        }
+        const session = getActiveSession(req);
+        if (!session) {
+            return jsonWithCookies({ success: false, error: 'Authentication required.' }, 401, res);
+        }
+
+        const currentLookup = await fetchUserByEmailResult(session.email, session.id);
+        if (currentLookup.dbError) {
+            return jsonWithCookies({ success: false, error: 'Unable to update password right now.' }, 503, res);
+        }
+        const currentUser = currentLookup.row;
+        if (!currentUser || isDeletedUserRow(currentUser)) {
+            return jsonWithCookies({ success: false, error: 'Account not found.' }, 404, res);
+        }
+
+        if (!await checkRateLimit({ key: `pw_change:user:${currentUser.id}`, limit: 8, windowSeconds: 300, blockSeconds: 600 })) {
+            return jsonWithCookies({ success: false, error: 'Too many password change attempts. Please wait a few minutes.' }, 429, res);
+        }
+
+        const currentPassword = String(body.current_password || '');
+        const cleanNewPassword = String(body.new_password || '').trim();
+        if (cleanNewPassword.length < 8 || cleanNewPassword.length > 128) {
+            return jsonWithCookies({ success: false, error: 'New password must be between 8 and 128 characters.' }, 400, res);
+        }
+
+        const userHasPassword = currentUser.has_password === undefined || currentUser.has_password === null
+            ? true
+            : Boolean(currentUser.has_password);
+
+        if (userHasPassword) {
+            if (!currentPassword || !(await verifyPBKDF2Password(currentPassword, currentUser.password_hash))) {
+                return jsonWithCookies({ success: false, error: 'The current password you entered is incorrect.' }, 400, res);
+            }
+        }
+
+        const newHash = await createPasswordHash(cleanNewPassword);
+        const nowIso = new Date().toISOString();
+        const updateRes = await writeUserMutation(
+            restUrl('users', { id: `eq.${currentUser.id}` }),
+            'PATCH',
+            {
+                password_hash: newHash,
+                has_password: true,
+                email_verified_at: currentUser.email_verified_at || nowIso,
+                updated_at: nowIso
+            },
+            { Prefer: 'return=representation' }
+        );
+        if (!updateRes.ok) {
+            return jsonWithCookies({ success: false, error: 'Unable to update password right now.' }, 503, res);
+        }
+        const rows = updateRes.data;
+        const updatedUser = Array.isArray(rows) && rows[0]
+            ? { ...rows[0], has_password: true }
+            : { ...currentUser, password_hash: newHash, has_password: true, updated_at: nowIso };
+        const { cookies } = issueCookiesForUser(req, updatedUser);
+        return jsonWithCookies({
+            success: true,
+            user: sanitizeUser(updatedUser),
+            message: userHasPassword
+                ? 'Password updated successfully.'
+                : 'Password added successfully. You can now sign in with email and password or Google.'
+        }, 200, res, { cookies });
+    }
+
+    if (action === 'link-google') {
+        if (!verifyCsrfIfAuthenticated(req)) {
+            return jsonWithCookies({ success: false, error: 'CSRF validation failed.' }, 403, res);
+        }
+        const session = getActiveSession(req);
+        if (!session) {
+            return jsonWithCookies({ success: false, error: 'Authentication required.' }, 401, res);
+        }
+
+        const currentLookup = await fetchUserByEmailResult(session.email, session.id);
+        if (currentLookup.dbError) {
+            return jsonWithCookies({ success: false, error: 'Unable to connect Google account right now.' }, 503, res);
+        }
+        const currentUser = currentLookup.row;
+        if (!currentUser || isDeletedUserRow(currentUser)) {
+            return jsonWithCookies({ success: false, error: 'Account not found.' }, 404, res);
+        }
+
+        if (!await checkRateLimit({ key: `google_link:user:${currentUser.id}`, limit: 10, windowSeconds: 300, blockSeconds: 600 })) {
+            return jsonWithCookies({ success: false, error: 'Too many Google connection attempts. Please wait a few minutes.' }, 429, res);
+        }
+
+        const googleCheck = await verifyGoogleCredentials(body);
+        if (!googleCheck.ok) {
+            if (googleCheck.reason === 'missing') {
+                return jsonWithCookies({ success: false, error: 'Missing Google sign-in token. Please try again.' }, 400, res);
+            }
+            if (googleCheck.reason === 'network_error') {
+                return jsonWithCookies({ success: false, error: 'Unable to reach Google verification service. Please try again.' }, 502, res);
+            }
+            return jsonWithCookies({ success: false, error: 'Google token verification failed.' }, 401, res);
+        }
+        const googleInfo = googleCheck.data;
+        const googleSub = String(googleInfo.google_id || '').trim();
+        const googleEmail = normalizeEmail(googleInfo.email);
+        const currentEmail = normalizeEmail(currentUser.email);
+
+        if (currentUser.google_id) {
+            if (String(currentUser.google_id) === googleSub) {
+                const syncPatch = {};
+                if (!String(currentUser.google_email || '').trim()) {
+                    syncPatch.google_email = googleEmail;
+                    syncPatch.updated_at = new Date().toISOString();
+                    await writeUserMutation(
+                        restUrl('users', { id: `eq.${currentUser.id}` }),
+                        'PATCH',
+                        syncPatch
+                    );
+                }
+                const mergedSame = {
+                    ...currentUser,
+                    ...syncPatch,
+                    google_email: syncPatch.google_email || currentUser.google_email || googleEmail
+                };
+                const { cookies } = issueCookiesForUser(req, mergedSame);
+                return jsonWithCookies({
+                    success: true,
+                    user: sanitizeUser(mergedSame),
+                    message: 'Google account is already connected.'
+                }, 200, res, { cookies });
+            }
+            return jsonWithCookies({
+                success: false,
+                error: 'A different Google account is already connected to this profile.'
+            }, 409, res);
+        }
+
+        const isCurrentAdmin = ALLOWED_ADMIN_EMAILS.has(currentEmail);
+        if (isCurrentAdmin && !ALLOWED_ADMIN_EMAILS.has(googleEmail)) {
+            return jsonWithCookies({
+                success: false,
+                error: 'The administrator account can only be linked to miriamalobren@gmail.com.'
+            }, 403, res);
+        }
+        if (!isCurrentAdmin && ALLOWED_ADMIN_EMAILS.has(googleEmail)) {
+            return jsonWithCookies({
+                success: false,
+                error: 'This Google account cannot be linked to a client profile.'
+            }, 403, res);
+        }
+
+        const safeSub = escapePostgrestFilterValue(googleSub);
+        const safeGoogleEmail = escapePostgrestFilterValue(googleEmail);
+        const signal = typeof AbortSignal !== 'undefined' && typeof AbortSignal.timeout === 'function'
+            ? AbortSignal.timeout(5000)
+            : undefined;
+
+        try {
+            const subRes = await fetch(restUrl('users', {
+                google_id: `eq.${safeSub}`,
+                select: '*'
+            }), { headers: serviceHeaders({}, true), ...(signal ? { signal } : {}) });
+            if (!subRes.ok) {
+                return jsonWithCookies({ success: false, error: 'Unable to verify Google account availability.' }, 503, res);
+            }
+            const subRows = await subRes.json().catch(() => []);
+            const subConflict = Array.isArray(subRows) && subRows.some(
+                (r) => !isDeletedUserRow(r) && String(r.id) !== String(currentUser.id)
+            );
+            if (subConflict) {
+                return jsonWithCookies({
+                    success: false,
+                    error: 'This Google account is already connected to another UrbanScope account.'
+                }, 409, res);
+            }
+
+            if (googleEmail !== currentEmail) {
+                let emailRes = await fetch(restUrl('users', {
+                    or: `(email.eq.${safeGoogleEmail},google_email.eq.${safeGoogleEmail})`,
+                    select: '*'
+                }), { headers: serviceHeaders({}, true), ...(signal ? { signal } : {}) });
+                if (emailRes.status === 400) {
+                    emailRes = await fetch(restUrl('users', {
+                        email: `eq.${safeGoogleEmail}`,
+                        select: '*'
+                    }), { headers: serviceHeaders({}, true), ...(signal ? { signal } : {}) });
+                }
+                if (!emailRes.ok) {
+                    return jsonWithCookies({ success: false, error: 'Unable to verify Google email availability.' }, 503, res);
+                }
+                const emailRows = await emailRes.json().catch(() => []);
+                const emailConflict = Array.isArray(emailRows) && emailRows.some(
+                    (r) => !isDeletedUserRow(r) && String(r.id) !== String(currentUser.id)
+                );
+                if (emailConflict) {
+                    return jsonWithCookies({
+                        success: false,
+                        error: 'That Google email is already associated with another UrbanScope account.'
+                    }, 409, res);
+                }
+            }
+        } catch (_) {
+            return jsonWithCookies({ success: false, error: 'Unable to connect Google account right now.' }, 503, res);
+        }
+
+        const nowIso = new Date().toISOString();
+        const patch = {
+            google_id: googleSub,
+            google_email: googleEmail,
+            email_verified_at: currentUser.email_verified_at || nowIso,
+            updated_at: nowIso
+        };
+        const currentRole = normalizeAccountRole(currentUser.role, currentUser.email);
+        const isStaff = isAuthorizedAdminRole(currentUser.email, currentRole);
+        const curAvatar = String(currentUser.avatar_url || '').trim();
+        if (!isStaff && googleInfo.avatar_url && (!curAvatar || curAvatar === 'assets/images/agent.jpg')) {
+            const avatarCheck = sanitizeImageUrl(googleInfo.avatar_url, { defaultValue: '' });
+            if (avatarCheck.ok && avatarCheck.value) patch.avatar_url = avatarCheck.value;
+        }
+
+        const updateRes = await writeUserMutation(
+            restUrl('users', { id: `eq.${currentUser.id}` }),
+            'PATCH',
+            patch,
+            { Prefer: 'return=representation' },
+            { optionalProtectedColumns: [] }
+        );
+        if (!updateRes.ok) {
+            return jsonWithCookies({ success: false, error: 'Unable to connect Google account right now.' }, 503, res);
+        }
+
+        const rows = updateRes.data;
+        const updatedUser = Array.isArray(rows) && rows[0]
+            ? {
+                ...rows[0],
+                google_id: rows[0].google_id || googleSub,
+                google_email: rows[0].google_email || googleEmail
+            }
+            : { ...currentUser, ...patch };
+        const { cookies } = issueCookiesForUser(req, updatedUser);
+        return jsonWithCookies({
+            success: true,
+            user: sanitizeUser(updatedUser),
+            message: 'Google account connected successfully!'
         }, 200, res, { cookies });
     }
 

@@ -99,14 +99,16 @@ def _pull_supabase_users_to_sqlite(force: bool = False) -> None:
             except ValueError:
                 avatar_url = "assets/images/agent.jpg"
             google_id = ru.get("google_id") or None
+            google_email = (ru.get("google_email") or "").strip().lower() or (clean_email if google_id else "")
+            has_password_val = 1 if ru.get("has_password") is None else (1 if bool(ru.get("has_password")) else 0)
             verified_at = ru.get("email_verified_at") or datetime.now(timezone.utc).isoformat()
 
             cursor.execute(
                 """
-                INSERT INTO users (email, password_hash, full_name, phone, role, avatar_url, google_id, email_verified_at)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                INSERT INTO users (email, password_hash, full_name, phone, role, avatar_url, google_id, google_email, has_password, email_verified_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """,
-                (clean_email, pwd_hash, full_name, phone, norm_role, avatar_url, google_id, verified_at)
+                (clean_email, pwd_hash, full_name, phone, norm_role, avatar_url, google_id, google_email, has_password_val, verified_at)
             )
             new_id = cursor.lastrowid
             # Re-apply role after trg_user_role_insert in case remote account was promoted to admin

@@ -2483,12 +2483,67 @@
         } catch (_) {}
     }
 
+    function normalizeHasPassword(u) {
+        return (u && u.has_password !== undefined && u.has_password !== null)
+            ? Boolean(u.has_password)
+            : true;
+    }
+
     function formatUserRecord(u) {
         if (!u) return null;
+        const googleConnected = Boolean(u.google_connected);
         return {
             ...u,
-            role: normalizeAccountRole(u.role, u.email)
+            role: normalizeAccountRole(u.role, u.email),
+            has_password: normalizeHasPassword(u),
+            google_connected: googleConnected,
+            google_email: googleConnected ? String(u.google_email || u.email || '').trim().toLowerCase() : ''
         };
+    }
+
+    function buildSessionUserFromApi(u, fallbacks = {}) {
+        const email = (u && u.email) || fallbacks.email || '';
+        const fullName = (u && (u.full_name || u.name)) || fallbacks.full_name || fallbacks.name || email.split('@')[0];
+        const phone = (u && u.phone !== undefined) ? (u.phone || '') : (fallbacks.phone || '');
+        const role = normalizeAccountRole(u && u.role, email);
+        const avatar = sanitizeImageUrl((u && u.avatar_url) || fallbacks.avatar_url || '', '');
+        const hasPassword = (u && u.has_password !== undefined && u.has_password !== null)
+            ? Boolean(u.has_password)
+            : (fallbacks.has_password !== undefined && fallbacks.has_password !== null ? Boolean(fallbacks.has_password) : true);
+        const googleConnected = (u && u.google_connected !== undefined)
+            ? Boolean(u.google_connected)
+            : Boolean(fallbacks.google_connected);
+        const rawGoogleEmail = (u && u.google_email) || fallbacks.google_email || '';
+        const googleEmail = googleConnected ? String(rawGoogleEmail || email).trim().toLowerCase() : '';
+        return {
+            id: (u && u.id !== undefined) ? u.id : fallbacks.id,
+            email,
+            name: fullName,
+            full_name: fullName,
+            phone,
+            role,
+            avatar_url: avatar,
+            has_password: hasPassword,
+            google_connected: googleConnected,
+            google_email: googleEmail,
+            user_metadata: {
+                full_name: fullName,
+                phone,
+                avatar_url: avatar
+            }
+        };
+    }
+
+    function syncCachedClientUserState(userObj) {
+        if (!userObj) return;
+        try {
+            localStorage.setItem(USER_KEY, JSON.stringify(userObj));
+            localStorage.setItem(DEMO_KEY, JSON.stringify(userObj));
+        } catch (_) {}
+        READ_CACHE.currentUser = { promise: null, data: userObj, ts: Date.now(), hasValue: true };
+        try {
+            window.dispatchEvent(new CustomEvent('urbanscope:clientProfileUpdated', { detail: userObj }));
+        } catch (_) {}
     }
 
     async function apiGetUsers() {
@@ -3246,6 +3301,196 @@
         }
     }
 
+    async function apiUpdateClientProfile(payload = {}) {
+        try {
+            const cleanName = String(payload.full_name !== undefined ? payload.full_name : (payload.name || '')).trim();
+            let cleanPhone = String(payload.phone !== undefined ? payload.phone : '').trim();
+
+            if (!cleanName || cleanName.length < 2 || cleanName.length > 120) {
+                return { success: false, error: 'Full name must be between 2 and 120 characters.' };
+            }
+            if (cleanPhone.length > 40) {
+                return { success: false, error: 'Phone number is too long.' };
+            }
+            if (cleanPhone) {
+                const digitsOnly = cleanPhone.replace(/[\s\-()]/g, '');
+                if (/^09\d{9}$/.test(digitsOnly)) {
+                    cleanPhone = '+63' + digitsOnly.slice(1);
+                } else if (/^639\d{9}$/.test(digitsOnly)) {
+                    cleanPhone = '+' + digitsOnly;
+                } else if (/^9\d{9}$/.test(digitsOnly)) {
+                    cleanPhone = '+63' + digitsOnly;
+                } else if (/^\+639\d{9}$/.test(digitsOnly)) {
+                    cleanPhone = digitsOnly;
+                } else {
+                    return {
+                        success: false,
+                        error: 'Please enter a valid Philippine mobile number (e.g. 0917 123 4567 or +63 917 123 4567).'
+                    };
+                }
+            }
+
+            let cachedPrev = {};
+            try {
+                cachedPrev = JSON.parse(localStorage.getItem(USER_KEY) || localStorage.getItem(DEMO_KEY) || '{}') || {};
+            } catch (_) {}
+
+            const isLocal = isLocalBackendReachableHost();
+            const res = isLocal
+                ? await localApiFetch('/auth/me', {
+                    method: 'PUT',
+                    body: JSON.stringify({ full_name: cleanName, phone: cleanPhone })
+                }, 8000)
+                : await hostedApiFetch('/api/session', {
+                    method: 'POST',
+                    body: JSON.stringify({ action: 'update-profile', full_name: cleanName, phone: cleanPhone })
+                }, 10000);
+
+            const body = await res.json().catch(() => ({}));
+            if (!res.ok || body.success === false) {
+                return {
+                    success: false,
+                    error: body.detail || body.error || body.message || 'Unable to update your profile.'
+                };
+            }
+
+            const rawUser = body.user || body;
+            const updatedUser = buildSessionUserFromApi(rawUser, {
+                ...cachedPrev,
+                full_name: cleanName,
+                phone: cleanPhone
+            });
+            syncCachedClientUserState(updatedUser);
+
+            return {
+                success: true,
+                user: updatedUser,
+                message: body.message || 'Profile updated successfully.'
+            };
+        } catch (err) {
+            console.warn('apiUpdateClientProfile notice:', err);
+            return { success: false, error: (err && err.message) || 'Unable to update your profile right now.' };
+        }
+    }
+
+    async function apiUpdateClientPassword(payload = {}) {
+        try {
+            const currentPassword = String(payload.current_password || '');
+            const cleanNewPassword = String(payload.new_password || '').trim();
+
+            if (!cleanNewPassword || cleanNewPassword.length < 8 || cleanNewPassword.length > 128) {
+                return { success: false, error: 'New password must be between 8 and 128 characters long.' };
+            }
+
+            let cachedPrev = {};
+            try {
+                cachedPrev = JSON.parse(localStorage.getItem(USER_KEY) || localStorage.getItem(DEMO_KEY) || '{}') || {};
+            } catch (_) {}
+
+            const isLocal = isLocalBackendReachableHost();
+            const res = isLocal
+                ? await localApiFetch('/auth/password', {
+                    method: 'PUT',
+                    body: JSON.stringify({
+                        current_password: currentPassword,
+                        new_password: cleanNewPassword
+                    })
+                }, 8000)
+                : await hostedApiFetch('/api/session', {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        action: 'change-password',
+                        current_password: currentPassword,
+                        new_password: cleanNewPassword
+                    })
+                }, 10000);
+
+            const body = await res.json().catch(() => ({}));
+            if (!res.ok || body.success === false) {
+                return {
+                    success: false,
+                    error: body.detail || body.error || body.message || 'Unable to update your password.'
+                };
+            }
+
+            const rawUser = body.user || cachedPrev;
+            const mergedUser = buildSessionUserFromApi(
+                { ...rawUser, has_password: true },
+                { ...cachedPrev, has_password: true }
+            );
+            syncCachedClientUserState(mergedUser);
+
+            return {
+                success: true,
+                user: mergedUser,
+                message: body.message || 'Password updated successfully.'
+            };
+        } catch (err) {
+            console.warn('apiUpdateClientPassword notice:', err);
+            return { success: false, error: (err && err.message) || 'Unable to update password right now.' };
+        }
+    }
+
+    async function apiLinkGoogleAccount(payload = {}) {
+        try {
+            const credential = payload.credential || null;
+            const accessToken = payload.access_token || null;
+            if (!credential && !accessToken) {
+                return { success: false, error: 'Missing Google sign-in token. Please try again.' };
+            }
+
+            let cachedPrev = {};
+            try {
+                cachedPrev = JSON.parse(localStorage.getItem(USER_KEY) || localStorage.getItem(DEMO_KEY) || localStorage.getItem('adminUser') || '{}') || {};
+            } catch (_) {}
+
+            const isLocal = isLocalBackendReachableHost();
+            const res = isLocal
+                ? await localApiFetch('/auth/google/link', {
+                    method: 'POST',
+                    body: JSON.stringify({ credential, access_token: accessToken })
+                }, 10000)
+                : await hostedApiFetch('/api/session', {
+                    method: 'POST',
+                    body: JSON.stringify({ action: 'link-google', credential, access_token: accessToken })
+                }, 10000);
+
+            const body = await res.json().catch(() => ({}));
+            if (!res.ok || body.success === false) {
+                return {
+                    success: false,
+                    status: res.status,
+                    error: body.detail || body.error || body.message || 'Unable to connect your Google account.'
+                };
+            }
+
+            const rawUser = body.user || cachedPrev;
+            const mergedUser = buildSessionUserFromApi(
+                {
+                    ...rawUser,
+                    google_connected: true,
+                    google_email: rawUser.google_email || cachedPrev.google_email || rawUser.email || ''
+                },
+                { ...cachedPrev, google_connected: true }
+            );
+            syncCachedClientUserState(mergedUser);
+
+            if (mergedUser.role === 'admin' || mergedUser.role === 'superadmin') {
+                try { localStorage.setItem('adminUser', JSON.stringify(mergedUser)); } catch (_) {}
+                try { window.dispatchEvent(new CustomEvent('urbanscope:profileUpdated', { detail: mergedUser })); } catch (_) {}
+            }
+
+            return {
+                success: true,
+                user: mergedUser,
+                message: body.message || 'Google account connected successfully!'
+            };
+        } catch (err) {
+            console.warn('apiLinkGoogleAccount notice:', err);
+            return { success: false, error: (err && err.message) || 'Unable to connect your Google account right now.' };
+        }
+    }
+
     async function postAuthFlow(path, payload) {
         try {
             const response = isLocalBackendReachableHost()
@@ -3315,21 +3560,13 @@
 
         try { sessionStorage.removeItem('urbanscope_register_challenge'); } catch (_) {}
         const u = serverRes.user || {};
-        const role = normalizeAccountRole(u.role, u.email || cleanEmail);
-        const sessionUser = {
-            id: u.id,
-            email: u.email || cleanEmail,
-            name: u.full_name || cleanName,
-            full_name: u.full_name || cleanName,
-            phone: u.phone || cleanPhone,
-            role: role,
-            avatar_url: sanitizeImageUrl(u.avatar_url || '', ''),
-            user_metadata: {
-                full_name: u.full_name || cleanName,
-                phone: u.phone || cleanPhone,
-                avatar_url: sanitizeImageUrl(u.avatar_url || '', '')
-            }
-        };
+        const sessionUser = buildSessionUserFromApi(u, {
+            email: cleanEmail,
+            full_name: cleanName,
+            phone: cleanPhone,
+            has_password: true
+        });
+        const role = sessionUser.role;
 
         if (isLocal && serverRes.token) {
             localStorage.setItem(TOKEN_KEY, serverRes.token);
@@ -3364,11 +3601,27 @@
     }
 
     async function apiCompletePasswordReset(email, code, password) {
-        return postAuthFlow('password/reset/confirm', {
-            email: String(email || '').trim().toLowerCase(),
+        const cleanEmail = String(email || '').trim().toLowerCase();
+        const res = await postAuthFlow('password/reset/confirm', {
+            email: cleanEmail,
             code: String(code || '').trim(),
             password: String(password || '')
         });
+        if (res && res.success) {
+            try {
+                [USER_KEY, DEMO_KEY].forEach((k) => {
+                    const raw = localStorage.getItem(k);
+                    if (!raw) return;
+                    const parsed = JSON.parse(raw);
+                    if (parsed && String(parsed.email || '').trim().toLowerCase() === cleanEmail) {
+                        parsed.has_password = true;
+                        localStorage.setItem(k, JSON.stringify(parsed));
+                    }
+                });
+                invalidateReadCache('profile');
+            } catch (_) {}
+        }
+        return res;
     }
 
     async function apiSendPasswordResetEmail(email, botData = {}) {
@@ -3557,21 +3810,8 @@
                 return { success: false, error: 'Authentication response was incomplete. Please try again.' };
             }
 
-            const role = normalizeAccountRole(u.role, u.email || cleanEmail);
-            const sessionUser = {
-                id: u.id,
-                email: u.email || cleanEmail,
-                name: u.full_name || u.name || cleanEmail.split('@')[0],
-                full_name: u.full_name || u.name || cleanEmail.split('@')[0],
-                phone: u.phone || '',
-                role: role,
-                avatar_url: sanitizeImageUrl(u.avatar_url || '', ''),
-                user_metadata: {
-                    full_name: u.full_name || u.name || '',
-                    phone: u.phone || '',
-                    avatar_url: sanitizeImageUrl(u.avatar_url || '', '')
-                }
-            };
+            const sessionUser = buildSessionUserFromApi(u, { email: cleanEmail });
+            const role = sessionUser.role;
 
             if (isLocal && authRes.token) {
                 localStorage.setItem(TOKEN_KEY, authRes.token);
@@ -3682,21 +3922,10 @@
                 return { success: false, error: 'Google login returned an incomplete profile.' };
             }
 
-            const resolvedRole = normalizeAccountRole(u.role, u.email);
-            const sessionUser = {
-                id: u.id,
-                email: u.email,
-                name: u.full_name || u.name,
-                full_name: u.full_name || u.name,
-                phone: u.phone || '',
-                role: resolvedRole,
-                avatar_url: sanitizeImageUrl(u.avatar_url || '', ''),
-                user_metadata: {
-                    full_name: u.full_name || u.name,
-                    phone: u.phone || '',
-                    avatar_url: sanitizeImageUrl(u.avatar_url || '', '')
-                }
-            };
+            const sessionUser = buildSessionUserFromApi(u, {
+                has_password: normalizeHasPassword(u)
+            });
+            const resolvedRole = sessionUser.role;
 
             if (isLocal && authRes.token) {
                 localStorage.setItem(TOKEN_KEY, authRes.token);
@@ -3781,21 +4010,14 @@
                 const u = authRes.user;
                 clearUserDeletedLocal(u.id, cleanEmail);
                 purgeInquiriesByEmailLocal(cleanEmail, u.id);
-                const role = normalizeAccountRole(u.role, u.email || cleanEmail);
-                const sessionUser = {
-                    id: u.id,
-                    email: u.email || cleanEmail,
-                    name: u.full_name || fullName,
-                    full_name: u.full_name || fullName,
-                    phone: u.phone || phone,
-                    role: role,
-                    avatar_url: sanitizeImageUrl(u.avatar_url || avatarUrl, ''),
-                    user_metadata: {
-                        full_name: u.full_name || fullName,
-                        phone: u.phone || phone,
-                        avatar_url: sanitizeImageUrl(u.avatar_url || avatarUrl, '')
-                    }
-                };
+                const sessionUser = buildSessionUserFromApi(u, {
+                    email: cleanEmail,
+                    full_name: fullName,
+                    phone: phone,
+                    avatar_url: avatarUrl,
+                    has_password: (u.has_password !== undefined && u.has_password !== null) ? Boolean(u.has_password) : false
+                });
+                const role = sessionUser.role;
                 if (authRes.token && isLocal) {
                     localStorage.setItem(TOKEN_KEY, authRes.token);
                 }
@@ -3945,20 +4167,7 @@
                         const res = await localApiFetch('/auth/me', { method: 'GET' }, 5000);
                         if (res.ok) {
                             const u = await res.json();
-                            const userObj = {
-                                id: u.id,
-                                email: u.email,
-                                name: u.full_name,
-                                full_name: u.full_name,
-                                phone: u.phone || '',
-                                role: normalizeAccountRole(u.role, u.email),
-                                avatar_url: sanitizeImageUrl(u.avatar_url || '', ''),
-                                user_metadata: {
-                                    full_name: u.full_name,
-                                    phone: u.phone || '',
-                                    avatar_url: sanitizeImageUrl(u.avatar_url || '', '')
-                                }
-                            };
+                            const userObj = buildSessionUserFromApi(u);
                             localStorage.setItem(USER_KEY, JSON.stringify(userObj));
                             localStorage.setItem(DEMO_KEY, JSON.stringify(userObj));
                             resolvedUser = userObj;
@@ -3978,20 +4187,7 @@
                             const body = await res.json().catch(() => ({}));
                             if (body && body.authenticated && body.user) {
                                 const u = body.user;
-                                const userObj = {
-                                    id: u.id,
-                                    email: u.email,
-                                    name: u.full_name || u.name,
-                                    full_name: u.full_name || u.name,
-                                    phone: u.phone || '',
-                                    role: normalizeAccountRole(u.role, u.email),
-                                    avatar_url: sanitizeImageUrl(u.avatar_url || '', ''),
-                                    user_metadata: {
-                                        full_name: u.full_name || u.name,
-                                        phone: u.phone || '',
-                                        avatar_url: sanitizeImageUrl(u.avatar_url || '', '')
-                                    }
-                                };
+                                const userObj = buildSessionUserFromApi(u);
                                 localStorage.setItem(USER_KEY, JSON.stringify(userObj));
                                 localStorage.setItem(DEMO_KEY, JSON.stringify(userObj));
                                 resolvedUser = userObj;
@@ -4002,15 +4198,7 @@
                         if (res.status === 401 || res.status === 403) {
                             const adminSess = await apiGetHostedAdminSession();
                             if (adminSess && adminSess.email) {
-                                resolvedUser = {
-                                    id: adminSess.id || null,
-                                    email: adminSess.email,
-                                    name: adminSess.name || adminSess.full_name || adminSess.email,
-                                    full_name: adminSess.full_name || adminSess.name || adminSess.email,
-                                    role: normalizeAccountRole(adminSess.role, adminSess.email),
-                                    avatar_url: sanitizeImageUrl(adminSess.avatar_url || '', ''),
-                                    user_metadata: { full_name: adminSess.full_name || adminSess.name || '' }
-                                };
+                                resolvedUser = buildSessionUserFromApi(adminSess);
                                 READ_CACHE.currentUser = { promise: null, data: resolvedUser, ts: Date.now(), hasValue: true };
                                 return resolvedUser;
                             }
@@ -4178,6 +4366,9 @@
     window.apiUpdateAdminProfile = apiUpdateAdminProfile;
     window.apiGetLeadAgentProfile = apiGetLeadAgentProfile;
     window.apiUpdateAdminPassword = apiUpdateAdminPassword;
+    window.apiUpdateClientProfile = apiUpdateClientProfile;
+    window.apiUpdateClientPassword = apiUpdateClientPassword;
+    window.apiLinkGoogleAccount = apiLinkGoogleAccount;
     window.apiSignUp = apiSignUp;
     window.apiStartRegistrationOtp = apiStartRegistrationOtp;
     window.apiCompleteRegistrationOtp = apiCompleteRegistrationOtp;

@@ -60,6 +60,8 @@ def init_db():
             role TEXT CHECK(role IN ('user', 'admin', 'superadmin')) DEFAULT 'user',
             avatar_url TEXT DEFAULT 'assets/images/agent.jpg',
             google_id TEXT,
+            google_email TEXT DEFAULT '',
+            has_password INTEGER NOT NULL DEFAULT 1,
             license_number TEXT DEFAULT '',
             title TEXT DEFAULT 'Real Estate Salesperson',
             brokerage TEXT DEFAULT 'CD Miranda Realty',
@@ -164,7 +166,18 @@ def init_db():
     cursor.execute("UPDATE users SET brokerage = 'CD Miranda Realty' WHERE brokerage IS NULL OR brokerage = '' OR brokerage = 'UrbanScope' OR brokerage = 'UrbanScope Realty'")
     if "bio" not in existing_user_cols:
         cursor.execute("ALTER TABLE users ADD COLUMN bio TEXT DEFAULT ''")
+    if "has_password" not in existing_user_cols:
+        cursor.execute("ALTER TABLE users ADD COLUMN has_password INTEGER NOT NULL DEFAULT 1")
+    cursor.execute("UPDATE users SET has_password = 1 WHERE has_password IS NULL")
+    if "google_email" not in existing_user_cols:
+        cursor.execute("ALTER TABLE users ADD COLUMN google_email TEXT DEFAULT ''")
+    cursor.execute(
+        "UPDATE users SET google_email = LOWER(email) WHERE google_id IS NOT NULL AND (google_email IS NULL OR TRIM(google_email) = '')"
+    )
     cursor.execute("CREATE UNIQUE INDEX IF NOT EXISTS idx_users_google_id ON users(google_id) WHERE google_id IS NOT NULL")
+    cursor.execute(
+        "CREATE UNIQUE INDEX IF NOT EXISTS idx_users_google_email ON users(LOWER(google_email)) WHERE google_email IS NOT NULL AND TRIM(google_email) != ''"
+    )
     cursor.execute("""
         CREATE TRIGGER IF NOT EXISTS trg_users_email_verified_default
         AFTER INSERT ON users
