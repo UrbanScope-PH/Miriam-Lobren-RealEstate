@@ -640,193 +640,193 @@ body.sidebar-is-open {
     }
 
     .content {
-        padding: 16px 14px max(24px, env(safe-area-inset-bottom, 0px));
+        padding: 18px 16px max(36px, env(safe-area-inset-bottom, 0px));
     }
 
     .page-header {
         flex-direction: column;
         align-items: stretch;
-        gap: 10px;
-        margin-bottom: 14px;
+        gap: 12px;
+        margin-bottom: 16px;
     }
 
     .eyebrow {
-        font-size: 10.5px;
+        font-size: 11.5px;
         margin-bottom: 4px;
     }
 
     .page-header h1 {
-        font-size: 21px;
+        font-size: 22px;
         line-height: 1.25;
         letter-spacing: -0.4px;
     }
 
     .page-header p {
-        font-size: 13.5px;
-        line-height: 1.5;
+        font-size: 14.5px;
+        line-height: 1.58;
         margin-top: 4px;
     }
 
     .back-btn {
         width: 100%;
         align-self: stretch;
-        min-height: 38px;
-        padding: 8px 12px;
-        font-size: 13px;
-        border-radius: 9px;
+        min-height: 40px;
+        padding: 8px 13px;
+        font-size: 13.5px;
+        border-radius: 10px;
     }
 
     .back-btn span {
-        font-size: 14px;
+        font-size: 15px;
         line-height: 1;
     }
 
     .property-form {
-        gap: 12px;
+        gap: 14px;
     }
 
     .form-card {
-        border-radius: 12px;
+        border-radius: 14px;
     }
 
     .form-card-header {
         display: flex;
         align-items: center;
-        gap: 10px;
-        padding: 12px 14px;
+        gap: 12px;
+        padding: 14px 16px;
     }
 
     .section-icon {
-        width: 32px;
-        height: 32px;
-        flex-basis: 32px;
-        font-size: 16px;
-        border-radius: 8px;
+        width: 36px;
+        height: 36px;
+        flex-basis: 36px;
+        font-size: 17px;
+        border-radius: 9px;
     }
 
     .form-card-header h2 {
-        font-size: 16.5px;
+        font-size: 18px;
         line-height: 1.3;
     }
 
     .form-card-header p {
-        font-size: 12px;
-        line-height: 1.4;
+        font-size: 12.5px;
+        line-height: 1.45;
         margin-top: 2px;
     }
 
     .form-card-chevron {
-        width: 28px;
-        height: 28px;
+        width: 30px;
+        height: 30px;
     }
 
     .form-content {
-        gap: 12px;
-        padding: 12px 14px;
+        gap: 14px;
+        padding: 14px 16px;
     }
 
     .form-row {
         grid-template-columns: minmax(0, 1fr);
-        gap: 10px;
+        gap: 12px;
     }
 
     .form-group {
-        gap: 5px;
+        gap: 6px;
     }
 
     .form-group label {
-        font-size: 12.5px;
+        font-size: 13.5px;
     }
 
     .form-group input,
     .form-group select {
-        min-height: 38px;
-        height: 38px;
-        padding: 8px 11px;
+        min-height: 42px;
+        height: 42px;
+        padding: 10px 12px;
         border-radius: 8px;
     }
 
     .form-group textarea {
-        min-height: 96px;
-        padding: 9px 11px;
-        line-height: 1.5;
+        min-height: 104px;
+        padding: 10px 12px;
+        line-height: 1.58;
         border-radius: 8px;
     }
 
     .field-note {
-        font-size: 11.5px;
+        font-size: 12.5px;
     }
 
     .input-with-prefix .input-prefix,
     .input-with-suffix .input-suffix {
-        min-width: 42px;
-        padding: 0 10px;
-        font-size: 12.5px;
+        min-width: 44px;
+        padding: 0 11px;
+        font-size: 13px;
     }
 
     .image-section {
-        gap: 10px;
+        gap: 12px;
     }
 
     .image-section-heading h3 {
-        font-size: 14.5px;
+        font-size: 15.5px;
     }
 
     .image-status {
-        font-size: 11px;
-        padding: 3px 8px;
+        font-size: 11.5px;
+        padding: 3px 9px;
     }
 
     .current-image {
-        gap: 8px;
-        min-height: 80px;
+        gap: 10px;
+        min-height: 84px;
     }
 
     .current-image > div {
-        flex: 0 0 calc(50% - 4px);
-        max-width: 140px;
+        flex: 0 0 calc(50% - 5px);
+        max-width: 150px;
     }
 
     .current-image img,
     .image-placeholder {
         width: 100%;
-        height: 84px;
-        min-height: 84px;
+        height: 90px;
+        min-height: 90px;
     }
 
     .upload-area {
-        padding: 16px 12px;
-        border-radius: 12px;
+        padding: 18px 14px;
+        border-radius: 14px;
     }
 
     .upload-symbol {
-        width: 38px;
-        height: 38px;
-        margin-bottom: 8px;
-        font-size: 19px;
+        width: 40px;
+        height: 40px;
+        margin-bottom: 10px;
+        font-size: 20px;
         border-radius: 10px;
     }
 
     .upload-area h3 {
-        font-size: 14.5px;
+        font-size: 15.5px;
     }
 
     .upload-area > p {
-        max-width: 260px;
-        font-size: 12px;
-        margin-top: 3px;
+        max-width: 280px;
+        font-size: 13px;
+        margin-top: 4px;
     }
 
     .upload-btn {
-        min-height: 36px;
-        margin-top: 10px;
-        padding: 7px 14px;
-        font-size: 12.5px;
+        min-height: 38px;
+        margin-top: 12px;
+        padding: 8px 14px;
+        font-size: 13px;
         border-radius: 8px;
     }
 
     .upload-note {
-        font-size: 11.5px;
+        font-size: 12px;
         margin-top: 8px;
     }
 
@@ -834,33 +834,33 @@ body.sidebar-is-open {
         display: flex;
         flex-direction: column-reverse;
         align-items: stretch;
-        gap: 8px;
+        gap: 10px;
         padding: 4px 0 max(12px, env(safe-area-inset-bottom, 0px));
     }
 
     .cancel-btn {
         min-width: 0;
         width: 100%;
-        min-height: 38px;
-        padding: 8px 12px;
-        font-size: 13px;
-        border-radius: 9px;
+        min-height: 40px;
+        padding: 8px 13px;
+        font-size: 13.5px;
+        border-radius: 10px;
     }
 
     .save-btn {
         min-width: 0;
         width: 100%;
-        min-height: 40px;
-        padding: 9px 14px;
-        font-size: 13.5px;
-        border-radius: 9px;
+        min-height: 44px;
+        padding: 10px 16px;
+        font-size: 14.5px;
+        border-radius: 10px;
     }
 
     .page-footer {
         flex-direction: column;
-        gap: 4px;
+        gap: 6px;
         margin-top: 18px;
-        font-size: 11px;
+        font-size: 12px;
     }
 }
 
@@ -870,23 +870,23 @@ body.sidebar-is-open {
 
 @media (max-width: 480px) {
     .content {
-        padding: 14px 12px max(22px, env(safe-area-inset-bottom, 0px));
+        padding: 16px 14px max(36px, env(safe-area-inset-bottom, 0px));
     }
 
     .page-header h1 {
-        font-size: 20px;
+        font-size: 21px;
     }
 
     .form-card-header,
     .form-content {
-        padding: 12px;
+        padding: 14px;
     }
 }
 
 @media (max-width: 380px) {
     .content {
-        padding-right: 12px;
-        padding-left: 12px;
+        padding-right: 14px;
+        padding-left: 14px;
     }
 }
 
@@ -958,13 +958,13 @@ body.sidebar-is-open {
 
 @media (max-width: 768px) {
     .property-card {
-        border-radius: 12px !important;
+        border-radius: 14px !important;
     }
 
     .save-btn {
-        min-height: 40px;
-        padding: 9px 14px;
-        font-size: 13.5px;
+        min-height: 44px;
+        padding: 10px 16px;
+        font-size: 14.5px;
     }
 }
 
