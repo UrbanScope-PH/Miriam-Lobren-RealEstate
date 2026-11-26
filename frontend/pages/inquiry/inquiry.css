@@ -12,13 +12,13 @@ html {
     scroll-behavior: smooth;
     width: 100%;
     max-width: 100%;
-    overflow-x: hidden;
+    overflow-x: clip;
 }
 
 body {
     width: 100%;
     max-width: 100%;
-    overflow-x: hidden;
+    overflow-x: clip;
     font-family: 'Plus Jakarta Sans', Arial, sans-serif;
     background-color: var(--bg-main);
     color: var(--text-dark);
@@ -436,30 +436,30 @@ body {
 /* RESPONSIVE */
 @media (max-width: 768px) {
     .inquiry-page-container {
-        margin: 18px auto 32px;
-        padding: 0 14px max(28px, env(safe-area-inset-bottom, 0px));
+        margin: 20px auto 32px;
+        padding: 0 16px max(36px, env(safe-area-inset-bottom, 0px));
     }
     .guest-inquiry-banner {
-        padding: 9px 12px;
-        font-size: 12.5px;
-        line-height: 1.4;
-        border-radius: 10px;
-        margin-bottom: 12px;
-        gap: 8px;
+        padding: 10px 14px;
+        font-size: 13px;
+        line-height: 1.48;
+        border-radius: 12px;
+        margin-bottom: 14px;
+        gap: 10px;
     }
     .inquiry-header-top {
-        gap: 10px;
-        margin-bottom: 14px;
+        gap: 12px;
+        margin-bottom: 16px;
     }
     .page-heading {
-        font-size: 21px;
-        line-height: 1.25;
+        font-size: 23px;
+        line-height: 1.24;
     }
     .history-pill-link {
-        min-height: 36px;
-        padding: 6px 12px;
-        font-size: 12.5px;
-        gap: 6px;
+        min-height: 38px;
+        padding: 8px 13px;
+        font-size: 13.5px;
+        gap: 7px;
         touch-action: manipulation;
         -webkit-user-select: none;
         user-select: none;
@@ -467,48 +467,48 @@ body {
     .inquiry-mode-selector {
         width: 100%;
         display: flex;
-        padding: 4px;
-        gap: 4px;
-        border-radius: 12px;
-        margin-bottom: 14px;
+        padding: 5px;
+        gap: 5px;
+        border-radius: 14px;
+        margin-bottom: 16px;
     }
     .mode-tab {
         flex: 1;
         min-width: 0;
-        min-height: 36px;
+        min-height: 40px;
         justify-content: center;
-        padding: 7px 11px;
-        font-size: 12.5px;
-        gap: 7px;
-        border-radius: 9px;
+        padding: 8px 13px;
+        font-size: 13.5px;
+        gap: 8px;
+        border-radius: 10px;
         text-align: center;
         touch-action: manipulation;
         -webkit-user-select: none;
         user-select: none;
     }
     .mode-tab svg {
-        width: 16px;
-        height: 16px;
+        width: 18px;
+        height: 18px;
     }
     .inquiry-form-card {
-        padding: 14px;
-        border-radius: 12px;
+        padding: 16px;
+        border-radius: 14px;
     }
     .form-section {
-        margin-bottom: 18px;
+        margin-bottom: 20px;
     }
     .section-title {
-        font-size: 15px;
-        margin-bottom: 10px;
+        font-size: 16px;
+        margin-bottom: 12px;
     }
     .consultation-fields-grid {
         grid-template-columns: minmax(0, 1fr);
-        gap: 10px;
+        gap: 12px;
     }
     .section-title-row {
         flex-direction: column;
         align-items: flex-start;
-        gap: 8px;
+        gap: 10px;
     }
     .property-select-group {
         width: 100%;
@@ -521,51 +521,51 @@ body {
     }
     .user-info-row {
         grid-template-columns: minmax(0, 1fr);
-        gap: 10px;
+        gap: 12px;
     }
     .input-field label,
     .textarea-field label {
-        font-size: 12.5px;
-        margin-bottom: 4px;
+        font-size: 13.5px;
+        margin-bottom: 5px;
     }
     .optional-tag,
     .detected-tag {
-        font-size: 11.5px;
+        font-size: 12.5px;
     }
     .field-hint {
-        font-size: 11.5px !important;
-        line-height: 1.4;
+        font-size: 12.5px !important;
+        line-height: 1.45;
     }
     .property-summary-box {
         flex-direction: column;
         align-items: flex-start;
-        padding: 12px;
-        gap: 10px;
-        border-radius: 12px;
+        padding: 14px;
+        gap: 12px;
+        border-radius: 14px;
     }
     .sold-property-notice {
-        margin: 10px 0;
-        padding: 10px 12px;
-        font-size: 12.5px;
-        line-height: 1.45;
+        margin: 12px 0;
+        padding: 12px 14px;
+        font-size: 13px;
+        line-height: 1.5;
     }
     .summary-thumb {
         width: 100%;
-        height: 144px;
-        border-radius: 9px;
+        height: 156px;
+        border-radius: 10px;
     }
     .summary-details h2 {
-        font-size: 16.5px;
+        font-size: 18px;
         line-height: 1.25;
-        margin-bottom: 3px;
+        margin-bottom: 4px;
     }
     .summary-loc {
-        font-size: 12px;
-        margin-bottom: 6px;
+        font-size: 13px;
+        margin-bottom: 8px;
     }
     .summary-specs {
-        font-size: 12px;
-        gap: 8px 12px;
+        font-size: 13px;
+        gap: 8px 14px;
     }
     .topbar-search {
         display: none;
@@ -580,79 +580,79 @@ body {
     .input-field input,
     .form-select,
     .form-input {
-        min-height: 40px;
-        height: 40px;
-        padding: 8px 11px;
+        min-height: 42px;
+        height: 42px;
+        padding: 10px 12px;
     }
     .textarea-field textarea {
-        padding: 8px 11px;
-        min-height: 96px;
+        padding: 10px 12px;
+        min-height: 104px;
     }
     .form-actions-row {
-        margin-top: 20px;
-        padding-top: 14px;
-        gap: 10px;
+        margin-top: 22px;
+        padding-top: 16px;
+        gap: 12px;
     }
     .cancel-btn {
-        min-height: 38px;
-        padding: 8px 16px;
-        font-size: 13px;
+        min-height: 40px;
+        padding: 8px 14px;
+        font-size: 13.5px;
         touch-action: manipulation;
         -webkit-user-select: none;
         user-select: none;
     }
     .submit-btn {
-        min-height: 40px;
-        padding: 9px 18px;
-        font-size: 14px;
+        min-height: 44px;
+        padding: 10px 16px;
+        font-size: 14.5px;
         touch-action: manipulation;
         -webkit-user-select: none;
         user-select: none;
     }
     .inquiry-cooldown-notice {
-        font-size: 12px;
+        font-size: 12.5px;
         margin-top: 10px;
     }
 }
 
 @media (max-width: 640px) {
     .inquiry-page-container {
-        margin: 16px auto 28px;
-        padding: 0 12px max(24px, env(safe-area-inset-bottom, 0px));
+        margin: 18px auto 28px;
+        padding: 0 16px max(32px, env(safe-area-inset-bottom, 0px));
     }
 
     .inquiry-mode-selector {
         flex-direction: column;
-        padding: 4px;
-        gap: 4px;
-        border-radius: 12px;
+        padding: 5px;
+        gap: 5px;
+        border-radius: 14px;
     }
 
     .mode-tab {
         width: 100%;
         white-space: normal;
         line-height: 1.3;
-        min-height: 36px;
-        padding: 8px 12px;
-        font-size: 12.5px;
-        border-radius: 9px;
+        min-height: 40px;
+        padding: 8px 13px;
+        font-size: 13.5px;
+        border-radius: 10px;
     }
 
     .inquiry-form-card {
-        padding: 13px 12px;
-        border-radius: 12px;
+        padding: 15px 14px;
+        border-radius: 14px;
     }
 
     .summary-specs {
-        gap: 8px 12px;
+        gap: 8px 14px;
         flex-wrap: wrap;
     }
 
     .form-actions-row {
         flex-direction: column-reverse;
-        gap: 8px;
-        margin-top: 18px;
-        padding-top: 14px;
+        gap: 10px;
+        margin-top: 20px;
+        padding-top: 16px;
     }
 
     .cancel-btn,
@@ -668,12 +668,17 @@ body {
 }
 
 @media (max-width: 480px) {
+    .inquiry-page-container {
+        padding-left: 14px;
+        padding-right: 14px;
+    }
+
     .inquiry-header-top {
         align-items: flex-start;
     }
 
     .page-heading {
-        font-size: 20px;
+        font-size: 22px;
     }
 
     .history-pill-link {
@@ -682,7 +687,7 @@ body {
     }
 
     body.has-contact-fab .inquiry-page-container {
-        padding-bottom: calc(74px + env(safe-area-inset-bottom, 0px));
+        padding-bottom: calc(90px + env(safe-area-inset-bottom, 0px));
     }
 }
 
@@ -1138,10 +1143,10 @@ body {
 
 @media (max-width: 768px) {
     .modal-overlay {
-        padding: max(12px, env(safe-area-inset-top, 0px)) 12px max(12px, env(safe-area-inset-bottom, 0px));
+        padding: max(12px, env(safe-area-inset-top, 0px)) 14px max(12px, env(safe-area-inset-bottom, 0px));
     }
 
-    .modal-box {
+    .modal-overlay .modal-box {
         border-radius: 14px;
         max-height: calc(100dvh - 24px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
         overscroll-behavior: contain;
@@ -1150,11 +1155,17 @@ body {
     .modal-back-btn,
     .modal-close-btn {
         top: 12px;
-        width: 34px;
-        height: 34px;
+        width: 38px;
+        height: 38px;
         touch-action: manipulation;
         -webkit-user-select: none;
         user-select: none;
+    }
+
+    .modal-back-btn svg,
+    .modal-close-btn svg {
+        width: 18px;
+        height: 18px;
     }
 
     .modal-back-btn {
@@ -1166,133 +1177,133 @@ body {
     }
 
     .success-modal-hero {
-        padding: 22px 14px 12px;
+        padding: 24px 16px 14px;
     }
 
     .success-icon-badge {
-        width: 48px;
-        height: 48px;
-        margin-bottom: 10px;
+        width: 52px;
+        height: 52px;
+        margin-bottom: 12px;
     }
 
     .success-icon-badge svg {
-        width: 24px;
-        height: 24px;
+        width: 26px;
+        height: 26px;
     }
 
     .success-modal-hero h3 {
-        font-size: 17px;
-        margin-bottom: 4px;
+        font-size: 18.5px;
+        margin-bottom: 5px;
     }
 
     .success-modal-lead {
-        font-size: 12.5px;
-        line-height: 1.45;
+        font-size: 13px;
+        line-height: 1.5;
     }
 
     .modal-body.success-modal-body {
-        padding: 12px 14px 8px;
+        padding: 14px 16px 10px;
     }
 
     .success-card {
-        padding: 12px;
-        border-radius: 12px;
+        padding: 14px;
+        border-radius: 14px;
     }
 
     .success-card-header {
         flex-wrap: wrap;
-        gap: 6px;
-        margin-bottom: 10px;
-        padding-bottom: 9px;
+        gap: 8px;
+        margin-bottom: 12px;
+        padding-bottom: 10px;
     }
 
     .success-status-pill {
-        font-size: 11px;
-        padding: 3px 10px;
+        font-size: 11.5px;
+        padding: 4px 10px;
     }
 
     .success-date {
-        font-size: 11.5px;
+        font-size: 12.5px;
     }
 
     .success-topic-info {
-        margin-bottom: 10px;
+        margin-bottom: 12px;
     }
 
     .success-label {
-        font-size: 10.5px;
+        font-size: 11.5px;
     }
 
     .success-property-title {
-        font-size: 15px;
+        font-size: 16px;
     }
 
     .success-schedule-box {
         max-width: 100%;
         flex-wrap: wrap;
-        font-size: 12px;
-        padding: 5px 10px;
-        margin-bottom: 10px;
+        font-size: 12.5px;
+        padding: 6px 10px;
+        margin-bottom: 12px;
     }
 
     .success-client-row {
         grid-template-columns: minmax(0, 1fr);
-        gap: 8px;
-        padding: 10px 12px;
-        margin-bottom: 10px;
+        gap: 10px;
+        padding: 12px;
+        margin-bottom: 12px;
     }
 
     .client-meta-item small {
-        font-size: 10.5px;
+        font-size: 11.5px;
     }
 
     .client-meta-item span {
-        font-size: 12.5px;
+        font-size: 13px;
     }
 
     .success-note {
-        font-size: 12px;
-        padding: 9px 10px;
+        font-size: 12.5px;
+        padding: 10px 12px;
     }
 
     .success-sla-notice {
-        font-size: 12px;
+        font-size: 12.5px;
     }
 
     .modal-footer.success-modal-footer {
-        padding: 12px 14px 14px;
-        gap: 8px;
+        padding: 14px 16px 16px;
+        gap: 10px;
     }
 
     .btn-success-primary {
-        min-height: 40px;
-        padding: 9px 14px;
-        font-size: 13.5px;
+        min-height: 44px;
+        padding: 10px 16px;
+        font-size: 14.5px;
         touch-action: manipulation;
         -webkit-user-select: none;
         user-select: none;
     }
 
     .btn-secondary {
-        min-height: 38px;
-        padding: 7px 12px;
-        font-size: 13px;
+        min-height: 40px;
+        padding: 8px 13px;
+        font-size: 13.5px;
         touch-action: manipulation;
         -webkit-user-select: none;
         user-select: none;
     }
 
     .btn-return-home {
-        font-size: 12.5px;
+        font-size: 13px;
         padding: 4px 8px;
     }
 
     .toast-notice {
-        left: 12px;
-        right: 12px;
-        bottom: calc(14px + env(safe-area-inset-bottom, 0px));
-        padding: 10px 14px;
-        font-size: 12.5px;
+        left: 14px;
+        right: 14px;
+        bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+        padding: 11px 14px;
+        font-size: 13px;
     }
 }
 
@@ -1300,14 +1311,14 @@ body {
     .modal-footer.success-modal-footer {
         flex-direction: column;
         align-items: stretch;
-        padding: 12px 14px 16px;
-        gap: 8px;
+        padding: 14px 16px 16px;
+        gap: 10px;
     }
 
     .success-modal-footer .modal-action-group {
         flex-direction: column;
         align-items: stretch;
-        gap: 8px;
+        gap: 10px;
         width: 100%;
     }
 
@@ -2321,95 +2332,105 @@ html.dark-mode .custom-select-price-pill {
     }
 
     body.has-contact-fab .inquiry-page-container {
-        padding-bottom: calc(74px + env(safe-area-inset-bottom, 0px));
+        padding-bottom: calc(90px + env(safe-area-inset-bottom, 0px));
     }
 
     /* Compact custom datepicker & custom select on mobile */
     .custom-datepicker-input {
-        padding-right: 38px !important;
+        padding-right: 44px !important;
     }
 
     .datepicker-trigger-btn {
-        width: 34px;
-        height: 34px;
+        width: 38px;
+        height: 38px;
         right: 4px;
         touch-action: manipulation;
         -webkit-user-select: none;
         user-select: none;
     }
 
+    .datepicker-trigger-btn svg {
+        width: 18px;
+        height: 18px;
+    }
+
     .urban-datepicker-popup {
-        width: min(300px, 100%);
-        max-width: calc(100vw - 28px);
-        padding: 11px;
-        border-radius: 12px;
+        width: min(310px, 100%);
+        max-width: calc(100vw - 32px);
+        padding: 12px;
+        border-radius: 14px;
     }
 
     .datepicker-header {
-        margin-bottom: 8px;
+        margin-bottom: 10px;
     }
 
     .datepicker-nav-btn {
-        width: 34px;
-        height: 34px;
+        width: 38px;
+        height: 38px;
         touch-action: manipulation;
         -webkit-user-select: none;
         user-select: none;
     }
 
+    .datepicker-nav-btn svg {
+        width: 18px;
+        height: 18px;
+    }
+
     .datepicker-title {
-        font-size: 13.5px;
+        font-size: 14.5px;
     }
 
     .datepicker-weekday {
-        font-size: 11px;
+        font-size: 11.5px;
     }
 
     .datepicker-day-cell {
-        font-size: 12.5px;
-        border-radius: 7px;
+        font-size: 13px;
+        border-radius: 8px;
         touch-action: manipulation;
         -webkit-user-select: none;
         user-select: none;
     }
 
     .datepicker-footer {
-        padding-top: 8px;
+        padding-top: 10px;
     }
 
     .datepicker-action-btn {
-        font-size: 12.5px;
-        min-height: 34px;
-        padding: 5px 10px;
+        font-size: 13px;
+        min-height: 38px;
+        padding: 8px 12px;
         touch-action: manipulation;
         -webkit-user-select: none;
         user-select: none;
     }
 
     .custom-select-trigger {
-        min-height: 38px;
-        padding: 7px 11px;
-        font-size: 13px;
+        min-height: 42px;
+        padding: 10px 12px;
+        font-size: 14px;
         touch-action: manipulation;
         -webkit-user-select: none;
         user-select: none;
     }
 
     .custom-select-trigger-loc {
-        font-size: 11.5px;
+        font-size: 12.5px;
     }
 
     .custom-select-trigger-price {
-        font-size: 11px;
-        padding: 2px 7px;
+        font-size: 11.5px;
+        padding: 2px 8px;
     }
 
     .custom-select-dropdown {
         min-width: 100%;
         max-width: 100%;
         max-height: 260px;
-        padding: 4px;
-        border-radius: 10px;
+        padding: 6px;
+        border-radius: 12px;
         overscroll-behavior: contain;
         -webkit-overflow-scrolling: touch;
     }
@@ -2421,35 +2442,35 @@ html.dark-mode .custom-select-price-pill {
     }
 
     .custom-select-option {
-        padding: 7px 10px;
-        font-size: 13px;
-        min-height: 36px;
+        padding: 8px 12px;
+        font-size: 13.5px;
+        min-height: 40px;
         touch-action: manipulation;
         -webkit-user-select: none;
         user-select: none;
     }
 
     .custom-select-option.is-property-option {
-        padding: 7px 8px;
+        padding: 8px 10px;
     }
 
     .custom-select-property-thumb {
-        width: 40px;
-        height: 32px;
+        width: 42px;
+        height: 34px;
         border-radius: 6px;
     }
 
     .custom-select-property-title {
-        font-size: 13px;
+        font-size: 14px;
     }
 
     .custom-select-property-sub {
-        font-size: 11.5px;
+        font-size: 12.5px;
     }
 
     .custom-select-price-pill {
-        font-size: 11px;
-        padding: 2px 7px;
+        font-size: 11.5px;
+        padding: 2px 8px;
     }
 
     html[data-theme="dark"] body {

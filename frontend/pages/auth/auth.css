@@ -11,7 +11,7 @@
 html {
     width: 100%;
     height: 100%;
-    overflow-x: hidden;
+    overflow-x: clip;
 }
 
 body {
@@ -1000,14 +1000,15 @@ body {
 @media (max-width: 768px), (max-height: 539px) {
     html {
         height: auto;
-        overflow-y: auto;
+        overflow-x: clip;
+        overflow-y: visible;
         -webkit-tap-highlight-color: transparent;
         -webkit-text-size-adjust: 100%;
     }
     body {
         height: auto;
-        overflow-y: auto;
-        overflow-x: hidden;
+        overflow-x: clip;
+        overflow-y: visible;
     }
     .main-container {
         display: flex;
@@ -1020,15 +1021,15 @@ body {
     }
 
     /* Compact top showcase card on mobile */
-    .showcase-panel {
+    .main-container .showcase-panel {
         width: 100%;
         height: auto;
-        min-height: 156px;
+        min-height: 168px;
         max-height: none;
-        padding: max(12px, env(safe-area-inset-top, 0px)) 14px 12px;
-        border-radius: 0 0 16px 16px;
+        padding: max(14px, env(safe-area-inset-top, 0px)) 16px 14px;
+        border-radius: 0 0 18px 18px;
         justify-content: space-between;
-        gap: 10px;
+        gap: 12px;
         box-shadow: 0 6px 18px rgba(0, 0, 0, 0.22);
         touch-action: pan-y;
         -webkit-user-select: none;
@@ -1041,9 +1042,9 @@ body {
     }
 
     /* User request: in mobile view, make Better Homes... on the upper left align */
-    .cursive-tagline {
-        font-size: clamp(22px, 5.8vw, 24px);
-        line-height: 1.15;
+    .showcase-panel .cursive-tagline {
+        font-size: clamp(23px, 6vw, 26px);
+        line-height: 1.18;
         margin: 0 0 6px 0;
         text-align: left;
         align-self: flex-start;
@@ -1059,22 +1060,22 @@ body {
         margin-top: 0;
     }
 
-    .showcase-caption {
+    .showcase-panel .showcase-caption {
         display: block;
         text-align: left;
-        margin-bottom: 6px;
+        margin-bottom: 8px;
     }
 
-    .showcase-caption-title {
-        font-size: 14.5px;
-        line-height: 1.25;
-        margin: 0 0 3px 0;
+    .showcase-panel .showcase-caption-title {
+        font-size: 15.5px;
+        line-height: 1.28;
+        margin: 0 0 4px 0;
         text-shadow: 0 2px 8px rgba(0, 0, 0, 0.9);
     }
 
-    .showcase-caption-desc {
-        font-size: 12px;
-        line-height: 1.35;
+    .showcase-panel .showcase-caption-desc {
+        font-size: 12.5px;
+        line-height: 1.4;
         max-width: 100%;
         text-shadow: 0 1px 4px rgba(0, 0, 0, 0.85);
         display: -webkit-box;
@@ -1127,12 +1128,12 @@ body {
     }
 
     /* Form panel below showcase */
-    .form-panel {
+    .main-container .form-panel {
         width: 100%;
         height: auto;
         max-height: none;
         min-height: auto;
-        padding: 16px 14px max(24px, env(safe-area-inset-bottom, 0px));
+        padding: 20px 16px max(28px, env(safe-area-inset-bottom, 0px));
         overflow-y: visible;
         background-color: var(--bg-page);
     }
@@ -1144,11 +1145,11 @@ body {
     }
 
     .form-top-bar {
-        margin-bottom: 8px;
+        margin-bottom: 10px;
     }
 
     .back-home-link {
-        font-size: 13px;
+        font-size: 14px;
         padding: 4px 2px;
         min-height: auto;
         touch-action: manipulation;
@@ -1156,96 +1157,96 @@ body {
 
     .form-brand-header,
     .register-container .form-brand-header {
-        margin-bottom: 8px;
+        margin-bottom: 10px;
     }
 
     .form-brand-badge {
-        gap: 8px;
+        gap: 9px;
         min-height: auto;
         touch-action: manipulation;
     }
 
     .form-brand-logo {
-        width: 30px;
-        height: 30px;
+        width: 34px;
+        height: 34px;
     }
 
     .form-brand-text .brand-title {
-        font-size: 20px;
+        font-size: 22px;
         letter-spacing: -0.4px;
     }
 
     .welcome-header,
     .register-container .welcome-header {
         margin-top: 0;
-        margin-bottom: 14px;
+        margin-bottom: 16px;
     }
 
     .welcome-header h1,
     .register-container .welcome-header h1 {
-        font-size: 22px;
-        line-height: 1.2;
+        font-size: 23px;
+        line-height: 1.22;
     }
 
     .welcome-header p {
-        font-size: 12.5px;
-        line-height: 1.45;
+        font-size: 13px;
+        line-height: 1.5;
     }
 
     .auth-form,
     .register-container .auth-form {
-        gap: 10px;
+        gap: 12px;
     }
 
     .form-row-2col,
     .register-container .form-row-2col {
         grid-template-columns: 1fr;
-        gap: 10px;
+        gap: 12px;
     }
 
     .form-group label,
     .register-container .form-group label {
-        font-size: 12.5px;
-        margin-bottom: 4px;
+        font-size: 13.5px;
+        margin-bottom: 5px;
     }
 
     /* 16px font-size prevents iOS Safari auto-zoom on focus */
     .input-box input,
     .register-container .input-box input {
-        height: 40px;
-        min-height: 40px;
-        padding: 8px 11px;
+        height: 42px;
+        min-height: 42px;
+        padding: 10px 12px;
         font-size: 16px !important;
     }
 
     .form-options {
         flex-wrap: wrap;
-        gap: 8px;
-        font-size: 12.5px;
+        gap: 10px;
+        font-size: 13.5px;
         margin-top: 2px;
     }
 
     .remember-label {
-        font-size: 12.5px;
+        font-size: 13.5px;
         min-height: auto;
-        padding: 3px 0;
+        padding: 4px 0;
         touch-action: manipulation;
     }
 
     .forgot-link {
-        font-size: 12.5px;
+        font-size: 13.5px;
         min-height: auto;
-        padding: 3px 0;
+        padding: 4px 0;
         touch-action: manipulation;
     }
 
     .btn-submit,
     .register-container .btn-submit {
         height: auto;
-        min-height: 40px;
-        padding: 9px 14px;
-        font-size: 14px;
-        margin-top: 2px;
+        min-height: 44px;
+        padding: 10px 16px;
+        font-size: 14.5px;
+        margin-top: 4px;
         touch-action: manipulation;
         -webkit-user-select: none;
         user-select: none;
@@ -1253,65 +1254,65 @@ body {
 
     .divider,
     .register-container .divider {
-        margin: 10px 0;
+        margin: 12px 0;
     }
 
     .divider span {
-        font-size: 12px;
-        padding: 0 10px;
+        font-size: 12.5px;
+        padding: 0 12px;
     }
 
     .btn-google,
     .register-container .btn-google {
         height: auto;
-        min-height: 38px;
-        padding: 8px 14px;
-        font-size: 13px;
+        min-height: 42px;
+        padding: 9px 14px;
+        font-size: 13.5px;
         touch-action: manipulation;
         -webkit-user-select: none;
         user-select: none;
     }
 
     .google-auth-banner {
-        font-size: 12.5px;
-        line-height: 1.45;
-        padding: 8px 11px;
+        font-size: 13px;
+        line-height: 1.5;
+        padding: 10px 12px;
     }
 
     .register-prompt,
     .register-container .register-prompt {
-        margin-top: 12px;
-        font-size: 12.5px;
+        margin-top: 14px;
+        font-size: 13px;
     }
 
     .register-prompt a {
         min-height: auto;
-        padding: 2px 3px;
-        font-size: 12.5px;
+        padding: 4px;
+        font-size: 13px;
     }
 
     .form-footer,
     .register-container .form-footer {
-        margin-top: 18px !important;
-        padding-top: 10px !important;
-        font-size: 11.5px;
+        margin-top: 20px !important;
+        padding-top: 12px !important;
+        font-size: 12.5px;
     }
 
     .form-footer p {
-        font-size: 11.5px;
-        margin-bottom: 4px;
+        font-size: 12.5px;
+        margin-bottom: 6px;
     }
 
     .form-footer-links {
-        font-size: 11.5px;
-        gap: 8px;
+        font-size: 12.5px;
+        gap: 10px;
         flex-wrap: wrap;
     }
 
     .form-footer-links a {
         min-height: auto;
-        padding: 2px 4px;
-        font-size: 11.5px;
+        padding: 4px;
+        font-size: 12.5px;
     }
 }
 /* ==========================================
@@ -1955,125 +1956,131 @@ body.terms-modal-open {
 
 @media (max-width: 768px) {
     .terms-modal-overlay {
-        padding: max(12px, env(safe-area-inset-top, 0px)) 12px max(12px, env(safe-area-inset-bottom, 0px));
+        padding: max(12px, env(safe-area-inset-top, 0px)) 14px max(12px, env(safe-area-inset-bottom, 0px));
     }
 
-    .terms-modal-card {
-        height: min(88dvh, 640px);
+    .terms-modal-overlay .terms-modal-card {
+        height: min(88dvh, 650px);
         max-height: calc(100dvh - 24px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
         border-radius: 14px;
     }
 
     .terms-modal-header-main {
-        padding: 12px 14px 10px;
+        padding: 14px 16px 10px;
         gap: 10px;
     }
 
     .terms-modal-badge-icon {
-        width: 34px;
-        height: 34px;
-        border-radius: 9px;
+        width: 36px;
+        height: 36px;
+        border-radius: 10px;
     }
 
     .terms-modal-heading h2 {
-        font-size: 16.5px;
+        font-size: 18px;
     }
 
     .terms-modal-subtitle {
-        font-size: 11.5px;
+        font-size: 12.5px;
     }
 
     .terms-modal-close {
-        width: 34px;
-        height: 34px;
+        width: 38px;
+        height: 38px;
         touch-action: manipulation;
         -webkit-user-select: none;
         user-select: none;
     }
 
+    .terms-modal-close svg {
+        width: 18px;
+        height: 18px;
+    }
+
     .terms-modal-tabs {
-        padding: 0 14px 10px;
-        gap: 6px;
+        padding: 0 16px 10px;
+        gap: 8px;
     }
 
     .terms-modal-tab {
         height: auto;
-        min-height: 34px;
-        padding: 6px 11px;
-        font-size: 12.5px;
+        min-height: 38px;
+        padding: 8px 13px;
+        font-size: 13px;
         touch-action: manipulation;
         -webkit-user-select: none;
         user-select: none;
     }
 
     .terms-modal-body {
-        padding: 14px 16px 16px;
+        padding: 16px;
     }
 
     .terms-part-banner {
-        padding: 7px 10px;
+        padding: 8px 12px;
         margin-bottom: 12px;
     }
 
     .terms-part-pill {
-        font-size: 10.5px;
-    }
-
-    .terms-part-meta {
         font-size: 11.5px;
     }
 
+    .terms-part-meta {
+        font-size: 12px;
+    }
+
     .terms-doc-section {
-        margin-bottom: 12px;
-        padding-bottom: 11px;
+        margin-bottom: 14px;
+        padding-bottom: 12px;
     }
 
     .terms-doc-section h3 {
-        font-size: 14.5px;
-        margin-bottom: 6px;
+        font-size: 15.5px;
+        margin-bottom: 7px;
     }
 
     .terms-doc-section p,
-    .terms-doc-section ul {
-        font-size: 13.5px;
-        line-height: 1.55;
+    .terms-doc-section ul,
+    .terms-doc-section li {
+        font-size: 14.5px;
+        line-height: 1.58;
     }
 
     .terms-doc-section code {
-        font-size: 12px;
+        font-size: 12.5px;
     }
 
     .terms-end-callout {
-        padding: 11px 12px;
-        margin-top: 10px;
+        padding: 12px 14px;
+        margin-top: 12px;
     }
 
     .terms-end-callout p {
-        font-size: 12.5px;
-        line-height: 1.45;
+        font-size: 13px;
+        line-height: 1.5;
     }
 
     .terms-modal-footer {
-        padding: 10px 14px max(12px, env(safe-area-inset-bottom, 0px));
-        gap: 8px;
+        padding: 12px 16px max(14px, env(safe-area-inset-bottom, 0px));
+        gap: 10px;
     }
 
     .terms-scroll-hint {
-        padding: 6px 10px;
-        font-size: 12px;
+        padding: 8px 12px;
+        font-size: 12.5px;
     }
 
     .terms-modal-actions {
         width: 100%;
-        gap: 8px;
+        gap: 10px;
     }
 
     .btn-terms-decline {
         flex: 1;
         height: auto;
-        min-height: 38px;
-        padding: 8px 12px;
-        font-size: 13px;
+        min-height: 40px;
+        padding: 8px 13px;
+        font-size: 13.5px;
         touch-action: manipulation;
         -webkit-user-select: none;
         user-select: none;
@@ -2082,9 +2089,9 @@ body.terms-modal-open {
     .btn-terms-accept {
         flex: 1;
         height: auto;
-        min-height: 40px;
-        padding: 9px 14px;
-        font-size: 13.5px;
+        min-height: 44px;
+        padding: 10px 16px;
+        font-size: 14.5px;
         touch-action: manipulation;
         -webkit-user-select: none;
         user-select: none;
@@ -2093,22 +2100,22 @@ body.terms-modal-open {
 
 @media (max-width: 600px) {
     .terms-modal-overlay {
-        padding: max(10px, env(safe-area-inset-top, 0px)) 10px max(10px, env(safe-area-inset-bottom, 0px));
+        padding: max(10px, env(safe-area-inset-top, 0px)) 12px max(10px, env(safe-area-inset-bottom, 0px));
     }
 
-    .terms-modal-card {
+    .terms-modal-overlay .terms-modal-card {
         height: calc(100dvh - 20px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
         max-height: calc(100dvh - 20px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
         border-radius: 14px;
     }
 
     .terms-modal-header-main {
-        padding: 12px 14px 9px;
+        padding: 12px 14px 10px;
         gap: 10px;
     }
 
     .terms-modal-body {
-        padding: 14px;
+        padding: 14px 16px;
     }
 
     .terms-modal-footer {
@@ -2399,11 +2406,11 @@ body.otp-modal-open {
 
 @media (max-width: 768px) {
     .otp-modal-overlay {
-        padding: max(12px, env(safe-area-inset-top, 0px)) 12px max(12px, env(safe-area-inset-bottom, 0px));
+        padding: max(12px, env(safe-area-inset-top, 0px)) 14px max(12px, env(safe-area-inset-bottom, 0px));
         overflow-y: auto;
     }
 
-    .otp-modal-card {
+    .otp-modal-overlay .otp-modal-card {
         padding: 16px;
         border-radius: 14px;
         max-height: calc(100dvh - 24px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
@@ -2415,58 +2422,58 @@ body.otp-modal-open {
     .otp-modal-close {
         top: 12px;
         right: 12px;
-        width: 34px;
-        height: 34px;
-        font-size: 20px;
+        width: 38px;
+        height: 38px;
+        font-size: 22px;
         touch-action: manipulation;
         -webkit-user-select: none;
         user-select: none;
     }
 
     .otp-modal-icon {
-        width: 36px;
-        height: 36px;
+        width: 38px;
+        height: 38px;
         border-radius: 10px;
         font-size: 18px;
-        margin-bottom: 10px;
+        margin-bottom: 12px;
     }
 
     .otp-modal-card h2 {
-        font-size: 17.5px;
-        margin: 0 38px 6px 0;
+        font-size: 19px;
+        margin: 0 42px 8px 0;
     }
 
     .otp-modal-copy {
-        font-size: 12.5px;
-        line-height: 1.5;
-        margin-bottom: 14px;
+        font-size: 13.5px;
+        line-height: 1.55;
+        margin-bottom: 16px;
     }
 
     .otp-form label {
-        font-size: 12.5px;
-        margin-bottom: 5px;
+        font-size: 13.5px;
+        margin-bottom: 6px;
     }
 
     .otp-form input {
-        height: 42px;
-        padding: 8px 11px;
+        height: 44px;
+        padding: 10px 12px;
         font-size: 16px !important;
         letter-spacing: 6px;
     }
 
     .otp-form-message {
-        font-size: 12px;
-        margin: 6px 0 10px;
+        font-size: 12.5px;
+        margin: 8px 0 12px;
     }
 
     .otp-modal-resend {
-        margin-top: 12px;
-        font-size: 11.5px;
-        gap: 6px;
+        margin-top: 14px;
+        font-size: 12.5px;
+        gap: 8px;
     }
 
     .otp-modal-resend button {
-        font-size: 12.5px;
+        font-size: 13.5px;
         padding: 4px 2px;
         touch-action: manipulation;
         -webkit-user-select: none;
@@ -2476,18 +2483,18 @@ body.otp-modal-open {
 
 @media (max-width: 600px) {
     .otp-modal-overlay {
-        padding: max(10px, env(safe-area-inset-top, 0px)) 10px max(10px, env(safe-area-inset-bottom, 0px));
+        padding: max(10px, env(safe-area-inset-top, 0px)) 12px max(10px, env(safe-area-inset-bottom, 0px));
     }
 
-    .otp-modal-card {
-        padding: 15px 14px;
+    .otp-modal-overlay .otp-modal-card {
+        padding: 16px 14px;
         border-radius: 14px;
     }
 
     .otp-modal-resend {
         align-items: flex-start;
         flex-direction: column;
-        gap: 4px;
+        gap: 6px;
     }
 }
 
@@ -3058,64 +3065,99 @@ html.dark-mode .match-hint.ok {
 @media (max-width: 768px) {
     .input-box.has-toggle input,
     .register-container .input-box.has-toggle input {
-        padding-right: 42px;
+        padding-right: 46px;
     }
 
     .toggle-pw {
-        width: 34px;
-        height: 34px;
+        width: 38px;
+        height: 38px;
         right: 4px;
         touch-action: manipulation;
         -webkit-user-select: none;
         user-select: none;
     }
 
+    .toggle-pw svg {
+        width: 18px;
+        height: 18px;
+    }
+
     .strength-meter small,
     .match-hint {
-        font-size: 11.5px;
-        line-height: 1.35;
+        font-size: 12.5px;
+        line-height: 1.4;
     }
 
     .terms-label {
-        font-size: 12px;
-        line-height: 1.4;
+        font-size: 13px;
+        line-height: 1.45;
         padding: 6px 8px;
         margin-left: 0;
         margin-right: 0;
     }
 
     .auth-notice {
-        margin: 0 0 10px;
-        padding: 8px 11px;
-        font-size: 12.5px;
-        line-height: 1.45;
+        margin: 0 0 12px;
+        padding: 10px 12px;
+        font-size: 13px;
+        line-height: 1.5;
     }
 
     .admin-badge-pill {
-        font-size: 10.5px;
+        font-size: 11.5px;
     }
 
     .admin-security-card {
-        font-size: 11.5px;
-        padding: 8px 10px;
+        font-size: 12.5px;
+        line-height: 1.45;
+        padding: 10px 12px;
     }
 
     .admin-access-link a {
-        font-size: 12px;
+        font-size: 12.5px;
     }
 
     .theme-toggle-btn {
-        width: 36px;
-        height: 36px;
+        width: 38px;
+        height: 38px;
         touch-action: manipulation;
         -webkit-user-select: none;
         user-select: none;
+    }
+
+    .theme-icon-wrap {
+        width: 19px;
+        height: 19px;
     }
 
     html[data-theme="dark"] body,
     html[data-theme="dark"] .form-panel {
         background-color: var(--bg-page) !important;
         color: var(--text-dark);
+    }
+}
+
+@media (max-width: 480px) {
+    .main-container .showcase-panel {
+        padding: max(12px, env(safe-area-inset-top, 0px)) 14px 12px;
+    }
+
+    .main-container .form-panel {
+        padding: 18px 14px max(28px, env(safe-area-inset-bottom, 0px));
+    }
+
+    .form-brand-logo {
+        width: 32px;
+        height: 32px;
+    }
+
+    .form-brand-text .brand-title {
+        font-size: 21px;
+    }
+
+    .welcome-header h1,
+    .register-container .welcome-header h1 {
+        font-size: 22px;
     }
 }
 
