@@ -3214,3 +3214,26 @@ html.dark-mode .match-hint.ok {
         margin: auto;
     }
 }
+
+/* Login and registration footer placement */
+.auth-entry-page .form-container {
+    flex: 1 0 auto;
+}
+
+.auth-entry-page .form-footer {
+    margin-top: auto !important;
+}
+
+.auth-entry-page .form-footer-links {
+    font-size: 12.5px;
+}
+
+.auth-entry-page .form-footer-links a {
+    font-size: inherit;
+}
+
+@media (min-width: 1600px) and (min-height: 540px) {
+    .auth-entry-page .form-container {
+        margin: 12px auto 0;
+    }
+}

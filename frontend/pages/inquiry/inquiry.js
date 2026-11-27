@@ -1137,6 +1137,15 @@ function initUrbanSelect(selectEl) {
     trigger.setAttribute('aria-haspopup', 'listbox');
     trigger.setAttribute('aria-expanded', 'false');
 
+    if (selectEl.id === 'preferredTime' || selectEl.id === 'propertyPreferredTime') {
+        const label = document.querySelector('label[for="' + selectEl.id + '"]');
+        if (label) {
+            if (!label.id) label.id = selectEl.id + 'Label';
+            trigger.setAttribute('aria-labelledby', label.id);
+            label.addEventListener('click', (event) => event.preventDefault());
+        }
+    }
+
     const valueSpan = document.createElement('span');
     valueSpan.className = 'custom-select-value';
 
