@@ -181,10 +181,12 @@ body {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 24px;
-    align-items: start;
+    align-items: stretch;
 }
 
 .account-card {
+    display: flex;
+    flex-direction: column;
     background: var(--surface);
     border: 1px solid var(--border-color);
     border-radius: 20px;
@@ -219,10 +221,9 @@ body {
     white-space: nowrap;
 }
 
-.google-status-badge .status-badge-dot {
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
+.google-status-badge .status-badge-dot,
+.password-status-badge .status-badge-dot {
+    display: none;
 }
 
 .google-status-badge.is-connected {
@@ -231,18 +232,10 @@ body {
     border: 1px solid var(--status-success-border);
 }
 
-.google-status-badge.is-connected .status-badge-dot {
-    background: var(--status-success-dot);
-}
-
 .google-status-badge.is-disconnected {
     background: var(--status-neutral-bg);
     color: var(--status-neutral-text);
     border: 1px solid var(--status-neutral-border);
-}
-
-.google-status-badge.is-disconnected .status-badge-dot {
-    background: var(--status-neutral-text);
 }
 
 .google-connect-row {
@@ -359,20 +352,10 @@ body {
     white-space: nowrap;
 }
 
-.password-status-badge .status-badge-dot {
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-}
-
 .password-status-badge.is-active {
     background: var(--status-success-bg);
     color: var(--status-success-text);
     border: 1px solid var(--status-success-border);
-}
-
-.password-status-badge.is-active .status-badge-dot {
-    background: var(--status-success-dot);
 }
 
 .password-status-badge.is-missing {
@@ -381,14 +364,11 @@ body {
     border: 1px solid var(--danger-border);
 }
 
-.password-status-badge.is-missing .status-badge-dot {
-    background: var(--danger-dot, #ef4444);
-}
-
 /* FORM CONTROLS */
 .account-form {
     display: flex;
     flex-direction: column;
+    flex: 1;
     gap: 18px;
 }
 
@@ -514,6 +494,7 @@ body {
     display: flex;
     justify-content: flex-end;
     padding-top: 4px;
+    margin-top: auto;
 }
 
 .security-footer-row {
@@ -523,6 +504,7 @@ body {
     flex-wrap: wrap;
     gap: 14px;
     padding-top: 4px;
+    margin-top: auto;
 }
 
 .forgot-pw-link {
@@ -623,6 +605,14 @@ html[data-theme="dark"] .reminder-content p {
 @media (max-width: 860px) {
     .account-grid {
         grid-template-columns: 1fr;
+    }
+
+    .account-form {
+        flex: 0 1 auto;
+    }
+
+    .security-footer-row {
+        margin-top: 0;
     }
 }
 

@@ -2408,9 +2408,9 @@ html.dark-mode .property-status-badge.badge-rfo {
 }
 
 .intent-card-badge.featured {
-    background: var(--status-success-bg);
-    color: var(--status-success-text);
-    border-color: var(--status-success-border);
+    background: var(--light-green);
+    color: var(--green);
+    border-color: var(--green-border-soft);
 }
 
 .intent-icon-wrap {
@@ -2437,9 +2437,9 @@ html.dark-mode .property-status-badge.badge-rfo {
 }
 
 .icon-property {
-    background: var(--status-success-bg);
-    color: var(--dark-green);
-    border: 1px solid var(--status-success-border);
+    background: var(--light-green);
+    color: var(--green);
+    border: 1px solid var(--green-border-soft);
 }
 
 .intent-info h4 {
@@ -2923,9 +2923,9 @@ html.dark-mode .icon-general {
 }
 
 html.dark-mode .icon-property {
-    background: var(--status-info-bg);
-    color: var(--accent-green);
-    border-color: var(--status-info-border);
+    background: var(--light-green);
+    color: var(--dark-green);
+    border-color: var(--green-border-soft);
 }
 
 html.dark-mode .modal-close {

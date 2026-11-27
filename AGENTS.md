@@ -1692,6 +1692,24 @@ path when rendering from a page.
   - Added server-side Gmail linking endpoints (`POST /api/auth/google/link` in FastAPI and `POST /api/session?action=link-google` on Vercel) plus `apiLinkGoogleAccount` in `supabase.js`/`api.js`. Supports linking a Gmail address even when the user registered with a non-Google email (preserving their primary `email`, `role`, and `has_password`), blocks cross-account `google_id` / `google_email` conflicts (`409`), enforces `miriamalobren@gmail.com` admin isolation (`403`), and supports subsequent login via `/auth/google` or `/api/session?action=google`.
   - Added the **Google Account** connection card (`#googleAccountCard` on `frontend/pages/account/profile.html` and `#adminGoogleCard` on `frontend/pages/admin/profile.html`) displaying **Connected** / **Not connected** status badges, linked Gmail details, and one-click Google Identity Services OAuth popup linking.
 
+207. **Client Profile & Security Card Layout (`frontend/pages/account/profile.html`, `frontend/pages/account/profile.css`):**
+  - The desktop account grid stretches Personal Details and Change Password to the same row height. Both cards use a column layout, and their save actions stay aligned at the bottom; the single-column layout returns the password actions to normal flow beneath Confirm Password to avoid excess blank space. The hero's Submit an Inquiry button and both card subtitles are removed, the Forgot Password link has no leading question icon, and the Password active and Google Connected badges retain their green styling and labels without decorative status dots.
+
+208. **Preferred Time Slot Custom Select Label Behavior (`frontend/pages/inquiry/inquiry.js`):**
+  - Clicking the Preferred Time / Slot label no longer activates the visually hidden native select or opens its unstyled browser menu. The styled custom-select box remains the only click target that opens the dropdown, and it uses the field label as its accessible name for both inquiry modes.
+
+209. **Consultation Intent Card Accent Matching (`frontend/index.css`):**
+  - The specific-property card's house icon and Accredited Listings badge use the same softer green background, border, and text treatment as the General Consultation card in both light and dark themes.
+
+210. **Compact Legal Page Hero Spacing (`frontend/pages/legal/legal.css`):**
+  - Reduced the desktop Terms of Service and Privacy Policy green hero's vertical padding and gaps between navigation, title, metadata, and document tabs so the legal header uses less screen height; the existing compact mobile overrides remain in place.
+
+211. **Login and Registration Footer Placement & Link Sizing (`frontend/pages/auth/{login,register}.html`, `frontend/pages/auth/auth.css`):**
+  - The copyright and navigation footer now stays at the bottom of the login/registration form panel when space allows, and the Home, Privacy Policy, and Terms of Service links use a larger 12.5px type size. Longer registration forms still scroll naturally when they exceed the viewport.
+
+212. **Authentication Showcase Professional Title (`frontend/pages/auth/{login,register,forgot-password}.html`, `frontend/pages/auth/auth.css`):**
+  - Updated the left showcase subtitle on the login, registration, and password recovery pages to “Real Estate Salesperson,” matching the professional title used elsewhere in the site. The subtitle retains its original dark green styling.
+
 ## Safety Rules
 
 - Do **not** commit `backend/urbanscope.db`, `.env`, or virtualenvs (already in `.gitignore`).
