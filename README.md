@@ -10,6 +10,8 @@
 
 Built for **Miriam Lobren, Real Estate Salesperson** (CD Miranda Realty, Las Piñas & Cavite, Philippines).
 
+Follow a buyer from the Kathleen listing to an approved viewing request in the [60-second UrbanScope walkthrough (4K, 60 fps)](UrbanScope-Walkthrough-4K60.mp4).
+
 ---
 
 ## ✨ Features
@@ -17,16 +19,16 @@ Built for **Miriam Lobren, Real Estate Salesperson** (CD Miranda Realty, Las Pi�
 - **Property Showcase** — featured accredited listings (Casasuerte, Kathleen, Liora Homes, Airmen's Village Triplex, Benecia Single-Attached, Amore Classico – Benedetto Residences, and Midori Mid-Rise Condo – Zone 1) with a hero search bar (property type, location, sort, and keywords), photo galleries, current pricing, and location maps. Sold listings remain visible with a Sold Out label but no longer accept new inquiries.
 - **Modern UI, Motion & Clean Search** — shared motion tokens keep hover, menu, modal, toast, theme, and scroll-reveal timing consistent across public and admin pages; reduced-motion preferences shorten transitions and remove decorative movement. Also includes responsive viewport metrics, a floating back-to-top button with SVG scroll progress, quick-contact FAB, glassmorphic hero search, and CSS Grid FAQ accordion with category filters.
 - **Solid-Color Visual System** — flat-color backgrounds, controls, overlays, and loading placeholders across public, client, Admin, and Superadmin pages; gradient effects have been removed.
-- **Client Accounts & Google Sign-In** — email-code verification for password registration, one-time-code password recovery, PH phone validation, and one-click **Google Authentication** (OAuth 2.0 via Google Identity Services); unified sign-in that routes users by role.
+- **Client Accounts, Profile & Google Sign-In** — email-code verification for password registration, one-time-code password recovery, PH phone validation, one-click **Google Authentication** (OAuth 2.0 via Google Identity Services), and a dedicated **Profile & Security** page (`/pages/account/profile.html`) for updating contact details, setting/changing passwords, and linking Gmail accounts.
 - **Consultations & Inquiries** — interactive consultation intent flow allowing clients to book general consultations (free site tripping, loan pre-approval, property advice) or inquire about specific accredited listings. **Guest inquiries are accepted with zero login required** (honeypot-protected against spam), and post-submission prompts allow guests to optionally create an account with pre-filled details to track their inquiries in the client history portal.
 - **Direct Multi-Channel Contact** — floating quick-contact button (`.contact-fab`) providing instant 1-tap access to Facebook Messenger (`https://m.me/miriam.lobren`), direct phone call (`tel:+639189645434`), and SMS with pre-composed property inquiry messages.
 - **Search Engine Optimization & Social Sharing** — full Open Graph and Twitter Card link previews across all public pages, dynamic JSON-LD `RealEstateAgent` schema markup, canonical URLs, `robots.txt`, and automated `sitemap.xml`.
-- **High-Performance Assets** — compressed progressive JPEG imagery, responsive preloading on key banners, and native `loading="lazy" decoding="async"` on all below-the-fold property thumbnails.
+- **High-Performance Assets & Skeleton Loaders** — compressed progressive JPEG imagery, responsive preloading on key banners, native `loading="lazy" decoding="async"` on below-the-fold thumbnails, and sitewide shimmer skeletons across all active pages.
 - **System-Wide Dark Mode** — seamless dark theme with multi-layer preference persistence (`localStorage`, 1-year cookie, and window session), smooth crossfade transitions, comfortable photo dimming, and high-contrast accessible controls.
-- **Admin Dashboard & Accounts/Role Management** — streamlined high-priority dashboard with KPI cards, inquiry status & notification analytics, property viewing calendar, and recent inquiries preview (`4` items) with `View All Inquiries`, plus search and status pill tabs on the Client Inquiries page (`clients.html`), custom-styled status and full property-type filters on the Manage Properties page (`propertylist.html`), property CRUD, and full RBAC **Accounts & Role Access** governance (`/pages/admin/users.html`: create accounts, edit profiles, promote/demote roles, reset passwords, and delete accounts).
-- **Administrative Access Control** — Vercel checks a signed, HttpOnly session before serving Admin pages. Hosted admin sign-in requires Google verification for an approved staff account; normal client sign-ins and editable browser storage cannot grant administrative access.
+- **Single-Admin Dashboard & Account Governance** — streamlined dashboard with KPI cards, animated inquiry status donut & notification analytics, interactive property viewing calendar, recent inquiries preview (`4` items) with `View All Inquiries`, Client Inquiries management (`clients.html`), custom property filters & CRUD (`propertylist.html`), and **Accounts & Roles** management (`/pages/admin/users.html`, restricted exclusively to `miriamalobren@gmail.com`).
+- **Administrative Access Control** — Vercel checks a signed, `HttpOnly` session before serving Admin pages. Hosted admin sign-in enforces single-admin verification for `miriamalobren@gmail.com`; normal client sign-ins and editable browser storage cannot grant administrative access.
 - **Legal & Privacy Hub** — comprehensive Terms of Service (aligned with RESA RA 9646) and Privacy Policy (compliant with Philippine Data Privacy Act RA 10173).
-- **Responsive Design** — optimized for desktop, tablet, and mobile with a shared mobile navigation shell across public, client, Admin, and Superadmin pages, dynamic viewport sizing (`100dvh`), safe-area insets, mobile keyboard hints, touch-friendly (`@media (pointer: coarse)`) 44px+ controls, high-contrast WCAG AA typography, progressive mobile expand toggles and section accordions, sticky property quick-CTA actions, and stacked Admin/Superadmin mobile cards.
+- **Responsive Design** — optimized for desktop, tablet, and mobile with a shared mobile navigation shell across public, client, and admin pages, dynamic viewport sizing (`100dvh`), safe-area insets, mobile keyboard hints, high-contrast WCAG AA typography, and stacked admin mobile cards.
 
 ---
 
@@ -111,8 +113,8 @@ To reset local SQLite data, delete `backend/urbanscope.db` and restart the serve
   - **Edit Property:** Select **Edit** on any listing card (`edit-property.html`) to update pricing, specifications, or replace photos.
   - **Delete Property:** Remove unlisted or sold properties with immediate database and cache synchronization.
 - **Client Inquiries & CRM:** Review client inquiries under `clients.html`, inspect contact information, track message details, approve client requests via the modal or inline select, and update inquiry follow-up statuses (e.g., *Under Review*, *Approved*, *Completed*).
-- **Accounts & Role Access (RBAC):** Access `users.html` (`Accounts & Roles` in the Admin sidebar) for full user account governance — create client/admin accounts, edit full name, email, contact phone, and account role (`user`/`admin`), promote/demote permissions, delete non-protected accounts, and reset passwords synchronized across local SQLite and Supabase Cloud.
-- **Profile Picture Upload & Settings:** Visit `profile.html` to update contact details, change passwords, and upload custom profile photos (< 5MB limit) with automatic canvas optimization, live topbar avatar synchronization, and one-click photo reset.
+- **Accounts & Role Access (`users.html`):** Accessible exclusively to the main administrator (`miriamalobren@gmail.com`) via `Accounts & Roles` in the Admin sidebar — create client accounts, edit full name, email, and contact phone, reset passwords, and delete client accounts synchronized across local SQLite and Supabase Cloud.
+- **Profile Picture Upload, Google Linking & Settings:** Visit `profile.html` to update contact details, change passwords, link your Google account, and upload custom profile photos (< 5MB limit) with automatic canvas optimization, live topbar avatar synchronization, and one-click photo reset.
 
 ---
 
@@ -150,19 +152,39 @@ To reset local SQLite data, delete `backend/urbanscope.db` and restart the serve
 │   ├── pages/
 │   │   ├── properties/     # 7 accredited showcases (`casasuerte`, `kathleen`, `Liora`, `Airmen`, `benecia`, `amore-classico`, `midori`) & dynamic `property-detail`
 │   │   ├── inquiry/        # Dual-mode consultation/property inquiry form (`inquiry.*`) & client history (`history.*`)
+│   │   ├── account/        # Client Profile & Security (`profile.*`, password & Google linking)
 │   │   ├── auth/           # Unified sign-in (`login.*`), registration (`register.*`) & recovery (`forgot-password.*`)
 │   │   ├── legal/          # RESA Terms of Service (`terms.html`) & DPA Privacy Policy (`privacy.html`)
-│   │   └── admin/          # Agent dashboard, `propertylist`, `add-property`, `edit-property`, `clients`, `users` (Accounts & Roles RBAC) & `profile`
+│   │   └── admin/          # Agent dashboard, `propertylist`, `add-property`, `edit-property`, `clients`, `users` (Accounts & Roles) & `profile`
 │   ├── shared/
-│   │   ├── css/            # `tokens.css`, `common.css`, `session.css`, `splash.css`, `mobile-shell.css`
-│   │   └── js/             # `supabase.js` (API gateway), `session.js`, `splash.js`, `api.js`
+│   │   ├── css/            # `tokens.css`, `common.css`, `session.css`, `splash.css`, `skeleton.css`, `mobile-shell.css`
+│   │   └── js/             # `supabase.js` (API gateway), `session.js`, `splash.js`, `skeleton.js`, `api.js`
 │   └── assets/images/      # Optimized property galleries, brand logos & agent avatars
 ├── supabase/               # Supabase CLI project (`config.toml`, atomic `migrations/`, `seed.sql`, `scripts/`)
-├── DATABASE.md             # Database schema, RLS architecture & seed documentation
-├── CHANGELOG.md            # Feature & session changelog
-├── CONTRIBUTING.md         # Development & contributing guidelines
-└── AGENTS.md               # Architecture & AI coding agent reference
+├── docs/                   # Organized documentation hub (see `docs/README.md`)
+│   ├── README.md           # Documentation index & maintenance rules
+│   ├── ARCHITECTURE.md     # Current frontend, backend, Vercel & Single-Admin RBAC architecture
+│   ├── UI_GUIDELINES.md    # Flat color design system, banned patterns, Dark Mode & mobile standards
+│   ├── DATABASE.md         # SQLite & Supabase schema, RLS policies & atomic migration checklist
+│   ├── DEPLOYMENT.md       # Local setup, env vars, Vercel Hobby limits, OAuth & Resend setup
+│   ├── CHANGELOG.md        # Chronological session & feature changelog
+│   └── archive/            # Historical archive of legacy agent notes (`LEGACY_AGENT_NOTES.md`)
+├── AGENTS.md               # Concise master instructions for AI coding agents
+├── CLAUDE.md               # Claude Code shim importing `AGENTS.md`
+└── CONTRIBUTING.md         # Branching, commit & pull request workflow
 ```
+
+---
+
+## 📚 Documentation
+
+- **[Documentation Index](docs/README.md)** — Complete map of all guides and when to read/update each file
+- **[AI Agent Guide](AGENTS.md)** — Core invariants, workflow rules, and output standards for AI coding agents
+- **[Architecture](docs/ARCHITECTURE.md)** — Frontend, REST gateway, FastAPI, Vercel API, auth & Single-Admin RBAC
+- **[UI & Mobile Guidelines](docs/UI_GUIDELINES.md)** — Visual design rules, banned patterns, Dark Mode & mobile contract
+- **[Database](docs/DATABASE.md)** — SQLite & Supabase schema, RLS policies, seeds & migrations
+- **[Deployment & Operations](docs/DEPLOYMENT.md)** — Local run, env vars, Vercel limits, Google OAuth & Resend email
+- **[Changelog](docs/CHANGELOG.md)** — Chronological feature & bug-fix history
 
 ---
 
