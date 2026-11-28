@@ -114,10 +114,10 @@
                 if (verifyForm) verifyForm.hidden = false;
                 if (newPasswordForm) newPasswordForm.hidden = true;
                 if (title) title.textContent = 'Verify your email';
-                if (subtitle) subtitle.textContent = `We sent a 6-digit verification code to ${email}. Check your email and enter the code below.`;
+                if (subtitle) subtitle.textContent = `We sent a 6-digit verification code to ${email}. Enter the code below to continue.`;
 
                 if (codeInput) codeInput.value = '';
-                showStatus(`A six-digit verification code has been sent to ${email}. Please check your inbox and spam folder.`, 'success');
+                showStatus(`A six-digit verification code has been sent to ${email}. Please check your inbox, Spam, or Junk folder.`, 'success');
                 startResendCountdown();
                 if (codeInput) {
                     codeInput.focus();
@@ -193,7 +193,7 @@
 
             if (result && result.success) {
                 if (codeInput) codeInput.value = '';
-                showStatus(`A new six-digit verification code has been sent to ${currentEmail}. Please check your inbox.`, 'success');
+                showStatus(`A new six-digit verification code has been sent to ${currentEmail}. Please check your inbox, Spam, or Junk folder.`, 'success');
                 startResendCountdown();
                 if (codeInput) { codeInput.focus(); }
             } else {

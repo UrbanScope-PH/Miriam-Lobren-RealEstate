@@ -710,7 +710,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     const res = await apiStartRegistrationOtp(window.__activeGooglePending.email, botData);
                     if (res && res.success) {
                         if (otpMessage) {
-                            otpMessage.textContent = "A new 6-digit verification code has been sent to your Gmail.";
+                            otpMessage.textContent = "A new 6-digit verification code has been sent. Please check your inbox, Spam, or Junk folder.";
                             otpMessage.className = "otp-form-message is-success";
                         }
                         startGoogleOtpCountdown();

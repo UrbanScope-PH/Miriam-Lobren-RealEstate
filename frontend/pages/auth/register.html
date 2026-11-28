@@ -197,10 +197,18 @@
                             <button type="button" class="otp-modal-close" id="closeEmailOtpModal" aria-label="Close verification dialog">&times;</button>
                             <div class="otp-modal-icon" aria-hidden="true">@</div>
                             <h2 id="emailOtpTitle">Verify your email</h2>
-                            <p class="otp-modal-copy">We sent a 6-digit verification code to <strong id="otpTargetEmail"></strong>. Check your inbox and spam folder, then enter the code below to complete your registration. Codes expire in 10 minutes.</p>
+                            <p class="otp-modal-copy">We sent a 6-digit verification code to <strong id="otpTargetEmail"></strong>. Enter the code below to complete your registration. Codes expire in 10 minutes.</p>
+                            <div class="otp-spam-hint" role="note">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                    <circle cx="12" cy="12" r="10"></circle>
+                                    <line x1="12" y1="8" x2="12" y2="12"></line>
+                                    <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                                </svg>
+                                <span>Can&rsquo;t find the email? Please check your <strong>Spam</strong> or <strong>Junk</strong> folder.</span>
+                            </div>
                             <form id="emailOtpForm" class="otp-form">
                                 <label for="emailOtpCode">Email verification code</label>
-                                <input id="emailOtpCode" name="code" type="text" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6}" maxlength="6" placeholder="000000" required enterkeyhint="done">
+                                <input id="emailOtpCode" name="code" type="text" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6}" maxlength="6" required enterkeyhint="done">
                                 <p class="otp-form-message" id="emailOtpMessage" role="status" aria-live="polite"></p>
                                 <button type="submit" class="btn-submit" id="verifyEmailOtpBtn">Verify &amp; Create Account</button>
                             </form>

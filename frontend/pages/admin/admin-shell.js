@@ -190,6 +190,7 @@
                 backdrop.classList.add("show");
             }
             document.body.classList.add("sidebar-open");
+            document.documentElement.classList.add("sidebar-open");
         }
 
         function closeSidebar() {
@@ -200,6 +201,7 @@
                 backdrop.classList.remove("show");
             }
             document.body.classList.remove("sidebar-open");
+            document.documentElement.classList.remove("sidebar-open");
         }
 
         if (toggleBtn) {

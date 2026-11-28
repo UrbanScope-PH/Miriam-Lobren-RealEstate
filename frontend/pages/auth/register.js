@@ -384,7 +384,7 @@
                 return;
             }
             if (emailOtpCode) emailOtpCode.value = '';
-            setOtpMessage('A new 6-digit verification code has been sent to your email.', true);
+            setOtpMessage('A new 6-digit verification code has been sent. Please check your inbox, Spam, or Junk folder.', true);
             startOtpResendCountdown();
         });
     }
