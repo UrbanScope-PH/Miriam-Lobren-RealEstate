@@ -31,10 +31,10 @@
 </head>
 <body class="auth-entry-page">
 
-    <div class="main-container">
+    <div class="main-container auth-photo-sheet">
         
         <!-- LEFT PANEL: Image, Branding & Showcase -->
-        <div class="showcase-panel">
+        <div class="showcase-panel" id="authPhotos">
             <div class="slides-track" id="slidesTrack">
                 <div class="slide-item clone"><img src="../../assets/images/auth-slide3.jpg" alt="Miriam Lobren Properties 3"></div>
                 <div class="slide-item active"><img src="../../assets/images/auth-slide1.jpg" alt="Miriam Lobren Properties 1"></div>
@@ -88,6 +88,12 @@
 
         <!-- RIGHT PANEL: Register Form -->
         <div class="form-panel">
+            <button class="auth-sheet-handle" type="button" aria-label="Expand property photos"
+                aria-controls="authPhotos" aria-expanded="false" hidden>
+                <svg width="38" height="12" viewBox="0 0 38 12" fill="none" aria-hidden="true">
+                    <path d="m3 3 16 5 16-5" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+            </button>
             <div class="form-container register-container">
                 <div class="form-top-bar">
                     <a href="../../index.html" class="back-home-link">

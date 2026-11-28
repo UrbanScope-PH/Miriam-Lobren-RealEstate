@@ -3237,3 +3237,78 @@ html.dark-mode .match-hint.ok {
         margin: 12px auto 0;
     }
 }
+
+.auth-sheet-handle {
+    display: none;
+}
+
+@media (max-width: 768px), (max-height: 539px) {
+    .auth-photo-sheet {
+        --sheet-radius: 32px;
+        overflow-anchor: none;
+    }
+
+    .auth-photo-sheet .showcase-panel {
+        --compact-height: clamp(224px, 35svh, 352px);
+        --expanded-height: max(calc(var(--compact-height) + 104px), 60svh);
+        --photo-height: var(--compact-height);
+        height: clamp(var(--compact-height), var(--drag-height, var(--photo-height)), var(--expanded-height));
+        min-height: min-content;
+        flex: none;
+        isolation: isolate;
+        padding: max(18px, env(safe-area-inset-top, 0px)) max(20px, env(safe-area-inset-right, 0px))
+            calc(var(--sheet-radius) + 12px) max(20px, env(safe-area-inset-left, 0px));
+        border-radius: 0;
+        box-shadow: none;
+    }
+
+    .auth-photo-sheet .showcase-panel.is-expanded {
+        --photo-height: var(--expanded-height);
+    }
+
+    .auth-photo-sheet .form-panel {
+        position: relative;
+        margin-top: calc(-1 * var(--sheet-radius));
+        border-radius: var(--sheet-radius) var(--sheet-radius) 0 0;
+        padding: 24px max(18px, env(safe-area-inset-right, 0px)) max(28px, env(safe-area-inset-bottom, 0px))
+            max(18px, env(safe-area-inset-left, 0px));
+    }
+
+    .auth-photo-sheet .form-wrapper {
+        padding-bottom: 20px;
+    }
+
+    .auth-sheet-handle:not([hidden]) {
+        position: absolute;
+        inset: 0 0 auto;
+        margin-inline: auto;
+        display: grid;
+        justify-items: center;
+        align-items: start;
+        width: 64px;
+        height: 44px;
+        padding: 10px 0 0;
+        border: 0;
+        border-radius: 16px;
+        background: transparent;
+        color: var(--text-muted);
+        cursor: ns-resize;
+        touch-action: pan-x pinch-zoom;
+        user-select: none;
+    }
+
+    .auth-sheet-handle[aria-expanded="true"] svg {
+        transform: rotate(180deg);
+    }
+
+    .auth-sheet-handle:focus-visible {
+        outline: 2px solid var(--brand-primary-green);
+        outline-offset: -3px;
+    }
+
+    @media (prefers-reduced-motion: no-preference) {
+        .auth-photo-sheet .showcase-panel:not(.is-dragging) {
+            transition: height var(--motion-duration-enter) var(--motion-ease-out);
+        }
+    }
+}

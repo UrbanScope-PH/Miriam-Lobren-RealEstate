@@ -52,6 +52,10 @@ These patterns were explicitly removed by the user — never add them back:
 - **Inquiry & Legal pages:** Matching borderless `24px` left-arrow SVG button at top-left.
 - **Auth (`login.html`, `register.html`):** Inline `18px` SVG arrow next to the back-to-home label (`8px` gap).
 
+### Mobile Sign-In, Account Creation, and Password Reset
+
+Each form overlaps the property carousel with two rounded top corners. Its centered handle lowers or raises the form by tap, keyboard activation, or vertical drag. The form scrolls with the page, and horizontal swipes on the photo change slides.
+
 ### Typography, Copy & Locale
 - **Locale:** Prices in Philippine Pesos (`₱`), PH phone numbers (`+63…` / `09…`), preserve place-name diacritics (`Las Piñas`, `Dasmariñas`).
 - **Property Descriptions ("About This Property"):** Justified (`text-align: justify; text-justify: inter-word`), `14px` gap between consecutive paragraphs, `1em` first-line indent.

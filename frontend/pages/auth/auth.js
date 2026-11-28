@@ -367,6 +367,55 @@ function initSwipeAndTap() {
     });
 }
 
+function initAuthPhotoSheet() {
+    const handle = document.querySelector('.auth-sheet-handle');
+    const photos = document.getElementById(handle?.getAttribute('aria-controls'));
+    if (!handle || !photos) return;
+
+    let drag = null;
+    let dragged = false;
+
+    function setExpanded(expanded) {
+        photos.classList.toggle('is-expanded', expanded);
+        handle.setAttribute('aria-expanded', String(expanded));
+        handle.setAttribute('aria-label', expanded ? 'Collapse property photos' : 'Expand property photos');
+    }
+
+    function finishDrag(event) {
+        if (!drag || drag.id !== event.pointerId) return;
+        const distance = event.clientY - drag.y;
+        if (event.type === 'pointerup' && Math.abs(distance) >= 24) {
+            dragged = true;
+            setExpanded(distance > 0);
+        }
+        drag = null;
+        photos.classList.remove('is-dragging');
+        photos.style.removeProperty('--drag-height');
+    }
+
+    handle.addEventListener('pointerdown', event => {
+        if (!event.isPrimary || event.button !== 0) return;
+        dragged = false;
+        drag = { id: event.pointerId, y: event.clientY, height: photos.offsetHeight };
+        handle.setPointerCapture(event.pointerId);
+    });
+    handle.addEventListener('pointermove', event => {
+        if (!drag || drag.id !== event.pointerId) return;
+        const distance = event.clientY - drag.y;
+        if (!dragged && Math.abs(distance) < 6) return;
+        dragged = true;
+        photos.classList.add('is-dragging');
+        photos.style.setProperty('--drag-height', (drag.height + distance) + 'px');
+    });
+    handle.addEventListener('pointerup', finishDrag);
+    handle.addEventListener('lostpointercapture', finishDrag);
+    handle.addEventListener('click', event => {
+        // Pointer release also fires a click. Keyboard activation has no pointer drag.
+        if (!dragged || event.detail === 0) setExpanded(!photos.classList.contains('is-expanded'));
+    });
+    handle.hidden = false;
+}
+
 // Initialize on DOM ready
 function initCarousel() {
     let savedIndex = 0;
@@ -394,6 +443,7 @@ function initCarousel() {
     updateDots(savedIndex);
     resetAutoSlide();
     initSwipeAndTap();
+    initAuthPhotoSheet();
 }
 
 if (document.readyState === "loading") {
