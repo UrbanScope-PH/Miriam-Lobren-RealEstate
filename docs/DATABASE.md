@@ -305,8 +305,7 @@ Seeding happens inside `init_db()` **only when the table is empty** or missing i
 | Amore Classico | Benedetto Residences, Barangay Pulang Lupa Uno, Las Piñas City | Townhouse | 7,995,000 | 3 Beds, 3 Baths, 102.0 sqm |
 | Midori Mid-Rise Condo – Zone 1 | Zone 1, Buildings 14–21, Dasmariñas, Cavite | Mid-Rise Condominium | 3,140,000 | 2 Beds, 1 Bath, 50.0 sqm |
 
-**Inquiries (3)** — Sarah Jenkins (*Under Review*), Mark Anthony Cruz (*Approved*),
-Maria Elena Santos (*Completed*).
+**Inquiries.** A fresh SQLite database starts with an empty inquiry history. The sample buyer and dashboard counts in the client walkthrough came from a separate local database populated for filming.
 
 > [!CAUTION]
 > Seed credentials are for local development only. Change or remove them, and set
