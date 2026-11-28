@@ -3,7 +3,7 @@
 This document describes the data layer behind the UrbanScope platform: the
 schema, seed data, how migrations work, and how the frontend reaches it.
 
-> Source of truth: [`backend/database.py`](backend/database.py).
+> Source of truth: [`backend/database.py`](../backend/database.py).
 > If this document and the code disagree, the code wins — please update this file.
 
 ---
@@ -14,10 +14,10 @@ schema, seed data, how migrations work, and how the frontend reaches it.
 | :--- | :--- |
 | Engine (runtime) | **SQLite 3** via Python's standard `sqlite3` module |
 | File | `backend/urbanscope.db` (auto-created, **git-ignored** via `*.db`) |
-| Access layer | Raw parameterised SQL in [`backend/routers/`](backend/routers) — no ORM |
+| Access layer | Raw parameterised SQL in [`backend/routers/`](../backend/routers) — no ORM |
 | Connection helper | `get_db_connection()` — `row_factory = sqlite3.Row`, `check_same_thread=False` |
 | Schema bootstrap | `init_db()` — runs on import of `backend.app` **and** in the FastAPI lifespan hook |
-| Optional cloud mirror | [`supabase/migrations/`](supabase/migrations) + [`supabase/seed.sql`](supabase/seed.sql) (Supabase CLI), or the one-shot [`backend/supabase_schema.sql`](backend/supabase_schema.sql) |
+| Optional cloud mirror | [`supabase/migrations/`](../supabase/migrations) + [`supabase/seed.sql`](../supabase/seed.sql) (Supabase CLI), or the one-shot [`backend/supabase_schema.sql`](../backend/supabase_schema.sql) |
 
 ```mermaid
 flowchart LR
@@ -239,14 +239,14 @@ There is no migration framework. `init_db()` is **idempotent** and non-destructi
 
 1. Add it to the `CREATE TABLE` statement in `init_db()` (for fresh databases).
 2. Add a matching `if "<col>" not in existing_cols: ALTER TABLE …` guard (for existing databases).
-3. Update the Pydantic models in [`backend/models.py`](backend/models.py)
+3. Update the Pydantic models in [`backend/models.py`](../backend/models.py)
    (`*Create`, `*Update`, `*Response`).
-4. Update any explicit column lists in `INSERT` statements in [`backend/routers/`](backend/routers)
+4. Update any explicit column lists in `INSERT` statements in [`backend/routers/`](../backend/routers)
    and the seed block in `init_db()`.
 5. Mirror the change in Supabase: add a **new** migration with `supabase migration new <name>`
    (never edit an already-applied file in `supabase/migrations/`), update
-   [`supabase/seed.sql`](supabase/seed.sql) if seed rows need the column, and keep
-   [`backend/supabase_schema.sql`](backend/supabase_schema.sql) in sync.
+   [`supabase/seed.sql`](../supabase/seed.sql) if seed rows need the column, and keep
+   [`backend/supabase_schema.sql`](../backend/supabase_schema.sql) in sync.
 6. Update this document.
 
 Migration `20261105120000_email_otp_auth.sql` adds the cloud email-verification timestamp, server-only challenge tables, and atomic issue/consume RPCs. Apply it before deploying the Vercel password registration and recovery endpoints.
@@ -260,7 +260,7 @@ Migration `20261105120000_email_otp_auth.sql` adds the cloud email-verification 
 
 ## 6. Passwords, Google OAuth & Tokens
 
-Defined in [`backend/auth.py`](backend/auth.py).
+Defined in [`backend/auth.py`](../backend/auth.py).
 
 - **Hashing:** PBKDF2-HMAC-SHA256, 100,000 iterations, 16-byte random hex salt.
   Stored as `salt$hash` (both hex). Verified with `hmac.compare_digest`. Accounts created
@@ -353,7 +353,7 @@ The superadmin console also provides account and role governance. When a user ac
 
 ## 9. Supabase / PostgreSQL Production Schema
 
-[`backend/supabase_schema.sql`](backend/supabase_schema.sql) is the production-grade PostgreSQL / Supabase
+[`backend/supabase_schema.sql`](../backend/supabase_schema.sql) is the production-grade PostgreSQL / Supabase
 schema. It is 3NF-normalized, enforces foreign key referential integrity, automated triggers, relational views,
 performance indexes, and Row Level Security (RLS).
 
@@ -483,7 +483,7 @@ supabase migration new add_some_column   # create the next migration file
 > `backend/supabase_schema.sql` begins with `DROP TABLE … CASCADE` and wipes existing data.
 
 1. In Supabase Dashboard, go to **SQL Editor** -> **+ New query**.
-2. Paste the entire contents of [`backend/supabase_schema.sql`](backend/supabase_schema.sql) and press **RUN**.
+2. Paste the entire contents of [`backend/supabase_schema.sql`](../backend/supabase_schema.sql) and press **RUN**.
 3. Verify that all 12 tables and views report row counts in the results panel.
 4. Obtain the **Project URL** and **API anon key** from **Project Settings -> API**.
 5. Supply the credentials to Antigravity to configure the frontend gateway.

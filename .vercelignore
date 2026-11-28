@@ -1,5 +1,6 @@
-# Ignore Python backend and Supabase CLI directory during Vercel static deployment
+# Ignore Python backend, internal docs, and Supabase CLI directory during Vercel static deployment
 backend/
+docs/
 supabase/
 __pycache__/
 *.py

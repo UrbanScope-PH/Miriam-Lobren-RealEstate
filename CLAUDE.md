@@ -1,44 +1,26 @@
 # CLAUDE.md
 
-Instructions for Claude (Claude Code / Claude-based agents) in this repository.
+Instructions for Claude Code and Claude-based agents working in **UrbanScope**.
 
-The full, tool-agnostic project guide lives in **AGENTS.md** and is imported below so
-there's a single source of truth. Database details are in **DATABASE.md**.
+The tool-agnostic project rules, expected output format, hard invariants, and documentation map live in [`AGENTS.md`](AGENTS.md) and are imported below as the single source of truth. Load topical guides from [`docs/`](docs/README.md) on demand (do not bulk-import all docs up front).
 
 @AGENTS.md
-@DATABASE.md
 
 ---
 
-## Claude-Specific Workflow
+## Quick Commands (Linux / `bash`)
 
-- **Read before writing.** Before editing a page, open its `.html`, `.css`, and `.js` together —
-  behaviour is often split across all three plus `frontend/shared/js/session.js`.
-- **Plan non-trivial changes.** For anything touching more than one feature folder, or the
-  backend schema, outline the plan and confirm with the user before editing.
-- **Small, focused diffs.** Don't reformat files or reorder CSS you aren't changing.
-- **Verify by running it.** There are no tests. After changes:
-  1. `python run.py`
-  2. Hit the affected endpoint in `http://127.0.0.1:8000/docs`, or load the affected page.
-  3. Check the browser console for errors (the gateway logs failures with `console.warn/error`).
-- **Windows environment.** The primary dev machine is Windows / PowerShell. Use
-  PowerShell-compatible commands (`Remove-Item`, backslash paths) in instructions.
-- **Keep docs in sync.** If you change routes, tables, folders, or pages, update
-  `README.md`, `AGENTS.md`, and `DATABASE.md` in the same change.
-
-## Quick Commands
-
-```powershell
-pip install -r backend/requirements.txt   # install deps
-python run.py                             # run site + API on :8000
-python backend/seed_rbac.py               # verify & seed RBAC accounts & triggers
-Remove-Item backend\urbanscope.db         # reset DB (re-seeds on next start)
+```bash
+pip install -r backend/requirements.txt   # install Python deps
+python3 run.py                            # run site + FastAPI API on :8000
+rm -f backend/urbanscope.db               # reset local SQLite DB (re-seeds on start)
+python3 -m py_compile run.py backend/*.py backend/routers/*.py
+node --check proxy.js api/session.js api/properties.js api/inquiries.js
 ```
 
-## Don'ts
+## Working Reminders
 
-- Don't introduce frameworks, bundlers, Tailwind, or npm packages unless asked.
-- Don't rename `frontend/shared/js/supabase.js` or move folders without asking — paths are hard-coded
-  across pages and in `backend/app.py`.
-- Don't run `backend/supabase_schema.sql` against a live project (it drops tables).
-- Don't commit `backend/urbanscope.db` or secrets.
+- **Small, focused diffs:** Do not reformat untouched files or reorder unrelated CSS.
+- **Verify what you touch:** Run syntax/brace checks matching your edits and inspect affected endpoints/pages where available.
+- **Never auto-commit:** Finish code changes with a suggested branch name, conventional commit message, and copy-pasteable `bash` command.
+- **Docs hygiene:** Update the matching topical guide in [`docs/`](docs/README.md) and [`docs/CHANGELOG.md`](docs/CHANGELOG.md) — never append turn logs to `AGENTS.md`.
