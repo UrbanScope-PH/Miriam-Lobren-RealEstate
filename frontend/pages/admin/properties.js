@@ -45,6 +45,8 @@ function matchesPropertyTypeFilter(rawType, filterTypeVal) {
     return normProp.includes(normFilter);
 }
 
+const finishedProjectLabel = 'Finished Project';
+
 function normalizePropertyRowMeta(property) {
     const title = property.title || property.name || property.propertyName || "Listing";
     const type = property.property_type || property.type || property.propertyType || "—";
@@ -52,7 +54,7 @@ function normalizePropertyRowMeta(property) {
     const priceStr = property.price ? "₱" + Number(property.price).toLocaleString() : "—";
     const rawStatus = String(property.status || "Available").trim();
     const isSold = rawStatus.toLowerCase() === 'sold' || rawStatus.toLowerCase() === 'sold out';
-    const displayStatus = isSold ? 'Sold' : (rawStatus || 'Available');
+    const displayStatus = isSold ? finishedProjectLabel : (rawStatus || 'Available');
 
     let imgSrc = property.image_url ? sanitizeAdminPropImg(property.image_url, '') : '';
 
@@ -418,8 +420,8 @@ function addPropertyMobileCard(property) {
             <button type="button" class="edit-btn" data-id="${safeId}">Edit</button>
             <button type="button" class="status-toggle-btn ${meta.isSold ? 'btn-make-available' : 'btn-make-sold'}"
                 data-id="${safeId}"
-                data-status="${safeStatus}">
-                ${meta.isSold ? 'Mark Available' : 'Mark as Sold'}
+                data-status="${escapePropHtml(meta.rawStatus)}">
+                ${meta.isSold ? 'Mark Available' : finishedProjectLabel}
             </button>
             <button type="button" class="delete-btn"
                 data-id="${safeId}"
@@ -454,7 +456,7 @@ function addPropertyRow(property) {
     const actionsCellHtml = (window.UrbanPropertyActionMenu && typeof window.UrbanPropertyActionMenu.renderTrigger === "function")
         ? window.UrbanPropertyActionMenu.renderTrigger({
             id: property.id,
-            status: safeStatus,
+            status: meta.rawStatus,
             title: meta.title
         })
         : `<div class="actions">
@@ -462,8 +464,8 @@ function addPropertyRow(property) {
                 <button type="button" class="edit-btn" data-id="${safeId}">Edit</button>
                 <button type="button" class="status-toggle-btn ${isSold ? 'btn-make-available' : 'btn-make-sold'}"
                     data-id="${safeId}"
-                    data-status="${safeStatus}">
-                    ${isSold ? 'Mark Available' : 'Mark as Sold'}
+                    data-status="${escapePropHtml(meta.rawStatus)}">
+                    ${isSold ? 'Mark Available' : finishedProjectLabel}
                 </button>
                 <button type="button" class="delete-btn"
                     data-id="${safeId}"
@@ -617,7 +619,7 @@ async function toggleManagedPropertyStatus(propertyId, rawStatus, controlBtn) {
         if (controlBtn) {
             controlBtn.disabled = false;
             if (!isTrigger) {
-                controlBtn.innerText = prevLabel || (isCurrentlySold ? 'Mark Available' : 'Mark as Sold');
+                controlBtn.innerText = prevLabel || (isCurrentlySold ? 'Mark Available' : finishedProjectLabel);
             }
         }
     }
@@ -704,6 +706,7 @@ document.addEventListener(
         if (actionTrigger && window.UrbanPropertyActionMenu && typeof window.UrbanPropertyActionMenu.toggle === "function") {
             window.UrbanPropertyActionMenu.toggle(event, {
                 trigger: actionTrigger,
+                markSoldLabel: finishedProjectLabel,
                 id: actionTrigger.getAttribute("data-prop-id"),
                 status: actionTrigger.getAttribute("data-prop-status") || "Available",
                 title: actionTrigger.getAttribute("data-prop-title") || "Listing",

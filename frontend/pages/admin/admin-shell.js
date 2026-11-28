@@ -1187,7 +1187,7 @@
             trigger.classList.add("is-open");
             trigger.setAttribute("aria-expanded", "true");
 
-            const toggleLabel = isSold ? "Mark Available" : "Mark Sold";
+            const toggleLabel = isSold ? "Mark Available" : ((options && options.markSoldLabel) || "Mark Sold");
             const toggleClass = isSold ? "prop-menu-available" : "prop-menu-sold";
             const toggleIcon = isSold
                 ? '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>'
@@ -1201,7 +1201,7 @@
                 </a>
                 <button type="button" class="prop-actions-item ${toggleClass}" data-menu-action="toggle" role="menuitem">
                     ${toggleIcon}
-                    <span>${toggleLabel}</span>
+                    <span>${escShellHtml(toggleLabel)}</span>
                 </button>
                 <div class="prop-actions-menu-divider" role="separator"></div>
                 <button type="button" class="prop-actions-item prop-menu-delete" data-menu-action="delete" role="menuitem">
