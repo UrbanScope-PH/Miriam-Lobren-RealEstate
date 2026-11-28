@@ -26,7 +26,12 @@
     if (cameFromProfile) {
         if (backHomeLink) {
             backHomeLink.href = '../account/profile.html';
-            backHomeLink.textContent = '← Back to Profile & Security';
+            const backLabel = backHomeLink.querySelector('span');
+            if (backLabel) {
+                backLabel.textContent = 'Back to Profile & Security';
+            } else {
+                backHomeLink.textContent = 'Back to Profile & Security';
+            }
         }
         if (registerPrompt) {
             registerPrompt.innerHTML = '<span>Want to manage your account instead?</span><a href="../account/profile.html">Back to Profile &amp; Security</a>';

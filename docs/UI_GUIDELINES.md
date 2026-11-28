@@ -50,7 +50,7 @@ These patterns were explicitly removed by the user — never add them back:
 ### Back Buttons
 - **Property detail & 7 showcases:** Borderless `24px` left-arrow SVG button in the status row immediately left of the `Available`/`Sold Out` badge on narrower screens, and positioned in the left margin (`left: -44px`) on wide desktop.
 - **Inquiry & Legal pages:** Matching borderless `24px` left-arrow SVG button at top-left.
-- **Auth (`login.html`, `register.html`):** Inline `18px` SVG arrow next to the back-to-home label (`8px` gap).
+- **Auth (`login.html`, `register.html`, `forgot-password.html`):** Inline `18px` SVG arrow next to the back link label (`8px` gap).
 
 ### Mobile Sign-In, Account Creation, and Password Reset
 
@@ -60,7 +60,7 @@ Each form overlaps the property carousel with two rounded top corners. Its cente
 - **Locale:** Prices in Philippine Pesos (`₱`), PH phone numbers (`+63…` / `09…`), preserve place-name diacritics (`Las Piñas`, `Dasmariñas`).
 - **Property Descriptions ("About This Property"):** Justified (`text-align: justify; text-justify: inter-word`), `14px` gap between consecutive paragraphs, `1em` first-line indent.
 - **Footer Bio:** Justified on both desktop and mobile.
-- **Unified Copyright Line:** `&copy; 2026 UrbanScope &bull; All Rights Reserved` across all public, property, legal, and auth pages.
+- **Unified Copyright Line:** `&copy; 2026 UrbanScope &bull; All Rights Reserved` across all public, property, legal, and auth pages (with auth footers on `login.html`, `register.html`, and `forgot-password.html` placing `Home • Privacy Policy • Terms of Service` above the bottom copyright line).
 - **Auth Showcase Subtitle:** `"Real Estate Salesperson"` (dark green styling, bright daylight overlay `rgba(12, 28, 17, 0.2)`).
 
 ### Navigation, Z-Index & Dropdowns
