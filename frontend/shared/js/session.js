@@ -702,6 +702,7 @@
                     toggleEl.setAttribute('aria-expanded', 'false');
                 }
                 document.body.classList.remove('nav-locked');
+                document.documentElement.classList.remove('nav-locked');
             }
 
             notifWrap.querySelector('#clientNotifBtn').addEventListener('click', function (e) {
@@ -835,6 +836,7 @@
             toggle.setAttribute('aria-expanded', String(open));
             backdrop.classList.toggle('active', open);
             document.body.classList.toggle('nav-locked', open);
+            document.documentElement.classList.toggle('nav-locked', open);
 
             if (open) {
                 navbar.querySelectorAll('.profile-menu.open, .client-notif-wrap.open').forEach(function (menu) {

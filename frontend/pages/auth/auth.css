@@ -2346,7 +2346,7 @@ body.terms-modal-open {
 }
 
 .otp-modal-copy {
-    margin: 0 0 22px;
+    margin: 0 0 12px;
     color: var(--text-muted);
     font-size: 13px;
     line-height: 1.6;
@@ -2355,6 +2355,30 @@ body.terms-modal-open {
 
 .otp-modal-copy strong {
     color: var(--dark-green);
+}
+
+.otp-spam-hint {
+    display: flex;
+    align-items: flex-start;
+    gap: 9px;
+    margin: 0 0 16px;
+    padding: 10px 12px;
+    border: 1px solid var(--status-warning-border);
+    border-radius: 10px;
+    background: var(--status-warning-bg);
+    color: var(--status-warning-text);
+    font-size: 12.5px;
+    line-height: 1.45;
+}
+
+.otp-spam-hint svg {
+    flex: 0 0 auto;
+    margin-top: 1px;
+}
+
+.otp-spam-hint strong {
+    font-weight: 700;
+    color: inherit;
 }
 
 .otp-form label {
@@ -2473,7 +2497,15 @@ body.otp-modal-open {
     .otp-modal-copy {
         font-size: 13.5px;
         line-height: 1.55;
-        margin-bottom: 16px;
+        margin-bottom: 12px;
+    }
+
+    .otp-spam-hint {
+        gap: 8px;
+        margin-bottom: 14px;
+        padding: 9px 11px;
+        font-size: 13px;
+        line-height: 1.45;
     }
 
     .otp-form label {

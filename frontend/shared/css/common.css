@@ -789,8 +789,10 @@ svg {
         visibility: visible;
     }
 
-    body.nav-locked {
+    html.nav-locked,
+    html:has(body.nav-locked) {
         overflow: hidden;
+        overscroll-behavior: none;
     }
 
     .footer-top {

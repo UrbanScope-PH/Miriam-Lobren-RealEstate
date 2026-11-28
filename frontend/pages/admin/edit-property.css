@@ -509,7 +509,7 @@
     font-size: 10px;
 }
 
-body.sidebar-is-open {
+html:has(body.sidebar-is-open) {
     overflow: hidden;
 }
 

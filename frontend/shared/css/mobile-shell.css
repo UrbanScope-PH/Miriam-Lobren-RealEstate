@@ -166,8 +166,10 @@ html[data-theme="dark"] {
         justify-content: center;
     }
 
-    body.sidebar-open {
+    html.sidebar-open,
+    html:has(body.sidebar-open) {
         overflow: hidden;
+        overscroll-behavior: none;
     }
 }
 
@@ -724,9 +726,20 @@ html[data-theme="dark"] {
         padding: 0;
     }
 
-    body.sidebar-open,
-    body.nav-locked {
+    html.sidebar-open,
+    html:has(body.sidebar-open),
+    html.nav-locked,
+    html:has(body.nav-locked) {
         overflow: hidden;
+        overscroll-behavior: none;
+    }
+
+    .mobile-nav-backdrop.active,
+    .sidebar-backdrop.active,
+    .sidebar-backdrop.show,
+    .sa-backdrop.active,
+    .sa-backdrop.show {
+        touch-action: none;
     }
 
     .profile-dropdown,
@@ -970,8 +983,9 @@ html:has(.admin-topbar, .sa-topbar) {
     -webkit-overflow-scrolling: touch;
 }
 
-body.modal-open,
-body.sidebar-open {
+html.sidebar-open,
+html.nav-locked,
+html:has(body.modal-open, body.sidebar-open, body.nav-locked) {
     overscroll-behavior: none;
 }
 
